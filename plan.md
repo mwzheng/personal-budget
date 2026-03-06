@@ -82,165 +82,38 @@ This document outlines a phased roadmap and detailed considerations for building
 
 ---
 
-## Reports & Sankey Budget Plan (NEW)
+## Reports & Sankey Budget Plan (STATUS)
 
-### Overview
+Status: Local implementation complete (reports + sankey). Completed items were moved to `plan.completed.md` for traceability.
 
-Objective: Add a Reports page and a Sankey Budget page which let users generate spending reports, filter data by tags and date ranges, and visualize spending via charts (pie chart for wants/needs/savings, category diagrams, time-series) and a Sankey diagram to help derive a budget from user inputs.
+Summary of what was completed locally during this session:
 
-This plan assumes a Next.js + TypeScript front-end (app router), MUI for UI, Redux Toolkit available for global state, and a serverless backend (AWS Lambda + DynamoDB) for persistent transaction storage.
+- Implemented local APIs: `GET /api/reports` (reads sample-data) and `POST /api/sankey` (zod-validated allocations -> sankey nodes/links + budget suggestion).
+- Implemented Reports UI (`app/reports/page.tsx`) with `FilterBar`, summary cards, pie/time-series/tag charts, and `TransactionsTable` using client-side filtering against sample-data.
+- Implemented Sankey/Budget UI (`app/sankey/page.tsx`) with `SankeyForm` and `SankeyChart` (dynamic import) plus budget breakdown table.
+- Added lib utilities (`lib/types.ts`, `lib/csvParser.ts`, `lib/aggregations.ts`).
+- Fixed date-fns adapter for MUI: switched to `AdapterDateFnsV3` in `app/providers.tsx`.
+- Installed dependencies, verified `pnpm build` succeeded, and smoke-tested the dev server and APIs.
 
-### Scope
+Remaining / next priorities (high level):
 
-In scope:
+- Integrate persistence and auth: connect API routes to DynamoDB and enforce user-scoped access via Cognito (or chosen auth provider).
+- Add CSV import/export endpoints (upsert semantics), validation, and UI for import preview.
+- Add tests (unit, integration, E2E) and CI (GitHub Actions) to protect builds and deployments.
+- Add server-side pagination/aggregation and performance tuning for large datasets.
+- Improve accessibility, add ARIA labels, keyboard navigation, and mobile layout tweaks.
 
-- /reports page with filtering by tags and date range, a transactions table, and multiple charts (pie, treemap/sunburst, time-series).
-- /sankey page that accepts user-provided income/allocations and generates an interactive Sankey diagram and suggested budget breakdown.
-- A reports API (route handler or Lambda) that supports filtering, pagination, and server-side aggregation for large datasets.
-- Hybrid filtering strategy: client-side for small datasets, server-side for large datasets.
+Immediate next steps for the repository (developer tasks):
 
-Out of scope:
+1. Commit code and documentation changes (done in this session).
+2. Create AWS dev resources (Cognito + DynamoDB) and provide env vars for local dev.
+3. Implement auth middleware and wire APIs to DynamoDB.
+4. Add tests and CI; add example large dataset to `sample-data` for perf testing.
 
-- Full infra rework beyond adding route handlers or Lambdas.
-- Advanced forecasting or ML-driven budget recommendations (future enhancement).
-
-### Data model (proposal - confirm in discovery)
-
-Suggested canonical transaction shape:
-
-- id: string
-- userId: string
-- date: ISO date string (YYYY-MM-DD)
-- amount: number
-- type: 'expense' | 'income'
-- category: string
-- categoryType: 'needs' | 'wants' | 'savings' # optional; can be derived
-- tags: string[]
-- paymentMethod: string
-- notes?: string
-
-Confirm mapping from sample CSV and DynamoDB schema during `confirm-data-sources`.
-
-### Filtering strategy (chosen: hybrid)
-
-- Client-side filtering for small datasets (<= 2,000 transactions) for snappy UI and offline capability.
-- Server-side filtering and pre-aggregation for large datasets or broad date ranges; API accepts filters and returns paginated transactions + aggregates for charts.
-- Heuristic: check transaction count or requested date span; default to server-side for ranges > 1 year or when transactionCount > threshold.
-- Keep URL search params in sync with filters for shareable reports.
-
-### API design (proposed)
-
-GET /api/reports
-
-- Query params: startDate, endDate, tags (comma), page, pageSize, groupBy (month|week|day), includeAggregates=true
-- Response shape:
-  {
-  transactions: [ ... ],
-  totalCount: number,
-  aggregates: {
-  totalAmount: number,
-  totalByCategoryType: { needs: number, wants: number, savings: number },
-  totalByCategory: { [category]: number },
-  timeseries: [ { period: 'YYYY-MM', amount: number } ],
-  categoryDiagramData: [ { id: category, value: number } ]
-  }
-  }
-
-POST /api/sankey
-
-- Body: { incomes: [{source, amount}], categories: [{name, currentSpend?}], userConstraints: {...} }
-- Returns: { sankeyData: { nodes: [...], links: [...] }, budgetSuggestion: { category: suggestedAmount } }
-
-Notes:
-
-- Validate inputs (use zod) and sanitize.
-- Implement DynamoDB queries with appropriate indexes (GSI by userId+date) and aggregate in Lambda.
-
-### UI pages & components
-
-Pages:
-
-- app/reports/page.tsx — Reports screen
-- app/sankey/page.tsx — Sankey budget generator
-
-Shared components:
-
-- FilterBar: date-range picker (MUI), tag multi-select, text search, apply/reset
-- TransactionsTable: paginated table (MUI DataGrid)
-- ChartsPanel: container for ChartCards
-- PieChartCard: wants/needs/savings breakdown
-- CategoryDiagramCard: treemap/sunburst
-- TimeSeriesCard: monthly/weekly series
-- SankeyForm: input incomes and categories
-- SankeyChart: renders Sankey and suggestions
-
-Implementation notes:
-
-- Chart components must be client components (`'use client'`) and lazy-loaded via dynamic import/Suspense.
-- Persist filters in URL and optionally in Redux for saved views.
-
-### Chart libraries (recommendation)
-
-- Recharts or Chart.js for pie/time-series (lightweight).
-- @nivo for treemap/sunburst and Sankey (rich visuals); lazy-load to reduce bundle size.
-- Decision: Recharts + @nivo recommended.
-
-### State & data flow
-
-- Use React Query (or similar) for server data fetching and caching.
-- Use Redux Toolkit for global UI state and saved filters.
-- Sync filter state to URL search params for shareable reports.
-
-### Implementation roadmap (phases & tasks)
-
-Phase A — Discovery & setup
-
-- confirm-data-sources: inspect DynamoDB schema, Lambda code, and sample-data CSV.
-- add chart deps (Recharts, @nivo) and configure pnpm.
-
-Phase B — API & aggregation
-
-- implement-api-reports: create GET /api/reports returning sample aggregates (start with sample-data for local dev).
-- implement-api-sankey: POST /api/sankey to compute sankey nodes/links and budget suggestion.
-
-Phase C — Reports UI
-
-- filters-implementation: build FilterBar, URL sync, and client-side filtering utilities.
-- reports-page-ui: implement /reports page and TransactionsTable.
-- charts-implementation: wire pie, treemap, time-series to API or client filters.
-
-Phase D — Sankey UI
-
-- sankey-page: build SankeyForm and SankeyChart, call /api/sankey and show budgetSuggestion.
-
-Phase E — Polish & tests
-
-- data-import-export: ensure CSV import/export maps categories/tags and support filtered export.
-- tests-and-docs: unit/integration tests; update README with usage and examples.
-- accessibility-performance: run accessibility checks and lazy-load heavy chart bundles.
-
-### Acceptance criteria
-
-- Reports page filters by tags and date ranges; charts and table update correctly.
-- Pie chart accurately shows wants/needs/savings from filtered data.
-- Category diagram shows category proportions with tooltips.
-- Sankey page produces an interactive Sankey and returns budget suggestions from user inputs.
-- API endpoints validate inputs and return aggregates in the specified shape.
-- Tests cover main API endpoints and UI flows; README updated.
-
-### Risks & mitigations
-
-- Large datasets -> slow UI: mitigate with server-side aggregation, pagination, and lazy-loading charts.
-- Bundle size -> use dynamic imports and only load @nivo when needed.
-- CategoryType mapping missing -> provide configurable mapping and default rules.
-
-### Next steps (immediate)
-
-1. Run `confirm-data-sources` to map CSV and DynamoDB schemas and update todo state.
-2. Add chart libraries (Recharts + @nivo) to package.json and pnpm install.
-3. Implement a minimal GET /api/reports that returns sample aggregates from `sample-data` for frontend development.
+(Completed work has been moved to `plan.completed.md`.)
 
 ---
+
 
 ## 📌 Ongoing / future enhancements
 
