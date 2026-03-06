@@ -98,7 +98,7 @@ Summary of what was completed locally during this session:
 Remaining / next priorities (high level):
 
 - Integrate persistence and auth: connect API routes to DynamoDB and enforce user-scoped access via Cognito (or chosen auth provider).
-- Add CSV import/export endpoints (upsert semantics), validation, and UI for import preview.
+- CSV import/export API endpoints implemented locally (import/export APIs). UI for import preview remains to be implemented.
 - Add tests (unit, integration, E2E) and CI (GitHub Actions) to protect builds and deployments.
 - Add server-side pagination/aggregation and performance tuning for large datasets.
 - Improve accessibility, add ARIA labels, keyboard navigation, and mobile layout tweaks.

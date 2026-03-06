@@ -32,3 +32,5 @@ Commit
 
 All changes were committed and pushed in the working branch. See the git history for per-file commits.
 
+- Implemented CSV import/export API routes for local development: `app/api/reports/import` (POST — parses uploaded CSV and returns parsed transactions) and `app/api/reports/export` (GET — returns filtered transactions as CSV).
+
