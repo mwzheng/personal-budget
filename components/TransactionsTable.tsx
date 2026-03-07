@@ -2,6 +2,13 @@
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,6 +18,8 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useState } from 'react';
 import { CategoryType, Transaction } from '@/lib/types';
 
@@ -25,13 +34,16 @@ type SortDir = 'asc' | 'desc';
 
 interface Props {
   transactions: Transaction[];
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function TransactionsTable({ transactions }: Props) {
+export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -53,115 +65,174 @@ export function TransactionsTable({ transactions }: Props) {
   });
 
   const paged = sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const showActions = Boolean(onEdit || onDelete);
 
   return (
-    <Paper>
-      <TableContainer sx={{ maxHeight: 520 }}>
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <TableSortLabel
-                  active={sortField === 'date'}
-                  direction={sortField === 'date' ? sortDir : 'asc'}
-                  onClick={() => handleSort('date')}
-                >
-                  Date
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={sortField === 'name'}
-                  direction={sortField === 'name' ? sortDir : 'asc'}
-                  onClick={() => handleSort('name')}
-                >
-                  Name
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={sortField === 'category'}
-                  direction={sortField === 'category' ? sortDir : 'asc'}
-                  onClick={() => handleSort('category')}
-                >
-                  Category
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>Payment Method</TableCell>
-              <TableCell>Tags</TableCell>
-              <TableCell align="right">
-                <TableSortLabel
-                  active={sortField === 'amount'}
-                  direction={sortField === 'amount' ? sortDir : 'asc'}
-                  onClick={() => handleSort('amount')}
-                >
-                  Amount
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>Notes</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paged.map((t) => (
-              <TableRow key={t.id} hover>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.date}</TableCell>
-                <TableCell>{t.name}</TableCell>
+    <>
+      <Paper>
+        <TableContainer sx={{ maxHeight: 520 }}>
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
                 <TableCell>
-                  <Chip
-                    label={t.category}
-                    size="small"
-                    color={CATEGORY_COLORS[t.category]}
-                  />
+                  <TableSortLabel
+                    active={sortField === 'date'}
+                    direction={sortField === 'date' ? sortDir : 'asc'}
+                    onClick={() => handleSort('date')}
+                  >
+                    Date
+                  </TableSortLabel>
                 </TableCell>
-                <TableCell>{t.paymentMethod}</TableCell>
                 <TableCell>
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {t.tags.map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: 11 }}
-                      />
-                    ))}
-                  </Box>
+                  <TableSortLabel
+                    active={sortField === 'name'}
+                    direction={sortField === 'name' ? sortDir : 'asc'}
+                    onClick={() => handleSort('name')}
+                  >
+                    Name
+                  </TableSortLabel>
                 </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}
-                >
-                  ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                <TableCell>
+                  <TableSortLabel
+                    active={sortField === 'category'}
+                    direction={sortField === 'category' ? sortDir : 'asc'}
+                    onClick={() => handleSort('category')}
+                  >
+                    Category
+                  </TableSortLabel>
                 </TableCell>
-                <TableCell
-                  sx={{
-                    maxWidth: 200,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    color: 'text.secondary',
-                    fontSize: 12,
-                  }}
-                >
-                  {t.notes}
+                <TableCell>Payment Method</TableCell>
+                <TableCell>Tags</TableCell>
+                <TableCell align="right">
+                  <TableSortLabel
+                    active={sortField === 'amount'}
+                    direction={sortField === 'amount' ? sortDir : 'asc'}
+                    onClick={() => handleSort('amount')}
+                  >
+                    Amount
+                  </TableSortLabel>
                 </TableCell>
+                <TableCell>Notes</TableCell>
+                {showActions && <TableCell align="center">Actions</TableCell>}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        component="div"
-        count={transactions.length}
-        page={page}
-        onPageChange={(_, p) => setPage(p)}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={(e) => {
-          setRowsPerPage(parseInt(e.target.value, 10));
-          setPage(0);
-        }}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-      />
-    </Paper>
+            </TableHead>
+            <TableBody>
+              {paged.map((t) => (
+                <TableRow key={t.id} hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.date}</TableCell>
+                  <TableCell>{t.name}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={t.category}
+                      size="small"
+                      color={CATEGORY_COLORS[t.category]}
+                    />
+                  </TableCell>
+                  <TableCell>{t.paymentMethod}</TableCell>
+                  <TableCell>
+                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                      {t.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: 11 }}
+                        />
+                      ))}
+                    </Box>
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}
+                  >
+                    ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 200,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: 'text.secondary',
+                      fontSize: 12,
+                    }}
+                  >
+                    {t.notes}
+                  </TableCell>
+                  {showActions && (
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      {onEdit && (
+                        <IconButton
+                          size="small"
+                          aria-label={`Edit ${t.name}`}
+                          onClick={() => onEdit(t)}
+                        >
+                          <EditOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {onDelete && (
+                        <IconButton
+                          size="small"
+                          aria-label={`Delete ${t.name}`}
+                          color="error"
+                          onClick={() => setDeleteTarget(t)}
+                        >
+                          <DeleteOutlineIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          component="div"
+          count={transactions.length}
+          page={page}
+          onPageChange={(_, p) => setPage(p)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
+      </Paper>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Transaction?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo; (
+            {deleteTarget?.date}, ${deleteTarget?.amount.toFixed(2)})? This cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              if (deleteTarget && onDelete) {
+                onDelete(deleteTarget.id);
+              }
+              setDeleteTarget(null);
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
