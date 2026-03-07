@@ -1,72 +1,94 @@
 # Copilot Instructions for Personal Budget Project
 
-This file contains high-level guidance for GitHub Copilot while assisting with development of the Personal Budget application.
+This file is the top-level guidance for GitHub Copilot when working on the Personal Budget application. It provides project context and high-level rules; detailed, per-topic rules live under `.github/instructions/` and take precedence when present. When new skills or instruction files are added, update this document to reflect them.
 
-## Project Overview
-- **Purpose:** Build a personal budgeting application that helps users track income, expenses, and savings goals.
-- **Tech Stack:**
-  - **Frontend:** Next.js with TypeScript
-  - **UI Library:** Material-UI (MUI) and custom React components
-  - **Backend:** AWS Lambda functions written in TypeScript
-  - **Authentication & accounts:** AWS Cognito for user management and auth flows
-  - **Database:** AWS DynamoDB table for storing user data
-  - **Deployment:** AWS Lambda (possibly via Serverless Framework or AWS SAM)
+## Available Copilot skills (local agent capabilities)
 
-## Development Guidelines
-- Use **TypeScript** everywhere for safety and tooling.
-- Structure the Next.js app using standard conventions (pages/app router, API routes if needed).
-- Keep UI components reusable and styled with MUI.
-- Backend business logic should be separated into individual Lambda handlers.
-- Interact with DynamoDB via AWS SDK v3 using typed models.
-- Use environment variables for AWS configuration (e.g., table name, region).
-- Write thorough tests: unit tests for slices, components, and utilities; integration tests for auth flows, CSV import/export, and API interactions; snapshot tests for visual components.
-- Use **Redux Toolkit** for centralized application state management, keeping logic in slices and leveraging `createAsyncThunk` for async actions.
-- Follow a consistent Prettier configuration across the entire project for formatting; format any file edits before committing.
-- Adhere to best practices for accessibility and responsive design.
-- Optimize for inexpensive, free-tier-friendly hosting: on-demand DynamoDB, minimal Lambda duration, Cognito free tier, deploy frontend to free hosting (Vercel/Netlify) or S3/CloudFront.
+The repository exposes specialized Copilot skills that can (and should) be used when relevant. If a user's request maps to a skill, invoke that skill immediately as the first tool action.
 
-## UI/UX Requirements
-- Provide a **transactions table** mirroring the Notion layout:
-  - Columns: Date, Description/Name, Category, Payment Method, Tags, Amount, Notes, etc.
-  - Client-side filtering/sorting on every column.
-  - Ability to **filter by date range** and by any column value.
-- Include a **filter bar** with controls for date range (using MUI date pickers), category and tag selectors, payment method dropdown, and text search.
-- Support a quick year selector (e.g. dropdown or chips) to jump between calendar years.
-- Implement a **spending-over-time chart** that aggregates data by month or week and supports predefined ranges (past month, past 3 months, past year, custom).
-- Chart must update based on the same filters as the table.
-- Provide a global **light/dark theme toggle** and ensure all components respect MUI theme settings.
-- Enable filtering the transactions table and charts by **year** in addition to arbitrary date ranges.
+- `add-educational-comments` — Add educational comments to the specified file or prompt for a file when none is supplied.
+- `documentation-writer` — Diátaxis-style documentation expert for producing structured docs and guides.
+- `first-ask` — Interactive task refinement workflow to clarify scope before implementation (requires Joyride).
+- `git-commit` — Create git commits with intelligent staging and conventional commit messages.
+- `javascript-typescript-jest` — Generate and improve JavaScript/TypeScript tests using Jest and best practices.
+- `make-skill-template` — Scaffold a new Copilot skill template.
+- `mentoring-juniors` — Socratic mentoring workflow for teaching and guiding junior developers.
+- `prd` — Generate Product Requirements Documents (PRDs) with structure and acceptance criteria.
+- `prompt-builder` — Help craft high-quality prompts for Copilot and other LLMs.
+- `update-implementation-plan` — Update or create implementation plans (plan.md) from new requirements.
+- `web-coder` — Expert-level web development assistant for HTML/CSS/JS and modern web patterns.
+- `web-design-reviewer` — Visual design reviewer for UI layout, accessibility, and responsiveness.
 
-## UI Extensions
+Guidance: when multiple skills are relevant, prefer the most specialized one (for example, use `javascript-typescript-jest` for test-related tasks rather than a general web-coder).
 
-- Add a dedicated **budget planner page** where users can define a budget by category and amount. Display a **pie chart** preview that updates as the budget is filled out to help visualize allocations.
-- Provide a **year‑to‑year investment progress page** showing tracked amounts over time (similar to spreadsheet screenshot) with ability to input yearly values and render a growth chart or table for comparison.
+## Local instruction files (authoritative)
 
-## Data Import / Export
-- Provide the ability for users to **export** their transaction data as CSV and **import** from a CSV file.
-  - CSV format should match the example in `sample-data/expenses.csv` (date, description, category, payment method, tags, amount, notes, etc.).
-  - Implement front‑end controls for selecting a file to upload and triggering a download of the current filtered dataset.
-  - Validation should run on import to ensure required columns exist and values are well‑formed.
-  - Backend/API route should accept a CSV payload, parse it, and upsert transactions into DynamoDB.
-  - Export endpoint should query DynamoDB (respecting filters) and stream back a CSV file.
+Detailed rules are kept in `.github/instructions/`. Always open and follow the relevant file before making changes. Examples in this repository include:
 
-## AI Interaction Preferences
-- Provide concise suggestions and explanations tailored to TypeScript and Next.js.
-- When asked to generate code, include relevant imports and typing annotations.
-- Favor modern React patterns (hooks, functional components).
-- Ask clarifying questions if requirements are ambiguous.
+- `typescript-5-es2022.instructions.md` — TypeScript and typing rules
+- `nextjs.instructions.md` — Next.js (App Router) guidance
+- `reactjs.instructions.md` — React component and testing guidance
+- `prettier-after-updates.instructions.md` — Format files after edits
+- `update-docs-on-code-change.instructions.md` — When/how to update documentation
+- `markdown.instructions.md` — Markdown content rules
+- `github-actions-ci-cd-best-practices.instructions.md` — CI/CD workflow guidance
+- `html-css-style-color-guide.instructions.md` — Visual styling and color guidance
 
-## Common Tasks
-- Creating pages/screens for budget categories, transactions, and reports.
-- Implementing API routes or Lambda functions for CRUD operations.
-- Configuring DynamoDB tables and IAM permissions in infrastructure.
-- Styling components with MUI and using themes.
-- Setting up CI/CD for AWS deployment (e.g., GitHub Actions). Pipelines should run tests and lint/format checks and only deploy on successful passes.
+If this top-level file conflicts with a per-topic instruction, the per-topic file wins. Keep `.github/instructions/` in sync with repository needs.
 
-## Project Goals
-1. Enable users to add, edit, and delete budget items.
-2. Display summary dashboards and charts.
-3. Secure data access per user.
-4. Deploy reliably on AWS Lambda with DynamoDB.
+## Project overview
 
-Feel free to expand this file with more details as the project evolves.
+- Purpose: Build a personal budgeting application to track income, expenses, and savings goals.
+- Tech stack:
+  - Frontend: Next.js + TypeScript (App Router preferred)
+  - UI: Material-UI (MUI)
+  - Backend: AWS Lambda (TypeScript) with API route handlers
+  - Auth: AWS Cognito
+  - Database: AWS DynamoDB
+  - Deployment: Serverless Lambdas (SAM/Serverless Framework) and static frontend hosting (Vercel/Netlify/S3)
+
+## Development guidelines (high level)
+
+- Prefer TypeScript 5 and an ES2022 baseline; add explicit types for public APIs.
+- Keep UI components reusable, accessible, and theme-aware (MUI). Use hooks and modern React patterns.
+- Keep backend logic in small, testable Lambda handlers and shared `lib/` modules.
+- Interact with DynamoDB using AWS SDK v3 and typed models.
+- Use environment variables for configuration; never commit secrets.
+- Add unit tests, integration tests, and snapshot tests where appropriate; use `javascript-typescript-jest` skill for test scaffolding when helpful.
+- Use Redux Toolkit for complex app state; prefer local state and React Query for server state where it fits.
+- Follow the repository formatting rules: run the `format` script if present (e.g., `pnpm format` or `npm run format`) or run Prettier (`pnpm dlx prettier --write .` / `npx prettier --write .`) after edits.
+
+## Code change and commit rules
+
+- Run the repository's format script or Prettier after making edits and include formatting changes in the same commit.
+- Run existing linters and tests locally (or in CI) before committing when feasible.
+- When creating git commits via automation or agents, include this trailer in the commit message:
+
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+- Prefer small, focused commits with conventional commit messages (use the `git-commit` skill when appropriate).
+
+## AI interaction and tool usage
+
+- When the user asks about Copilot/CLI capabilities, call `fetch_copilot_cli_documentation` first and base answers on its output.
+- Use the `ask_user` tool for any clarifying question; ask one focused question at a time and prefer multiple-choice where possible.
+- When calling tools, report intent via the `report_intent` tool on the first tool-calling turn and when changing phases; use a short gerund phrase (<=4 words), e.g., `Updating instructions`.
+- If a specialized skill applies to the request, invoke the `skill` tool immediately as the first action (do not wait to produce text output first).
+
+## Common tasks (summary)
+
+- Pages/screens: transactions, budgets, reports, settings
+- API/Lambda: CRUD for transactions, budgets, and user data
+- Data import/export: CSV import/export (see `sample-data/expenses.csv`) with validation and server-side upsert
+- Charts: spending-over-time, budget allocation, investment progress
+- CI/CD: GitHub Actions workflows should run tests, linting, and formatting before deploys (see `.github/instructions/github-actions-ci-cd-best-practices.instructions.md`)
+
+## When to update this file
+
+- Add new skills to the "Available Copilot skills" list when they are added to the repository.
+- Add or update references to per-topic instruction files when those files change.
+- Keep the commit/format guidance current with repository scripts (e.g., update instructions if the repo switches package manager or adds a different format script).
+
+---
+
+Keep this file concise; prefer moving long or detailed rules into `.github/instructions/` so they can be edited per topic.
