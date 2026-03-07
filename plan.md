@@ -10,8 +10,8 @@ This document outlines a phased roadmap and detailed considerations for building
    - Install MUI, Redux Toolkit, and chart library of choice.
 
 2. **Authentication & infra**
-   - Provision Cognito user pool (via Serverless/SAM/CDK), keeping within the free tier.
-   - Create DynamoDB table (`pk=userId`, `sk=date#transactionId`) using on-demand capacity to avoid costs.
+   - ✅ Provision Cognito user pool — deployed via SAM (`us-east-1_p3sQWF56J`).
+   - ✅ Create DynamoDB table (`pk=userId`, `sk=date#transactionId`, on-demand billing) — deployed via SAM (`personal-budget-infra-dev-transactions`).
    - Write IAM roles for Lambdas to access Cognito + DynamoDB.
    - Favor configuration and usage patterns that stay within AWS free-tier limits (e.g. limit log retention, remove unused resources).
 
@@ -78,13 +78,14 @@ This document outlines a phased roadmap and detailed considerations for building
 15. **Deployment pipeline**
     - GitHub Actions workflow deploying to AWS (different stages).
     - Pipeline must run all unit/integration tests, linting, and formatting checks; deployment only triggers when jobs pass.
-    - Auto‑generate Terraform/Serverless resources for Cognito, DynamoDB, and Lambdas.
+    - ✅ SAM template and `deploy-sam.sh` script provision Cognito, DynamoDB resources; `deploy:infra` / `deploy:infra:prod` npm scripts added.
+    - Lambda function resources still need to be added to the SAM template when Lambda API routes are implemented.
 
 ---
 
 ## Reports & Sankey Budget Plan (STATUS)
 
-Status: Local implementation complete (reports + sankey). DynamoDB integration in progress; infrastructure provisioning attempted (Serverless template added). Serverless deploy ran into a Serverless binary/installer issue on this machine; options under consideration: continue troubleshooting Serverless, provision resources via AWS CLI/SDK, or use a local DynamoDB emulator for development. Dev server was restarted and is running locally (port 3000).
+Status: Local implementation complete (reports + sankey). AWS infrastructure (DynamoDB + Cognito) deployed via SAM — stack `personal-budget-resources` live in `us-east-1`. Next priority: wire API routes to DynamoDB with Cognito JWT middleware, and build user data management (localStorage CRUD → DynamoDB).
 
 Summary of what was completed locally during this session:
 
@@ -94,6 +95,7 @@ Summary of what was completed locally during this session:
 - Added lib utilities (`lib/types.ts`, `lib/csvParser.ts`, `lib/aggregations.ts`).
 - Fixed date-fns adapter for MUI: switched to `AdapterDateFnsV3` in `app/providers.tsx`.
 - Installed dependencies, verified `pnpm build` succeeded, and smoke-tested the dev server and APIs.
+- ✅ Provisioned DynamoDB + Cognito via SAM deploy; documented in `infra/SAM-DEPLOY.md`; added `deploy:infra` / `deploy:infra:prod` scripts to `package.json`.
 
 Remaining / next priorities (high level):
 
@@ -106,9 +108,10 @@ Remaining / next priorities (high level):
 Immediate next steps for the repository (developer tasks):
 
 1. Implement user data management (localStorage CRUD + CSV import/export UI) — details below.
-2. Create AWS dev resources (Cognito + DynamoDB) and provide env vars for local dev.
-3. Implement auth middleware and wire APIs to DynamoDB (replace localStorage with DynamoDB once auth is ready).
-4. Add tests and CI; add example large dataset to `sample-data` for perf testing.
+2. ✅ ~~Create AWS dev resources (Cognito + DynamoDB) and provide env vars for local dev.~~ Done — see `plan.completed.md`.
+3. Create `.env.local` with stack output values (`NEXT_PUBLIC_COGNITO_USER_POOL_ID`, `NEXT_PUBLIC_COGNITO_CLIENT_ID`, `DYNAMODB_TABLE_NAME`).
+4. Write IAM roles for Lambda functions; implement auth middleware and wire APIs to DynamoDB (replace localStorage with DynamoDB once auth is ready).
+5. Add tests and CI; add example large dataset to `sample-data` for perf testing.
 
 (Completed work has been moved to `plan.completed.md`.)
 
