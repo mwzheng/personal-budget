@@ -25,7 +25,12 @@ export async function POST(request: NextRequest) {
 
     const parsed = loadTransactionsFromCSV(csvText);
 
-    return NextResponse.json({ importedCount: parsed.length, sample: parsed.slice(0, 50) });
+    return NextResponse.json({
+      importedCount: parsed.length,
+      transactions: parsed,
+      // Legacy preview alias kept for backward compatibility
+      sample: parsed.slice(0, 50),
+    });
   } catch (error) {
     console.error('[/api/reports/import]', error);
     return NextResponse.json(

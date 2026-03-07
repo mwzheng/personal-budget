@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { loadTransactionsFromCSV } from '@/lib/csvParser';
 import { filterTransactions, aggregateTransactions } from '@/lib/aggregations';
+import { requireAuth } from '@/lib/cognitoAuth';
+import { getUserTransactions } from '@/lib/dynamo';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,9 +19,17 @@ export async function GET(request: NextRequest) {
     );
     const includeAggregates = searchParams.get('includeAggregates') !== 'false';
 
-    const csvPath = join(process.cwd(), 'sample-data', 'expenses.csv');
-    const csvContent = readFileSync(csvPath, 'utf-8');
-    const allTransactions = loadTransactionsFromCSV(csvContent);
+    const skipAuth = process.env.DISABLE_AUTH === 'true' || !process.env.COGNITO_USER_POOL_ID;
+    let userId = 'local-demo';
+    if (!skipAuth) {
+      userId = await requireAuth(request, {
+        region: process.env.AWS_REGION,
+        userPoolId: process.env.COGNITO_USER_POOL_ID!,
+        audience: process.env.COGNITO_CLIENT_ID,
+      });
+    }
+
+    const allTransactions = await getUserTransactions(userId);
 
     const filtered = filterTransactions(allTransactions, {
       startDate,
