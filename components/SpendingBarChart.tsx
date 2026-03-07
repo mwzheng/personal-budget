@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Bar,
@@ -10,13 +10,13 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import { format, parseISO } from 'date-fns';
-import { TimeseriesPoint } from '@/lib/types';
+} from "recharts";
+import { format, parseISO } from "date-fns";
+import { TimeseriesPoint } from "@/lib/types";
 
 function formatMonth(period: string): string {
   try {
-    return format(parseISO(`${period}-01`), 'MMM yy');
+    return format(parseISO(`${period}-01`), "MMM yy");
   } catch {
     return period;
   }
@@ -35,7 +35,7 @@ export function SpendingBarChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div
-        style={{ textAlign: 'center', padding: 40, color: '#666', height: 300 }}
+        style={{ textAlign: "center", padding: 40, color: "#666", height: 300 }}
       >
         No data for selected filters
       </div>
@@ -53,21 +53,21 @@ export function SpendingBarChart({ data }: Props) {
         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#aaa' }}
+          tick={{ fontSize: 11, fill: "#aaa" }}
           angle={-45}
           textAnchor="end"
           interval={0}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: '#aaa' }}
+          tick={{ fontSize: 11, fill: "#aaa" }}
           tickFormatter={formatDollar}
         />
         <Tooltip
           formatter={(value: number) => [
-            `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-            '',
+            `$${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+            "",
           ]}
-          contentStyle={{ background: '#242424', border: '1px solid #444' }}
+          contentStyle={{ background: "#242424", border: "1px solid #444" }}
         />
         <Legend />
         <Bar dataKey="Saving" stackId="a" fill="#66bb6a" name="Saving" />
@@ -77,7 +77,7 @@ export function SpendingBarChart({ data }: Props) {
             dataKey="amount"
             position="top"
             formatter={formatDollar}
-            style={{ fontSize: 10, fill: '#ccc' }}
+            style={{ fontSize: 10, fill: "#ccc" }}
           />
         </Bar>
       </BarChart>

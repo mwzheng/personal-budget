@@ -1,36 +1,36 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TableSortLabel from '@mui/material/TableSortLabel';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { useState } from 'react';
-import { CategoryType, Transaction } from '@/lib/types';
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
+import TableRow from "@mui/material/TableRow";
+import TableSortLabel from "@mui/material/TableSortLabel";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { useState } from "react";
+import { CategoryType, Transaction } from "@/lib/types";
 
-const CATEGORY_COLORS: Record<CategoryType, 'error' | 'info' | 'success'> = {
-  Need: 'error',
-  Want: 'info',
-  Saving: 'success',
+const CATEGORY_COLORS: Record<CategoryType, "error" | "info" | "success"> = {
+  Need: "error",
+  Want: "info",
+  Saving: "success",
 };
 
-type SortField = 'date' | 'name' | 'amount' | 'category';
-type SortDir = 'asc' | 'desc';
+type SortField = "date" | "name" | "amount" | "category";
+type SortDir = "asc" | "desc";
 
 interface Props {
   transactions: Transaction[];
@@ -41,30 +41,34 @@ interface Props {
 export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
   function handleSort(field: SortField) {
     if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      setSortDir('desc');
+      setSortDir("desc");
     }
     setPage(0);
   }
 
   const sorted = [...transactions].sort((a, b) => {
     let cmp = 0;
-    if (sortField === 'date') cmp = a.date.localeCompare(b.date);
-    else if (sortField === 'name') cmp = a.name.localeCompare(b.name);
-    else if (sortField === 'amount') cmp = a.amount - b.amount;
-    else if (sortField === 'category') cmp = a.category.localeCompare(b.category);
-    return sortDir === 'asc' ? cmp : -cmp;
+    if (sortField === "date") cmp = a.date.localeCompare(b.date);
+    else if (sortField === "name") cmp = a.name.localeCompare(b.name);
+    else if (sortField === "amount") cmp = a.amount - b.amount;
+    else if (sortField === "category")
+      cmp = a.category.localeCompare(b.category);
+    return sortDir === "asc" ? cmp : -cmp;
   });
 
-  const paged = sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paged = sorted.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
   const showActions = Boolean(onEdit || onDelete);
 
   return (
@@ -76,27 +80,27 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
               <TableRow>
                 <TableCell>
                   <TableSortLabel
-                    active={sortField === 'date'}
-                    direction={sortField === 'date' ? sortDir : 'asc'}
-                    onClick={() => handleSort('date')}
+                    active={sortField === "date"}
+                    direction={sortField === "date" ? sortDir : "asc"}
+                    onClick={() => handleSort("date")}
                   >
                     Date
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortField === 'name'}
-                    direction={sortField === 'name' ? sortDir : 'asc'}
-                    onClick={() => handleSort('name')}
+                    active={sortField === "name"}
+                    direction={sortField === "name" ? sortDir : "asc"}
+                    onClick={() => handleSort("name")}
                   >
                     Name
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortField === 'category'}
-                    direction={sortField === 'category' ? sortDir : 'asc'}
-                    onClick={() => handleSort('category')}
+                    active={sortField === "category"}
+                    direction={sortField === "category" ? sortDir : "asc"}
+                    onClick={() => handleSort("category")}
                   >
                     Category
                   </TableSortLabel>
@@ -105,9 +109,9 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                 <TableCell>Tags</TableCell>
                 <TableCell align="right">
                   <TableSortLabel
-                    active={sortField === 'amount'}
-                    direction={sortField === 'amount' ? sortDir : 'asc'}
-                    onClick={() => handleSort('amount')}
+                    active={sortField === "amount"}
+                    direction={sortField === "amount" ? sortDir : "asc"}
+                    onClick={() => handleSort("amount")}
                   >
                     Amount
                   </TableSortLabel>
@@ -119,7 +123,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
             <TableBody>
               {paged.map((t) => (
                 <TableRow key={t.id} hover>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.date}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{t.date}</TableCell>
                   <TableCell>{t.name}</TableCell>
                   <TableCell>
                     <Chip
@@ -144,24 +148,27 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                   </TableCell>
                   <TableCell
                     align="right"
-                    sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}
+                    sx={{ whiteSpace: "nowrap", fontWeight: 600 }}
                   >
-                    ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    $
+                    {t.amount.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                    })}
                   </TableCell>
                   <TableCell
                     sx={{
                       maxWidth: 200,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      color: 'text.secondary',
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      color: "text.secondary",
                       fontSize: 12,
                     }}
                   >
                     {t.notes}
                   </TableCell>
                   {showActions && (
-                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                    <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                       {onEdit && (
                         <IconButton
                           size="small"
@@ -213,8 +220,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo; (
-            {deleteTarget?.date}, ${deleteTarget?.amount.toFixed(2)})? This cannot be
-            undone.
+            {deleteTarget?.date}, ${deleteTarget?.amount.toFixed(2)})? This
+            cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

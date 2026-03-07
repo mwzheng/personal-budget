@@ -11,30 +11,32 @@ Web servers, hosting, deployment, and infrastructure concepts.
 High-performance web server and reverse proxy.
 
 **Features**:
+
 - Load balancing
 - Reverse proxy
 - Static file serving
 - SSL/TLS termination
 
 **Basic Configuration**:
+
 ```nginx
 server {
     listen 80;
     server_name example.com;
-    
+
     # Serve static files
     location / {
         root /var/www/html;
         index index.html;
     }
-    
+
     # Proxy to backend
     location /api {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
-    
+
     # SSL configuration
     listen 443 ssl;
     ssl_certificate /path/to/cert.pem;
@@ -47,11 +49,13 @@ server {
 Widely-used web server.
 
 **Features**:
+
 - .htaccess support
 - Module system
 - Virtual hosting
 
 **Basic .htaccess**:
+
 ```apache
 # Redirect to HTTPS
 RewriteEngine On
@@ -70,29 +74,31 @@ ErrorDocument 404 /404.html
 #### Node.js Servers
 
 **Express.js**:
+
 ```javascript
-const express = require('express');
+const express = require("express");
 const app = express();
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-app.get('/api/users', (req, res) => {
+app.get("/api/users", (req, res) => {
   res.json({ users: [] });
 });
 
 app.listen(3000, () => {
-  console.log('Server running on port 3000');
+  console.log("Server running on port 3000");
 });
 ```
 
 **Built-in HTTP Server**:
+
 ```javascript
-const http = require('http');
+const http = require("http");
 
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end('<h1>Hello World</h1>');
+  res.writeHead(200, { "Content-Type": "text/html" });
+  res.end("<h1>Hello World</h1>");
 });
 
 server.listen(3000);
@@ -105,6 +111,7 @@ server.listen(3000);
 For static sites (HTML, CSS, JS).
 
 **Platforms**:
+
 - **Vercel**: Automatic deployments, serverless functions
 - **Netlify**: Build automation, edge functions
 - **GitHub Pages**: Free for public repos
@@ -112,6 +119,7 @@ For static sites (HTML, CSS, JS).
 - **AWS S3 + CloudFront**: Scalable, requires setup
 
 **Deployment**:
+
 ```bash
 # Vercel
 npx vercel
@@ -128,6 +136,7 @@ git push origin main
 Managed application hosting.
 
 **Platforms**:
+
 - **Heroku**: Easy deployment, add-ons
 - **Railway**: Modern developer experience
 - **Render**: Unified platform
@@ -135,6 +144,7 @@ Managed application hosting.
 - **Azure App Service**: Microsoft cloud
 
 **Example (Heroku)**:
+
 ```bash
 # Deploy
 git push heroku main
@@ -151,6 +161,7 @@ heroku logs --tail
 Virtual servers (more control, more setup).
 
 **Providers**:
+
 - **AWS EC2**: Amazon virtual servers
 - **Google Compute Engine**: Google VMs
 - **DigitalOcean Droplets**: Simple VPS
@@ -159,6 +170,7 @@ Virtual servers (more control, more setup).
 ### Containerization
 
 **Docker**:
+
 ```dockerfile
 # Dockerfile
 FROM node:18-alpine
@@ -179,8 +191,9 @@ docker run -p 3000:3000 my-app
 ```
 
 **Docker Compose**:
+
 ```yaml
-version: '3'
+version: "3"
 services:
   web:
     build: .
@@ -199,6 +212,7 @@ services:
 Container orchestration platform.
 
 **Concepts**:
+
 - **Pods**: Smallest deployable units
 - **Services**: Expose pods
 - **Deployments**: Manage replicas
@@ -209,18 +223,21 @@ Container orchestration platform.
 Distributed network for fast content delivery.
 
 **Benefits**:
+
 - Faster load times
 - Reduced server load
 - DDoS protection
 - Geographic distribution
 
 **Popular CDNs**:
+
 - **Cloudflare**: Free tier, DDoS protection
 - **AWS CloudFront**: Amazon CDN
 - **Fastly**: Edge computing
 - **Akamai**: Enterprise CDN
 
 **CDN for Libraries**:
+
 ```html
 <!-- CDN-hosted library -->
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
@@ -232,16 +249,17 @@ Translates domain names to IP addresses.
 
 ### DNS Records
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| A | IPv4 address | `example.com → 192.0.2.1` |
-| AAAA | IPv6 address | `example.com → 2001:db8::1` |
-| CNAME | Alias to another domain | `www → example.com` |
-| MX | Mail server | `mail.example.com` |
-| TXT | Text information | SPF, DKIM records |
-| NS | Nameserver | DNS delegation |
+| Type  | Purpose                 | Example                     |
+| ----- | ----------------------- | --------------------------- |
+| A     | IPv4 address            | `example.com → 192.0.2.1`   |
+| AAAA  | IPv6 address            | `example.com → 2001:db8::1` |
+| CNAME | Alias to another domain | `www → example.com`         |
+| MX    | Mail server             | `mail.example.com`          |
+| TXT   | Text information        | SPF, DKIM records           |
+| NS    | Nameserver              | DNS delegation              |
 
 **DNS Lookup**:
+
 ```bash
 # Command line
 nslookup example.com
@@ -268,6 +286,7 @@ Encrypt data between client and server.
 ### Getting Certificates
 
 **Let's Encrypt** (Free):
+
 ```bash
 # Certbot
 sudo certbot --nginx -d example.com
@@ -282,10 +301,10 @@ sudo certbot --nginx -d example.com
 server {
     listen 443 ssl http2;
     server_name example.com;
-    
+
     ssl_certificate /path/to/fullchain.pem;
     ssl_certificate_key /path/to/privkey.pem;
-    
+
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 }
@@ -310,6 +329,7 @@ Distribute traffic across multiple servers.
 - **Weighted**: Servers have different capacities
 
 **Nginx Load Balancer**:
+
 ```nginx
 upstream backend {
     server server1.example.com weight=3;
@@ -329,12 +349,14 @@ server {
 Server that forwards requests to backend servers.
 
 **Benefits**:
+
 - Load balancing
 - SSL termination
 - Caching
 - Security (hide backend)
 
 **Nginx Reverse Proxy**:
+
 ```nginx
 server {
     location / {
@@ -359,17 +381,18 @@ Cache-Control: public, max-age=31536000, immutable
 ### Server-Side Caching
 
 **Redis**:
+
 ```javascript
-const redis = require('redis');
+const redis = require("redis");
 const client = redis.createClient();
 
 // Cache data
-await client.set('user:1', JSON.stringify(user), {
-  EX: 3600 // Expire after 1 hour
+await client.set("user:1", JSON.stringify(user), {
+  EX: 3600, // Expire after 1 hour
 });
 
 // Retrieve cached data
-const cached = await client.get('user:1');
+const cached = await client.get("user:1");
 ```
 
 ### CDN Caching
@@ -389,11 +412,12 @@ NODE_ENV=production
 
 ```javascript
 // Access in Node.js
-require('dotenv').config();
+require("dotenv").config();
 const dbUrl = process.env.DATABASE_URL;
 ```
 
 **Best Practices**:
+
 - Never commit .env to Git
 - Use .env.example as template
 - Different values per environment
@@ -406,6 +430,7 @@ const dbUrl = process.env.DATABASE_URL;
 Automatically deploy when code is pushed.
 
 **GitHub Actions**:
+
 ```yaml
 name: Deploy
 on:
@@ -580,6 +605,7 @@ Add more servers.
 ## Glossary Terms
 
 **Key Terms Covered**:
+
 - Apache
 - Bandwidth
 - CDN

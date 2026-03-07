@@ -1,14 +1,18 @@
-import type { Metadata } from 'next';
-import { AppNav } from '@/components/AppNav';
-import { Providers } from './providers';
-import './globals.css';
+import type { Metadata } from "next";
+import { AppNav } from "@/components/AppNav";
+import { Providers } from "./providers";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Personal Budget',
-  description: 'Track and analyze your personal spending',
+  title: "Personal Budget",
+  description: "Track and analyze your personal spending",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>

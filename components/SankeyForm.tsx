@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import InputAdornment from '@mui/material/InputAdornment';
-import Slider from '@mui/material/Slider';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import { useState } from 'react';
-import { SankeyRequestBody, SankeyResponse } from '@/lib/types';
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import InputAdornment from "@mui/material/InputAdornment";
+import Slider from "@mui/material/Slider";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { useState } from "react";
+import { SankeyRequestBody, SankeyResponse } from "@/lib/types";
 
 interface Props {
   onResult: (response: SankeyResponse) => void;
 }
 
 interface SliderRow {
-  key: 'Need' | 'Want' | 'Saving';
+  key: "Need" | "Want" | "Saving";
   label: string;
   color: string;
 }
 
 const ROWS: SliderRow[] = [
-  { key: 'Need', label: 'Needs', color: '#ef5350' },
-  { key: 'Want', label: 'Wants', color: '#42a5f5' },
-  { key: 'Saving', label: 'Savings', color: '#66bb6a' },
+  { key: "Need", label: "Needs", color: "#ef5350" },
+  { key: "Want", label: "Wants", color: "#42a5f5" },
+  { key: "Saving", label: "Savings", color: "#66bb6a" },
 ];
 
 export function SankeyForm({ onResult }: Props) {
   const [monthlyIncome, setMonthlyIncome] = useState<number>(5000);
-  const [incomeLabel, setIncomeLabel] = useState('Income');
+  const [incomeLabel, setIncomeLabel] = useState("Income");
   const [pct, setPct] = useState<Record<string, number>>({
     Need: 50,
     Want: 30,
@@ -54,16 +54,16 @@ export function SankeyForm({ onResult }: Props) {
           percentage: pct[r.key],
         })),
       };
-      const res = await fetch('/api/sankey', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sankey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message ?? 'Unknown error');
+      if (!res.ok) throw new Error(data.error?.message ?? "Unknown error");
       onResult(data as SankeyResponse);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate');
+      setError(e instanceof Error ? e.message : "Failed to generate");
     } finally {
       setLoading(false);
     }
@@ -87,9 +87,7 @@ export function SankeyForm({ onResult }: Props) {
         fullWidth
         slotProps={{
           input: {
-            startAdornment: (
-              <InputAdornment position="start">$</InputAdornment>
-            ),
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
           },
         }}
       />
@@ -113,7 +111,9 @@ export function SankeyForm({ onResult }: Props) {
           </Box>
           <Slider
             value={pct[key]}
-            onChange={(_, v) => setPct((prev) => ({ ...prev, [key]: v as number }))}
+            onChange={(_, v) =>
+              setPct((prev) => ({ ...prev, [key]: v as number }))
+            }
             min={0}
             max={100}
             step={1}
@@ -125,10 +125,10 @@ export function SankeyForm({ onResult }: Props) {
       <Box display="flex" justifyContent="flex-end">
         <Typography
           variant="body2"
-          color={isValid ? 'success.main' : 'error.main'}
+          color={isValid ? "success.main" : "error.main"}
           fontWeight={600}
         >
-          Total: {total}%{!isValid && total !== 0 && ' (must equal 100%)'}
+          Total: {total}%{!isValid && total !== 0 && " (must equal 100%)"}
         </Typography>
       </Box>
 
@@ -145,7 +145,7 @@ export function SankeyForm({ onResult }: Props) {
         fullWidth
         size="large"
       >
-        {loading ? 'Generating…' : 'Generate Budget Sankey'}
+        {loading ? "Generating…" : "Generate Budget Sankey"}
       </Button>
     </Box>
   );

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { ResponsiveSankey } from '@nivo/sankey';
-import { SankeyData } from '@/lib/types';
+import { ResponsiveSankey } from "@nivo/sankey";
+import { SankeyData } from "@/lib/types";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Need: '#ef5350',
-  Want: '#42a5f5',
-  Saving: '#66bb6a',
+  Need: "#ef5350",
+  Want: "#42a5f5",
+  Saving: "#66bb6a",
 };
 
 function getNodeColor(node: { id: string | number }): string {
-  return CATEGORY_COLORS[String(node.id)] ?? '#2D7DD2';
+  return CATEGORY_COLORS[String(node.id)] ?? "#2D7DD2";
 }
 
 interface Props {
@@ -22,14 +22,14 @@ export function SankeyChart({ data }: Props) {
     return (
       <div
         style={{
-          textAlign: 'center',
-          padding: '60px 40px',
-          color: '#666',
+          textAlign: "center",
+          padding: "60px 40px",
+          color: "#666",
           height: 400,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
           gap: 8,
         }}
       >
@@ -51,21 +51,21 @@ export function SankeyChart({ data }: Props) {
         nodeInnerPadding={3}
         nodeSpacing={24}
         nodeBorderWidth={0}
-        nodeBorderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+        nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
         linkOpacity={0.4}
         linkHoverOthersOpacity={0.1}
         enableLinkGradient
         labelPosition="outside"
         labelOrientation="horizontal"
         labelPadding={16}
-        labelTextColor={{ from: 'color', modifiers: [['brighter', 1]] }}
+        labelTextColor={{ from: "color", modifiers: [["brighter", 1]] }}
         theme={{
-          text: { fill: '#ddd', fontSize: 13 },
+          text: { fill: "#ddd", fontSize: 13 },
           tooltip: {
             container: {
-              background: '#242424',
-              border: '1px solid #444',
-              color: '#ddd',
+              background: "#242424",
+              border: "1px solid #444",
+              color: "#ddd",
             },
           },
         }}

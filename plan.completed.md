@@ -56,14 +56,13 @@ Provisioned the AWS dev infrastructure using AWS SAM and fully documented the de
 
 ## Stack outputs
 
-| Key | Value |
-|---|---|
+| Key                     | Value                                    |
+| ----------------------- | ---------------------------------------- |
 | `TransactionsTableName` | `personal-budget-infra-dev-transactions` |
-| `UserPoolId` | `us-east-1_p3sQWF56J` |
-| `UserPoolClientId` | `2peialoophbsr5pso0grnljavt` |
+| `UserPoolId`            | `us-east-1_p3sQWF56J`                    |
+| `UserPoolClientId`      | `2peialoophbsr5pso0grnljavt`             |
 
 ## Notes
 
 - IAM roles for Lambda functions (to access DynamoDB + Cognito) are not yet created; will be needed when Lambda API routes are wired up.
 - `.env.local` with the above values still needs to be created for local Next.js development.
-

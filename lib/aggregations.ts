@@ -1,4 +1,9 @@
-import { Transaction, FilterParams, ReportsAggregates, TimeseriesPoint } from './types';
+import {
+  Transaction,
+  FilterParams,
+  ReportsAggregates,
+  TimeseriesPoint,
+} from "./types";
 
 export function filterTransactions(
   transactions: Transaction[],
@@ -24,7 +29,9 @@ export function filterTransactions(
   });
 }
 
-export function aggregateTransactions(transactions: Transaction[]): ReportsAggregates {
+export function aggregateTransactions(
+  transactions: Transaction[],
+): ReportsAggregates {
   const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
   const totalByCategoryType = { Need: 0, Want: 0, Saving: 0 };

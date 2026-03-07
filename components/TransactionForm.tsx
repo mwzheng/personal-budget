@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import FormControl from '@mui/material/FormControl';
-import FormHelperText from '@mui/material/FormHelperText';
-import InputAdornment from '@mui/material/InputAdornment';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { format, parseISO } from 'date-fns';
-import { useEffect, useState } from 'react';
-import type { Transaction } from '@/lib/types';
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputAdornment from "@mui/material/InputAdornment";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { format, parseISO } from "date-fns";
+import { useEffect, useState } from "react";
+import type { Transaction } from "@/lib/types";
 
-const CATEGORY_OPTIONS = ['Need', 'Want', 'Saving'] as const;
+const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
 
 interface FormValues {
   date: Date | null;
@@ -41,13 +41,13 @@ interface FormErrors {
 
 const DEFAULT_VALUES: FormValues = {
   date: null,
-  name: '',
-  amount: '',
-  category: 'Want',
-  paymentMethod: '',
-  tagsInput: '',
+  name: "",
+  amount: "",
+  category: "Want",
+  paymentMethod: "",
+  tagsInput: "",
   tags: [],
-  notes: '',
+  notes: "",
 };
 
 function transactionToFormValues(t: Transaction): FormValues {
@@ -56,20 +56,21 @@ function transactionToFormValues(t: Transaction): FormValues {
     name: t.name,
     amount: String(t.amount),
     category: t.category,
-    paymentMethod: t.paymentMethod ?? '',
-    tagsInput: '',
+    paymentMethod: t.paymentMethod ?? "",
+    tagsInput: "",
     tags: [...t.tags],
-    notes: t.notes ?? '',
+    notes: t.notes ?? "",
   };
 }
 
 function validate(values: FormValues): FormErrors {
   const errors: FormErrors = {};
-  if (!values.date) errors.date = 'Date is required';
-  if (!values.name.trim()) errors.name = 'Name is required';
+  if (!values.date) errors.date = "Date is required";
+  if (!values.name.trim()) errors.name = "Name is required";
   const amt = parseFloat(values.amount);
-  if (!values.amount || isNaN(amt) || amt <= 0) errors.amount = 'Enter a positive amount';
-  if (!values.category) errors.category = 'Category is required';
+  if (!values.amount || isNaN(amt) || amt <= 0)
+    errors.amount = "Enter a positive amount";
+  if (!values.category) errors.category = "Category is required";
   return errors;
 }
 
@@ -88,7 +89,9 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
 
   useEffect(() => {
     if (open) {
-      setValues(transaction ? transactionToFormValues(transaction) : DEFAULT_VALUES);
+      setValues(
+        transaction ? transactionToFormValues(transaction) : DEFAULT_VALUES,
+      );
       setErrors({});
       setSubmitted(false);
     }
@@ -105,20 +108,23 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
   function handleAddTag() {
     const tag = values.tagsInput.trim();
     if (tag && !values.tags.includes(tag)) {
-      set('tags', [...values.tags, tag]);
+      set("tags", [...values.tags, tag]);
     }
-    set('tagsInput', '');
+    set("tagsInput", "");
   }
 
   function handleTagKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       handleAddTag();
     }
   }
 
   function handleDeleteTag(tag: string) {
-    set('tags', values.tags.filter((t) => t !== tag));
+    set(
+      "tags",
+      values.tags.filter((t) => t !== tag),
+    );
   }
 
   function handleSubmit() {
@@ -131,8 +137,8 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
       id: transaction?.id ?? crypto.randomUUID(),
       name: values.name.trim(),
       amount: parseFloat(values.amount),
-      category: values.category as Transaction['category'],
-      date: format(values.date!, 'yyyy-MM-dd'),
+      category: values.category as Transaction["category"],
+      date: format(values.date!, "yyyy-MM-dd"),
       notes: values.notes.trim(),
       paymentMethod: values.paymentMethod.trim(),
       tags: values.tags,
@@ -144,13 +150,15 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
+      <DialogTitle>
+        {isEdit ? "Edit Transaction" : "Add Transaction"}
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} mt={1}>
           <DatePicker
             label="Date *"
             value={values.date}
-            onChange={(d) => set('date', d)}
+            onChange={(d) => set("date", d)}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -164,7 +172,7 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
             label="Name *"
             fullWidth
             value={values.name}
-            onChange={(e) => set('name', e.target.value)}
+            onChange={(e) => set("name", e.target.value)}
             error={Boolean(errors.name)}
             helperText={errors.name}
           />
@@ -173,12 +181,14 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
             label="Amount *"
             fullWidth
             type="number"
-            inputProps={{ min: 0, step: '0.01' }}
+            inputProps={{ min: 0, step: "0.01" }}
             InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
             }}
             value={values.amount}
-            onChange={(e) => set('amount', e.target.value)}
+            onChange={(e) => set("amount", e.target.value)}
             error={Boolean(errors.amount)}
             helperText={errors.amount}
           />
@@ -188,7 +198,7 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
             <Select
               label="Category *"
               value={values.category}
-              onChange={(e) => set('category', e.target.value)}
+              onChange={(e) => set("category", e.target.value)}
             >
               {CATEGORY_OPTIONS.map((c) => (
                 <MenuItem key={c} value={c}>
@@ -196,14 +206,16 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
                 </MenuItem>
               ))}
             </Select>
-            {errors.category && <FormHelperText>{errors.category}</FormHelperText>}
+            {errors.category && (
+              <FormHelperText>{errors.category}</FormHelperText>
+            )}
           </FormControl>
 
           <TextField
             label="Payment Method"
             fullWidth
             value={values.paymentMethod}
-            onChange={(e) => set('paymentMethod', e.target.value)}
+            onChange={(e) => set("paymentMethod", e.target.value)}
             placeholder="e.g. Credit Card, Bank, Cash"
           />
 
@@ -212,7 +224,7 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
               label="Add Tag"
               fullWidth
               value={values.tagsInput}
-              onChange={(e) => set('tagsInput', e.target.value)}
+              onChange={(e) => set("tagsInput", e.target.value)}
               onKeyDown={handleTagKeyDown}
               onBlur={handleAddTag}
               helperText="Press Enter or comma to add a tag"
@@ -238,14 +250,14 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
             multiline
             rows={2}
             value={values.notes}
-            onChange={(e) => set('notes', e.target.value)}
+            onChange={(e) => set("notes", e.target.value)}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit}>
-          {isEdit ? 'Save Changes' : 'Add Transaction'}
+          {isEdit ? "Save Changes" : "Add Transaction"}
         </Button>
       </DialogActions>
     </Dialog>

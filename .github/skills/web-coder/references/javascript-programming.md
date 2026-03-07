@@ -5,9 +5,11 @@ Comprehensive reference for JavaScript, ECMAScript, programming concepts, and mo
 ## Core Concepts
 
 ### JavaScript
+
 High-level, interpreted programming language that conforms to the ECMAScript specification. Primary language for web development alongside HTML and CSS.
 
 **Key Characteristics**:
+
 - Dynamically typed
 - Prototype-based inheritance
 - First-class functions
@@ -15,9 +17,11 @@ High-level, interpreted programming language that conforms to the ECMAScript spe
 - Asynchronous execution
 
 ### ECMAScript
+
 The standardized specification that JavaScript implements.
 
 **Major Versions**:
+
 - **ES5** (2009): Strict mode, JSON support
 - **ES6/ES2015**: Classes, arrow functions, promises, modules
 - **ES2016+**: Async/await, optional chaining, nullish coalescing
@@ -29,7 +33,7 @@ The standardized specification that JavaScript implements.
 ```javascript
 // String
 let name = "John";
-let greeting = 'Hello';
+let greeting = "Hello";
 let template = `Hello, ${name}!`; // Template literal
 
 // Number
@@ -53,7 +57,7 @@ console.log(undefined_var); // undefined
 let empty = null;
 
 // Symbol (unique identifier)
-let sym = Symbol('description');
+let sym = Symbol("description");
 ```
 
 ### Type Checking
@@ -67,7 +71,7 @@ typeof null; // "object" (historical bug)
 typeof Symbol(); // "symbol"
 typeof {}; // "object"
 typeof []; // "object"
-typeof function() {}; // "function"
+typeof function () {}; // "function"
 
 // Better array check
 Array.isArray([]); // true
@@ -98,6 +102,7 @@ parseFloat("3.14"); // 3.14
 ### Truthy and Falsy Values
 
 **Falsy values** (evaluate to false):
+
 - `false`
 - `0`, `-0`
 - `""` (empty string)
@@ -106,6 +111,7 @@ parseFloat("3.14"); // 3.14
 - `NaN`
 
 **Everything else is truthy**, including:
+
 - `"0"` (string)
 - `"false"` (string)
 - `[]` (empty array)
@@ -145,7 +151,7 @@ function greet(name) {
 ### Function Expression
 
 ```javascript
-const greet = function(name) {
+const greet = function (name) {
   return `Hello, ${name}!`;
 };
 ```
@@ -163,7 +169,7 @@ const multiply = (a, b) => {
 };
 
 // Single parameter (parentheses optional)
-const square = x => x * x;
+const square = (x) => x * x;
 
 // No parameters
 const getRandom = () => Math.random();
@@ -175,13 +181,16 @@ const makePerson = (name, age) => ({ name, age });
 ### First-Class Functions
 
 Functions are values that can be:
+
 - Assigned to variables
 - Passed as arguments
 - Returned from other functions
 
 ```javascript
 // Assign to variable
-const fn = function() { return 42; };
+const fn = function () {
+  return 42;
+};
 
 // Pass as argument
 function execute(callback) {
@@ -191,7 +200,7 @@ execute(() => console.log("Hello"));
 
 // Return from function
 function createMultiplier(factor) {
-  return function(x) {
+  return function (x) {
     return x * factor;
   };
 }
@@ -206,7 +215,7 @@ Functions that remember their lexical scope:
 ```javascript
 function createCounter() {
   let count = 0; // Private variable
-  
+
   return {
     increment() {
       count++;
@@ -218,7 +227,7 @@ function createCounter() {
     },
     getCount() {
       return count;
-    }
+    },
   };
 }
 
@@ -237,11 +246,11 @@ Function passed as an argument to be executed later:
 // Array methods use callbacks
 const numbers = [1, 2, 3, 4, 5];
 
-numbers.forEach(num => console.log(num));
+numbers.forEach((num) => console.log(num));
 
-const doubled = numbers.map(num => num * 2);
+const doubled = numbers.map((num) => num * 2);
 
-const evens = numbers.filter(num => num % 2 === 0);
+const evens = numbers.filter((num) => num % 2 === 0);
 
 const sum = numbers.reduce((acc, num) => acc + num, 0);
 ```
@@ -249,13 +258,13 @@ const sum = numbers.reduce((acc, num) => acc + num, 0);
 ### IIFE (Immediately Invoked Function Expression)
 
 ```javascript
-(function() {
+(function () {
   // Code here runs immediately
   console.log("IIFE executed");
 })();
 
 // With parameters
-(function(name) {
+(function (name) {
   console.log(`Hello, ${name}`);
 })("World");
 
@@ -276,7 +285,7 @@ const person = {
   age: 30,
   greet() {
     return `Hello, I'm ${this.name}`;
-  }
+  },
 };
 
 // Constructor function
@@ -288,7 +297,11 @@ function Person(name, age) {
 const john = new Person("John", 30);
 
 // Object.create
-const proto = { greet() { return "Hello"; } };
+const proto = {
+  greet() {
+    return "Hello";
+  },
+};
 const obj = Object.create(proto);
 ```
 
@@ -353,7 +366,9 @@ const { name, country = "USA" } = person;
 
 // Nested destructuring
 const user = { profile: { email: "john@example.com" } };
-const { profile: { email } } = user;
+const {
+  profile: { email },
+} = user;
 
 // Array destructuring
 const numbers = [1, 2, 3, 4, 5];
@@ -383,27 +398,31 @@ arr.push(4); // Add to end
 arr.pop(); // Remove from end
 arr.unshift(0); // Add to beginning
 arr.shift(); // Remove from beginning
-arr.splice(1, 2, 'a', 'b'); // Remove 2 elements at index 1, insert 'a', 'b'
+arr.splice(1, 2, "a", "b"); // Remove 2 elements at index 1, insert 'a', 'b'
 
 // Iteration
-arr.forEach(item => console.log(item));
-for (let item of arr) { console.log(item); }
-for (let i = 0; i < arr.length; i++) { console.log(arr[i]); }
+arr.forEach((item) => console.log(item));
+for (let item of arr) {
+  console.log(item);
+}
+for (let i = 0; i < arr.length; i++) {
+  console.log(arr[i]);
+}
 
 // Transformation
-const doubled = arr.map(x => x * 2);
-const evens = arr.filter(x => x % 2 === 0);
+const doubled = arr.map((x) => x * 2);
+const evens = arr.filter((x) => x % 2 === 0);
 const sum = arr.reduce((acc, x) => acc + x, 0);
 
 // Search
 arr.includes(2); // true
 arr.indexOf(2); // Index or -1
-arr.find(x => x > 2); // First matching element
-arr.findIndex(x => x > 2); // Index of first match
+arr.find((x) => x > 2); // First matching element
+arr.findIndex((x) => x > 2); // Index of first match
 
 // Test
-arr.some(x => x > 5); // true if any match
-arr.every(x => x > 0); // true if all match
+arr.some((x) => x > 5); // true if any match
+arr.every((x) => x > 0); // true if all match
 
 // Sort and reverse
 arr.sort((a, b) => a - b); // Ascending
@@ -417,7 +436,10 @@ const spread = [...arr, 4, 5];
 const portion = arr.slice(1, 3); // Index 1 to 3 (exclusive)
 
 // Flat (flatten nested arrays)
-[[1, 2], [3, 4]].flat(); // [1, 2, 3, 4]
+[
+  [1, 2],
+  [3, 4],
+].flat(); // [1, 2, 3, 4]
 ```
 
 ## Control Flow
@@ -447,7 +469,7 @@ switch (value) {
     // code for 2 or 3
     break;
   default:
-    // default code
+  // default code
 }
 
 // Nullish coalescing (ES2020)
@@ -511,7 +533,7 @@ function fetchData(callback) {
   }, 1000);
 }
 
-fetchData(data => console.log(data));
+fetchData((data) => console.log(data));
 ```
 
 ### Promises
@@ -531,8 +553,8 @@ const promise = new Promise((resolve, reject) => {
 
 // Use promise
 promise
-  .then(result => console.log(result))
-  .catch(error => console.error(error))
+  .then((result) => console.log(result))
+  .catch((error) => console.error(error))
   .finally(() => console.log("Done"));
 
 // Promise utilities
@@ -548,16 +570,16 @@ Promise.any([promise1, promise2]); // First to succeed (ES2021)
 // Async function
 async function fetchData() {
   try {
-    const response = await fetch('https://api.example.com/data');
+    const response = await fetch("https://api.example.com/data");
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
   }
 }
 
 // Use async function
-fetchData().then(data => console.log(data));
+fetchData().then((data) => console.log(data));
 
 // Top-level await (ES2022, in modules)
 const data = await fetchData();
@@ -572,22 +594,22 @@ class Person {
     this.name = name;
     this.age = age;
   }
-  
+
   // Instance method
   greet() {
     return `Hello, I'm ${this.name}`;
   }
-  
+
   // Getter
   get info() {
     return `${this.name}, ${this.age}`;
   }
-  
+
   // Setter
   set birthYear(year) {
     this.age = new Date().getFullYear() - year;
   }
-  
+
   // Static method
   static species() {
     return "Homo sapiens";
@@ -600,7 +622,7 @@ class Employee extends Person {
     super(name, age); // Call parent constructor
     this.jobTitle = jobTitle;
   }
-  
+
   // Override method
   greet() {
     return `${super.greet()}, I'm a ${this.jobTitle}`;
@@ -631,9 +653,9 @@ export default class Calculator {
 }
 
 // Import
-import Calculator, { PI, add } from './math.js';
-import * as math from './math.js';
-import { add as sum } from './math.js'; // Rename
+import Calculator, { PI, add } from "./math.js";
+import * as math from "./math.js";
+import { add as sum } from "./math.js"; // Rename
 ```
 
 ### CommonJS (Node.js)
@@ -643,11 +665,11 @@ import { add as sum } from './math.js'; // Rename
 module.exports = {
   add(a, b) {
     return a + b;
-  }
+  },
 };
 
 // Import
-const math = require('./math');
+const math = require("./math");
 ```
 
 ## Error Handling
@@ -678,6 +700,7 @@ throw new ValidationError("Invalid input");
 ## Best Practices
 
 ### Do's
+
 - ✅ Use `const` by default, `let` when needed
 - ✅ Use strict mode (`'use strict';`)
 - ✅ Use arrow functions for callbacks
@@ -690,6 +713,7 @@ throw new ValidationError("Invalid input");
 - ✅ Use modern ES6+ features
 
 ### Don'ts
+
 - ❌ Use `var` (use `let` or `const`)
 - ❌ Pollute global scope
 - ❌ Use `==` (use `===` for strict equality)
@@ -702,6 +726,7 @@ throw new ValidationError("Invalid input");
 ## Glossary Terms
 
 **Key Terms Covered**:
+
 - Algorithm
 - Argument
 - Array

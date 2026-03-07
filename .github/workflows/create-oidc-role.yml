@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       stack-name:
-        description: 'CloudFormation stack name (optional)'
+        description: "CloudFormation stack name (optional)"
         required: false
-        default: 'personal-budget-oidc-role'
+        default: "personal-budget-oidc-role"
       github-ref:
-        description: 'Git ref to allow (e.g. refs/heads/main)'
+        description: "Git ref to allow (e.g. refs/heads/main)"
         required: false
-        default: 'refs/heads/main'
+        default: "refs/heads/main"
 
 jobs:
   deploy-role:

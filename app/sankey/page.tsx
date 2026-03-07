@@ -1,34 +1,37 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
+import Typography from "@mui/material/Typography";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 
-import { SankeyForm } from '@/components/SankeyForm';
-import { SankeyResponse } from '@/lib/types';
+import { SankeyForm } from "@/components/SankeyForm";
+import { SankeyResponse } from "@/lib/types";
 
 const SankeyChart = dynamic(
-  () => import('@/components/SankeyChart').then((m) => m.SankeyChart),
-  { ssr: false, loading: () => <Skeleton variant="rectangular" height={420} /> },
+  () => import("@/components/SankeyChart").then((m) => m.SankeyChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton variant="rectangular" height={420} />,
+  },
 );
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Need: '#ef5350',
-  Want: '#42a5f5',
-  Saving: '#66bb6a',
+  Need: "#ef5350",
+  Want: "#42a5f5",
+  Saving: "#66bb6a",
 };
 
 export default function SankeyPage() {
@@ -40,8 +43,8 @@ export default function SankeyPage() {
         Budget Generator
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={4}>
-        Enter your monthly income and set how to allocate it across needs, wants,
-        and savings. The Sankey diagram visualises your money flow.
+        Enter your monthly income and set how to allocate it across needs,
+        wants, and savings. The Sankey diagram visualises your money flow.
       </Typography>
 
       <Grid container spacing={3}>
@@ -51,8 +54,8 @@ export default function SankeyPage() {
             <CardHeader
               title="Configure Budget"
               subheader="Uses the 50/30/20 rule as default"
-              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-              subheaderTypographyProps={{ variant: 'caption' }}
+              titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
+              subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
             <CardContent>
@@ -69,8 +72,8 @@ export default function SankeyPage() {
               <CardHeader
                 title="Budget Flow"
                 subheader="Income → category allocation"
-                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                subheaderTypographyProps={{ variant: 'caption' }}
+                titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
+                subheaderTypographyProps={{ variant: "caption" }}
               />
               <Divider />
               <CardContent>
@@ -85,7 +88,10 @@ export default function SankeyPage() {
               <Card>
                 <CardHeader
                   title="Monthly Budget Breakdown"
-                  titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                  titleTypographyProps={{
+                    variant: "subtitle1",
+                    fontWeight: 600,
+                  }}
                 />
                 <Divider />
                 <CardContent>
@@ -102,7 +108,7 @@ export default function SankeyPage() {
                                   sx={{
                                     color:
                                       CATEGORY_COLORS[category] ??
-                                      'text.primary',
+                                      "text.primary",
                                   }}
                                 >
                                   {category}
@@ -131,7 +137,7 @@ export default function SankeyPage() {
                             </TableRow>
                           ),
                         )}
-                        <TableRow sx={{ bgcolor: 'action.hover' }}>
+                        <TableRow sx={{ bgcolor: "action.hover" }}>
                           <TableCell>
                             <Typography variant="body2" fontWeight={700}>
                               Total

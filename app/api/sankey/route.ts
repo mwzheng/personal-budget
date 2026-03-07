@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const AllocationSchema = z.object({
-  category: z.enum(['Need', 'Want', 'Saving']),
+  category: z.enum(["Need", "Want", "Saving"]),
   percentage: z.number().min(0).max(100),
 });
 
 const SankeyBodySchema = z.object({
   monthlyIncome: z.number().positive(),
-  incomeLabel: z.string().min(1).default('Income'),
+  incomeLabel: z.string().min(1).default("Income"),
   allocations: z.array(AllocationSchema).min(1),
 });
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: { code: 'INVALID_INPUT', message: parsed.error.message } },
+        { error: { code: "INVALID_INPUT", message: parsed.error.message } },
         { status: 400 },
       );
     }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: {
-            code: 'INVALID_INPUT',
+            code: "INVALID_INPUT",
             message: `Allocations must sum to 100% (got ${totalPct.toFixed(1)}%)`,
           },
         },
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
       budgetSuggestion,
     });
   } catch (error) {
-    console.error('[/api/sankey]', error);
+    console.error("[/api/sankey]", error);
     return NextResponse.json(
       {
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to generate sankey' },
+        error: { code: "INTERNAL_ERROR", message: "Failed to generate sankey" },
       },
       { status: 500 },
     );

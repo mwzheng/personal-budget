@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Autocomplete from '@mui/material/Autocomplete';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ClearIcon from '@mui/icons-material/Clear';
-import { useState } from 'react';
-import { FilterParams } from '@/lib/types';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Autocomplete from "@mui/material/Autocomplete";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ClearIcon from "@mui/icons-material/Clear";
+import { useState } from "react";
+import { FilterParams } from "@/lib/types";
 
-const QUICK_YEARS = ['2021', '2022', '2023', '2024', '2025', '2026'];
+const QUICK_YEARS = ["2021", "2022", "2023", "2024", "2025", "2026"];
 
 interface Props {
   availableTags: string[];
@@ -24,7 +24,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [activeYear, setActiveYear] = useState<string | null>(null);
 
   function applyFilters(
@@ -34,8 +34,8 @@ export function FilterBar({ availableTags, onChange }: Props) {
     q: string,
   ) {
     onChange({
-      startDate: sd ? sd.toISOString().split('T')[0] : null,
-      endDate: ed ? ed.toISOString().split('T')[0] : null,
+      startDate: sd ? sd.toISOString().split("T")[0] : null,
+      endDate: ed ? ed.toISOString().split("T")[0] : null,
       tags,
       search: q,
     });
@@ -65,9 +65,9 @@ export function FilterBar({ availableTags, onChange }: Props) {
     setStartDate(null);
     setEndDate(null);
     setSelectedTags([]);
-    setSearch('');
+    setSearch("");
     setActiveYear(null);
-    onChange({ startDate: null, endDate: null, tags: [], search: '' });
+    onChange({ startDate: null, endDate: null, tags: [], search: "" });
   }
 
   return (
@@ -84,7 +84,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
             label={y}
             size="small"
             clickable
-            color={activeYear === y ? 'primary' : 'default'}
+            color={activeYear === y ? "primary" : "default"}
             onClick={() => handleYearClick(y)}
           />
         ))}
@@ -98,7 +98,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
             setStartDate(val);
             setActiveYear(null);
           }}
-          slotProps={{ textField: { size: 'small', sx: { width: 170 } } }}
+          slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
         />
         <DatePicker
           label="End Date"
@@ -107,7 +107,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
             setEndDate(val);
             setActiveYear(null);
           }}
-          slotProps={{ textField: { size: 'small', sx: { width: 170 } } }}
+          slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
         />
         <Autocomplete
           multiple
@@ -124,7 +124,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
           size="small"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+          onKeyDown={(e) => e.key === "Enter" && handleApply()}
           sx={{ width: 180 }}
         />
         <Button variant="contained" size="small" onClick={handleApply}>

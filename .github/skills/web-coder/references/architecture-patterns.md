@@ -9,17 +9,20 @@ Web application architectures, design patterns, and architectural concepts.
 Web app that loads single HTML page and dynamically updates content.
 
 **Characteristics**:
+
 - Client-side routing
 - Heavy JavaScript usage
 - Fast navigation after initial load
 - Complex state management
 
 **Pros**:
+
 - Smooth user experience
 - Reduced server load
 - Mobile app-like feel
 
 **Cons**:
+
 - Larger initial download
 - SEO challenges (mitigated with SSR)
 - Complex state management
@@ -28,7 +31,7 @@ Web app that loads single HTML page and dynamically updates content.
 
 ```javascript
 // React Router example
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
@@ -48,16 +51,19 @@ function App() {
 Traditional web app with multiple HTML pages.
 
 **Characteristics**:
+
 - Server renders each page
 - Full page reload on navigation
 - Simpler architecture
 
 **Pros**:
+
 - Better SEO out of the box
 - Simpler to build
 - Good for content-heavy sites
 
 **Cons**:
+
 - Slower navigation
 - More server requests
 
@@ -66,6 +72,7 @@ Traditional web app with multiple HTML pages.
 Web app with native app capabilities.
 
 **Features**:
+
 - Installable
 - Offline support (Service Workers)
 - Push notifications
@@ -73,14 +80,16 @@ Web app with native app capabilities.
 
 ```javascript
 // Service Worker registration
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('SW registered', reg))
-    .catch(err => console.error('SW error', err));
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/sw.js")
+    .then((reg) => console.log("SW registered", reg))
+    .catch((err) => console.error("SW error", err));
 }
 ```
 
 **manifest.json**:
+
 ```json
 {
   "name": "My PWA",
@@ -104,11 +113,13 @@ if ('serviceWorker' in navigator) {
 Render pages on server, send HTML to client.
 
 **Pros**:
+
 - Better SEO
 - Faster first contentful paint
 - Works without JavaScript
 
 **Cons**:
+
 - Higher server load
 - More complex setup
 
@@ -131,6 +142,7 @@ function Page({ data }) {
 Pre-render pages at build time.
 
 **Pros**:
+
 - Extremely fast
 - Low server cost
 - Great SEO
@@ -162,7 +174,7 @@ export async function getStaticProps() {
   const data = await fetchData();
   return {
     props: { data },
-    revalidate: 60 // Revalidate every 60 seconds
+    revalidate: 60, // Revalidate every 60 seconds
   };
 }
 ```
@@ -172,12 +184,14 @@ export async function getStaticProps() {
 JavaScript, APIs, Markup architecture.
 
 **Principles**:
+
 - Pre-rendered static files
 - APIs for dynamic functionality
 - Git-based workflows
 - CDN deployment
 
 **Benefits**:
+
 - Fast performance
 - High security
 - Scalability
@@ -193,7 +207,7 @@ JavaScript renders content in browser.
 <div id="root"></div>
 <script>
   // React renders app here
-  ReactDOM.render(<App />, document.getElementById('root'));
+  ReactDOM.render(<App />, document.getElementById("root"));
 </script>
 ```
 
@@ -203,7 +217,7 @@ Attach JavaScript to server-rendered HTML.
 
 ```javascript
 // React hydration
-ReactDOM.hydrate(<App />, document.getElementById('root'));
+ReactDOM.hydrate(<App />, document.getElementById("root"));
 ```
 
 ### Partial Hydration
@@ -255,7 +269,7 @@ function Button({ onClick, children }) {
 }
 
 // Usage
-<Button onClick={handleClick}>Click me</Button>
+<Button onClick={handleClick}>Click me</Button>;
 ```
 
 ### Micro Frontends
@@ -263,6 +277,7 @@ function Button({ onClick, children }) {
 Split frontend into smaller, independent apps.
 
 **Approaches**:
+
 - Build-time integration
 - Run-time integration (iframes, Web Components)
 - Edge-side includes
@@ -286,6 +301,7 @@ function Counter() {
 Application-wide state.
 
 **Solutions**:
+
 - **Redux**: Predictable state container
 - **MobX**: Observable state
 - **Zustand**: Minimal state management
@@ -293,18 +309,20 @@ Application-wide state.
 
 ```javascript
 // Redux example
-import { createSlice, configureStore } from '@reduxjs/toolkit';
+import { createSlice, configureStore } from "@reduxjs/toolkit";
 
 const counterSlice = createSlice({
-  name: 'counter',
+  name: "counter",
   initialState: { value: 0 },
   reducers: {
-    increment: state => { state.value += 1; }
-  }
+    increment: (state) => {
+      state.value += 1;
+    },
+  },
 });
 
 const store = configureStore({
-  reducer: { counter: counterSlice.reducer }
+  reducer: { counter: counterSlice.reducer },
 });
 ```
 
@@ -314,7 +332,7 @@ Share state without prop drilling.
 
 ```javascript
 // React Context
-const ThemeContext = React.createContext('light');
+const ThemeContext = React.createContext("light");
 
 function App() {
   return (
@@ -338,11 +356,11 @@ Resource-based API design.
 
 ```javascript
 // RESTful API
-GET    /api/users      // List users
-GET    /api/users/1    // Get user
-POST   /api/users      // Create user
-PUT    /api/users/1    // Update user
-DELETE /api/users/1    // Delete user
+GET / api / users; // List users
+GET / api / users / 1; // Get user
+POST / api / users; // Create user
+PUT / api / users / 1; // Update user
+DELETE / api / users / 1; // Delete user
 ```
 
 ### GraphQL
@@ -372,7 +390,7 @@ mutation {
 
 ```javascript
 // Apollo Client
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, gql } from "@apollo/client";
 
 const GET_USER = gql`
   query GetUser($id: ID!) {
@@ -385,9 +403,9 @@ const GET_USER = gql`
 
 function User({ id }) {
   const { loading, error, data } = useQuery(GET_USER, {
-    variables: { id }
+    variables: { id },
   });
-  
+
   if (loading) return <p>Loading...</p>;
   return <p>{data.user.name}</p>;
 }
@@ -400,15 +418,13 @@ End-to-end typesafe APIs.
 ```typescript
 // Server
 const appRouter = router({
-  getUser: publicProcedure
-    .input(z.string())
-    .query(async ({ input }) => {
-      return await db.user.findUnique({ where: { id: input } });
-    })
+  getUser: publicProcedure.input(z.string()).query(async ({ input }) => {
+    return await db.user.findUnique({ where: { id: input } });
+  }),
 });
 
 // Client (fully typed!)
-const user = await trpc.getUser.query('1');
+const user = await trpc.getUser.query("1");
 ```
 
 ## Microservices Architecture
@@ -416,17 +432,20 @@ const user = await trpc.getUser.query('1');
 Split application into small, independent services.
 
 **Characteristics**:
+
 - Independent deployment
 - Service-specific databases
 - API communication
 - Decentralized governance
 
 **Benefits**:
+
 - Scalability
 - Technology flexibility
 - Fault isolation
 
 **Challenges**:
+
 - Complexity
 - Network latency
 - Data consistency
@@ -436,11 +455,13 @@ Split application into small, independent services.
 Single, unified application.
 
 **Pros**:
+
 - Simpler development
 - Easier debugging
 - Single deployment
 
 **Cons**:
+
 - Scaling challenges
 - Technology lock-in
 - Tight coupling
@@ -454,16 +475,18 @@ Run code without managing servers.
 ```javascript
 // Vercel serverless function
 export default function handler(req, res) {
-  res.status(200).json({ message: 'Hello from serverless!' });
+  res.status(200).json({ message: "Hello from serverless!" });
 }
 ```
 
 **Benefits**:
+
 - Auto-scaling
 - Pay per use
 - No server management
 
 **Use Cases**:
+
 - APIs
 - Background jobs
 - Webhooks
@@ -474,6 +497,7 @@ export default function handler(req, res) {
 ### Separation of Concerns
 
 Keep different aspects separate:
+
 - Presentation layer
 - Business logic layer
 - Data access layer
@@ -498,7 +522,7 @@ Prefer composing objects over class hierarchies.
 // Composition
 function withLogging(Component) {
   return function LoggedComponent(props) {
-    console.log('Rendering', Component.name);
+    console.log("Rendering", Component.name);
     return <Component {...props} />;
   };
 }
@@ -514,14 +538,14 @@ Modern JavaScript modules.
 
 ```javascript
 // export
-export const name = 'John';
+export const name = "John";
 export function greet() {}
 export default App;
 
 // import
-import App from './App.js';
-import { name, greet } from './utils.js';
-import * as utils from './utils.js';
+import App from "./App.js";
+import { name, greet } from "./utils.js";
+import * as utils from "./utils.js";
 ```
 
 ### CommonJS
@@ -530,11 +554,11 @@ Node.js module system.
 
 ```javascript
 // export
-module.exports = { name: 'John' };
-exports.greet = function() {};
+module.exports = { name: "John" };
+exports.greet = function () {};
 
 // import
-const { name } = require('./utils');
+const { name } = require("./utils");
 ```
 
 ## Build Optimization
@@ -545,7 +569,7 @@ Split code into smaller chunks.
 
 ```javascript
 // React lazy loading
-const OtherComponent = React.lazy(() => import('./OtherComponent'));
+const OtherComponent = React.lazy(() => import("./OtherComponent"));
 
 function App() {
   return (
@@ -562,7 +586,7 @@ Remove unused code.
 
 ```javascript
 // Only imports 'map', not entire lodash
-import { map } from 'lodash-es';
+import { map } from "lodash-es";
 ```
 
 ### Bundle Splitting
@@ -574,6 +598,7 @@ import { map } from 'lodash-es';
 ## Glossary Terms
 
 **Key Terms Covered**:
+
 - Abstraction
 - API
 - Application

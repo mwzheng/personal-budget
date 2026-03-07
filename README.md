@@ -47,5 +47,3 @@ A personal budgeting application built with TypeScript, Next.js, and serverless 
 ## Contributing
 
 This is a personal project; contributions and suggestions are welcome. For development, update `plan.md` and consult `plan.completed.md` for recent progress.
-
- 

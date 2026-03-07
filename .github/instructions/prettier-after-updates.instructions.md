@@ -1,6 +1,6 @@
 ---
-description: 'Ensure Prettier is applied automatically to files modified by the agent.'
-applyTo: '**/*.{ts,tsx,js,jsx,md,json,css,scss,html}'
+description: "Ensure Prettier is applied automatically to files modified by the agent."
+applyTo: "**/*.{ts,tsx,js,jsx,md,json,css,scss,html}"
 ---
 
 # Apply Prettier After Updates

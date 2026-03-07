@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 const COLORS: Record<string, string> = {
-  Need: '#ef5350',
-  Want: '#42a5f5',
-  Saving: '#66bb6a',
+  Need: "#ef5350",
+  Want: "#42a5f5",
+  Saving: "#66bb6a",
 };
 
 interface Props {
@@ -14,15 +21,15 @@ interface Props {
 
 export function SpendingPieChart({ data }: Props) {
   const chartData = [
-    { name: 'Need', value: data.Need },
-    { name: 'Want', value: data.Want },
-    { name: 'Saving', value: data.Saving },
+    { name: "Need", value: data.Need },
+    { name: "Want", value: data.Want },
+    { name: "Saving", value: data.Saving },
   ].filter((d) => d.value > 0);
 
   if (chartData.length === 0) {
     return (
       <div
-        style={{ textAlign: 'center', padding: 40, color: '#666', height: 280 }}
+        style={{ textAlign: "center", padding: 40, color: "#666", height: 280 }}
       >
         No data for selected filters
       </div>
@@ -52,10 +59,10 @@ export function SpendingPieChart({ data }: Props) {
         </Pie>
         <Tooltip
           formatter={(value: number) => [
-            `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            '',
+            `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            "",
           ]}
-          contentStyle={{ background: '#242424', border: '1px solid #444' }}
+          contentStyle={{ background: "#242424", border: "1px solid #444" }}
         />
         <Legend />
       </PieChart>

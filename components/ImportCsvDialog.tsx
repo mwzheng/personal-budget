@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import { useRef, useState } from 'react';
-import type { Transaction } from '@/lib/types';
-import { appendTransactions } from '@/lib/storage';
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Typography from "@mui/material/Typography";
+import { useRef, useState } from "react";
+import type { Transaction } from "@/lib/types";
+import { appendTransactions } from "@/lib/storage";
 
 type ImportState =
-  | { stage: 'idle' }
-  | { stage: 'parsing' }
-  | { stage: 'preview'; all: Transaction[]; sample: Transaction[] }
-  | { stage: 'error'; message: string };
+  | { stage: "idle" }
+  | { stage: "parsing" }
+  | { stage: "preview"; all: Transaction[]; sample: Transaction[] }
+  | { stage: "error"; message: string };
 
 interface Props {
   open: boolean;
@@ -32,12 +32,12 @@ interface Props {
 }
 
 export function ImportCsvDialog({ open, onClose, onImported }: Props) {
-  const [state, setState] = useState<ImportState>({ stage: 'idle' });
+  const [state, setState] = useState<ImportState>({ stage: "idle" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function reset() {
-    setState({ stage: 'idle' });
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setState({ stage: "idle" });
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleClose() {
@@ -49,20 +49,21 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setState({ stage: 'parsing' });
+    setState({ stage: "parsing" });
 
     try {
       const text = await file.text();
-      const res = await fetch('/api/reports/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/reports/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv: text }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(
-          (err as { error?: { message?: string } }).error?.message ?? `Parse failed (${res.status})`
+          (err as { error?: { message?: string } }).error?.message ??
+            `Parse failed (${res.status})`,
         );
       }
 
@@ -73,58 +74,61 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
       };
 
       setState({
-        stage: 'preview',
+        stage: "preview",
         all: data.transactions,
         sample: data.sample,
       });
     } catch (err) {
       setState({
-        stage: 'error',
-        message: err instanceof Error ? err.message : 'Unknown error during import',
+        stage: "error",
+        message:
+          err instanceof Error ? err.message : "Unknown error during import",
       });
     }
   }
 
   function handleConfirm() {
-    if (state.stage !== 'preview') return;
+    if (state.stage !== "preview") return;
     const { appended, skipped } = appendTransactions(state.all);
     onImported();
     handleClose();
     // Slight delay so the parent re-renders with fresh data before dialog fully unmounts
-    void appended; void skipped;
+    void appended;
+    void skipped;
   }
 
-  const isParsing = state.stage === 'parsing';
-  const isPreview = state.stage === 'preview';
-  const isError = state.stage === 'error';
+  const isParsing = state.stage === "parsing";
+  const isPreview = state.stage === "preview";
+  const isError = state.stage === "error";
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Import CSV</DialogTitle>
       <DialogContent>
-        {state.stage === 'idle' && (
+        {state.stage === "idle" && (
           <Box>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Select a CSV file to import. The file must match the sample{' '}
+              Select a CSV file to import. The file must match the sample{" "}
               <code>expenses.csv</code> format:
             </Typography>
             <Typography
               component="pre"
               variant="caption"
               sx={{
-                display: 'block',
-                bgcolor: 'action.hover',
+                display: "block",
+                bgcolor: "action.hover",
                 borderRadius: 1,
                 p: 1.5,
                 mb: 2,
-                overflow: 'auto',
+                overflow: "auto",
               }}
             >
               Name,Amount,Category,Date,Notes,Payment Method,Tags
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Imported rows are <strong>appended</strong> to your existing data. Duplicate
-              rows (same date, name, and amount) are automatically skipped.
+              Imported rows are <strong>appended</strong> to your existing data.
+              Duplicate rows (same date, name, and amount) are automatically
+              skipped.
             </Typography>
           </Box>
         )}
@@ -146,7 +150,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           <Box>
             <Alert severity="info" sx={{ mb: 2 }}>
               <strong>{state.all.length}</strong> transaction
-              {state.all.length !== 1 ? 's' : ''} ready to import. Click{' '}
+              {state.all.length !== 1 ? "s" : ""} ready to import. Click{" "}
               <strong>Confirm Import</strong> to append them to your data.
             </Alert>
 
@@ -155,7 +159,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                 <Typography variant="subtitle2" gutterBottom>
                   Preview (first 5 rows):
                 </Typography>
-                <Box sx={{ overflowX: 'auto' }}>
+                <Box sx={{ overflowX: "auto" }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -190,7 +194,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           Cancel
         </Button>
 
-        {(state.stage === 'idle' || isError) && (
+        {(state.stage === "idle" || isError) && (
           <Button variant="contained" component="label" disabled={isParsing}>
             Choose CSV File
             <input
@@ -212,4 +216,3 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
     </Dialog>
   );
 }
-

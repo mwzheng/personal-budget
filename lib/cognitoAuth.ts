@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export interface CognitoVerifyOptions {
   region?: string;
@@ -25,14 +25,18 @@ function getJwks(region: string, userPoolId: string) {
  * Verifies a Cognito JWT (ID or access token) using the JWKS endpoint and returns the token payload.
  * Throws on verification failure.
  */
-export async function verifyCognitoJwt(token: string, opts: CognitoVerifyOptions) {
-  const { region = 'us-east-1', userPoolId, audience } = opts;
+export async function verifyCognitoJwt(
+  token: string,
+  opts: CognitoVerifyOptions,
+) {
+  const { region = "us-east-1", userPoolId, audience } = opts;
   const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
   const jwks = getJwks(region, userPoolId);
 
   // audience is optional; if provided, it's validated
   const verifyOptions: Record<string, unknown> = { issuer };
-  if (audience) (verifyOptions as Record<string, unknown>)['audience'] = audience;
+  if (audience)
+    (verifyOptions as Record<string, unknown>)["audience"] = audience;
 
   const { payload } = await jwtVerify(token, jwks, verifyOptions);
   return payload as Record<string, unknown>;
@@ -42,26 +46,47 @@ export async function verifyCognitoJwt(token: string, opts: CognitoVerifyOptions
  * Convenience helper for Next.js/Route Handler usage.
  * Returns the Cognito subject (sub) as userId or throws a 401 Response.
  */
-export async function requireAuth(req: Request, opts: CognitoVerifyOptions): Promise<string> {
-  const auth = req.headers.get('authorization') || '';
-  if (!auth.startsWith('Bearer ')) {
-    throw new Response(JSON.stringify({ error: { code: 'unauthorized', message: 'Missing Authorization header' } }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+export async function requireAuth(
+  req: Request,
+  opts: CognitoVerifyOptions,
+): Promise<string> {
+  const auth = req.headers.get("authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    throw new Response(
+      JSON.stringify({
+        error: {
+          code: "unauthorized",
+          message: "Missing Authorization header",
+        },
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
   const token = auth.slice(7).trim();
   try {
-    const payload = await verifyCognitoJwt(token, opts) as Record<string, unknown>;
-    const userId = (payload as Record<string, unknown>)['sub'] as string | undefined;
-    if (!userId) throw new Error('Token missing sub claim');
+    const payload = (await verifyCognitoJwt(token, opts)) as Record<
+      string,
+      unknown
+    >;
+    const userId = (payload as Record<string, unknown>)["sub"] as
+      | string
+      | undefined;
+    if (!userId) throw new Error("Token missing sub claim");
     return userId;
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('Cognito token verification failed', err);
-    throw new Response(JSON.stringify({ error: { code: 'unauthorized', message: 'Invalid token' } }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error("Cognito token verification failed", err);
+    throw new Response(
+      JSON.stringify({
+        error: { code: "unauthorized", message: "Invalid token" },
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 }

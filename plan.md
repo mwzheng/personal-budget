@@ -122,6 +122,7 @@ Immediate next steps for the repository (developer tasks):
 ### Goal
 
 Replace the static sample-CSV data source with a user-owned, locally-persisted dataset. Users should be able to:
+
 - **Manually add, edit, and delete** individual transactions via a form dialog.
 - **Import** their own CSV (matching the sample `expenses.csv` format) — appending rows to existing data.
 - **Export** their current filtered dataset as a CSV download.
@@ -129,31 +130,31 @@ Replace the static sample-CSV data source with a user-owned, locally-persisted d
 
 ### Architecture Overview
 
-| Layer | Current | After |
-|---|---|---|
-| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | localStorage (client-side) |
-| CSV import | API parses CSV but no UI | UI dialog → API parse → append to localStorage |
-| CSV export | API exports CSV but no UI | Client-side CSV generation + download |
-| CRUD | None | Add/Edit/Delete via MUI Dialog form |
+| Layer       | Current                                             | After                                          |
+| ----------- | --------------------------------------------------- | ---------------------------------------------- |
+| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | localStorage (client-side)                     |
+| CSV import  | API parses CSV but no UI                            | UI dialog → API parse → append to localStorage |
+| CSV export  | API exports CSV but no UI                           | Client-side CSV generation + download          |
+| CRUD        | None                                                | Add/Edit/Delete via MUI Dialog form            |
 
 The existing `/api/reports/import` route (CSV parsing via PapaParse) is reused as the server-side parser for imports. Data is stored and managed entirely in `localStorage` under the key `personal-budget-transactions`.
 
 ### Files to Create
 
-| File | Purpose |
-|---|---|
-| `lib/storage.ts` | localStorage CRUD utilities: `getTransactions`, `setTransactions`, `addTransaction`, `updateTransaction`, `deleteTransaction`, `appendTransactions`, `clearTransactions` |
-| `lib/csvExport.ts` | Client-side CSV generation matching the `expenses.csv` format |
-| `components/TransactionForm.tsx` | MUI Dialog form for add/edit with Zod validation (fields: date, name, amount, category, payment method, tags, notes) |
-| `components/ImportCsvDialog.tsx` | Import flow: file picker → parse via API → preview summary → confirm append |
+| File                             | Purpose                                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lib/storage.ts`                 | localStorage CRUD utilities: `getTransactions`, `setTransactions`, `addTransaction`, `updateTransaction`, `deleteTransaction`, `appendTransactions`, `clearTransactions` |
+| `lib/csvExport.ts`               | Client-side CSV generation matching the `expenses.csv` format                                                                                                            |
+| `components/TransactionForm.tsx` | MUI Dialog form for add/edit with Zod validation (fields: date, name, amount, category, payment method, tags, notes)                                                     |
+| `components/ImportCsvDialog.tsx` | Import flow: file picker → parse via API → preview summary → confirm append                                                                                              |
 
 ### Files to Update
 
-| File | Changes |
-|---|---|
-| `app/reports/page.tsx` | Load data from `lib/storage` instead of `/api/reports`; wire up CRUD, import, export; add empty-state UI |
-| `components/TransactionsTable.tsx` | Add Edit and Delete action buttons per row |
-| `app/api/reports/route.ts` | No longer used for primary data fetch; keep for reference or repurpose for sample-data seeding |
+| File                               | Changes                                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `app/reports/page.tsx`             | Load data from `lib/storage` instead of `/api/reports`; wire up CRUD, import, export; add empty-state UI |
+| `components/TransactionsTable.tsx` | Add Edit and Delete action buttons per row                                                               |
+| `app/api/reports/route.ts`         | No longer used for primary data fetch; keep for reference or repurpose for sample-data seeding           |
 
 ### Key Design Decisions
 
@@ -174,7 +175,6 @@ The existing `/api/reports/import` route (CSV parsing via PapaParse) is reused a
 6. **`app/reports/page.tsx`** — wire everything together (localStorage, CRUD, import/export, empty state)
 
 ---
-
 
 ## 📌 Ongoing / future enhancements
 
@@ -300,4 +300,3 @@ interface SankeyResponse {
 ## Data retention policy (default)
 
 Default policy: Indefinite (no automatic deletion). Users may request data export or deletion via account settings or support; implement manual or on-request deletion workflows and document steps in the privacy policy.
-

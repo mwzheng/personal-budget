@@ -7,6 +7,7 @@ Comprehensive reference for web security, authentication, encryption, and secure
 ### CIA Triad
 
 Core principles of information security:
+
 - **Confidentiality**: Data accessible only to authorized parties
 - **Integrity**: Data remains accurate and unmodified
 - **Availability**: Systems and data accessible when needed
@@ -41,6 +42,7 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 Mitigates XSS and data injection attacks.
 
 **Directives**:
+
 - `default-src`: Fallback for other directives
 - `script-src`: JavaScript sources
 - `style-src`: CSS sources
@@ -51,6 +53,7 @@ Mitigates XSS and data injection attacks.
 - `object-src`: Plugin sources
 
 **Values**:
+
 - `'self'`: Same origin
 - `'none'`: Block all
 - `'unsafe-inline'`: Allow inline scripts/styles (avoid)
@@ -65,6 +68,7 @@ Mitigates XSS and data injection attacks.
 Encrypts data in transit between client and server.
 
 **TLS Handshake**:
+
 1. Client Hello (supported versions, cipher suites)
 2. Server Hello (chosen version, cipher suite)
 3. Server Certificate
@@ -72,6 +76,7 @@ Encrypts data in transit between client and server.
 5. Finished (connection established)
 
 **Versions**:
+
 - TLS 1.0, 1.1 (deprecated)
 - TLS 1.2 (current standard)
 - TLS 1.3 (latest, faster)
@@ -79,6 +84,7 @@ Encrypts data in transit between client and server.
 ### SSL Certificates
 
 **Types**:
+
 - **Domain Validated (DV)**: Basic validation
 - **Organization Validated (OV)**: Business verification
 - **Extended Validation (EV)**: Rigorous verification
@@ -112,26 +118,26 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 ```javascript
 // Login
-app.post('/login', (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  
+
   // Verify credentials
   if (verifyCredentials(username, password)) {
     req.session.userId = user.id;
     res.json({ success: true });
   } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401).json({ error: "Invalid credentials" });
   }
 });
 
 // Protected route
-app.get('/profile', requireAuth, (req, res) => {
+app.get("/profile", requireAuth, (req, res) => {
   const user = getUserById(req.session.userId);
   res.json(user);
 });
 
 // Logout
-app.post('/logout', (req, res) => {
+app.post("/logout", (req, res) => {
   req.session.destroy();
   res.json({ success: true });
 });
@@ -144,31 +150,29 @@ app.post('/logout', (req, res) => {
 
 ```javascript
 // Login
-app.post('/login', (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  
+
   if (verifyCredentials(username, password)) {
-    const token = jwt.sign(
-      { userId: user.id, role: user.role },
-      SECRET_KEY,
-      { expiresIn: '1h' }
-    );
+    const token = jwt.sign({ userId: user.id, role: user.role }, SECRET_KEY, {
+      expiresIn: "1h",
+    });
     res.json({ token });
   } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401).json({ error: "Invalid credentials" });
   }
 });
 
 // Protected route
-app.get('/profile', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  
+app.get("/profile", (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
     const user = getUserById(decoded.userId);
     res.json(user);
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: "Invalid token" });
   }
 });
 ```
@@ -181,12 +185,14 @@ app.get('/profile', (req, res) => {
 Authorization framework for delegated access.
 
 **Roles**:
+
 - **Resource Owner**: End user
 - **Client**: Application requesting access
 - **Authorization Server**: Issues tokens
 - **Resource Server**: Hosts protected resources
 
 **Flow Example** (Authorization Code):
+
 1. Client redirects to auth server
 2. User authenticates and grants permission
 3. Auth server redirects back with code
@@ -196,6 +202,7 @@ Authorization framework for delegated access.
 #### 4. Multi-Factor Authentication (MFA)
 
 Requires multiple verification factors:
+
 - **Something you know**: Password
 - **Something you have**: Phone, hardware token
 - **Something you are**: Biometric
@@ -203,7 +210,7 @@ Requires multiple verification factors:
 ### Password Security
 
 ```javascript
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 // Hash password
 async function hashPassword(password) {
@@ -218,6 +225,7 @@ async function verifyPassword(password, hash) {
 ```
 
 **Best Practices**:
+
 - ✅ Use bcrypt, scrypt, or Argon2
 - ✅ Minimum 8 characters (12+ recommended)
 - ✅ Require mix of characters
@@ -234,11 +242,13 @@ async function verifyPassword(password, hash) {
 Injecting malicious scripts into web pages.
 
 **Types**:
+
 1. **Stored XSS**: Malicious script stored in database
 2. **Reflected XSS**: Script in URL reflected in response
 3. **DOM-based XSS**: Client-side script manipulation
 
 **Prevention**:
+
 ```javascript
 // ❌ Vulnerable
 element.innerHTML = userInput;
@@ -250,18 +260,18 @@ element.textContent = userInput;
 function escapeHTML(str) {
   return str.replace(/[&<>"']/g, (match) => {
     const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
     };
     return map[match];
   });
 }
 
 // ✅ Use DOMPurify for rich content
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 element.innerHTML = DOMPurify.sanitize(userInput);
 ```
 
@@ -270,6 +280,7 @@ element.innerHTML = DOMPurify.sanitize(userInput);
 Tricks user into executing unwanted actions.
 
 **Prevention**:
+
 ```javascript
 // CSRF token
 app.get('/form', (req, res) => {
@@ -294,12 +305,13 @@ Set-Cookie: sessionId=abc; SameSite=Strict; Secure; HttpOnly
 Injecting malicious SQL code.
 
 **Prevention**:
+
 ```javascript
 // ❌ Vulnerable
 const query = `SELECT * FROM users WHERE username = '${username}'`;
 
 // ✅ Parameterized queries
-const query = 'SELECT * FROM users WHERE username = ?';
+const query = "SELECT * FROM users WHERE username = ?";
 db.execute(query, [username]);
 
 // ✅ ORM/Query builder
@@ -326,6 +338,7 @@ if (allowedOrigins.includes(origin)) {
 Tricking users into clicking hidden elements.
 
 **Prevention**:
+
 ```http
 X-Frame-Options: DENY
 X-Frame-Options: SAMEORIGIN
@@ -339,25 +352,26 @@ Content-Security-Policy: frame-ancestors 'self'
 
 ```javascript
 // Validate file type
-const allowedTypes = ['image/jpeg', 'image/png'];
+const allowedTypes = ["image/jpeg", "image/png"];
 if (!allowedTypes.includes(file.mimetype)) {
-  return res.status(400).json({ error: 'Invalid file type' });
+  return res.status(400).json({ error: "Invalid file type" });
 }
 
 // Check file size
 const maxSize = 5 * 1024 * 1024; // 5MB
 if (file.size > maxSize) {
-  return res.status(400).json({ error: 'File too large' });
+  return res.status(400).json({ error: "File too large" });
 }
 
 // Sanitize filename
-const sanitizedName = file.name.replace(/[^a-z0-9.-]/gi, '_');
+const sanitizedName = file.name.replace(/[^a-z0-9.-]/gi, "_");
 
 // Store outside web root
-const uploadPath = '/secure/uploads/' + sanitizedName;
+const uploadPath = "/secure/uploads/" + sanitizedName;
 
 // Use random filenames
-const filename = crypto.randomBytes(16).toString('hex') + path.extname(file.name);
+const filename =
+  crypto.randomBytes(16).toString("hex") + path.extname(file.name);
 ```
 
 ## Cryptography
@@ -372,23 +386,23 @@ const filename = crypto.randomBytes(16).toString('hex') + path.extname(file.name
 Same key for encryption and decryption.
 
 ```javascript
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 function encrypt(text, key) {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
 }
 
 function decrypt(text, key) {
-  const parts = text.split(':');
-  const iv = Buffer.from(parts[0], 'hex');
+  const parts = text.split(":");
+  const iv = Buffer.from(parts[0], "hex");
   const encrypted = parts[1];
-  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
   return decrypted;
 }
 ```
@@ -398,6 +412,7 @@ function decrypt(text, key) {
 Different keys for encryption (public) and decryption (private).
 
 **Use Cases**:
+
 - TLS/SSL certificates
 - Digital signatures
 - SSH keys
@@ -405,13 +420,13 @@ Different keys for encryption (public) and decryption (private).
 ### Hash Functions
 
 ```javascript
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // SHA-256
-const hash = crypto.createHash('sha256').update(data).digest('hex');
+const hash = crypto.createHash("sha256").update(data).digest("hex");
 
 // HMAC (keyed hash)
-const hmac = crypto.createHmac('sha256', secretKey).update(data).digest('hex');
+const hmac = crypto.createHmac("sha256", secretKey).update(data).digest("hex");
 ```
 
 ### Digital Signatures
@@ -419,19 +434,19 @@ const hmac = crypto.createHmac('sha256', secretKey).update(data).digest('hex');
 Verify authenticity and integrity.
 
 ```javascript
-const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-  modulusLength: 2048
+const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+  modulusLength: 2048,
 });
 
 // Sign
-const sign = crypto.createSign('SHA256');
+const sign = crypto.createSign("SHA256");
 sign.update(data);
-const signature = sign.sign(privateKey, 'hex');
+const signature = sign.sign(privateKey, "hex");
 
 // Verify
-const verify = crypto.createVerify('SHA256');
+const verify = crypto.createVerify("SHA256");
 verify.update(data);
-const isValid = verify.verify(publicKey, signature, 'hex');
+const isValid = verify.verify(publicKey, signature, "hex");
 ```
 
 ## Secure Coding Practices
@@ -448,7 +463,7 @@ function isValidEmail(email) {
 // Validate and sanitize
 function sanitizeInput(input) {
   // Remove dangerous characters
-  return input.replace(/[<>\"']/g, '');
+  return input.replace(/[<>\"']/g, "");
 }
 
 // Whitelist approach
@@ -460,6 +475,7 @@ function isValidUsername(username) {
 ### Output Encoding
 
 Encode data based on context:
+
 - **HTML context**: Escape `< > & " '`
 - **JavaScript context**: Use JSON.stringify()
 - **URL context**: Use encodeURIComponent()
@@ -469,42 +485,42 @@ Encode data based on context:
 
 ```javascript
 // ❌ Don't store sensitive data in localStorage
-localStorage.setItem('token', token); // XSS can access
+localStorage.setItem("token", token); // XSS can access
 
 // ✅ Use HttpOnly cookies
-res.cookie('token', token, {
+res.cookie("token", token, {
   httpOnly: true,
   secure: true,
-  sameSite: 'strict',
-  maxAge: 3600000
+  sameSite: "strict",
+  maxAge: 3600000,
 });
 
 // ✅ For sensitive client-side data, encrypt first
 const encrypted = encrypt(sensitiveData, encryptionKey);
-sessionStorage.setItem('data', encrypted);
+sessionStorage.setItem("data", encrypted);
 ```
 
 ### Rate Limiting
 
 ```javascript
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests, please try again later'
+  message: "Too many requests, please try again later",
 });
 
-app.use('/api/', limiter);
+app.use("/api/", limiter);
 
 // Stricter for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
 });
 
-app.use('/api/login', authLimiter);
+app.use("/api/login", authLimiter);
 ```
 
 ### Error Handling
@@ -525,6 +541,7 @@ catch (error) {
 ## Security Testing
 
 ### Tools
+
 - **OWASP ZAP**: Security scanner
 - **Burp Suite**: Web vulnerability scanner
 - **nmap**: Network scanner
@@ -532,6 +549,7 @@ catch (error) {
 - **Nikto**: Web server scanner
 
 ### Checklist
+
 - [ ] HTTPS enforced everywhere
 - [ ] Security headers configured
 - [ ] Authentication implemented securely
@@ -552,6 +570,7 @@ catch (error) {
 ## Glossary Terms
 
 **Key Terms Covered**:
+
 - Authentication
 - Authenticator
 - Certificate authority

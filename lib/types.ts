@@ -1,4 +1,4 @@
-export type CategoryType = 'Want' | 'Need' | 'Saving';
+export type CategoryType = "Want" | "Need" | "Saving";
 
 export interface Transaction {
   id: string;

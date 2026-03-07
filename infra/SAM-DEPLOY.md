@@ -4,11 +4,11 @@ This document covers everything needed to provision (or redeploy) the AWS infras
 
 ## What gets deployed
 
-| Resource | CloudFormation logical ID | Default name (dev) |
-|---|---|---|
-| DynamoDB table | `TransactionsTable` | `personal-budget-infra-dev-transactions` |
-| Cognito User Pool | `CognitoUserPool` | `personal-budget-infra-dev-userpool` |
-| Cognito App Client | `CognitoUserPoolClient` | `personal-budget-infra-dev-client` |
+| Resource           | CloudFormation logical ID | Default name (dev)                       |
+| ------------------ | ------------------------- | ---------------------------------------- |
+| DynamoDB table     | `TransactionsTable`       | `personal-budget-infra-dev-transactions` |
+| Cognito User Pool  | `CognitoUserPool`         | `personal-budget-infra-dev-userpool`     |
+| Cognito App Client | `CognitoUserPoolClient`   | `personal-budget-infra-dev-client`       |
 
 Stack outputs (`UserPoolId`, `UserPoolClientId`, `TransactionsTableName`) are printed after every deploy and can be viewed at any time with:
 
@@ -104,6 +104,7 @@ infra/deploy-sam.sh personal-budget-resources personal-budget-infra prod us-east
 ```
 
 The script will:
+
 1. Validate that `aws` and `sam` CLIs are installed.
 2. Validate that AWS credentials are active.
 3. Auto-create an S3 artifact bucket named `<service>-<stage>-sam-artifacts-<account-id>-<region>` if it does not exist.
@@ -161,11 +162,11 @@ The deploy step in your workflow would look like:
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| `aws: command not found` | Add `~/.local/bin` to `$PATH` or re-install. |
-| `sam: command not found` | Add `~/.local/bin` to `$PATH` or re-install. |
-| `Unable to locate credentials` | Run `aws configure` or export `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`. |
-| `403 / Access Denied` on deploy | Ensure your IAM user/role has permissions for CloudFormation, S3, DynamoDB, and Cognito (or attach the policy from `infra/oidc-role.yml`). |
-| Stack stuck in `ROLLBACK_IN_PROGRESS` | Delete the stack in the AWS Console or via `aws cloudformation delete-stack --stack-name personal-budget-resources --region us-east-1`, then redeploy. |
-| Want to inspect the changeset before applying | Remove `--no-confirm-changeset` from `deploy-sam.sh` and run manually. |
+| Symptom                                       | Fix                                                                                                                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `aws: command not found`                      | Add `~/.local/bin` to `$PATH` or re-install.                                                                                                           |
+| `sam: command not found`                      | Add `~/.local/bin` to `$PATH` or re-install.                                                                                                           |
+| `Unable to locate credentials`                | Run `aws configure` or export `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.                                                                           |
+| `403 / Access Denied` on deploy               | Ensure your IAM user/role has permissions for CloudFormation, S3, DynamoDB, and Cognito (or attach the policy from `infra/oidc-role.yml`).             |
+| Stack stuck in `ROLLBACK_IN_PROGRESS`         | Delete the stack in the AWS Console or via `aws cloudformation delete-stack --stack-name personal-budget-resources --region us-east-1`, then redeploy. |
+| Want to inspect the changeset before applying | Remove `--no-confirm-changeset` from `deploy-sam.sh` and run manually.                                                                                 |

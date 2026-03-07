@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import type { Transaction } from './types';
+import type { Transaction } from "./types";
 
-const STORAGE_KEY = 'personal-budget-transactions';
+const STORAGE_KEY = "personal-budget-transactions";
 
 export function getTransactions(): Transaction[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as Transaction[]) : [];
@@ -44,7 +44,7 @@ export function appendTransactions(incoming: Transaction[]): {
   const existing = getTransactions();
 
   const existingKeys = new Set(
-    existing.map((t) => `${t.date}|${t.name.toLowerCase()}|${t.amount}`)
+    existing.map((t) => `${t.date}|${t.name.toLowerCase()}|${t.amount}`),
   );
 
   const toAdd: Transaction[] = [];
