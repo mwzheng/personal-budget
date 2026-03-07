@@ -84,7 +84,7 @@ This document outlines a phased roadmap and detailed considerations for building
 
 ## Reports & Sankey Budget Plan (STATUS)
 
-Status: Local implementation complete (reports + sankey). Completed items were moved to `plan.completed.md` for traceability.
+Status: Local implementation complete (reports + sankey). DynamoDB integration in progress; infrastructure provisioning attempted (Serverless template added). Serverless deploy ran into a Serverless binary/installer issue on this machine; options under consideration: continue troubleshooting Serverless, provision resources via AWS CLI/SDK, or use a local DynamoDB emulator for development. Dev server was restarted and is running locally (port 3000).
 
 Summary of what was completed locally during this session:
 
@@ -97,20 +97,78 @@ Summary of what was completed locally during this session:
 
 Remaining / next priorities (high level):
 
+- **User data management (next up — see section below):** Migrate from static CSV to localStorage-backed CRUD; add import/export UI; add Add/Edit/Delete transaction forms.
 - Integrate persistence and auth: connect API routes to DynamoDB and enforce user-scoped access via Cognito (or chosen auth provider).
-- CSV import/export API endpoints implemented locally (import/export APIs). UI for import preview remains to be implemented.
 - Add tests (unit, integration, E2E) and CI (GitHub Actions) to protect builds and deployments.
 - Add server-side pagination/aggregation and performance tuning for large datasets.
 - Improve accessibility, add ARIA labels, keyboard navigation, and mobile layout tweaks.
 
 Immediate next steps for the repository (developer tasks):
 
-1. Commit code and documentation changes (done in this session).
+1. Implement user data management (localStorage CRUD + CSV import/export UI) — details below.
 2. Create AWS dev resources (Cognito + DynamoDB) and provide env vars for local dev.
-3. Implement auth middleware and wire APIs to DynamoDB.
+3. Implement auth middleware and wire APIs to DynamoDB (replace localStorage with DynamoDB once auth is ready).
 4. Add tests and CI; add example large dataset to `sample-data` for perf testing.
 
 (Completed work has been moved to `plan.completed.md`.)
+
+---
+
+## User Data Management — Implementation Plan
+
+### Goal
+
+Replace the static sample-CSV data source with a user-owned, locally-persisted dataset. Users should be able to:
+- **Manually add, edit, and delete** individual transactions via a form dialog.
+- **Import** their own CSV (matching the sample `expenses.csv` format) — appending rows to existing data.
+- **Export** their current filtered dataset as a CSV download.
+- Start from an **empty state** (no sample data pre-loaded) with a clear call-to-action.
+
+### Architecture Overview
+
+| Layer | Current | After |
+|---|---|---|
+| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | localStorage (client-side) |
+| CSV import | API parses CSV but no UI | UI dialog → API parse → append to localStorage |
+| CSV export | API exports CSV but no UI | Client-side CSV generation + download |
+| CRUD | None | Add/Edit/Delete via MUI Dialog form |
+
+The existing `/api/reports/import` route (CSV parsing via PapaParse) is reused as the server-side parser for imports. Data is stored and managed entirely in `localStorage` under the key `personal-budget-transactions`.
+
+### Files to Create
+
+| File | Purpose |
+|---|---|
+| `lib/storage.ts` | localStorage CRUD utilities: `getTransactions`, `setTransactions`, `addTransaction`, `updateTransaction`, `deleteTransaction`, `appendTransactions`, `clearTransactions` |
+| `lib/csvExport.ts` | Client-side CSV generation matching the `expenses.csv` format |
+| `components/TransactionForm.tsx` | MUI Dialog form for add/edit with Zod validation (fields: date, name, amount, category, payment method, tags, notes) |
+| `components/ImportCsvDialog.tsx` | Import flow: file picker → parse via API → preview summary → confirm append |
+
+### Files to Update
+
+| File | Changes |
+|---|---|
+| `app/reports/page.tsx` | Load data from `lib/storage` instead of `/api/reports`; wire up CRUD, import, export; add empty-state UI |
+| `components/TransactionsTable.tsx` | Add Edit and Delete action buttons per row |
+| `app/api/reports/route.ts` | No longer used for primary data fetch; keep for reference or repurpose for sample-data seeding |
+
+### Key Design Decisions
+
+- **localStorage key**: `personal-budget-transactions` (JSON array of `Transaction[]`).
+- **Empty state**: When no data exists, show a centered call-to-action with an "Import CSV" button and an "Add Transaction" button.
+- **CSV import mode**: Append only. Duplicate detection is by exact match on `(date, name, amount)`; duplicates are skipped with a warning count shown in the preview.
+- **Transaction IDs**: Generated client-side as `crypto.randomUUID()` to avoid collisions on append.
+- **Export format**: Matches the sample CSV columns: `Name,Amount,Category,Date,Notes,Payment Method,Tags` (amounts formatted as `$X.XX`, tags joined with `, `).
+- **Form validation**: Required fields are `date`, `name`, `amount`, `category`. `paymentMethod`, `tags`, `notes` are optional.
+
+### Todos (ordered)
+
+1. **`lib/storage.ts`** — localStorage CRUD utilities
+2. **`lib/csvExport.ts`** — client-side CSV generation
+3. **`components/TransactionForm.tsx`** — add/edit dialog
+4. **`components/ImportCsvDialog.tsx`** — import preview dialog
+5. **`components/TransactionsTable.tsx`** — add Edit/Delete actions
+6. **`app/reports/page.tsx`** — wire everything together (localStorage, CRUD, import/export, empty state)
 
 ---
 
