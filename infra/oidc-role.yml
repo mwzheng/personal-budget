@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM role for GitHub Actions OIDC to deploy Serverless infra (example template)
+
+Parameters:
+  GitHubOwner:
+    Type: String
+    Description: GitHub repository owner or organization (e.g. 'my-org' or 'my-user')
+    Default: 'REPLACE_WITH_OWNER'
+  GitHubRepo:
+    Type: String
+    Description: GitHub repository name (e.g. 'personal-budget')
+    Default: 'REPLACE_WITH_REPO'
+  GitHubRef:
+    Type: String
+    Description: Git ref pattern to allow (e.g. 'refs/heads/main' or 'refs/heads/*')
+    Default: 'refs/heads/main'
+
+Resources:
+  GitHubActionsOIDCRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-github-actions-oidc-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: 'sts.amazonaws.com'
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOwner}/${GitHubRepo}:ref:${GitHubRef}'
+      Policies:
+        - PolicyName: GitHubActionsDeployPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ListStacks
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - cognito-idp:*
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+Outputs:
+  RoleArn:
+    Description: ARN of the created role
+    Value: !GetAtt GitHubActionsOIDCRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-GitHubOIDCRoleArn'
+
+# IMPORTANT:
+# - Replace the default parameter values before deploying, or pass parameters when creating the stack.
+# - This template is a starting point and grants broad permissions for CloudFormation-driven deployments.
+#   For production, narrow Resource ARNs and actions to follow least-privilege best practices.
