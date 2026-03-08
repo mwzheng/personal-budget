@@ -13,6 +13,11 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export function BudgetList({
@@ -103,16 +108,32 @@ export function BudgetList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadKey]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this budget?")) return;
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function openDelete(candidate: { id: string; name: string }) {
+    setDeleteCandidate(candidate);
+    setConfirmOpen(true);
+  }
+
+  async function performDelete() {
+    if (!deleteCandidate) return;
     try {
-      const res = await apiFetch(`/api/budgets/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/budgets/${deleteCandidate.id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Delete failed");
       // Optimistically remove the deleted budget from local state.
-      setBudgets((s) => s.filter((b) => b.budgetId !== id));
+      setBudgets((s) => s.filter((b) => b.budgetId !== deleteCandidate.id));
     } catch (err) {
       console.error(err);
       alert("Failed to delete budget");
+    } finally {
+      setConfirmOpen(false);
+      setDeleteCandidate(null);
     }
   }
 
@@ -160,6 +181,25 @@ export function BudgetList({
           </ListItem>
         ))}
       </List>
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        aria-labelledby="delete-budget-dialog-title"
+      >
+        <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the budget "{deleteCandidate?.name}
+            "? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button color="error" onClick={performDelete} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
