@@ -102,3 +102,12 @@ Notes
 - Transaction handlers currently support listing, create (upsert), update (PUT as upsert), and delete; pagination, input validation (Zod), and stricter error handling remain TODO and are tracked in the main plan.
 
 - `.env.local` with the above values still needs to be created for local Next.js development.
+
+## Completed: Salary API & UI
+
+Date: 2026-03-08
+
+- Implemented salary helpers in `lib/salary.ts` and authenticated Salary API `app/api/salary/route.ts` (GET/POST/PUT/DELETE) using Cognito `sub` as the partition key.
+- Added Salary UI components: `components/SalaryForm.tsx`, `components/SalaryList.tsx`, `components/SalaryChart.tsx`, and `app/salary/page.tsx` for manual per-year entries and YoY visualization.
+
+Notes: Validation, accessibility improvements, and integration tests remain TODO and are tracked in the main plan.
