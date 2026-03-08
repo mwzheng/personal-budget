@@ -145,3 +145,12 @@ Completed: Sankey Budget UI (scaffold)
 Date: 2026-03-08
 
 - Added `components/BudgetForm.tsx` and `components/BudgetList.tsx` and updated `app/sankey/page.tsx` to allow creating and selecting saved budgets. Selecting a budget posts allocations to `/api/sankey` and renders the Sankey diagram. Validation, delete confirmation UX, and accessibility improvements remain TODO.
+
+Completed: Husky pre-commit hook and lint-staged integration
+
+Date: 2026-03-08
+
+- Added `.husky/pre-commit` script to run `lint-staged` which runs Prettier on staged files; made the hook executable and committed it to the repository.
+- Installed development dependencies and initialized Husky via `pnpm install` (the repository's `prepare` script ran `husky install`).
+- Pre-commit hook now runs `pnpm dlx --yes lint-staged` to format staged files with Prettier before commits; this closes the previous TODO about adding husky/lint-staged configuration being present but not installed.
+
