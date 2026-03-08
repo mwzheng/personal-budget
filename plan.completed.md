@@ -285,3 +285,41 @@ plus `.husky/pre-commit` and `.husky/post-commit`.
 `cc60768` — docs: add educational comments to all source files
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+---
+
+# Completed: Code review & quality fixes
+
+Date: 2026-03-08
+
+Summary
+
+Completed a repository-wide code review and quality pass. Key fixes and improvements:
+
+- Added missing imports for `apiFetch` in several components (ImportCsvDialog, SalaryForm, SalaryList, BudgetList, GoalForm, GoalList).
+- Guarded against null/undefined API responses where appropriate (ImportCsvDialog).
+- Removed unused imports and parameters; normalized catch clauses to avoid unused exception variables.
+- Replaced certain patterns that triggered ESLint unused-variable warnings (e.g., removed unused params or used `void` to reference them where appropriate).
+- Ensured Husky pre-commit and post-commit scripts are correct and compatible with the project's tooling.
+- Rebuilt the project (`pnpm build`) and iterated until TypeScript and linting checks passed.
+
+Files changed in this pass
+
+- app/api/goals/route.ts
+- app/api/reports/route.ts
+- app/api/salary/route.ts
+- app/api/transactions/route.ts
+- components/BudgetForm.tsx
+- components/BudgetList.tsx
+- components/GoalForm.tsx
+- components/GoalList.tsx
+- components/ImportCsvDialog.tsx
+- components/SalaryForm.tsx
+- components/SalaryList.tsx
+- lib/apiFetch.ts
+
+Commit
+
+- 94d6e2f — fix: resolve missing imports and unused variables after code review (apiFetch, cleanup)
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

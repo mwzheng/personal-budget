@@ -91,6 +91,8 @@ Status: Local implementation complete (reports + sankey). AWS infrastructure (Dy
 
 Summary of what was completed locally during this session:
 
+- Completed: repository-wide code review & quality fixes (2026-03-08) — missing imports, null guards, unused-variable cleanup, and small refactors. See `plan.completed.md` for details.
+
 - Implemented local APIs: `GET /api/reports` (reads sample-data) and `POST /api/sankey` (zod-validated allocations -> sankey nodes/links + budget suggestion).
 - Implemented Reports UI (`app/reports/page.tsx`) with `FilterBar`, summary cards, pie/time-series/tag charts, and `TransactionsTable` using client-side filtering against sample-data.
 - Implemented Sankey/Budget UI (`app/sankey/page.tsx`) with `SankeyForm` and `SankeyChart` (dynamic import) plus budget breakdown table.
