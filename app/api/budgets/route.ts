@@ -2,34 +2,12 @@
 // resource. Budgets represent a named allocation plan (e.g. "Monthly Plan")
 // where spending categories are assigned percentage or dollar targets.
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getUserIdFromRequest } from "../../../lib/auth";
 import { getUserBudgets, putBudget } from "../../../lib/dynamo";
+import { BudgetSchema } from "../../../lib/schemas";
 
-// Note 2: The Zod schema defines the expected shape of the request body.
-// `z.string().min(1)` validates that `name` is a non-empty string. `z.record(z.number())`
-// accepts any object whose values are numbers -- e.g. `{ "Food": 200, "Rent": 1500 }`.
-const AllocationRecord = z.record(z.number());
-const AllocationArray = z
-  .array(
-    z.object({
-      category: z.string(),
-      amount: z.number(),
-    }),
-  )
-  .optional();
-
-const BudgetSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1),
-  // Accept either a record of category->number (legacy clients) or an array
-  // of { category, amount } objects (preferred). Normalize below before
-  // persisting so the DB always stores an array.
-  allocations: z.union([AllocationRecord, AllocationArray]).optional(),
-  notes: z.string().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-});
+// Note: Budget schema centralised in lib/schemas.ts to keep validation consistent across routes.
+// See lib/schemas.ts for the canonical BudgetSchema.
 
 export async function GET(request: Request) {
   try {
