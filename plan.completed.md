@@ -84,6 +84,7 @@ Date: 2026-03-08
 
 - Implemented basic budgets storage helpers in `lib/dynamo.ts` and `lib/budgets.ts` for converting budgets to a Sankey-friendly format.
 - Implemented authenticated budgets API `app/api/budgets/route.ts` (GET list, POST create) using the Cognito `sub` as the partition key.
+- Added Zod validation for budgets POST in `app/api/budgets/route.ts` (returns 422 on validation errors); schema defined server-side to sanitize and document accepted fields.
 
 Notes: Update and delete for budgets, richer validation, and UI integration remain todo and are tracked in the main plan.
 
@@ -161,4 +162,3 @@ Date: 2026-03-08
 - Implemented refresh-token retry logic in `lib/apiFetch.ts`: when an API call returns 401/403 and a refresh token is present in `sessionStorage`, `apiFetch` will call the Cognito token endpoint with `grant_type=refresh_token`, update stored tokens (`access_token`, `id_token`, and `refresh_token` if returned), and retry the original request once.
 - On refresh failure, tokens are cleared from `sessionStorage` to surface authentication state and prompt re-login. The change is committed as `feat(auth): add refresh-token retry flow to apiFetch (refresh on 401/403)`.
 - Note: The callback exchange already stores `refresh_token` (see `app/auth/callback/page.tsx`). Consider adding proactive refresh or silent refresh if needed; server-side refresh proxy is optional and not implemented yet.
-
