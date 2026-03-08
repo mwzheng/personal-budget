@@ -91,3 +91,44 @@ export async function deleteTransaction(userId: string, txId: string, date: stri
   return { ok: true };
 }
 
+export async function putBudget(userId: string, budget: { budgetId?: string; name: string; allocations: { category: string; amount: number }[]; createdAt?: string; updatedAt?: string }) {
+  const client = getDocClient();
+  if (!client) throw new Error('DynamoDB table not configured');
+  const now = new Date().toISOString();
+  const id = budget.budgetId || (typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString());
+  const item = {
+    pk: `user#${userId}`,
+    sk: `budget#${id}`,
+    budgetId: id,
+    name: budget.name,
+    allocations: budget.allocations || [],
+    createdAt: budget.createdAt || now,
+    updatedAt: now,
+  } as const;
+
+  await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getUserBudgets(userId: string) {
+  const client = getDocClient();
+  if (!client) return [];
+  const pk = `user#${userId}`;
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
+    ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": "budget#" },
+  } as const;
+
+  const res = await client.send(new QueryCommand(params));
+  const items = (res.Items ?? []) as any[];
+  return items.map((item) => ({
+    budgetId: String(item.budgetId || ''),
+    name: String(item.name || ''),
+    allocations: Array.isArray(item.allocations) ? item.allocations : [],
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  }));
+}
+
