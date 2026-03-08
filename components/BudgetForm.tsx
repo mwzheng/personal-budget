@@ -16,11 +16,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 export type Allocation = { category: string; amount: number };
 
-export function BudgetForm({
-  onSaved,
-}: {
-  onSaved?: (budget: any) => void;
-}) {
+export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
   const [name, setName] = useState("");
   const [allocations, setAllocations] = useState<Allocation[]>([
     { category: "Needs", amount: 50 },

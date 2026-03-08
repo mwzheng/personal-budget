@@ -64,7 +64,7 @@ Provisioned the AWS dev infrastructure using AWS SAM and fully documented the de
 
 ## Notes
 
-- IAM roles for Lambda functions (to access DynamoDB + Cognito) were added to infra/template.yaml and committed.  
+- IAM roles for Lambda functions (to access DynamoDB + Cognito) were added to infra/template.yaml and committed.
 
 ---
 
@@ -83,7 +83,7 @@ Summary
 Date: 2026-03-08
 
 - Implemented basic budgets storage helpers in `lib/dynamo.ts` and `lib/budgets.ts` for converting budgets to a Sankey-friendly format.
-- Implemented authenticated budgets API `app/api/budgets/route.ts` (GET list, POST create) using the Cognito `sub` as the partition key.  
+- Implemented authenticated budgets API `app/api/budgets/route.ts` (GET list, POST create) using the Cognito `sub` as the partition key.
 
 Notes: Update and delete for budgets, richer validation, and UI integration remain todo and are tracked in the main plan.
 
@@ -95,7 +95,6 @@ Date: 2026-03-08
 - Implemented authenticated Goals API `app/api/goals/route.ts` (GET list, POST create, PUT update, DELETE) that returns estimated months-to-goal and projected date for each goal.
 
 Notes: Goals UI (page) and robust validation remain todo and are tracked in the main plan.
-
 
 Notes
 

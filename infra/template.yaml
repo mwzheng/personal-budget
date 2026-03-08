@@ -48,7 +48,7 @@ Resources:
     Properties:
       RoleName: !Sub "${ServiceName}-${Stage}-lambda-exec-role"
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -58,7 +58,7 @@ Resources:
       Policies:
         - PolicyName: DynamoDBAccess
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -70,7 +70,7 @@ Resources:
                 Resource: !GetAtt TransactionsTable.Arn
         - PolicyName: CognitoRead
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -79,14 +79,14 @@ Resources:
                 Resource: !GetAtt CognitoUserPool.Arn
         - PolicyName: CloudWatchLogs
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: 'arn:aws:logs:*:*:*'
+                Resource: "arn:aws:logs:*:*:*"
 
 Outputs:
   UserPoolId:

@@ -132,12 +132,12 @@ Move from the static sample-CSV data source to server-persisted, per-user data i
 
 ### Architecture Overview
 
-| Layer       | Current                                             | After                                                                                   |
-| ----------- | --------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | Server APIs backed by DynamoDB (per-user transactions table `personal-budget-infra-dev-transactions`) |
+| Layer       | Current                                             | After                                                                                                         |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | Server APIs backed by DynamoDB (per-user transactions table `personal-budget-infra-dev-transactions`)         |
 | CSV import  | API parses CSV but no UI                            | `POST /api/reports/import` parses CSV and writes transactions to DynamoDB; returns preview and import summary |
-| CSV export  | API exports CSV but no UI                           | `GET /api/reports/export` generates CSV server-side for filtered queries               |
-| CRUD        | None                                                | Transaction CRUD via server APIs with Cognito authentication                            |
+| CSV export  | API exports CSV but no UI                           | `GET /api/reports/export` generates CSV server-side for filtered queries                                      |
+| CRUD        | None                                                | Transaction CRUD via server APIs with Cognito authentication                                                  |
 
 Additional entities stored in DynamoDB (separate tables recommended initially):
 
@@ -149,24 +149,24 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 ### Files to Create
 
-| File / Path                      | Purpose                                                                                              |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `lib/dynamo.ts`                  | DynamoDB client helper and small wrappers for common operations (query, get, put, update, delete)   |
-| `app/api/transactions/*`         | Transaction CRUD endpoints (list, create, update, delete) with filters, pagination and aggregates   |
-| `app/api/reports/import`         | CSV parse + persist endpoint (validates rows, writes to DynamoDB, returns summary)                 |
-| `app/api/reports/export`         | Server-side CSV generation endpoint for filtered queries                                            |
-| `app/api/budgets/*`              | Budgets CRUD endpoints (create/list/get/update/delete)                                              |
-| `app/api/goals/*`                | Goals CRUD endpoints and ETA/time-to-goal compute                                                   |
-| `app/api/salary/*`               | Salary history CRUD endpoints                                                                        |
-| `lib/budgets.ts`                 | Utilities to convert budget allocations into Sankey nodes/links                                     |
-| `components/BudgetForm.tsx`      | Create/Edit budget dialog                                                                            |
-| `components/BudgetList.tsx`      | Budget selector and management UI                                                                    |
-| `components/GoalForm.tsx`        | Create/Edit goal dialog                                                                              |
-| `components/GoalList.tsx`        | Goals list and progress UI                                                                           |
-| `components/ProjectionForm.tsx`  | Savings projection input UI                                                                          |
-| `components/ProjectionChart.tsx` | Chart for projection results                                                                          |
-| `components/SalaryForm.tsx`      | Manual per-year salary entry form                                                                     |
-| `components/SalaryChart.tsx`     | Year-over-year salary visualization                                                                   |
+| File / Path                      | Purpose                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `lib/dynamo.ts`                  | DynamoDB client helper and small wrappers for common operations (query, get, put, update, delete) |
+| `app/api/transactions/*`         | Transaction CRUD endpoints (list, create, update, delete) with filters, pagination and aggregates |
+| `app/api/reports/import`         | CSV parse + persist endpoint (validates rows, writes to DynamoDB, returns summary)                |
+| `app/api/reports/export`         | Server-side CSV generation endpoint for filtered queries                                          |
+| `app/api/budgets/*`              | Budgets CRUD endpoints (create/list/get/update/delete)                                            |
+| `app/api/goals/*`                | Goals CRUD endpoints and ETA/time-to-goal compute                                                 |
+| `app/api/salary/*`               | Salary history CRUD endpoints                                                                     |
+| `lib/budgets.ts`                 | Utilities to convert budget allocations into Sankey nodes/links                                   |
+| `components/BudgetForm.tsx`      | Create/Edit budget dialog                                                                         |
+| `components/BudgetList.tsx`      | Budget selector and management UI                                                                 |
+| `components/GoalForm.tsx`        | Create/Edit goal dialog                                                                           |
+| `components/GoalList.tsx`        | Goals list and progress UI                                                                        |
+| `components/ProjectionForm.tsx`  | Savings projection input UI                                                                       |
+| `components/ProjectionChart.tsx` | Chart for projection results                                                                      |
+| `components/SalaryForm.tsx`      | Manual per-year salary entry form                                                                 |
+| `components/SalaryChart.tsx`     | Year-over-year salary visualization                                                               |
 
 ### Files to Update
 

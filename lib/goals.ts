@@ -7,9 +7,18 @@ export type Goal = {
   expectedAnnualReturn?: number; // decimal, e.g., 0.05 for 5%
 };
 
-export function monthsToTarget(currentSaved: number, monthlyContribution: number, annualReturn: number, target: number, maxMonths = 600) {
+export function monthsToTarget(
+  currentSaved: number,
+  monthlyContribution: number,
+  annualReturn: number,
+  target: number,
+  maxMonths = 600,
+) {
   if (currentSaved >= target) return 0;
-  const monthlyRate = annualReturn && annualReturn > 0 ? Math.pow(1 + annualReturn, 1 / 12) - 1 : 0;
+  const monthlyRate =
+    annualReturn && annualReturn > 0
+      ? Math.pow(1 + annualReturn, 1 / 12) - 1
+      : 0;
   if (monthlyRate === 0) {
     if (!monthlyContribution || monthlyContribution <= 0) return Infinity;
     return Math.ceil((target - currentSaved) / monthlyContribution);
@@ -26,7 +35,12 @@ export function monthsToTarget(currentSaved: number, monthlyContribution: number
 }
 
 export function estimateGoalETA(goal: Goal) {
-  const months = monthsToTarget(goal.currentSaved ?? 0, goal.monthlyContribution ?? 0, goal.expectedAnnualReturn ?? 0, goal.targetAmount);
+  const months = monthsToTarget(
+    goal.currentSaved ?? 0,
+    goal.monthlyContribution ?? 0,
+    goal.expectedAnnualReturn ?? 0,
+    goal.targetAmount,
+  );
   if (!isFinite(months)) return { months: Infinity, projectedDate: null };
   const projected = new Date();
   projected.setMonth(projected.getMonth() + months);

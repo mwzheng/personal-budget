@@ -10,11 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export function BudgetList({
-  onSelect,
-}: {
-  onSelect?: (budget: any) => void;
-}) {
+export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +55,9 @@ export function BudgetList({
               primary={b.name}
               secondary={
                 b.allocations
-                  ? b.allocations.map((a: any) => `${a.category}: ${a.amount}`).join(", ")
+                  ? b.allocations
+                      .map((a: any) => `${a.category}: ${a.amount}`)
+                      .join(", ")
                   : ""
               }
             />

@@ -10,7 +10,10 @@ export async function GET(request: Request) {
     const withEta = goals.map((g) => ({ ...g, eta: estimateGoalETA(g) }));
     return NextResponse.json({ ok: true, goals: withEta });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, error: String(err) },
+      { status: 401 },
+    );
   }
 }
 
@@ -24,7 +27,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, created, eta });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: String(err) },
+      { status: 400 },
+    );
   }
 }
 
@@ -33,13 +39,20 @@ export async function PUT(request: Request) {
     const userId = await getUserIdFromRequest(request);
     const body = await request.json();
     const g = body || {};
-    if (!g.goalId) return NextResponse.json({ ok: false, error: 'Missing goalId for update' }, { status: 400 });
+    if (!g.goalId)
+      return NextResponse.json(
+        { ok: false, error: "Missing goalId for update" },
+        { status: 400 },
+      );
     const updated = await putGoal(userId, g);
     const eta = estimateGoalETA(updated as any);
     return NextResponse.json({ ok: true, updated, eta });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: String(err) },
+      { status: 400 },
+    );
   }
 }
 
@@ -55,13 +68,20 @@ export async function DELETE(request: Request) {
     }
     if (!goalId) {
       const url = new URL(request.url);
-      goalId = url.searchParams.get('goalId') || undefined;
+      goalId = url.searchParams.get("goalId") || undefined;
     }
-    if (!goalId) return NextResponse.json({ ok: false, error: 'Missing goalId' }, { status: 400 });
+    if (!goalId)
+      return NextResponse.json(
+        { ok: false, error: "Missing goalId" },
+        { status: 400 },
+      );
     await deleteGoal(userId, goalId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: String(err) },
+      { status: 400 },
+    );
   }
 }

@@ -1,4 +1,4 @@
-import SalaryList from '../../components/SalaryList';
+import SalaryList from "../../components/SalaryList";
 
 export default function Page() {
   return (

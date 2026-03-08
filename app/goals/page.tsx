@@ -1,4 +1,4 @@
-import GoalList from '../../components/GoalList';
+import GoalList from "../../components/GoalList";
 export default function Page() {
   return (
     <main style={{ padding: 24 }}>
