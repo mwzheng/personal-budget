@@ -18,8 +18,35 @@ A personal budgeting application built with TypeScript, Next.js, and serverless 
 
 ## APIs (local)
 
-- `GET /api/reports` — Returns transactions and aggregates from `sample-data/expenses.csv` (used for local development).
+- `GET /api/reports` — Returns transactions and aggregates from `sample-data/expenses.csv` (local development) or from DynamoDB when backend persistence is configured. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `category`.
+- `POST /api/reports/import` — Upload a CSV (multipart/form-data); server parses and returns a preview with per-row validation errors and, when available, persists rows to DynamoDB.
+- `GET /api/reports/export` — Export filtered transactions as CSV for the current user/filters.
+- `GET /api/transactions` — (Authenticated) List transactions for the current user; supports filters and pagination.
+- `POST /api/transactions` — (Authenticated) Create or upsert a transaction for the current user.
+- `PUT /api/transactions/:id` — (Authenticated) Update a transaction.
+- `DELETE /api/transactions/:id` — (Authenticated) Delete a transaction.
+- `GET /api/budgets` — (Authenticated) List budgets for the current user.
+- `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload).
+- `GET /api/budgets/:id` — (Authenticated) Fetch a budget by id.
 - `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`.
+- `GET /api/goals`, `POST /api/goals`, `PUT /api/goals/:id`, `DELETE /api/goals/:id` — Goals CRUD with estimates/ETA in responses.
+- `GET /api/salary`, `POST /api/salary`, `PUT /api/salary/:id`, `DELETE /api/salary/:id` — Salary history CRUD for per-year entries.
+
+### Auth / Environment
+
+The app uses AWS Cognito for authentication. Set the following env vars in `.env.local` (see `env.example` for an example):
+
+```
+NEXT_PUBLIC_COGNITO_DOMAIN=https://your-domain.auth.us-east-1.amazoncognito.com
+NEXT_PUBLIC_COGNITO_CLIENT_ID=<cognito_app_client_id>
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=<cognito_user_pool_id>
+COGNITO_CLIENT_ID=<cognito_app_client_id>
+COGNITO_USER_POOL_ID=<cognito_user_pool_id>
+DYNAMODB_TABLE_NAME=<transactions_table_name>
+AWS_REGION=us-east-1
+```
+
+For local development the app uses `GET /api/reports` against `sample-data/expenses.csv`. To enable backend persistence and authenticated APIs, deploy the SAM template and populate `.env.local` with the CloudFormation outputs (see `infra/SAM-DEPLOY.md`).
 
 ## Getting Started (local development)
 
