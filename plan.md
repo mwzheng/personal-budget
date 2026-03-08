@@ -106,7 +106,7 @@ Remaining / next priorities (high level):
   1. Add Zod validation to server APIs (transactions, budgets, goals, salary, sankey/import) and return structured errors (todo: add-zod-validation).
   2. Finish Budgets UI: implement update/delete, delete confirmations, accessibility labels (ARIA), keyboard navigation, and unit tests (todo: finish-budgets-ui).
   3. Re-enable stricter ESLint/TypeScript rules (remove `no-explicit-any` relaxations) and fix typing issues across the codebase (todo: reenable-eslint-strict).
-  4. Expand tests & CI coverage: add focused unit/integration tests for CSV import, Sankey generation, auth flows (token exchange and refresh), and increase coverage enforcement (todo: add-tests-ci).
+  4. Expand tests & CI coverage: (in progress) added unit tests for Sankey and a CI workflow; remaining work: budgets endpoint unit/integration tests and E2E smoke tests (todo: add-tests-ci).
 
 Immediate next steps (developer tasks):
 

@@ -381,3 +381,29 @@ Files/Commits
 Notes & next steps
 
 - Remaining work: finalize delete confirmation dialog, accessibility improvements (ARIA/keyboard), add unit/integration tests for budgets endpoints and UI flows, and re-enable stricter ESLint/TypeScript rules. See plan.md for next priorities.
+
+---
+
+# Completed: Tests & CI (Sankey normalization + unit tests)
+
+Date: 2026-03-08
+
+Summary
+
+- Added a reusable helper `lib/sankey.ts` to normalise allocation inputs that may be expressed as percentages or as amount/weight values.
+- Updated `app/api/sankey/route.ts` to accept allocations with either `percentage` or `amount` and normalise them to percentages before generating the Sankey and budget suggestion.
+- Added unit tests (`test/sankey.test.ts`) using Vitest that verify percentage-only, amount-as-percent, scaling of arbitrary weights, and mixing percentages with weights.
+- Added a `test` script to `package.json` (`pnpm test`) and added a GitHub Actions workflow `.github/workflows/ci.yml` that installs dependencies (pnpm) and runs the test suite on push and pull_request to `main`.
+
+Files changed
+
+- app/api/sankey/route.ts — accept percentage or amount and normalise allocations
+- lib/sankey.ts — new helper for normalising allocations
+- test/sankey.test.ts — unit tests
+- package.json — added `test` script and devDependency for vitest
+- .github/workflows/ci.yml — CI job to run the test suite
+
+Notes
+
+- This change addresses compatibility between saved budgets (which historically stored `allocations` as `{ category, amount }`) and the Sankey input form (which expects percentages). The normalisation logic supports mixed inputs and reasonable tolerances for floating-point rounding.
+- Remaining work for full CI/test coverage: add unit/integration tests for budgets endpoints (POST/PUT/DELETE), integration/E2E tests for the Sankey end-to-end flow, and hook tests into coverage reporting. These are tracked in `plan.md` under the tests task.
