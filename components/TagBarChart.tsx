@@ -1,3 +1,6 @@
+// Note 1: TagBarChart renders a horizontal bar chart so the tag names on the
+// Y-axis are readable even when they are long strings. A vertical bar chart
+// (the default orientation) would crowd the labels or require rotation.
 "use client";
 
 import {
@@ -12,6 +15,9 @@ import {
 } from "recharts";
 import { TagDataPoint } from "@/lib/types";
 
+// Note 2: BAR_COLORS cycles through a palette of 15 distinct colors. Using
+// `i % BAR_COLORS.length` prevents an out-of-bounds index when there are more
+// tags than colors. This is a modulo wrap-around -- e.g. tag 16 gets color 1.
 const BAR_COLORS = [
   "#42a5f5",
   "#66bb6a",
@@ -43,10 +49,15 @@ export function TagBarChart({ data }: Props) {
     );
   }
 
+  // Note 3: Chart height grows with the number of tags to ensure every bar has
+  // enough vertical space to be readable. `Math.max(300, ...)` sets a minimum
+  // height for cases where there are only one or two tags.
   const height = Math.max(300, data.length * 32 + 60);
 
   return (
     <ResponsiveContainer width="100%" height={height}>
+      {/* Note 4: `layout="vertical"` swaps the axes so categories appear on the
+          Y-axis and amounts on the X-axis, producing horizontal bars. */}
       <BarChart
         layout="vertical"
         data={data}
@@ -75,6 +86,9 @@ export function TagBarChart({ data }: Props) {
           labelStyle={{ color: "#fff" }}
           itemStyle={{ color: "#fff" }}
         />
+        {/* Note 5: `radius={[0, 4, 4, 0]}` rounds only the right corners of
+            each bar (top-right and bottom-right), giving them a polished look
+            while keeping the left edge flush with the Y-axis. */}
         <Bar dataKey="value" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => (
             <Cell key={`cell-${i}`} fill={BAR_COLORS[i % BAR_COLORS.length]} />

@@ -1,3 +1,6 @@
+// Note 1: `GET/POST/PUT/DELETE /api/salary` manages the user's salary history.
+// Year-over-year (YoY) growth is computed on the GET response so the client
+// can display it in a chart without extra computation.
 import { NextResponse } from "next/server";
 import { getUserIdFromRequest } from "../../../lib/auth";
 import { putSalary, getUserSalary, deleteSalary } from "../../../lib/salary";
@@ -6,13 +9,20 @@ export async function GET(request: Request) {
   try {
     const userId = await getUserIdFromRequest(request);
     const entries = await getUserSalary(userId);
+    // Note 2: Sorting by year ascending ensures the YoY calculation below can
+    // always compare entry[i] against entry[i-1] safely without re-sorting.
     const sorted = entries.sort((a, b) => a.year - b.year);
     const withYoY = sorted.map((e, i) => {
       const prev = i > 0 ? sorted[i - 1] : null;
+      // Note 3: YoY growth is (currentAmount - prevAmount) / prevAmount * 100.
+      // A null result is returned for the first entry (no prior year to compare)
+      // or when the previous salary was 0 (division by zero guard).
       const yoy =
         prev && prev.amount
           ? ((e.amount - prev.amount) / prev.amount) * 100
           : null;
+      // Note 4: `Math.round(yoy * 100) / 100` rounds to 2 decimal places.
+      // e.g. 5.2345... becomes 5.23. This keeps the payload concise.
       return { ...e, yoy: yoy === null ? null : Math.round(yoy * 100) / 100 };
     });
     return NextResponse.json({ ok: true, entries: withYoY });
@@ -28,6 +38,9 @@ export async function POST(request: Request) {
   try {
     const userId = await getUserIdFromRequest(request);
     const body = await request.json();
+    // Note 5: Both `year` and `amount` are validated with `typeof ... === "number"`
+    // to distinguish missing values from zero (a valid amount). Checking the type
+    // rather than truthiness allows `amount: 0` to pass validation.
     if (
       !body ||
       typeof body.year !== "number" ||
@@ -85,6 +98,9 @@ export async function DELETE(request: Request) {
       entryId = body?.entryId;
       year = body?.year;
     } catch (_) {}
+    // Note 6: The identifier is read from the query string as a fallback when the
+    // DELETE body is not provided. Some HTTP clients and frameworks do not support
+    // request bodies on DELETE requests, so supporting both is more compatible.
     if (!entryId) {
       const url = new URL(request.url);
       entryId = url.searchParams.get("entryId") || undefined;
@@ -97,6 +113,9 @@ export async function DELETE(request: Request) {
         { ok: false, error: "Missing entryId or year" },
         { status: 400 },
       );
+    // Note 7: `year` is passed separately to `deleteSalary` because it is part
+    // of the DynamoDB sort key (`salary#<year>#<entryId>`). Without the year the
+    // full key cannot be reconstructed and the delete would fail.
     await deleteSalary(userId, entryId, Number(year));
     return NextResponse.json({ ok: true });
   } catch (err) {

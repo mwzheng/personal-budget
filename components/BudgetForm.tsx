@@ -1,3 +1,6 @@
+// Note 1: BudgetForm provides an editable table of allocation rows, each with a
+// category name and a percentage/amount value. The three default rows reflect
+// the popular 50/30/20 personal finance rule (Needs/Wants/Savings).
 "use client";
 
 import React, { useState } from "react";
@@ -29,10 +32,16 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
     setAllocations((s) => [...s, { category: "", amount: 0 }]);
   }
   function removeRow(idx: number) {
+    // Note 2: `s.filter((_, i) => i !== idx)` creates a new array that excludes
+    // the element at index `idx`. The underscore `_` is a convention for an
+    // unused parameter; here the value is ignored and only the index matters.
     setAllocations((s) => s.filter((_, i) => i !== idx));
   }
   function updateRow(idx: number, field: keyof Allocation, value: any) {
     setAllocations((s) => {
+      // Note 3: Spreading `[...s]` creates a shallow copy of the array before
+      // modifying it. React state should never be mutated directly; always
+      // produce a new array/object to trigger a re-render.
       const copy = [...s];
       copy[idx] = { ...copy[idx], [field]: value };
       return copy;
@@ -114,6 +123,9 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
           Add category
         </Button>
         <Box flex={1} />
+        {/* Note 4: The Save button is disabled both while the API request is in
+            flight (`saving`) and when the name is empty. This prevents double
+            submission and enforces a basic required-field rule without a form tag. */}
         <Button
           variant="contained"
           color="primary"

@@ -1,3 +1,7 @@
+// Note 1: SankeyForm collects budget allocation inputs and sends them to
+// `/api/sankey`. The form implements the 50/30/20 rule (Needs/Wants/Savings)
+// as initial defaults, mirroring the BudgetForm defaults. Both sliders and
+// the submit button are disabled when allocations do not sum to exactly 100%.
 "use client";
 
 import Alert from "@mui/material/Alert";
@@ -22,6 +26,9 @@ interface SliderRow {
   color: string;
 }
 
+// Note 2: `ROWS` is a config-driven array that drives slider rendering.
+// Using a data array instead of three separate JSX blocks reduces repetition
+// and makes it easy to add or rename categories later.
 const ROWS: SliderRow[] = [
   { key: "Need", label: "Needs", color: "#ef5350" },
   { key: "Want", label: "Wants", color: "#42a5f5" },
@@ -40,6 +47,10 @@ export function SankeyForm({ onResult }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const total = Object.values(pct).reduce((s, v) => s + v, 0);
+  // Note 3: Floating-point arithmetic means slider values may not sum to
+  // exactly 100 (e.g. 33.33 + 33.33 + 33.34 = 100.0000...something). Using
+  // `Math.abs(total - 100) < 0.01` accepts any total within 1 cent of 100,
+  // avoiding false "invalid" errors from rounding.
   const isValid = Math.abs(total - 100) < 0.01 && monthlyIncome > 0;
 
   async function handleSubmit() {
@@ -50,6 +61,10 @@ export function SankeyForm({ onResult }: Props) {
       const body: SankeyRequestBody = {
         monthlyIncome,
         incomeLabel,
+        // Note 4: `ROWS.map(...)` derives the allocations array from the slider
+        // state in one pass. The order of entries in `ROWS` determines the order
+        // Sankey nodes are rendered, so keeping ROWS as the source of truth avoids
+        // accidental ordering bugs.
         allocations: ROWS.map((r) => ({
           category: r.key,
           percentage: pct[r.key],
@@ -107,6 +122,9 @@ export function SankeyForm({ onResult }: Props) {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {pct[key]}% &mdash; $
+              {/* Note 5: `(monthlyIncome * pct[key]) / 100` converts a percentage
+                  into a dollar amount. `toFixed(0)` rounds to the nearest dollar
+                  so the display stays clean while the slider stores exact integers. */}
               {((monthlyIncome * pct[key]) / 100).toFixed(0)}/mo
             </Typography>
           </Box>

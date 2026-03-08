@@ -1,3 +1,6 @@
+// Note 1: `GET /api/reports/export` streams a filtered CSV directly from the
+// server to the browser. Returning a `Response` (not `NextResponse.json`) with
+// appropriate headers triggers a file download dialog in the browser.
 import { NextRequest } from "next/server";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -13,6 +16,10 @@ export async function GET(request: NextRequest) {
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
 
+    // Note 2: `readFileSync` reads the sample CSV file synchronously. This is
+    // acceptable for a server route handler because Next.js runs it in a Node.js
+    // context (not a browser) and the file is small. For user-uploaded files or
+    // DynamoDB data, the async `getUserTransactions` function should be used instead.
     const csvPath = join(process.cwd(), "sample-data", "expenses.csv");
     const csvContent = readFileSync(csvPath, "utf-8");
     const allTransactions = loadTransactionsFromCSV(csvContent);
@@ -24,6 +31,9 @@ export async function GET(request: NextRequest) {
       search,
     });
 
+    // Note 3: Each cell in the CSV is wrapped in double quotes and internal quotes
+    // are escaped by doubling them, following RFC 4180. This prevents commas or
+    // newlines inside cell values from breaking the CSV structure.
     const header = [
       "Name",
       "Amount",
@@ -52,6 +62,9 @@ export async function GET(request: NextRequest) {
       )
       .join("\n");
 
+    // Note 4: The `Content-Disposition: attachment` header instructs the browser
+    // to download the response as a file rather than displaying it inline.
+    // The `filename` parameter suggests the default name for the saved file.
     return new Response(csv, {
       status: 200,
       headers: {

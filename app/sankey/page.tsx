@@ -1,3 +1,6 @@
+// Note 1: `"use client"` is required because this page uses `useState` and
+// event handlers. Next.js App Router renders components on the server by default;
+// the directive opts this entire module into client-side execution.
 "use client";
 
 import { apiFetch } from "../../lib/apiFetch";
@@ -24,6 +27,11 @@ import { SankeyResponse } from "@/lib/types";
 import { BudgetForm } from "@/components/BudgetForm";
 import { BudgetList } from "@/components/BudgetList";
 
+// Note 2: `dynamic(..., { ssr: false })` defers loading the SankeyChart bundle
+// to the browser. Nivo's Sankey chart relies on DOM APIs (SVG measurements)
+// that are unavailable during server-side rendering. Without `ssr: false`, the
+// server render would throw. The `loading` fallback renders a Skeleton while
+// the bundle downloads, keeping the page visually stable.
 const SankeyChart = dynamic(
   () => import("@/components/SankeyChart").then((m) => m.SankeyChart),
   {
@@ -69,22 +77,27 @@ export default function SankeyPage() {
                 Saved Budgets
               </Typography>
               <Box>
-                {/* Budget creation form and list */}
                 <Box mb={2}>
-                  {/* BudgetForm will POST to /api/budgets and call onSaved */}
+                  {/* Note 3: BudgetForm saves a named budget to DynamoDB via
+                      `/api/budgets`. The `onSaved` callback here is intentionally
+                      empty because BudgetList re-fetches independently via its own
+                      useEffect. The two components are decoupled by design. */}
                   <BudgetForm
                     onSaved={() => {
-                      /* refresh list via BudgetList' own effect */
+                      /* refresh list via BudgetList's own effect */
                     }}
                   />
                 </Box>
                 <Box>
-                  {/* BudgetList fetches saved budgets and exposes Select */}
+                  {/* Note 4: When the user selects a saved budget, an IIFE
+                      (Immediately Invoked Function Expression) is used so we can
+                      `await` the `/api/sankey` call inside a synchronous `onSelect`
+                      callback. IIFEs are a common workaround for async work inside
+                      a non-async prop handler. The `void` prefix silences the
+                      "unhandled promise" ESLint warning. */}
                   {/* @ts-ignore */}
                   <BudgetList
                     onSelect={(b: any) => {
-                      // convert budget to sankey data client-side using budgets API or lib
-                      // for now, call POST /api/sankey with allocations to get sankeyData
                       (async () => {
                         const resp = await apiFetch("/api/sankey", {
                           method: "POST",
@@ -109,7 +122,7 @@ export default function SankeyPage() {
             <Card>
               <CardHeader
                 title="Budget Flow"
-                subheader="Income → category allocation"
+                subheader="Income -> category allocation"
                 titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
                 subheaderTypographyProps={{ variant: "caption" }}
               />
@@ -158,6 +171,10 @@ export default function SankeyPage() {
                                 </Typography>
                               </TableCell>
                               <TableCell align="right">
+                                {/* Note 5: The percentage is computed on the fly by
+                                    dividing each category's amount by the running
+                                    total of all categories. This avoids storing a
+                                    separate percentage field on the server response. */}
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"

@@ -1,3 +1,7 @@
+// Note 1: TransactionForm uses the "controlled form" pattern -- every input
+// value is stored in React state (`values`) and updated via a `set()` helper.
+// This gives the component full control over validation and allows it to reset
+// cleanly when the dialog is closed and re-opened.
 "use client";
 
 import Button from "@mui/material/Button";
@@ -21,6 +25,10 @@ import type { Transaction } from "@/lib/types";
 
 const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
 
+// Note 2: `FormValues` separates the form's internal representation from the
+// `Transaction` type. For example, `amount` is a `string` in the form (so the
+// user can type freely) but a `number` in the Transaction model. `tagsInput` is
+// an ephemeral buffer that does not exist in Transaction at all.
 interface FormValues {
   date: Date | null;
   name: string;
@@ -50,6 +58,10 @@ const DEFAULT_VALUES: FormValues = {
   notes: "",
 };
 
+// Note 3: `transactionToFormValues` is an adapter function that converts a
+// `Transaction` (server/storage shape) into the local `FormValues` shape.
+// `parseISO` turns the "YYYY-MM-DD" date string into a JS Date object that
+// MUI DatePicker needs.
 function transactionToFormValues(t: Transaction): FormValues {
   return {
     date: parseISO(t.date),
@@ -85,6 +97,10 @@ interface Props {
 export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
   const [values, setValues] = useState<FormValues>(DEFAULT_VALUES);
   const [errors, setErrors] = useState<FormErrors>({});
+  // Note 4: `submitted` tracks whether the user has attempted to submit once.
+  // Before the first submit, errors are not shown (avoids overwhelming the user
+  // with errors on an empty form). After the first submit, errors update live
+  // as the user types via the `set()` helper.
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
@@ -107,6 +123,9 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
 
   function handleAddTag() {
     const tag = values.tagsInput.trim();
+    // Note 5: `!values.tags.includes(tag)` prevents duplicate tags. The tag
+    // input is cleared regardless so the user gets immediate feedback that the
+    // tag was processed.
     if (tag && !values.tags.includes(tag)) {
       set("tags", [...values.tags, tag]);
     }
@@ -134,6 +153,9 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
     if (Object.keys(errs).length > 0) return;
 
     const saved: Transaction = {
+      // Note 6: `crypto.randomUUID()` generates a UUIDv4 for new transactions.
+      // For edits, the original `id` is preserved so the record can be found
+      // in localStorage or DynamoDB for update/delete operations.
       id: transaction?.id ?? crypto.randomUUID(),
       name: values.name.trim(),
       amount: parseFloat(values.amount),

@@ -1,3 +1,7 @@
+// Note 1: BudgetList fetches all saved budgets on mount and renders them as a
+// selectable, deletable list. The `onSelect` callback lets the parent page
+// (SankeyPage) receive the chosen budget and pass its allocations to the
+// SankeyChart -- this is the "lifting state up" React pattern.
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -29,6 +33,10 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
     }
   }
 
+  // Note 2: `useEffect(() => { ... }, [])` with an empty dependency array runs
+  // exactly once after the component first renders -- the equivalent of
+  // `componentDidMount` in class components. This is the correct place to
+  // initiate an initial data fetch.
   useEffect(() => {
     load();
   }, []);
@@ -38,6 +46,9 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
     try {
       const res = await apiFetch(`/api/budgets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
+      // Note 3: Instead of calling `load()` again (another network round-trip),
+      // the deleted budget is removed optimistically from local state with
+      // `filter`. This keeps the UI snappy and avoids a flicker from re-fetching.
       setBudgets((s) => s.filter((b) => b.budgetId !== id));
     } catch (err) {
       console.error(err);
@@ -50,6 +61,8 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
       <List dense>
         {loading && <div>Loading budgets…</div>}
         {budgets.map((b) => (
+          // Note 4: `button` prop on `ListItem` enables keyboard focus and
+          // visual hover/active states, making the row feel interactive.
           <ListItem key={b.budgetId} button onClick={() => onSelect?.(b)}>
             <ListItemText
               primary={b.name}

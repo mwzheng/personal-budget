@@ -1,3 +1,6 @@
+// Note 1: SpendingPieChart visualizes the Need/Want/Saving budget split as a
+// donut chart using Recharts. It is lazily loaded (see reports/page.tsx) because
+// Recharts bundles D3 internals that add ~40KB to the initial JS load.
 "use client";
 
 import {
@@ -20,6 +23,9 @@ interface Props {
 }
 
 export function SpendingPieChart({ data }: Props) {
+  // Note 2: Filtering out zero-value entries prevents Recharts from rendering
+  // invisible slices that still show up in the legend and tooltip, which would
+  // be confusing for the user when only one or two categories have data.
   const chartData = [
     { name: "Need", value: data.Need },
     { name: "Want", value: data.Want },
@@ -37,8 +43,14 @@ export function SpendingPieChart({ data }: Props) {
   }
 
   return (
+    // Note 3: `ResponsiveContainer` makes the chart fill its parent element's
+    // width. Setting `height` here gives the SVG a fixed pixel height, keeping
+    // the chart a consistent size across different screen widths.
     <ResponsiveContainer width="100%" height={280}>
       <PieChart>
+        {/* Note 4: `innerRadius={50}` turns the pie into a donut chart.
+            The empty center can be used to show a total label in future iterations.
+            `paddingAngle={2}` adds a small gap between slices for readability. */}
         <Pie
           data={chartData}
           dataKey="value"

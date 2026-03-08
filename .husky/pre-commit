@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$(dirname \"$0\")/_/husky.sh"
+. "$(dirname "$0")/_/husky.sh"
 
 # Run lint-staged (uses pnpm dlx so no global install required)
-pnpm dlx --yes lint-staged
+pnpm dlx lint-staged

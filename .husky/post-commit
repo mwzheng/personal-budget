@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$(dirname \"$0\")/_/husky.sh"
+. "$(dirname "$0")/_/husky.sh"
 
 # Ensure commits are authored by repo-level git config user.name/user.email or fall back to global git config
 # Allow overrides via COMMIT_AUTHOR_NAME and COMMIT_AUTHOR_EMAIL environment variables.

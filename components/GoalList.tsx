@@ -1,3 +1,6 @@
+// Note 1: GoalList is an "orchestrator" component -- it owns all network calls
+// (fetch, delete) and passes data down to GoalForm. This keeps network logic
+// in one place and lets GoalForm remain a pure controlled form.
 "use client";
 import React, { useEffect, useState } from "react";
 import {
@@ -12,6 +15,10 @@ import {
 } from "@mui/material";
 import GoalForm from "./GoalForm";
 
+// Note 2: The local `Goal` type mirrors the server response shape. Having a
+// local type decouples GoalList from the shared `lib/types` Goal interface,
+// allowing the server to add computed fields (like `eta`) that the shared type
+// may not include.
 type Goal = {
   goalId?: string;
   name: string;
@@ -44,6 +51,9 @@ export default function GoalList() {
     }
   };
 
+  // Note 3: The empty dependency array `[]` means this effect runs once after
+  // the initial render, equivalent to `componentDidMount` in class components.
+  // It is the standard way to trigger a data fetch when a component first mounts.
   useEffect(() => {
     fetchGoals();
   }, []);
@@ -51,11 +61,17 @@ export default function GoalList() {
   const handleSaved = (g: any) => {
     setShowForm(false);
     setEditing(null);
+    // Note 4: Re-fetching the full list from the server after a save ensures the
+    // UI shows the latest data including server-computed fields like `eta`, rather
+    // than relying on a stale local copy.
     fetchGoals();
   };
 
   const handleDelete = async (goalId?: string) => {
     if (!goalId) return;
+    // Note 5: The native `confirm()` dialog is a simple way to require user
+    // confirmation before a destructive action. For a more polished UX, this
+    // could be replaced with a MUI Dialog (as in TransactionsTable).
     if (!confirm("Delete this goal?")) return;
     try {
       const res = await apiFetch(
@@ -133,6 +149,10 @@ export default function GoalList() {
               <ListItemText
                 primary={`${g.name} — $${Number(g.currentSaved ?? 0).toLocaleString()} / $${Number(g.targetAmount).toLocaleString()}`}
                 secondary={
+                  // Note 6: `eta.months === Infinity` occurs when the monthly
+                  // contribution is zero (or the goal can never be reached). The
+                  // UI shows "—" instead of "Infinity months" to avoid confusing
+                  // the user. This mirrors the same guard in `lib/goals.ts`.
                   g.eta
                     ? `ETA: ${g.eta.months === Infinity ? "—" : g.eta.months + " months"}${g.eta.projectedDate ? " (" + new Date(g.eta.projectedDate).toLocaleDateString() + ")" : ""}`
                     : ""

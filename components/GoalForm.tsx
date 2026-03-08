@@ -1,3 +1,7 @@
+// Note 1: GoalForm is a reusable form that supports both creating a new goal
+// (POST) and updating an existing one (PUT). The distinction is determined by
+// whether `defaultGoal.goalId` is present. This "upsert" pattern avoids the
+// need for two separate form components.
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
@@ -20,6 +24,9 @@ export default function GoalForm({
   onSaved?: (g: any) => void;
   onCancel?: () => void;
 }) {
+  // Note 2: Numeric fields are stored as strings in component state so they
+  // can be edited freely in a text input (e.g. the user can type "100." while
+  // mid-entry). They are converted to numbers only at submit time with `Number(...)`.
   const [name, setName] = useState(defaultGoal?.name ?? "");
   const [targetAmount, setTargetAmount] = useState(
     String(defaultGoal?.targetAmount ?? ""),
@@ -49,6 +56,9 @@ export default function GoalForm({
         monthlyContribution: Number(monthlyContribution),
         expectedAnnualReturn: Number(expectedAnnualReturn),
       };
+      // Note 3: If `defaultGoal.goalId` exists we are editing an existing goal
+      // so PUT is used. Otherwise POST creates a new goal. The API assigns the
+      // `goalId` on the server for new goals, ensuring unique IDs from one place.
       const res = await apiFetch("/api/goals", {
         method: defaultGoal?.goalId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,6 +66,9 @@ export default function GoalForm({
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Save failed");
+      // Note 4: `onSaved?.()` uses optional chaining to call the callback only
+      // if it was provided. The parent component uses this to close the form and
+      // refresh the goal list after a successful save.
       onSaved?.(data.created || data.updated);
     } catch (err: any) {
       setError(err.message || String(err));

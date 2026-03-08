@@ -1,3 +1,7 @@
+// Note 1: TransactionsTable is a pure presentational component. It receives data
+// from its parent (ReportsPage) and exposes optional `onEdit`/`onDelete` callbacks
+// rather than managing data itself. This separation keeps the component reusable
+// and keeps network logic in the page.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -23,6 +27,9 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useState } from "react";
 import { CategoryType, Transaction } from "@/lib/types";
 
+// Note 2: CATEGORY_COLORS maps each CategoryType to a MUI `color` token.
+// MUI `Chip` only accepts a restricted set of named colors. Mapping here keeps
+// the visual encoding consistent with other charts ("error"=red for Needs, etc.).
 const CATEGORY_COLORS: Record<CategoryType, "error" | "info" | "success"> = {
   Need: "error",
   Want: "info",
@@ -43,10 +50,16 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  // Note 3: `deleteTarget` stores the transaction to be deleted so the
+  // confirmation dialog can show its name and amount. Using state (vs a ref)
+  // triggers a render that opens the Dialog when set to a non-null value.
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
   function handleSort(field: SortField) {
     if (sortField === field) {
+      // Note 4: Toggling direction on repeated clicks of the same column header
+      // is standard sort UX. Clicking a new column always resets to descending
+      // (most recent or largest value first).
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
@@ -55,6 +68,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
     setPage(0);
   }
 
+  // Note 5: `[...transactions]` creates a shallow copy before sorting so the
+  // original prop array is not mutated. React props should be treated as read-only.
   const sorted = [...transactions].sort((a, b) => {
     let cmp = 0;
     if (sortField === "date") cmp = a.date.localeCompare(b.date);
@@ -65,6 +80,9 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  // Note 6: Client-side pagination with `slice` is fine here because all data
+  // is already in memory (loaded from localStorage). For server-side data,
+  // you would pass `page`/`rowsPerPage` as query params to the API instead.
   const paged = sorted.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage,
@@ -75,6 +93,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
     <>
       <Paper>
         <TableContainer sx={{ maxHeight: 520 }}>
+          {/* Note 7: `stickyHeader` keeps column headers visible while scrolling
+              a long list. The container must have a fixed `maxHeight` for this to work. */}
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
@@ -209,7 +229,9 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
         />
       </Paper>
 
-      {/* Delete confirmation dialog */}
+      {/* Note 8: The delete dialog is rendered outside the table in the same
+          React Fragment so it is not nested inside a <table> element (which
+          would be invalid HTML). `Boolean(deleteTarget)` drives the `open` prop. */}
       <Dialog
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}

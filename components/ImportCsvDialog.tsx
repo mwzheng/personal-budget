@@ -1,3 +1,7 @@
+// Note 1: ImportCsvDialog implements a discriminated union state machine for the
+// CSV import flow. The four stages -- idle, parsing, preview, error -- are
+// modeled as a single `ImportState` union type instead of multiple boolean flags.
+// This prevents impossible states (e.g. "parsing AND error at the same time").
 "use client";
 
 import Alert from "@mui/material/Alert";
@@ -18,6 +22,9 @@ import { useRef, useState } from "react";
 import type { Transaction } from "@/lib/types";
 import { appendTransactions } from "@/lib/storage";
 
+// Note 2: The discriminated union uses `stage` as the discriminant property.
+// TypeScript can narrow the type based on `state.stage`, giving compile-time
+// guarantees that `state.all` only exists when `stage === "preview"`.
 type ImportState =
   | { stage: "idle" }
   | { stage: "parsing" }
@@ -33,6 +40,10 @@ interface Props {
 
 export function ImportCsvDialog({ open, onClose, onImported }: Props) {
   const [state, setState] = useState<ImportState>({ stage: "idle" });
+  // Note 3: `useRef` stores a reference to the hidden <input type="file"> element.
+  // Unlike `useState`, updating a ref does not trigger a re-render.
+  // It is used here to imperatively reset the file input value after each import
+  // attempt, so the user can re-select the same file if needed.
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function reset() {
@@ -53,7 +64,10 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
 
     try {
       const text = await file.text();
-      // Try server-side import first; fallback to client-side parsing if server fails
+      // Note 4: The server-first strategy sends the CSV to `/api/reports/import`
+      // which saves rows directly to DynamoDB. If auth is not configured or the
+      // server errors out, the catch block falls back to client-side parsing
+      // via `csvParser` and saves to localStorage instead.
       let data: {
         importedCount: number;
         transactions: Transaction[];
@@ -74,7 +88,9 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         }
         data = (await res.json()) as any;
       } catch (err) {
-        // fallback: parse client-side and show preview, user can confirm to append to local storage
+        // Note 5: Dynamic `import("@/lib/csvParser")` loads the parser module on
+        // demand. This keeps it out of the initial bundle since it is only needed
+        // when the user actually selects a file and the server import fails.
         console.warn(
           "Server import failed, falling back to client-side parse",
           err,

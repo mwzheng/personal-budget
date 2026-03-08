@@ -1,3 +1,7 @@
+// Note 1: SalaryList is the top-level orchestrator for the salary history page.
+// It manages the list of entries, the add/edit form visibility, and the
+// SalaryChart. Splitting into List, Form, and Chart sub-components keeps each
+// piece focused and independently testable.
 "use client";
 import React, { useEffect, useState } from "react";
 import {
@@ -16,6 +20,9 @@ import SalaryChart from "./SalaryChart";
 export default function SalaryList() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  // Note 2: `editing` holds the full salary object being edited, or `null` when
+  // the form is in "create new" mode. Passing it as `defaultEntry` pre-fills the
+  // SalaryForm fields when the user clicks Edit.
   const [editing, setEditing] = useState<any | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +47,9 @@ export default function SalaryList() {
   }, []);
 
   const handleSaved = (e: any) => {
+    // Note 3: After a successful save the form is dismissed and the list is
+    // re-fetched. Re-fetching from the server guarantees the list reflects the
+    // freshly stored data (including any server-computed YoY values).
     setShowForm(false);
     setEditing(null);
     fetchEntries();
@@ -49,6 +59,9 @@ export default function SalaryList() {
     if (!entryId || !year) return;
     if (!confirm("Delete this salary entry?")) return;
     try {
+      // Note 4: Year is required in the query string alongside entryId because
+      // the DynamoDB sort key encodes both: "salary#<year>#<entryId>". Without
+      // the year the server cannot reconstruct the sort key to delete the item.
       const res = await apiFetch(
         "/api/salary?entryId=" +
           encodeURIComponent(entryId) +

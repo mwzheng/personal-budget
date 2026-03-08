@@ -1,3 +1,7 @@
+// Note 1: ReportsPage is the main data entry and analytics view. It manages
+// all transaction CRUD via localStorage (client-side) so the app works without
+// a live backend. Three chart bundles are lazy-loaded to keep the initial
+// JavaScript payload small; they only download when this route is visited.
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -36,7 +40,10 @@ import {
 } from "@/lib/storage";
 import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
 
-// Lazy-load heavy chart bundles
+// Note 2: All three chart components use `{ ssr: false }` because they depend
+// on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.
+// During server-side rendering that DOM element does not exist, causing errors.
+// The `loading` prop renders a Skeleton placeholder while the bundle downloads.
 const SpendingPieChart = dynamic(
   () => import("@/components/SpendingPieChart").then((m) => m.SpendingPieChart),
   {
@@ -59,6 +66,10 @@ const TagBarChart = dynamic(
   },
 );
 
+// Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
+// `ReportsAggregates` type contract when there are no transactions to aggregate.
+// Passing this to charts instead of `null` avoids null checks inside each chart
+// component, simplifying their props interface.
 const EMPTY_AGGREGATES: ReportsAggregates = {
   totalAmount: 0,
   totalByCategoryType: { Need: 0, Want: 0, Saving: 0 },
@@ -80,6 +91,10 @@ interface StatCardProps {
   loading: boolean;
 }
 
+// Note 4: `StatCard` and `EmptyState` are defined as module-level functions
+// rather than in a separate file because they are small, single-use sub-components
+// with no state of their own. Co-locating them with their only consumer avoids
+// unnecessary file fragmentation.
 function StatCard({ label, value, color, loading }: StatCardProps) {
   return (
     <Card>
@@ -157,7 +172,10 @@ export default function ReportsPage() {
   );
   const [importOpen, setImportOpen] = useState(false);
 
-  // Load from localStorage on mount (client-side only)
+  // Note 5: `useEffect` with an empty dependency array runs once after the
+  // first render, on the client only. Reading from localStorage here (rather
+  // than at module level) is safe because localStorage is unavailable on the
+  // server where the component is pre-rendered.
   useEffect(() => {
     setAllTransactions(getTransactions());
     setLoading(false);
@@ -197,6 +215,10 @@ export default function ReportsPage() {
     downloadTransactionsCsv(filtered, "transactions_export.csv");
   }
 
+  // Note 6: `useMemo` caches the result of these expensive operations and only
+  // recomputes when their dependencies change. Without memoization, `getAllTags`,
+  // `filterTransactions`, and `aggregateTransactions` would run on every render
+  // (e.g., when a dialog opens), wasting CPU on unchanged data.
   const availableTags = useMemo(
     () => getAllTags(allTransactions),
     [allTransactions],
@@ -383,7 +405,10 @@ export default function ReportsPage() {
         onImported={refreshFromStorage}
       />
 
-      {/* FAB to add transaction (shown when data exists) */}
+      {/* Note 7: The Floating Action Button (FAB) is a Material Design pattern
+          for the primary action on a page. Positioning it `fixed` at the bottom
+          right corner keeps it always accessible regardless of scroll position.
+          It is hidden on the empty state so the EmptyState CTA is the focal point. */}
       {!isEmpty && (
         <Fab
           color="primary"

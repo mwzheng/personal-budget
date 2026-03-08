@@ -1,3 +1,7 @@
+// Note 1: ProjectionForm is a pure "controlled" form component. It does not
+// perform any computation itself -- it collects user inputs and calls `onGenerate`
+// with them. The computation happens in `ProjectionView`, which keeps logic and
+// presentation cleanly separated.
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
@@ -12,6 +16,9 @@ export default function ProjectionForm({
     years: number;
   }) => void;
 }) {
+  // Note 2: Default values ("0", "500", "0.05", "10") are sensible starting
+  // points for exploring the compound interest simulator. A user can see a
+  // meaningful chart immediately without entering any data.
   const [currentSaved, setCurrentSaved] = useState("0");
   const [monthlyContribution, setMonthlyContribution] = useState("500");
   const [annualReturn, setAnnualReturn] = useState("0.05");
@@ -19,6 +26,9 @@ export default function ProjectionForm({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Note 3: `Number(...)` coerces the string state values to numbers. If the
+    // user clears a field, the resulting empty string becomes `0`, which is safe
+    // for the projection math rather than `NaN`.
     onGenerate({
       currentSaved: Number(currentSaved),
       monthlyContribution: Number(monthlyContribution),
