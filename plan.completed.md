@@ -203,4 +203,85 @@ Files changed
 
 ---
 
+---
 
+# Completed: Educational code comments (all source files)
+
+Date: 2026-03-08
+
+## Summary
+
+Added `Note N`-prefixed educational comments to all 47 TypeScript/TSX source
+files in the project, explaining the "why" behind key patterns and architectural
+decisions throughout the codebase.
+
+## Completed items
+
+- `lib/types.ts` — union types, utility types, interface design
+- `lib/goals.ts` — compound interest simulation, Infinity handling
+- `lib/projections.ts` — Future Value formula, monthly rate conversion
+- `lib/auth.ts` — JWKS endpoint, Bearer scheme, JWT sub claim
+- `lib/cognitoAuth.ts` — OIDC, JWKS caching, throwing Response
+- `lib/aggregations.ts` — Array.filter, hash maps, Set, timeseries grouping
+- `lib/csvParser.ts` — Papa Parse, BOM stripping, date normalization
+- `lib/csvExport.ts` — RFC 4180 CSV, Blob API, revokeObjectURL
+- `lib/apiFetch.ts` — token refresh, sessionStorage, OAuth 2.0
+- `lib/storage.ts` — "use client", localStorage, deduplication
+- `lib/budgets.ts` — Sankey node/link data structure
+- `lib/dynamo.ts` — DynamoDB SDK v3, single-table design, pagination
+- `lib/salary.ts` — sort key with year, lazy singleton, type coercion
+- `app/api/transactions/route.ts` — CRUD patterns, auth middleware
+- `app/api/sankey/route.ts` — Zod validation, floating-point tolerance
+- `app/api/reports/route.ts` — pagination, auth bypass, null coalescing
+- `app/api/reports/import/route.ts` — content-type negotiation, dynamic import
+- `app/api/reports/export/route.ts` — RFC 4180, Content-Disposition
+- `app/api/budgets/route.ts` — Zod schema, safeParse, server-side timestamps
+- `app/api/goals/route.ts` — ETA enrichment, goalId required for updates
+- `app/api/salary/route.ts` — YoY formula, typeof number, year in sort key
+- `app/auth/callback/page.tsx` — PKCE, state CSRF check, sessionStorage
+- `app/layout.tsx` — metadata export, lang attr, suppressHydrationWarning
+- `app/providers.tsx` — createTheme outside component, Dark Reader cleanup
+- `app/reports/page.tsx` — dynamic imports, useMemo, localStorage CRUD, StatCard/EmptyState, FAB
+- `app/sankey/page.tsx` — dynamic import ssr:false, IIFE async in event handler
+- `components/AppNav.tsx` — usePathname, startsWith, component prop
+- `components/FilterBar.tsx` — controlled component, ISO date, flex spacer
+- `components/SankeyChart.tsx` — Nivo sankey, getNodeColor fallback
+- `components/SpendingPieChart.tsx` — donut chart, zero-filter, ResponsiveContainer
+- `components/SpendingBarChart.tsx` — stacked bars, stackId, formatMonth
+- `components/TagBarChart.tsx` — horizontal layout, modulo wrap, dynamic height
+- `components/ProjectionView.tsx` — compound interest, monthly rate, end-of-month
+- `components/SalaryChart.tsx` — sort-before-render, typeof guard
+- `components/GoalForm.tsx` — upsert pattern, string state for numerics
+- `components/BudgetForm.tsx` — 50/30/20 defaults, filter pattern, shallow copy
+- `components/BudgetList.tsx` — useEffect mount, optimistic delete
+- `components/ProjectionForm.tsx` — pure form, default values, Number coercion
+- `components/ProjectionChart.tsx` — line chart, toLocaleDateString, minTickGap
+- `components/SalaryForm.tsx` — getFullYear at init, entryId, sort key
+- `components/SalaryList.tsx` — orchestrator pattern, editing state, re-fetch
+- `components/TransactionsTable.tsx` — CATEGORY_COLORS Record, TableSortLabel,
+  shallow copy before sort, client-side pagination, delete confirmation dialog
+- `components/TransactionForm.tsx` — FormValues/FormErrors interfaces, validate(),
+  set<K>() generic helper, transactionToFormValues adapter, tag Enter/comma input
+- `components/ImportCsvDialog.tsx` — discriminated union state machine
+  (idle|parsing|preview|error), server-first with client fallback, dynamic import
+- `components/GoalList.tsx` — orchestrator pattern, Infinity ETA display, confirm()
+- `components/SankeyForm.tsx` — ROWS config array, floating-point tolerance < 0.01
+- `components/Auth/SignInButton.tsx` — PKCE: base64url, SHA-256 via crypto.subtle,
+  randomString, CSRF state in sessionStorage
+
+Also fixed two pre-existing Husky hook bugs:
+
+- `.husky/pre-commit` — corrected escaped quotes in dirname path; replaced
+  `--yes` flag (unsupported in current pnpm dlx) with bare `pnpm dlx lint-staged`
+- `.husky/post-commit` — corrected escaped quotes in dirname path
+
+## Files changed
+
+All 47 TypeScript/TSX source files in `app/`, `components/`, and `lib/`,
+plus `.husky/pre-commit` and `.husky/post-commit`.
+
+## Commit
+
+`cc60768` — docs: add educational comments to all source files
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
