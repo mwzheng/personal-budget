@@ -2,6 +2,8 @@
 
 This document outlines a phased roadmap and detailed considerations for building the personal budgeting application.
 
+Developer process note: When work is completed, update both `plan.md` and `plan.completed.md` in the same commit. Remove completed items from `plan.md` and append them to `plan.completed.md` so both files stay synchronized and act as the authoritative record of progress.
+
 ## 🚀 Phase 1 – Foundation
 
 1. **Repository setup**
