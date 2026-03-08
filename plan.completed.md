@@ -111,3 +111,5 @@ Date: 2026-03-08
 - Added Salary UI components: `components/SalaryForm.tsx`, `components/SalaryList.tsx`, `components/SalaryChart.tsx`, and `app/salary/page.tsx` for manual per-year entries and YoY visualization.
 
 Notes: Validation, accessibility improvements, and integration tests remain TODO and are tracked in the main plan.
+
+In-progress: Sankey budget UI started — BudgetForm and BudgetList components scaffolded and committed; next steps are wiring the saved budgets to the budgets API and implementing the "Generate Sankey from Saved Budget" flow.

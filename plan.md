@@ -172,7 +172,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 - `app/reports/page.tsx` — switch data loading to server APIs, hook up import/export flows to server endpoints, and support server-side pagination/filters.
 - `components/TransactionsTable.tsx` — wire Edit/Delete actions to API calls and add server-aware pagination.
-- `app/sankey/page.tsx` — add budget picker, "Create budget from current spending" action, and budget save/preview controls.
+- `app/sankey/page.tsx` — add budget picker, "Create budget from current spending" action, and budget save/preview controls. (IN PROGRESS — BudgetForm/BudgetList scaffolding added; next: wire saved budgets to Sankey generation.)
 - `infra/SAM-DEPLOY.md` — document new tables and required IAM policy changes; update deploy scripts if needed.
 
 ### Key Design Decisions
