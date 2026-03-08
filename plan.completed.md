@@ -112,6 +112,21 @@ Date: 2026-03-08
 
 Notes: Validation, accessibility improvements, and integration tests remain TODO and are tracked in the main plan.
 
+## Completed: Local Data Management (client-side)
+
+Date: 2026-03-08
+
+- Implemented localStorage persistence helpers in `lib/storage.ts` with get/add/update/delete/append/clear and duplicate detection logic.
+- Wired Reports page to localStorage: `app/reports/page.tsx` uses `lib/storage` and components `TransactionForm`, `TransactionsTable`, and `ImportCsvDialog` to support add/edit/delete and CSV import flows.
+
+## Completed: CSV Export
+
+Date: 2026-03-08
+
+- Implemented `lib/csvExport.ts` and hooked the Reports page export button to download filtered transactions as CSV matching `expenses.csv` format.
+
+Notes: Server-side CSV import/export endpoints and persistence to DynamoDB remain TODO and are tracked in the main plan.
+
 Completed: Sankey Budget UI (scaffold)
 
 Date: 2026-03-08

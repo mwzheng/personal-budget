@@ -99,7 +99,7 @@ Summary of what was completed locally during this session:
 
 Remaining / next priorities (high level):
 
-- **User data management (next up — see section below):** Migrate from static CSV to localStorage-backed CRUD; add import/export UI; add Add/Edit/Delete transaction forms.
+- **User data management:** Implemented localStorage CRUD, transaction add/edit/delete, CSV import/export UI, and transaction forms. Next: wire server APIs to DynamoDB and enforce per-user access with Cognito (server-side pagination, validation, and CSV import persistence).
 - Integrate persistence and auth: connect API routes to DynamoDB and enforce user-scoped access via Cognito (or chosen auth provider).
 - Add tests (unit, integration, E2E) and CI (GitHub Actions) to protect builds and deployments.
 - Add server-side pagination/aggregation and performance tuning for large datasets.
