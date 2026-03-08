@@ -30,24 +30,79 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const allTransactions = await getUserTransactions(userId);
+    // Use paged DynamoDB query when available
+    let transactions = [] as any[];
+    let totalCount = 0;
+    let lastKey = undefined as any | undefined;
 
-    const filtered = filterTransactions(allTransactions, {
-      startDate,
-      endDate,
-      tags,
-      search,
-    });
-
-    const totalCount = filtered.length;
-    const start = (page - 1) * pageSize;
-    const transactions = filtered.slice(start, start + pageSize);
+    try {
+      const dynamo = await import("@/lib/dynamo");
+      if (dynamo.getUserTransactionsPaged) {
+        // Translate page/pageSize into limit/lastKey flow. For simple UX, support page+pageSize by iterating pages (not ideal for high offsets).
+        const limit = pageSize;
+        // If client provides lastKey param, use it. Otherwise, use page-based iteration up to page
+        const lastKeyParam = searchParams.get("lastKey");
+        if (lastKeyParam) {
+          const parsed = JSON.parse(lastKeyParam);
+          const res = await dynamo.getUserTransactionsPaged(userId, {
+            limit,
+            lastKey: parsed,
+            startDate,
+            endDate,
+          });
+          transactions = res.transactions;
+          lastKey = res.lastKey;
+        } else {
+          // iterate pages until the requested page
+          let currentLast = undefined;
+          for (let p = 1; p <= page; p++) {
+            const res = await dynamo.getUserTransactionsPaged(userId, {
+              limit,
+              lastKey: currentLast,
+              startDate,
+              endDate,
+            });
+            if (p === page) {
+              transactions = res.transactions;
+              lastKey = res.lastKey;
+            }
+            currentLast = res.lastKey;
+            if (!currentLast) break;
+          }
+        }
+        // For now we can't cheaply compute totalCount without a separate aggregate; leave as -1 to indicate unknown
+        totalCount = -1;
+      } else {
+        const allTransactions = await dynamo.getUserTransactions(userId);
+        const filtered = filterTransactions(allTransactions, {
+          startDate,
+          endDate,
+          tags,
+          search,
+        });
+        totalCount = filtered.length;
+        const start = (page - 1) * pageSize;
+        transactions = filtered.slice(start, start + pageSize);
+      }
+    } catch (e) {
+      // fallback to in-memory filtering
+      const allTransactions = await getUserTransactions(userId);
+      const filtered = filterTransactions(allTransactions, {
+        startDate,
+        endDate,
+        tags,
+        search,
+      });
+      totalCount = filtered.length;
+      const start = (page - 1) * pageSize;
+      transactions = filtered.slice(start, start + pageSize);
+    }
 
     const aggregates = includeAggregates
-      ? aggregateTransactions(filtered)
+      ? aggregateTransactions(transactions)
       : undefined;
 
-    return NextResponse.json({ transactions, totalCount, aggregates });
+    return NextResponse.json({ transactions, totalCount, aggregates, lastKey });
   } catch (error) {
     console.error("[/api/reports]", error);
     return NextResponse.json(
