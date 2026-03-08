@@ -196,17 +196,12 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 ### Todos (ordered)
 
-1. Create `.env.local` from SAM outputs (Cognito IDs, table names).
-2. Add IAM roles and least-privilege policies to SAM (Lambdas for transactions, budgets, goals, salary).
-3. Implement Cognito JWT middleware / Lambda authorizer and common auth helpers.
-4. Implement Transaction CRUD endpoints + import/export (DynamoDB-backed).
-5. Implement Budgets table + CRUD endpoints.
-6. Add Budget UI to Sankey page and `lib/budgets.ts` budget→sankey conversion.
-7. Implement Goals table + endpoints and Goals UI with time-to-goal calculation. (API implemented; UI pending)
-8. Implement Savings projection UI and projection utilities (client-side; optional server batch/export).
-9. Implement Salary history API + UI (manual per-year entries and year-over-year chart).
-10. Update reports UI to call server APIs and support server-side pagination/aggregation.
-11. Add tests and CI; include sample large datasets for perf testing. (CI workflow added: .github/workflows/ci.yml; sample datasets committed under dev-sample-data/)
+1. Add Zod validation to server APIs (transactions, budgets, goals, salary, sankey/import) — (todo: add-zod-validation).
+2. Finish budgets UI: implement update/delete flows, confirmation dialogs, accessibility (ARIA labels), keyboard navigation, and tests — (todo: finish-budgets-ui).
+3. Re-enable stricter ESLint/TypeScript rules (@typescript-eslint/no-explicit-any, ban-ts-comment) and fix typing issues across the codebase — (todo: reenable-eslint-strict).
+4. Expand tests & CI coverage: add unit/integration tests for CSV import, Sankey generation, and auth flows (token exchange and refresh); enforce coverage thresholds in CI — (todo: add-tests-ci).
+
+(Completed work has been moved to `plan.completed.md`.)
 
 ### Notes & considerations
 
