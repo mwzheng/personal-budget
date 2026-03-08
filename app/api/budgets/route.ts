@@ -9,10 +9,23 @@ import { getUserBudgets, putBudget } from "../../../lib/dynamo";
 // Note 2: The Zod schema defines the expected shape of the request body.
 // `z.string().min(1)` validates that `name` is a non-empty string. `z.record(z.number())`
 // accepts any object whose values are numbers -- e.g. `{ "Food": 200, "Rent": 1500 }`.
+const AllocationRecord = z.record(z.number());
+const AllocationArray = z
+  .array(
+    z.object({
+      category: z.string(),
+      amount: z.number(),
+    }),
+  )
+  .optional();
+
 const BudgetSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
-  allocations: z.record(z.number()).optional(),
+  // Accept either a record of category->number (legacy clients) or an array
+  // of { category, amount } objects (preferred). Normalize below before
+  // persisting so the DB always stores an array.
+  allocations: z.union([AllocationRecord, AllocationArray]).optional(),
   notes: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
@@ -65,6 +78,20 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     (bud as any).createdAt = (bud as any).createdAt || now;
     (bud as any).updatedAt = now;
+
+    // Normalize `allocations` so the DB always stores an array of
+    // { category, amount } objects. Support legacy record shape too.
+    let normalizedAllocations: { category: string; amount: number }[] = [];
+    if ((bud as any).allocations) {
+      if (Array.isArray((bud as any).allocations)) {
+        normalizedAllocations = (bud as any).allocations;
+      } else {
+        normalizedAllocations = Object.entries((bud as any).allocations).map(
+          ([category, amount]) => ({ category, amount: Number(amount) }),
+        );
+      }
+    }
+    (bud as any).allocations = normalizedAllocations;
 
     const created = await putBudget(userId, bud as any);
     return NextResponse.json({ ok: true, created });
