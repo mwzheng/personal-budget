@@ -1,13 +1,15 @@
-// Note 1: `"use client"` makes AppNav a Client Component because it uses
-// `usePathname` -- a Next.js hook that reads the current URL from the router.
-// Hooks like `usePathname` can only run in the browser where a Router context exists.
+// Note 1: "use client" makes AppNav a Client Component because it uses
+// client-only hooks and browser APIs (sessionStorage and storage events).
 "use client";
 
+import React, { useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,8 +20,38 @@ export function AppNav() {
   const pathname = usePathname();
   const value = pathname.startsWith("/sankey") ? "sankey" : "reports";
 
+  // Note 3: Client-side auth detection uses sessionStorage so state is scoped to
+  // the browser tab and can be observed via storage events in other tabs.
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkToken = () => {
+      try {
+        // Common token key names vary by implementation; check a few common ones.
+        const hasToken =
+          !!sessionStorage.getItem("accessToken") ||
+          !!sessionStorage.getItem("idToken") ||
+          !!sessionStorage.getItem("token");
+        setLoggedIn(hasToken);
+      } catch (e) {
+        setLoggedIn(false);
+      }
+    };
+
+    checkToken();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.storageArea === sessionStorage) {
+        checkToken();
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   return (
-    // Note 3: `elevation={0}` removes the default MUI shadow from the AppBar.
+    // Note 4: `elevation={0}` removes the default MUI shadow from the AppBar.
     // The border is added manually via `sx` to create a clean separation line
     // without a blurry shadow that could look heavy on a dark background.
     <AppBar
@@ -31,24 +63,40 @@ export function AppNav() {
         <Typography variant="h6" sx={{ mr: 4, fontWeight: 700 }}>
           💰 Personal Budget
         </Typography>
-        {/* Note 4: `component={NextLink}` replaces the Tab's default anchor
-            element with Next.js's Link. This gives MUI Tab the accessible
-            keyboard navigation and active-indicator behavior while still
-            performing a client-side navigation (no full-page reload). */}
-        <Tabs value={value} textColor="inherit" indicatorColor="primary">
-          <Tab
-            label="Reports"
-            value="reports"
-            component={NextLink}
-            href="/reports"
-          />
-          <Tab
-            label="Budget Generator"
-            value="sankey"
-            component={NextLink}
-            href="/sankey"
-          />
-        </Tabs>
+
+        {/* Tabs are allowed to grow, pushing auth buttons to the right */}
+        <Box sx={{ flexGrow: 1 }}>
+          <Tabs value={value} textColor="inherit" indicatorColor="primary">
+            <Tab
+              label="Reports"
+              value="reports"
+              component={NextLink}
+              href="/reports"
+            />
+            <Tab
+              label="Budget Generator"
+              value="sankey"
+              component={NextLink}
+              href="/sankey"
+            />
+          </Tabs>
+        </Box>
+
+        {/* Auth buttons: show Sign out when logged in, otherwise Sign in and Register */}
+        {loggedIn ? (
+          <Button component={NextLink} href="/auth/signout" color="inherit">
+            Sign out
+          </Button>
+        ) : (
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button component={NextLink} href="/auth/login" color="inherit">
+              Sign in
+            </Button>
+            <Button component={NextLink} href="/auth/register" color="inherit">
+              Register
+            </Button>
+          </Box>
+        )}
       </Toolbar>
     </AppBar>
   );
