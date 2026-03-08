@@ -11,7 +11,8 @@
     "prepare": "husky install",
     "gcommit": "bash ./scripts/commit.sh",
     "deploy:infra": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra dev us-east-1",
-    "deploy:infra:prod": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra prod us-east-1"
+    "deploy:infra:prod": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra prod us-east-1",
+    "test": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1004.0",
@@ -42,7 +43,8 @@
     "serverless": "4.33.0",
     "typescript": "^5.7.3",
     "husky": "^8.0.0",
-    "lint-staged": "^14.0.0"
+    "lint-staged": "^14.0.0",
+    "vitest": "^1.2.0"
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx,css,scss,md,json}": [
