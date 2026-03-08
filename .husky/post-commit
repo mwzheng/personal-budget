@@ -1,0 +1,37 @@
+#!/bin/sh
+. "$(dirname \"$0\")/_/husky.sh"
+
+# Ensure commits are authored by repo-level git config user.name/user.email or fall back to global git config
+# Allow overrides via COMMIT_AUTHOR_NAME and COMMIT_AUTHOR_EMAIL environment variables.
+
+# Read desired author from repo config, otherwise global config
+desired_name=$(git config user.name)
+desired_email=$(git config user.email)
+if [ -z "$desired_name" ] || [ -z "$desired_email" ]; then
+  desired_name=$(git config --global user.name)
+  desired_email=$(git config --global user.email)
+fi
+
+# Allow explicit environment override
+if [ -n "$COMMIT_AUTHOR_NAME" ]; then desired_name="$COMMIT_AUTHOR_NAME"; fi
+if [ -n "$COMMIT_AUTHOR_EMAIL" ]; then desired_email="$COMMIT_AUTHOR_EMAIL"; fi
+
+if [ -z "$desired_name" ] || [ -z "$desired_email" ]; then
+  echo "commit-author: no desired author configured; skipping"
+  exit 0
+fi
+
+# Get current HEAD author
+current_name=$(git log -1 --pretty=format:'%an')
+current_email=$(git log-1 --pretty=format:'%ae' 2>/dev/null || git log -1 --pretty=format:'%ae')
+
+# If already correct, nothing to do
+if [ "$current_name" = "$desired_name" ] && [ "$current_email" = "$desired_email" ]; then
+  exit 0
+fi
+
+# Amend commit to set the desired author. Ignore failures to avoid blocking the commit process.
+# This will rewrite the most recent commit to have the configured author and is idempotent.
+GIT_COMMITTER_NAME="$desired_name" GIT_COMMITTER_EMAIL="$desired_email" git commit --amend --no-edit --author="$desired_name <$desired_email>" >/dev/null 2>&1 || true
+
+echo "commit-author: ensured author is $desired_name <$desired_email>"
