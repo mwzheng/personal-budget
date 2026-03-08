@@ -60,6 +60,40 @@ export default function SankeyPage() {
             <Divider />
             <CardContent>
               <SankeyForm onResult={setResult} />
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                Saved Budgets
+              </Typography>
+              <Box>
+                {/* Budget creation form and list */}
+                <Box mb={2}>
+                  {/* BudgetForm will POST to /api/budgets and call onSaved */}
+                  {/* @ts-ignore */}
+                  <React.Suspense fallback={<div>Loading budget form…</div>}>
+                    {/* BudgetForm is a client component */}
+                    {/* eslint-disable-next-line react/jsx-no-undef */}
+                    {/* @ts-ignore */}
+                    <BudgetForm onSaved={() => { /* refresh list via BudgetList' own effect */ }} />
+                  </React.Suspense>
+                </Box>
+                <Box>
+                  {/* BudgetList fetches saved budgets and exposes Select */}
+                  {/* @ts-ignore */}
+                  <BudgetList onSelect={(b: any) => {
+                    // convert budget to sankey data client-side using budgets API or lib
+                    // for now, call POST /api/sankey with allocations to get sankeyData
+                    (async () => {
+                      const resp = await fetch('/api/sankey', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ allocations: b.allocations })
+                      });
+                      const data = await resp.json();
+                      setResult(data);
+                    })();
+                  }} />
+                </Box>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
