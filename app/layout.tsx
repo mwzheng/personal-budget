@@ -3,6 +3,7 @@
 // Components (no "use client" directive) like this file are rendered on the
 // server and sent as HTML to the browser before JavaScript hydrates the page.
 import type { Metadata } from "next";
+import Script from "next/script";
 import { AppNav } from "@/components/AppNav";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -26,11 +27,41 @@ export default function RootLayout({
     // practice: screen readers use it to select the correct voice/pronunciation
     // profile, and search engines use it for language-aware indexing.
     <html lang="en">
-      {/* Note 4: `suppressHydrationWarning` on <body> suppresses the React
-          warning caused when the server-rendered HTML differs from the client
-          hydration. This commonly occurs with browser extensions (e.g. Dark
-          Reader) that inject inline styles into the DOM before React runs. */}
+      {/*
+        Note 4: `suppressHydrationWarning` on <body> reduces React's hydration
+        warnings when server-rendered HTML differs from the client. A common
+        cause is browser extensions (e.g. Dark Reader) that inject inline
+        styles before React hydrates. To proactively avoid hydration mismatches
+        caused by such extensions, an inline script runs before React's
+        hydration to strip any Dark Reader style variables from elements.
+
+        The <Script strategy="beforeInteractive"> component ensures the
+        cleanup runs before React hydrates client components.
+      */}
       <body suppressHydrationWarning>
+        <Script id="cleanup-darkreader" strategy="beforeInteractive">
+          {`(function cleanupDarkReaderVars(){
+  try {
+    function clean(){
+      document.querySelectorAll('[style]').forEach(function(el){
+        var style = el.getAttribute('style');
+        if (!style) return;
+        var cleaned = style
+          .split(';')
+          .map(function(s){ return s.trim(); })
+          .filter(function(s){ return s && s.indexOf('--darkreader-') === -1; })
+          .join('; ');
+        if (cleaned !== style) el.setAttribute('style', cleaned);
+      });
+    }
+    clean();
+    setTimeout(clean, 100);
+  } catch (e) {
+    // Safe no-op if anything goes wrong during early cleanup
+  }
+})();`}
+        </Script>
+
         <Providers>
           <AppNav />
           {children}
