@@ -23,8 +23,61 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
     setLoading(true);
     try {
       const res = await apiFetch("/api/budgets");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || res.statusText);
+
+      // Read the body as text and attempt to parse JSON. This is safer than
+      // calling res.json() unconditionally because some error responses may
+      // be non-JSON and calling json() would throw.
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        // ignore parse errors; we'll fall back to statusText
+      }
+
+      if (!res.ok) {
+        const msg =
+          data?.error?.message ||
+          data?.message ||
+          res.statusText ||
+          "Request failed";
+        // If unauthorized, clear stored tokens and redirect to the auth flow
+        // so the user can re-authenticate instead of showing a console error.
+        if (res.status === 401 || res.status === 403) {
+          if (typeof window !== "undefined") {
+            try {
+              window.sessionStorage.removeItem("access_token");
+              window.sessionStorage.removeItem("id_token");
+              window.sessionStorage.removeItem("refresh_token");
+            } catch (e) {
+              // ignore storage errors
+            }
+
+            // Prefer redirecting to the configured Cognito hosted UI if envs
+            // are available, otherwise fall back to a local /login page.
+            const domain =
+              (process.env.NEXT_PUBLIC_COGNITO_DOMAIN as string) || undefined;
+            const clientId =
+              (process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID as string) ||
+              undefined;
+            const redirectUri = window.location.origin;
+
+            if (domain && clientId) {
+              const loginUrl = `${domain}/login?client_id=${encodeURIComponent(
+                clientId,
+              )}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
+              window.location.href = loginUrl;
+              return;
+            }
+
+            window.location.href = "/login";
+            return;
+          }
+        }
+
+        throw new Error(msg);
+      }
+
       setBudgets(data || []);
     } catch (err) {
       console.error("Failed to load budgets", err);
