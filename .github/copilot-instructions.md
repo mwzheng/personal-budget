@@ -89,6 +89,29 @@ If this top-level file conflicts with a per-topic instruction, the per-topic fil
 - Add or update references to per-topic instruction files when those files change.
 - Keep the commit/format guidance current with repository scripts (e.g., update instructions if the repo switches package manager or adds a different format script).
 
+- Plan update rule (REQUIRED): When work or a todo is completed, update BOTH `plan.md` and `plan.completed.md` in the SAME commit. Do not leave one file updated without the other. This keeps the active plan and the completed history synchronized and audit-friendly.
+
+  - Required steps when marking work complete:
+    1. Edit `plan.md` to remove (or clearly mark as moved) the completed item so the active plan reflects only pending work.
+    2. Append a detailed entry to `plan.completed.md` that includes at minimum:
+       - Date (YYYY-MM-DD)
+       - Short summary title
+       - Completed items list (brief bullets)
+       - Files changed (paths)
+       - Commit message or commit SHA reference
+       - Any notes or next steps
+    3. Stage and commit both files in the same commit. Include the usual commit trailer:
+       `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+    4. Run the repository format/lint checks (pre-commit hooks) before pushing. If hooks fail locally, fix hooks (`pnpm install` && `pnpm run prepare`) rather than bypassing them.
+    5. If the project uses the session todos database, also update the `todos` table (set status = 'done') and add any `todo_deps` changes in the same work session.
+
+  - Automation guidance:
+    - Use the `update-implementation-plan` skill when available to automate creating/updating the `plan.md` and `plan.completed.md` entries.
+    - If making code changes programmatically, prefer to include the plan updates in the same patch/PR so reviewers can see what was removed from the active plan and why.
+
+  - Rationale: Keeping `plan.md` (the active plan) and `plan.completed.md` (the authoritative record of done work) synchronized prevents drift, eases reviews, and makes it straightforward to audit progress and revert if necessary.
+
+
 ---
 
 Keep this file concise; prefer moving long or detailed rules into `.github/instructions/` so they can be edited per topic.
