@@ -78,6 +78,16 @@ Summary
 - Added DynamoDB put/delete helpers to `lib/dynamo.ts` and implemented authenticated Transactions API handlers: `app/api/transactions/route.ts` (GET/POST/PUT/DELETE) that enforce per-user access using the Cognito `sub` claim as the partition key.
 - Commits created for these changes and corresponding session todos updated.
 
+## Completed: Budgets API (partial)
+
+Date: 2026-03-08
+
+- Implemented basic budgets storage helpers in `lib/dynamo.ts` and `lib/budgets.ts` for converting budgets to a Sankey-friendly format.
+- Implemented authenticated budgets API `app/api/budgets/route.ts` (GET list, POST create) using the Cognito `sub` as the partition key.  
+
+Notes: Update and delete for budgets, richer validation, and UI integration remain todo and are tracked in the main plan.
+
+
 Notes
 
 - Transaction handlers currently support listing, create (upsert), update (PUT as upsert), and delete; pagination, input validation (Zod), and stricter error handling remain TODO and are tracked in the main plan.
