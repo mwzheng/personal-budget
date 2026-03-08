@@ -4,7 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 const darkTheme = createTheme({
   palette: {
@@ -29,6 +29,24 @@ const darkTheme = createTheme({
 });
 
 export function Providers({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const removeDarkReaderVars = () => {
+      document.querySelectorAll("[style]").forEach((el) => {
+        const style = el.getAttribute("style");
+        if (!style) return;
+        const cleaned = style
+          .split(";")
+          .map((s) => s.trim())
+          .filter((s) => s && !s.includes("--darkreader-"))
+          .join("; ");
+        if (cleaned !== style) el.setAttribute("style", cleaned);
+      });
+    };
+    removeDarkReaderVars();
+    const t = setTimeout(removeDarkReaderVars, 100);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
