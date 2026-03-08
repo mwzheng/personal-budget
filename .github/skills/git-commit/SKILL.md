@@ -96,7 +96,7 @@ Analyze the diff to determine:
 # Single line
 git commit -m "<type>[scope]: <description>"
 
-# Multi-line with body/footer
+# Multi-line with body/footer (heredoc)
 git commit -m "$(cat <<'EOF'
 <type>[scope]: <description>
 
@@ -105,6 +105,12 @@ git commit -m "$(cat <<'EOF'
 <optional footer>
 EOF
 )"
+
+# Recommended helper: scripts/commit.sh converts literal "\\n" or "/n" into real newlines
+# Example usage:
+#   ./scripts/commit.sh "feat(scope): add feature" "Body line1\\nBody line2" "Footer: Closes #123"
+# or via package script:
+#   pnpm run gcommit -- "fix(scope): bugfix" "One-line body"
 ```
 
 ## Best Practices

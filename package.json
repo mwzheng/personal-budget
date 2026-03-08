@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky install",
+    "gcommit": "bash ./scripts/commit.sh",
     "deploy:infra": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra dev us-east-1",
     "deploy:infra:prod": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra prod us-east-1"
   },
