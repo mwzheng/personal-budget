@@ -30,11 +30,46 @@ export async function POST(request: NextRequest) {
 
     const parsed = loadTransactionsFromCSV(csvText);
 
+    // Attempt to persist to DynamoDB when available
+    const imported: any[] = [];
+    const skipped: any[] = [];
+    const clientModule = await import("@/lib/dynamo").catch(() => null);
+    const skipAuth =
+      process.env.DISABLE_AUTH === "true" || !process.env.COGNITO_USER_POOL_ID;
+    let userId = "local-demo";
+    if (!skipAuth) {
+      userId = await (
+        await import("@/lib/cognitoAuth")
+      ).requireAuth(request, {
+        region: process.env.AWS_REGION,
+        userPoolId: process.env.COGNITO_USER_POOL_ID!,
+        audience: process.env.COGNITO_CLIENT_ID,
+      });
+    }
+
+    if (clientModule && clientModule.putTransaction) {
+      for (const t of parsed) {
+        // Create id if missing
+        const tx = {
+          ...t,
+          id: t.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        };
+        try {
+          // Simple idempotency: attempt put; higher-level dedupe by client may be needed
+          await clientModule.putTransaction(userId, tx);
+          imported.push(tx);
+        } catch (err) {
+          console.error("Error persisting transaction", err);
+          skipped.push({ tx, error: String(err) });
+        }
+      }
+    }
+
     return NextResponse.json({
-      importedCount: parsed.length,
-      transactions: parsed,
-      // Legacy preview alias kept for backward compatibility
-      sample: parsed.slice(0, 50),
+      importedCount: imported.length,
+      transactions: imported.length ? imported : parsed,
+      sample: (imported.length ? imported : parsed).slice(0, 50),
+      skipped,
     });
   } catch (error) {
     console.error("[/api/reports/import]", error);
