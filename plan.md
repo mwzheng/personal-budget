@@ -89,7 +89,7 @@ Developer process note: When work is completed, update both `plan.md` and `plan.
 
 Status: Local implementation complete (reports + sankey). AWS infrastructure (DynamoDB + Cognito) deployed via SAM — stack `personal-budget-resources` live in `us-east-1`. Next priority: wire API routes to DynamoDB with Cognito JWT middleware, and build user data management (localStorage CRUD → DynamoDB).
 
-Completed work (moved): The full details of the recent completed work (Reports & Sankey implementation, infra provisioning and documentation, repository-wide educational comments, Husky + lint-staged setup and fixes, build & dev smoke-testing, and related code quality fixes) have been moved to `plan.completed.md`. See the top of `plan.completed.md` for a consolidated record and per-feature entries.
+Completed work (moved): The full details of the recent completed work (Reports & Sankey implementation, infra provisioning and documentation, repository-wide educational comments, Husky + lint-staged setup and fixes, build & dev smoke-testing, and related code quality fixes) have been moved to `plan.completed.md`. See the top of `plan.completed.md` for a consolidated record and per-feature entries. Additionally, Budgets API & UI wiring was completed on 2026-03-08 and its details are recorded in `plan.completed.md`.
 
 Remaining / next priorities (high level):
 

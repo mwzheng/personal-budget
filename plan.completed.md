@@ -352,3 +352,32 @@ Commit references
 
 Notes
 Per project policy, `plan.md` was trimmed to remove the completed bullets and now points here for the authoritative history.
+
+---
+
+# Completed: Budgets API & UI wiring
+
+Date: 2026-03-08
+
+Summary
+
+- Implemented PUT and DELETE endpoints for budgets with Zod validation and normalization; added deleteBudget helper; normalized POST allocations; added BudgetForm edit support and BudgetList edit/select controls; wired Sankey preview on budget select.
+
+Completed items
+
+- app/api/budgets/[id]/route.ts — PUT and DELETE routes (Zod validation + allocations normalization)
+- app/api/budgets/route.ts — POST: accept record or array and normalize to array before persisting
+- lib/dynamo.ts — deleteBudget helper
+- components/BudgetForm.tsx — initialBudget support and PUT update flow
+- components/BudgetList.tsx — Edit/Select buttons and optimistic delete
+- app/sankey/page.tsx — connected BudgetForm and BudgetList for edit/preview flows
+
+Files/Commits
+
+- 176b59f — feat(budgets): add dynamic PUT/DELETE endpoints and deleteBudget (app/api/budgets/[id]/route.ts, lib/dynamo.ts)
+- c2fcf37 — fix(budgets): accept record or array for allocations and normalize before persisting (app/api/budgets/route.ts)
+- 6d05d00 — feat(budgets): wire UI editing flow and add edit/select controls (app/sankey/page.tsx, components/BudgetForm.tsx, components/BudgetList.tsx)
+
+Notes & next steps
+
+- Remaining work: finalize delete confirmation dialog, accessibility improvements (ARIA/keyboard), add unit/integration tests for budgets endpoints and UI flows, and re-enable stricter ESLint/TypeScript rules. See plan.md for next priorities.
