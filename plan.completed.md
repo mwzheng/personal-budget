@@ -125,6 +125,12 @@ Date: 2026-03-08
 
 - Implemented `lib/csvExport.ts` and hooked the Reports page export button to download filtered transactions as CSV matching `expenses.csv` format.
 
+## Completed: Budgets storage (single-table)
+
+Date: 2026-03-08
+
+- Implemented budgets persistence in `lib/dynamo.ts` using the single-table pattern (pk=`user#<userId>`, sk=`budget#<budgetId>`), and `putBudget` / `getUserBudgets` helpers. Frontend BudgetForm/BudgetList are wired to `app/api/budgets` for creation and listing.
+
 Notes: Server-side CSV import/export endpoints and persistence to DynamoDB remain TODO and are tracked in the main plan.
 
 Completed: Sankey Budget UI (scaffold)

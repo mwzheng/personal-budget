@@ -145,7 +145,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 - Goals table: `personal-budget-infra-dev-goals` (PK = userId, SK = goalId)
 - Salary table: `personal-budget-infra-dev-salary` (PK = userId, SK = year#entryId)
 
-(Consider moving to a single-table design later for scale/efficiency once access patterns are stable.)
+(Current implementation uses a single-table design with `pk = user#${userId}` and `sk` prefixes for entity types — e.g., `date#<date>#<txId>`, `budget#<budgetId>`, `goal#<goalId>`, `salary#<year>#<entryId>`). Budgets are stored as items with `sk = budget#<budgetId>` and an `allocations` array; see `lib/dynamo.ts` (putBudget/getUserBudgets) and `lib/budgets.ts` for conversion helpers.
 
 ### Files to Create
 
