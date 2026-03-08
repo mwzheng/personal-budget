@@ -72,6 +72,8 @@ export function TagBarChart({ data }: Props) {
             "Total",
           ]}
           contentStyle={{ background: "#242424", border: "1px solid #444" }}
+          labelStyle={{ color: "#fff" }}
+          itemStyle={{ color: "#fff" }}
         />
         <Bar dataKey="value" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => (

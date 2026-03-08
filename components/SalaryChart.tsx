@@ -35,6 +35,9 @@ export default function SalaryChart({ data }: { data: any[] }) {
                 ? `$${Number(value).toLocaleString()}`
                 : value
             }
+            contentStyle={{ background: "#242424", border: "1px solid #444" }}
+            labelStyle={{ color: "#fff" }}
+            itemStyle={{ color: "#fff" }}
           />
           <Bar dataKey="amount" fill="#4caf50" />
           <Line

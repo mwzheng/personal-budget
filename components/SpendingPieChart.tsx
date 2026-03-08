@@ -63,6 +63,8 @@ export function SpendingPieChart({ data }: Props) {
             "",
           ]}
           contentStyle={{ background: "#242424", border: "1px solid #444" }}
+          labelStyle={{ color: "#fff" }}
+          itemStyle={{ color: "#fff" }}
         />
         <Legend />
       </PieChart>

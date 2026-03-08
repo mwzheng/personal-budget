@@ -32,6 +32,9 @@ export default function ProjectionChart({
           <YAxis />
           <Tooltip
             formatter={(value: any) => `$${Number(value).toLocaleString()}`}
+            contentStyle={{ background: "#242424", border: "1px solid #444" }}
+            labelStyle={{ color: "#fff" }}
+            itemStyle={{ color: "#fff" }}
           />
           <Line
             type="monotone"

@@ -68,6 +68,8 @@ export function SpendingBarChart({ data }: Props) {
             "",
           ]}
           contentStyle={{ background: "#242424", border: "1px solid #444" }}
+          labelStyle={{ color: "#fff" }}
+          itemStyle={{ color: "#fff" }}
         />
         <Legend />
         <Bar dataKey="Saving" stackId="a" fill="#66bb6a" name="Saving" />
