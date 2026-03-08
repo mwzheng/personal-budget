@@ -53,25 +53,41 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
 
     try {
       const text = await file.text();
-      const res = await fetch("/api/reports/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ csv: text }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(
-          (err as { error?: { message?: string } }).error?.message ??
-            `Parse failed (${res.status})`,
-        );
-      }
-
-      const data = (await res.json()) as {
+      // Try server-side import first; fallback to client-side parsing if server fails
+      let data: {
         importedCount: number;
         transactions: Transaction[];
         sample: Transaction[];
-      };
+      } | null = null;
+      try {
+        const res = await fetch("/api/reports/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ csv: text }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(
+            (err as { error?: { message?: string } }).error?.message ??
+              `Parse failed (${res.status})`,
+          );
+        }
+        data = (await res.json()) as any;
+      } catch (err) {
+        // fallback: parse client-side and show preview, user can confirm to append to local storage
+        console.warn(
+          "Server import failed, falling back to client-side parse",
+          err,
+        );
+        const parsed = (
+          await import("@/lib/csvParser")
+        ).loadTransactionsFromCSV(text);
+        data = {
+          importedCount: parsed.length,
+          transactions: parsed,
+          sample: parsed.slice(0, 5),
+        };
+      }
 
       setState({
         stage: "preview",
