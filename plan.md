@@ -197,7 +197,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 8. Implement Savings projection UI and projection utilities (client-side; optional server batch/export).
 9. Implement Salary history API + UI (manual per-year entries and year-over-year chart).
 10. Update reports UI to call server APIs and support server-side pagination/aggregation.
-11. Add tests and CI; include sample large datasets for perf testing.
+11. Add tests and CI; include sample large datasets for perf testing. (CI workflow added: .github/workflows/ci.yml; sample datasets committed under dev-sample-data/)
 
 ### Notes & considerations
 
