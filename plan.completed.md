@@ -112,4 +112,8 @@ Date: 2026-03-08
 
 Notes: Validation, accessibility improvements, and integration tests remain TODO and are tracked in the main plan.
 
-In-progress: Sankey budget UI started — BudgetForm and BudgetList components scaffolded and committed; next steps are wiring the saved budgets to the budgets API and implementing the "Generate Sankey from Saved Budget" flow.
+Completed: Sankey Budget UI (scaffold)
+
+Date: 2026-03-08
+
+- Added `components/BudgetForm.tsx` and `components/BudgetList.tsx` and updated `app/sankey/page.tsx` to allow creating and selecting saved budgets. Selecting a budget posts allocations to `/api/sankey` and renders the Sankey diagram. Validation, delete confirmation UX, and accessibility improvements remain TODO.
