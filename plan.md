@@ -99,21 +99,30 @@ Summary of what was completed locally during this session:
 
 Remaining / next priorities (high level):
 
-- **User data management:** Implemented localStorage CRUD, transaction add/edit/delete, CSV import/export UI, and transaction forms. Next: wire server APIs to DynamoDB and enforce per-user access with Cognito (server-side pagination, validation, and CSV import persistence).
-- Integrate persistence and auth: connect API routes to DynamoDB and enforce user-scoped access via Cognito (or chosen auth provider).
-- Add tests (unit, integration, E2E) and CI (GitHub Actions) to protect builds and deployments.
-- Add server-side pagination/aggregation and performance tuning for large datasets.
-- Improve accessibility, add ARIA labels, keyboard navigation, and mobile layout tweaks.
+- Completed (implemented):
+  - User data management (localStorage CRUD, transaction add/edit/delete, CSV import/export UI, transaction forms) — wired into Reports UI and client-side flows.
+  - AWS infra (Cognito + DynamoDB) provisioned via SAM and documented; `.env.local` values available in `infra/SAM-DEPLOY.md`.
+  - API persistence wired to DynamoDB for transactions, budgets (basic), goals, and salary APIs with per-user access via Cognito JWT.
+  - Sankey generation and Budget UI scaffold (create/list) implemented; selecting a saved budget posts allocations to `/api/sankey` and renders the Sankey chart.
+  - CI basics, sample datasets, CSV import/export routes, and local auth helpers are implemented (see `plan.completed.md`).
+  - Husky pre-commit hook and post-commit author enforcement hook added; Prettier formatting runs on staged files via lint-staged.
+  - Client-side auth refresh flow implemented in `lib/apiFetch.ts` (refresh on 401/403 using refresh_token).
 
-Immediate next steps for the repository (developer tasks):
+- Pending (next priorities):
+  1. Add Zod validation to server APIs (transactions, budgets, goals, salary, sankey/import) and return structured errors (todo: add-zod-validation).
+  2. Finish Budgets UI: implement update/delete, delete confirmations, accessibility labels (ARIA), keyboard navigation, and unit tests (todo: finish-budgets-ui).
+  3. Re-enable stricter ESLint/TypeScript rules (remove `no-explicit-any` relaxations) and fix typing issues across the codebase (todo: reenable-eslint-strict).
+  4. Expand tests & CI coverage: add focused unit/integration tests for CSV import, Sankey generation, auth flows (token exchange and refresh), and increase coverage enforcement (todo: add-tests-ci).
 
-1. Implement user data management (localStorage CRUD + CSV import/export UI) — details below.
-2. ✅ ~~Create AWS dev resources (Cognito + DynamoDB) and provide env vars for local dev.~~ Done — see `plan.completed.md`.
-3. Create `.env.local` with stack output values (`NEXT_PUBLIC_COGNITO_USER_POOL_ID`, `NEXT_PUBLIC_COGNITO_CLIENT_ID`, `DYNAMODB_TABLE_NAME`).
-4. Write IAM roles for Lambda functions; implement auth middleware and wire APIs to DynamoDB (replace localStorage with DynamoDB once auth is ready).
-5. Add tests and CI; add example large dataset to `sample-data` for perf testing.
+Immediate next steps (developer tasks):
 
-(Completed work has been moved to `plan.completed.md`.)
+1. Implement Zod schemas and validation on a single API (recommend starting with `app/api/budgets/route.ts`) and add tests — this creates a pattern to follow across APIs.
+2. Finish budgets update/delete UX in the Sankey page: wire PUT/DELETE endpoints, add confirmation dialog and accessible labels, and test flows end-to-end against DynamoDB.
+3. Enable ESLint strict rules in a feature branch, run the type-fix pass, and address failures incrementally (prefer small PRs). Re-run CI to ensure linting passes.
+4. Expand tests & CI: add unit tests for `lib/csvParser`, `lib/budgets.ts` sankey conversion, and integration tests for `app/api/reports/import` and `app/api/sankey`.
+5. Optional: consider adding a server-side refresh endpoint or proactive background refresh to reduce user-facing auth interrupts; document trade-offs.
+
+(Completed work moved to `plan.completed.md` — keep that file as the authoritative record of done items.)
 
 ---
 
