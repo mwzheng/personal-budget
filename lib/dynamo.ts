@@ -379,3 +379,16 @@ export async function getUserBudgets(userId: string) {
     updatedAt: item.updatedAt,
   }));
 }
+
+export async function deleteBudget(userId: string, budgetId: string) {
+  const client = getDocClient();
+  if (!client) throw new Error("DynamoDB table not configured");
+  const sk = `budget#${budgetId}`;
+  await client.send(
+    new DeleteCommand({
+      TableName: TABLE_NAME,
+      Key: { pk: `user#${userId}`, sk },
+    }),
+  );
+  return { ok: true };
+}
