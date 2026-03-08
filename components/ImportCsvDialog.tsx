@@ -60,7 +60,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         sample: Transaction[];
       } | null = null;
       try {
-        const res = await fetch("/api/reports/import", {
+        const res = await apiFetch("/api/reports/import", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ csv: text }),

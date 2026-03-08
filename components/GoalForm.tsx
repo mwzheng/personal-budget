@@ -33,7 +33,7 @@ export default function GoalForm({ defaultGoal, onSaved, onCancel } : { defaultG
         monthlyContribution: Number(monthlyContribution),
         expectedAnnualReturn: Number(expectedAnnualReturn),
       };
-      const res = await fetch('/api/goals', {
+      const res = await apiFetch('/api/goals', {
         method: defaultGoal?.goalId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

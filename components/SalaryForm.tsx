@@ -16,7 +16,7 @@ export default function SalaryForm({ defaultEntry, onSaved, onCancel } : { defau
     try {
       const body: any = { year: Number(year), amount: Number(amount), note };
       if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
-      const res = await fetch('/api/salary', {
+      const res = await apiFetch('/api/salary', {
         method: defaultEntry?.entryId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

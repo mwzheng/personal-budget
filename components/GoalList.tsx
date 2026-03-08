@@ -24,7 +24,7 @@ export default function GoalList() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/goals');
+      const res = await apiFetch('/api/goals');
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Failed to load goals');
       setGoals(data.goals ?? []);
@@ -47,7 +47,7 @@ export default function GoalList() {
     if (!goalId) return;
     if (!confirm('Delete this goal?')) return;
     try {
-      const res = await fetch('/api/goals?goalId='+encodeURIComponent(goalId), { method: 'DELETE' });
+      const res = await apiFetch('/api/goals?goalId='+encodeURIComponent(goalId), { method: 'DELETE' });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Delete failed');
       fetchGoals();

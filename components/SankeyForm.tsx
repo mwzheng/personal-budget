@@ -10,6 +10,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { SankeyRequestBody, SankeyResponse } from "@/lib/types";
+import { apiFetch } from "../lib/apiFetch";
 
 interface Props {
   onResult: (response: SankeyResponse) => void;
@@ -54,7 +55,7 @@ export function SankeyForm({ onResult }: Props) {
           percentage: pct[r.key],
         })),
       };
-      const res = await fetch("/api/sankey", {
+      const res = await apiFetch("/api/sankey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

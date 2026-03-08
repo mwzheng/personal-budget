@@ -15,7 +15,7 @@ export default function SalaryList() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/salary');
+      const res = await apiFetch('/api/salary');
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Failed to load');
       setEntries(data.entries ?? []);
@@ -34,7 +34,7 @@ export default function SalaryList() {
     if (!entryId || !year) return;
     if (!confirm('Delete this salary entry?')) return;
     try {
-      const res = await fetch('/api/salary?entryId='+encodeURIComponent(entryId)+'&year='+encodeURIComponent(String(year)), { method: 'DELETE' });
+      const res = await apiFetch('/api/salary?entryId='+encodeURIComponent(entryId)+'&year='+encodeURIComponent(String(year)), { method: 'DELETE' });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Delete failed');
       fetchEntries();

@@ -4,10 +4,7 @@ import React from "react";
 function base64UrlEncode(bytes: Uint8Array) {
   let str = "";
   for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
-  return btoa(str)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 async function pkceChallengeFromVerifier(v: string) {
@@ -32,7 +29,9 @@ export default function SignInButton() {
     const userPoolDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN; // e.g., https://your-domain.auth.us-east-1.amazoncognito.com (set in .env.local)
     const redirectUri = `${window.location.origin}/auth/callback`;
     if (!clientId || !userPoolDomain) {
-      alert("Cognito not configured. Set NEXT_PUBLIC_COGNITO_CLIENT_ID and NEXT_PUBLIC_COGNITO_DOMAIN in .env.local");
+      alert(
+        "Cognito not configured. Set NEXT_PUBLIC_COGNITO_CLIENT_ID and NEXT_PUBLIC_COGNITO_DOMAIN in .env.local",
+      );
       return;
     }
     const verifier = randomString(96);

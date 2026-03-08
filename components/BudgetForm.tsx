@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { apiFetch } from "../lib/apiFetch";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -46,7 +47,7 @@ export function BudgetForm({
     setSaving(true);
     try {
       const payload = { name, allocations };
-      const res = await fetch("/api/budgets", {
+      const res = await apiFetch("/api/budgets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
