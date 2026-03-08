@@ -76,7 +76,7 @@ export async function DELETE(request: Request) {
     try {
       const body = await request.json();
       goalId = body?.goalId;
-    } catch (_) {
+    } catch {
       // ignore
     }
     // Note 5: The `goalId` is accepted either from the JSON body or from the

@@ -15,6 +15,7 @@ import {
   Divider,
 } from "@mui/material";
 import SalaryForm from "./SalaryForm";
+import { apiFetch } from "../lib/apiFetch";
 import SalaryChart from "./SalaryChart";
 
 export default function SalaryList() {
@@ -46,7 +47,7 @@ export default function SalaryList() {
     fetchEntries();
   }, []);
 
-  const handleSaved = (e: any) => {
+  const handleSaved = () => {
     // Note 3: After a successful save the form is dismissed and the list is
     // re-fetched. Re-fetching from the server guarantees the list reflects the
     // freshly stored data (including any server-computed YoY values).

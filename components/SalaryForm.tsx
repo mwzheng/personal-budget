@@ -4,6 +4,7 @@
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
+import { apiFetch } from "../lib/apiFetch";
 
 export default function SalaryForm({
   defaultEntry,

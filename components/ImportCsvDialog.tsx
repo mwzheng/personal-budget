@@ -19,6 +19,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
+import { apiFetch } from "../lib/apiFetch";
 import type { Transaction } from "@/lib/types";
 import { appendTransactions } from "@/lib/storage";
 
@@ -103,6 +104,14 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           transactions: parsed,
           sample: parsed.slice(0, 5),
         };
+      }
+
+      if (!data) {
+        setState({
+          stage: "error",
+          message: "Import failed: no data returned from import",
+        });
+        return;
       }
 
       setState({

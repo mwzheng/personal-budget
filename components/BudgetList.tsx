@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { apiFetch } from "../lib/apiFetch";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import IconButton from "@mui/material/IconButton";
@@ -61,19 +62,22 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
       <List dense>
         {loading && <div>Loading budgets…</div>}
         {budgets.map((b) => (
-          // Note 4: `button` prop on `ListItem` enables keyboard focus and
-          // visual hover/active states, making the row feel interactive.
-          <ListItem key={b.budgetId} button onClick={() => onSelect?.(b)}>
-            <ListItemText
-              primary={b.name}
-              secondary={
-                b.allocations
-                  ? b.allocations
-                      .map((a: any) => `${a.category}: ${a.amount}`)
-                      .join(", ")
-                  : ""
-              }
-            />
+          // Note 4: Use `ListItemButton` inside `ListItem` in MUI v6 instead of
+          // the removed `button` prop on `ListItem`. This keeps keyboard and
+          // focus behavior while matching the updated type definitions.
+          <ListItem key={b.budgetId}>
+            <ListItemButton onClick={() => onSelect?.(b)}>
+              <ListItemText
+                primary={b.name}
+                secondary={
+                  b.allocations
+                    ? b.allocations
+                        .map((a: any) => `${a.category}: ${a.amount}`)
+                        .join(", ")
+                    : ""
+                }
+              />
+            </ListItemButton>
             <ListItemSecondaryAction>
               <Button size="small" onClick={() => onSelect?.(b)}>
                 Select

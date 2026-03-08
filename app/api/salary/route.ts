@@ -97,7 +97,9 @@ export async function DELETE(request: Request) {
       const body = await request.json();
       entryId = body?.entryId;
       year = body?.year;
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
     // Note 6: The identifier is read from the query string as a fallback when the
     // DELETE body is not provided. Some HTTP clients and frameworks do not support
     // request bodies on DELETE requests, so supporting both is more compatible.

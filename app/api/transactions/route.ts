@@ -88,7 +88,7 @@ export async function DELETE(request: Request) {
       const body = await request.json();
       id = body?.id;
       date = body?.date;
-    } catch (_) {
+    } catch {
       // ignore
     }
     if (!id) {

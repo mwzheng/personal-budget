@@ -15,8 +15,11 @@ export async function GET(request: NextRequest) {
     // filter applied", while null is treated as "filter is set to null explicitly".
     const startDateRaw = searchParams.get("startDate");
     const endDateRaw = searchParams.get("endDate");
-    const startDate = startDateRaw ?? undefined;
-    const endDate = endDateRaw ?? undefined;
+    // Note 3: `searchParams.get` returns `string | null`. The aggregations layer
+    // expects `null` to represent a missing filter, so preserve `null` rather
+    // than converting it to `undefined` which would narrow the type incompatibly.
+    const startDate = startDateRaw;
+    const endDate = endDateRaw;
     const tagsParam = searchParams.get("tags");
     // Note 3: Tags are sent as a comma-separated string ("groceries,dining") and
     // split here. `filter(Boolean)` removes any empty strings that result from
@@ -70,8 +73,8 @@ export async function GET(request: NextRequest) {
           const res = await dynamo.getUserTransactionsPaged(userId, {
             limit,
             lastKey: parsed,
-            startDate,
-            endDate,
+            startDate: startDate ?? undefined,
+            endDate: endDate ?? undefined,
           });
           transactions = res.transactions;
           lastKey = res.lastKey;
@@ -82,8 +85,8 @@ export async function GET(request: NextRequest) {
             const res = await dynamo.getUserTransactionsPaged(userId, {
               limit,
               lastKey: currentLast,
-              startDate,
-              endDate,
+              startDate: startDate ?? undefined,
+              endDate: endDate ?? undefined,
             });
             if (p === page) {
               transactions = res.transactions;
@@ -107,7 +110,7 @@ export async function GET(request: NextRequest) {
         const start = (page - 1) * pageSize;
         transactions = filtered.slice(start, start + pageSize);
       }
-    } catch (e) {
+    } catch {
       // Note 8: The try/catch here handles the case where DynamoDB is unavailable
       // (e.g. no AWS credentials in the environment). The fallback reads transactions
       // from `getUserTransactions`, which falls back to the local CSV sample file.

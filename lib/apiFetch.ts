@@ -102,7 +102,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
       return res;
     }
-  } catch (e) {
+  } catch {
     // ignore client-side storage errors
   }
 
