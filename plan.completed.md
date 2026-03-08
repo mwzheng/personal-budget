@@ -133,6 +133,14 @@ Date: 2026-03-08
 
 Notes: Server-side CSV import/export endpoints and persistence to DynamoDB remain TODO and are tracked in the main plan.
 
+## Completed: Sample datasets
+
+Date: 2026-03-08
+
+- Added sample CSV datasets for performance and pagination testing (dev-sample-data/expenses_small.csv, expenses_medium.csv, expenses_large.csv). These are included under `dev-sample-data/` since `sample-data/` is gitignored to avoid large repository artifacts.
+
+Notes: Files are intended for local performance testing and CI artifacts; use them to benchmark pagination, aggregation, and import workflows.
+
 Completed: Sankey Budget UI (scaffold)
 
 Date: 2026-03-08
