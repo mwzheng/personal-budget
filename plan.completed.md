@@ -64,5 +64,22 @@ Provisioned the AWS dev infrastructure using AWS SAM and fully documented the de
 
 ## Notes
 
-- IAM roles for Lambda functions (to access DynamoDB + Cognito) are not yet created; will be needed when Lambda API routes are wired up.
+- IAM roles for Lambda functions (to access DynamoDB + Cognito) were added to infra/template.yaml and committed.  
+
+---
+
+# Completed: Auth middleware & Transactions API
+
+Date: 2026-03-08
+
+Summary
+
+- Implemented Cognito JWT verification helper: `lib/auth.ts` (uses `jose` and the Cognito JWKS endpoint) for server-side token verification and user extraction.
+- Added DynamoDB put/delete helpers to `lib/dynamo.ts` and implemented authenticated Transactions API handlers: `app/api/transactions/route.ts` (GET/POST/PUT/DELETE) that enforce per-user access using the Cognito `sub` claim as the partition key.
+- Commits created for these changes and corresponding session todos updated.
+
+Notes
+
+- Transaction handlers currently support listing, create (upsert), update (PUT as upsert), and delete; pagination, input validation (Zod), and stricter error handling remain TODO and are tracked in the main plan.
+
 - `.env.local` with the above values still needs to be created for local Next.js development.
