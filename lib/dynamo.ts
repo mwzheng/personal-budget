@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { loadTransactionsFromCSV } from "./csvParser";
@@ -58,3 +58,36 @@ export async function getUserTransactions(
 
   return txs;
 }
+
+export async function putTransaction(userId: string, tx: Transaction) {
+  const client = getDocClient();
+  if (!client) throw new Error('DynamoDB table not configured');
+
+  const now = new Date().toISOString();
+  const item = {
+    pk: `user#${userId}`,
+    sk: `date#${tx.date}#${tx.id}`,
+    id: tx.id,
+    name: tx.name,
+    amount: tx.amount,
+    category: tx.category,
+    date: tx.date,
+    notes: tx.notes || '',
+    paymentMethod: tx.paymentMethod || '',
+    tags: tx.tags || [],
+    createdAt: (tx as any).createdAt || now,
+    updatedAt: now,
+  } as const;
+
+  await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function deleteTransaction(userId: string, txId: string, date: string) {
+  const client = getDocClient();
+  if (!client) throw new Error('DynamoDB table not configured');
+  const sk = `date#${date}#${txId}`;
+  await client.send(new DeleteCommand({ TableName: TABLE_NAME, Key: { pk: `user#${userId}`, sk } }));
+  return { ok: true };
+}
+

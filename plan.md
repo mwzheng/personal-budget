@@ -121,58 +121,90 @@ Immediate next steps for the repository (developer tasks):
 
 ### Goal
 
-Replace the static sample-CSV data source with a user-owned, locally-persisted dataset. Users should be able to:
+Move from the static sample-CSV data source to server-persisted, per-user data in DynamoDB (DynamoDB-only). Users should be able to:
 
-- **Manually add, edit, and delete** individual transactions via a form dialog.
-- **Import** their own CSV (matching the sample `expenses.csv` format) — appending rows to existing data.
-- **Export** their current filtered dataset as a CSV download.
-- Start from an **empty state** (no sample data pre-loaded) with a clear call-to-action.
+- Add, edit, and delete individual transactions via authenticated server APIs and UI forms.
+- Import CSVs via a server-side parser that persists transactions to DynamoDB and returns an import summary.
+- Export filtered datasets via server-side CSV generation.
+- Create and manage named budgets saved per-user and generate Sankey graphs from a saved budget or from recent aggregates.
+- Create and track financial goals with progress and estimated time-to-goal.
+- Run savings projections and track salary history (manual per-year entries) with year-over-year changes.
 
 ### Architecture Overview
 
-| Layer       | Current                                             | After                                          |
-| ----------- | --------------------------------------------------- | ---------------------------------------------- |
-| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | localStorage (client-side)                     |
-| CSV import  | API parses CSV but no UI                            | UI dialog → API parse → append to localStorage |
-| CSV export  | API exports CSV but no UI                           | Client-side CSV generation + download          |
-| CRUD        | None                                                | Add/Edit/Delete via MUI Dialog form            |
+| Layer       | Current                                             | After                                                                                   |
+| ----------- | --------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | Server APIs backed by DynamoDB (per-user transactions table `personal-budget-infra-dev-transactions`) |
+| CSV import  | API parses CSV but no UI                            | `POST /api/reports/import` parses CSV and writes transactions to DynamoDB; returns preview and import summary |
+| CSV export  | API exports CSV but no UI                           | `GET /api/reports/export` generates CSV server-side for filtered queries               |
+| CRUD        | None                                                | Transaction CRUD via server APIs with Cognito authentication                            |
 
-The existing `/api/reports/import` route (CSV parsing via PapaParse) is reused as the server-side parser for imports. Data is stored and managed entirely in `localStorage` under the key `personal-budget-transactions`.
+Additional entities stored in DynamoDB (separate tables recommended initially):
+
+- Budgets table: `personal-budget-infra-dev-budgets` (PK = userId, SK = budgetId)
+- Goals table: `personal-budget-infra-dev-goals` (PK = userId, SK = goalId)
+- Salary table: `personal-budget-infra-dev-salary` (PK = userId, SK = year#entryId)
+
+(Consider moving to a single-table design later for scale/efficiency once access patterns are stable.)
 
 ### Files to Create
 
-| File                             | Purpose                                                                                                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lib/storage.ts`                 | localStorage CRUD utilities: `getTransactions`, `setTransactions`, `addTransaction`, `updateTransaction`, `deleteTransaction`, `appendTransactions`, `clearTransactions` |
-| `lib/csvExport.ts`               | Client-side CSV generation matching the `expenses.csv` format                                                                                                            |
-| `components/TransactionForm.tsx` | MUI Dialog form for add/edit with Zod validation (fields: date, name, amount, category, payment method, tags, notes)                                                     |
-| `components/ImportCsvDialog.tsx` | Import flow: file picker → parse via API → preview summary → confirm append                                                                                              |
+| File / Path                      | Purpose                                                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `lib/dynamo.ts`                  | DynamoDB client helper and small wrappers for common operations (query, get, put, update, delete)   |
+| `app/api/transactions/*`         | Transaction CRUD endpoints (list, create, update, delete) with filters, pagination and aggregates   |
+| `app/api/reports/import`         | CSV parse + persist endpoint (validates rows, writes to DynamoDB, returns summary)                 |
+| `app/api/reports/export`         | Server-side CSV generation endpoint for filtered queries                                            |
+| `app/api/budgets/*`              | Budgets CRUD endpoints (create/list/get/update/delete)                                              |
+| `app/api/goals/*`                | Goals CRUD endpoints and ETA/time-to-goal compute                                                   |
+| `app/api/salary/*`               | Salary history CRUD endpoints                                                                        |
+| `lib/budgets.ts`                 | Utilities to convert budget allocations into Sankey nodes/links                                     |
+| `components/BudgetForm.tsx`      | Create/Edit budget dialog                                                                            |
+| `components/BudgetList.tsx`      | Budget selector and management UI                                                                    |
+| `components/GoalForm.tsx`        | Create/Edit goal dialog                                                                              |
+| `components/GoalList.tsx`        | Goals list and progress UI                                                                           |
+| `components/ProjectionForm.tsx`  | Savings projection input UI                                                                          |
+| `components/ProjectionChart.tsx` | Chart for projection results                                                                          |
+| `components/SalaryForm.tsx`      | Manual per-year salary entry form                                                                     |
+| `components/SalaryChart.tsx`     | Year-over-year salary visualization                                                                   |
 
 ### Files to Update
 
-| File                               | Changes                                                                                                  |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `app/reports/page.tsx`             | Load data from `lib/storage` instead of `/api/reports`; wire up CRUD, import, export; add empty-state UI |
-| `components/TransactionsTable.tsx` | Add Edit and Delete action buttons per row                                                               |
-| `app/api/reports/route.ts`         | No longer used for primary data fetch; keep for reference or repurpose for sample-data seeding           |
+- `app/reports/page.tsx` — switch data loading to server APIs, hook up import/export flows to server endpoints, and support server-side pagination/filters.
+- `components/TransactionsTable.tsx` — wire Edit/Delete actions to API calls and add server-aware pagination.
+- `app/sankey/page.tsx` — add budget picker, "Create budget from current spending" action, and budget save/preview controls.
+- `infra/SAM-DEPLOY.md` — document new tables and required IAM policy changes; update deploy scripts if needed.
 
 ### Key Design Decisions
 
-- **localStorage key**: `personal-budget-transactions` (JSON array of `Transaction[]`).
-- **Empty state**: When no data exists, show a centered call-to-action with an "Import CSV" button and an "Add Transaction" button.
-- **CSV import mode**: Append only. Duplicate detection is by exact match on `(date, name, amount)`; duplicates are skipped with a warning count shown in the preview.
-- **Transaction IDs**: Generated client-side as `crypto.randomUUID()` to avoid collisions on append.
-- **Export format**: Matches the sample CSV columns: `Name,Amount,Category,Date,Notes,Payment Method,Tags` (amounts formatted as `$X.XX`, tags joined with `, `).
-- **Form validation**: Required fields are `date`, `name`, `amount`, `category`. `paymentMethod`, `tags`, `notes` are optional.
+- Use Cognito for authentication; use Cognito `sub` as `userId` (partition key) for per-user data.
+- Start with separate DynamoDB tables for budgets, goals, and salary for clarity; consider consolidating to a single-table design later.
+- Budget model: `{ budgetId, name, allocations: [{ category: string, amount: number }], createdAt, updatedAt }`.
+- Sankey generation: `lib/budgets.ts` converts allocations → sankey nodes/links; budgets can be previewed client-side by fetching a budget by id and rendering via `components/SankeyChart`.
+- Goals model: `{ goalId, name, targetAmount, currentSaved, monthlyContribution, expectedAnnualReturn, createdAt }` — server returns ETA based on assumptions.
+- Salary entries: manual per-year entries `{ year, amount, note }`; compute YoY percentage changes server-side or client-side as needed.
+- Validation: use Zod on server endpoints to validate inputs and return structured errors.
 
 ### Todos (ordered)
 
-1. **`lib/storage.ts`** — localStorage CRUD utilities
-2. **`lib/csvExport.ts`** — client-side CSV generation
-3. **`components/TransactionForm.tsx`** — add/edit dialog
-4. **`components/ImportCsvDialog.tsx`** — import preview dialog
-5. **`components/TransactionsTable.tsx`** — add Edit/Delete actions
-6. **`app/reports/page.tsx`** — wire everything together (localStorage, CRUD, import/export, empty state)
+1. Create `.env.local` from SAM outputs (Cognito IDs, table names).
+2. Add IAM roles and least-privilege policies to SAM (Lambdas for transactions, budgets, goals, salary).
+3. Implement Cognito JWT middleware / Lambda authorizer and common auth helpers.
+4. Implement Transaction CRUD endpoints + import/export (DynamoDB-backed).
+5. Implement Budgets table + CRUD endpoints.
+6. Add Budget UI to Sankey page and `lib/budgets.ts` budget→sankey conversion.
+7. Implement Goals table + endpoints and Goals UI with time-to-goal calculation.
+8. Implement Savings projection UI and projection utilities (client-side; optional server batch/export).
+9. Implement Salary history API + UI (manual per-year entries and year-over-year chart).
+10. Update reports UI to call server APIs and support server-side pagination/aggregation.
+11. Add tests and CI; include sample large datasets for perf testing.
+
+### Notes & considerations
+
+- Keep existing `app/api/reports` routes as local-dev seeds but route production UI to DynamoDB-backed APIs.
+- If offline support is desired later, design an IndexedDB sync mechanism after server APIs are stable.
+- Ensure IAM roles grant only the necessary permissions for required tables and operations.
+- Add integration tests that exercise Cognito-authenticated flows (using test accounts or mocked authorizers).
 
 ---
 
