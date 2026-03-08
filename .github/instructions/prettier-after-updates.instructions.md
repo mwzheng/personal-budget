@@ -3,7 +3,9 @@ description: "Ensure Prettier is applied automatically to files modified by the 
 applyTo: "**/*.{ts,tsx,js,jsx,md,json,css,scss,html}"
 ---
 
-# Apply Prettier After Updates
+# Apply Prettier Before Each Commit
+
+Before creating any git commit, format all changed files with the project's Prettier configuration. This must be done for every commit produced by automation or a developer.
 
 Whenever the agent modifies, creates, or updates files in this repository, run Prettier
 using the project's configuration before finalizing the edits or creating the patch/commit.
