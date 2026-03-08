@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from "../../lib/apiFetch";
+
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -84,7 +86,7 @@ export default function SankeyPage() {
                       // convert budget to sankey data client-side using budgets API or lib
                       // for now, call POST /api/sankey with allocations to get sankeyData
                       (async () => {
-                        const resp = await fetch("/api/sankey", {
+                        const resp = await apiFetch("/api/sankey", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ allocations: b.allocations }),
