@@ -131,7 +131,7 @@ Date: 2026-03-08
 
 - Implemented budgets persistence in `lib/dynamo.ts` using the single-table pattern (pk=`user#<userId>`, sk=`budget#<budgetId>`), and `putBudget` / `getUserBudgets` helpers. Frontend BudgetForm/BudgetList are wired to `app/api/budgets` for creation and listing.
 
-Notes: Server-side CSV import/export endpoints and persistence to DynamoDB remain TODO and are tracked in the main plan.
+Notes: Server-side CSV import routes now parse CSV and persist transactions to DynamoDB when available. ImportCsvDialog posts CSV to `/api/reports/import` and falls back to client-side parsing if server import is unavailable. Duplicates are handled by server/client dedup rules (client: date+name+amount skip; server: upsert by id).
 
 ## Completed: Sample datasets
 
