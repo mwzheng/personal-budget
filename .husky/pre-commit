@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname \"$0\")/_"
+
+# Run lint-staged (uses pnpm dlx so no global install required)
+pnpm dlx --yes lint-staged

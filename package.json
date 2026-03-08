@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "prepare": "husky install",
     "deploy:infra": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra dev us-east-1",
     "deploy:infra:prod": "bash infra/deploy-sam.sh personal-budget-resources personal-budget-infra prod us-east-1"
   },
@@ -38,6 +39,14 @@
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.7",
     "serverless": "4.33.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "husky": "^8.0.0",
+    "lint-staged": "^14.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx,css,scss,md,json}": [
+      "pnpm dlx prettier --write",
+      "git add"
+    ]
   }
 }
