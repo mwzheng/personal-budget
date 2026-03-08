@@ -48,6 +48,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function SankeyPage() {
   const [result, setResult] = useState<SankeyResponse | null>(null);
+  const [selectedBudget, setSelectedBudget] = useState<any | null>(null);
+  const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -78,25 +80,22 @@ export default function SankeyPage() {
               </Typography>
               <Box>
                 <Box mb={2}>
-                  {/* Note 3: BudgetForm saves a named budget to DynamoDB via
-                      `/api/budgets`. The `onSaved` callback here is intentionally
-                      empty because BudgetList re-fetches independently via its own
-                      useEffect. The two components are decoupled by design. */}
+                  {/* BudgetForm now accepts `initialBudget` so it can be used for
+                      both create and edit flows. onSaved triggers a list refresh */}
                   <BudgetForm
+                    initialBudget={selectedBudget ?? undefined}
                     onSaved={() => {
-                      /* refresh list via BudgetList's own effect */
+                      setSelectedBudget(null);
+                      setBudgetsReloadKey((k) => k + 1);
                     }}
+                    onCancel={() => setSelectedBudget(null)}
                   />
                 </Box>
                 <Box>
-                  {/* Note 4: When the user selects a saved budget, an IIFE
-                      (Immediately Invoked Function Expression) is used so we can
-                      `await` the `/api/sankey` call inside a synchronous `onSelect`
-                      callback. IIFEs are a common workaround for async work inside
-                      a non-async prop handler. The `void` prefix silences the
-                      "unhandled promise" ESLint warning. */}
+                  {/* BudgetList supports selection and an explicit edit action. */}
                   {/* @ts-ignore */}
                   <BudgetList
+                    reloadKey={budgetsReloadKey}
                     onSelect={(b: any) => {
                       (async () => {
                         const resp = await apiFetch("/api/sankey", {
@@ -108,6 +107,7 @@ export default function SankeyPage() {
                         setResult(data);
                       })();
                     }}
+                    onEdit={(b: any) => setSelectedBudget(b)}
                   />
                 </Box>
               </Box>

@@ -3,7 +3,7 @@
 // the popular 50/30/20 personal finance rule (Needs/Wants/Savings).
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { apiFetch } from "../lib/apiFetch";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -19,29 +19,42 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 export type Allocation = { category: string; amount: number };
 
-export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
-  const [name, setName] = useState("");
-  const [allocations, setAllocations] = useState<Allocation[]>([
+export function BudgetForm({
+  initialBudget,
+  onSaved,
+  onCancel,
+}: {
+  initialBudget?: any;
+  onSaved?: (budget: any) => void;
+  onCancel?: () => void;
+}) {
+  const defaultAllocations: Allocation[] = [
     { category: "Needs", amount: 50 },
     { category: "Wants", amount: 30 },
     { category: "Savings", amount: 20 },
-  ]);
+  ];
+
+  const [name, setName] = useState<string>(initialBudget?.name ?? "");
+  const [allocations, setAllocations] = useState<Allocation[]>(
+    initialBudget?.allocations ?? defaultAllocations,
+  );
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialBudget) {
+      setName(initialBudget.name || "");
+      setAllocations(initialBudget.allocations || defaultAllocations);
+    }
+  }, [initialBudget]);
 
   function addRow() {
     setAllocations((s) => [...s, { category: "", amount: 0 }]);
   }
   function removeRow(idx: number) {
-    // Note 2: `s.filter((_, i) => i !== idx)` creates a new array that excludes
-    // the element at index `idx`. The underscore `_` is a convention for an
-    // unused parameter; here the value is ignored and only the index matters.
     setAllocations((s) => s.filter((_, i) => i !== idx));
   }
   function updateRow(idx: number, field: keyof Allocation, value: any) {
     setAllocations((s) => {
-      // Note 3: Spreading `[...s]` creates a shallow copy of the array before
-      // modifying it. React state should never be mutated directly; always
-      // produce a new array/object to trigger a re-render.
       const copy = [...s];
       copy[idx] = { ...copy[idx], [field]: value };
       return copy;
@@ -52,20 +65,33 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
     setSaving(true);
     try {
       const payload = { name, allocations };
-      const res = await apiFetch("/api/budgets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+
+      let res: Response;
+      if (initialBudget && initialBudget.budgetId) {
+        // Update existing budget
+        res = await apiFetch(`/api/budgets/${initialBudget.budgetId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // Create new
+        res = await apiFetch("/api/budgets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message || res.statusText);
-      setName("");
-      // reset to defaults
-      setAllocations([
-        { category: "Needs", amount: 50 },
-        { category: "Wants", amount: 30 },
-        { category: "Savings", amount: 20 },
-      ]);
+
+      if (!initialBudget) {
+        // reset to defaults for newly created
+        setName("");
+        setAllocations(defaultAllocations);
+      }
+
       onSaved?.(data);
     } catch (err) {
       console.error("Failed to save budget", err);
@@ -83,6 +109,7 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
         onChange={(e) => setName(e.target.value)}
         size="small"
         fullWidth
+        inputProps={{ "aria-label": "Budget name" }}
       />
 
       <Table size="small">
@@ -95,6 +122,7 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
                   value={row.category}
                   onChange={(e) => updateRow(idx, "category", e.target.value)}
                   size="small"
+                  inputProps={{ "aria-label": `category-${idx}` }}
                 />
               </TableCell>
               <TableCell>
@@ -106,10 +134,15 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
                     updateRow(idx, "amount", Number(e.target.value || 0))
                   }
                   size="small"
+                  inputProps={{ "aria-label": `amount-${idx}` }}
                 />
               </TableCell>
               <TableCell align="right">
-                <IconButton onClick={() => removeRow(idx)} size="small">
+                <IconButton
+                  onClick={() => removeRow(idx)}
+                  size="small"
+                  aria-label={`delete-row-${idx}`}
+                >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </TableCell>
@@ -119,20 +152,28 @@ export function BudgetForm({ onSaved }: { onSaved?: (budget: any) => void }) {
       </Table>
 
       <Box display="flex" gap={1}>
-        <Button startIcon={<AddIcon />} onClick={addRow} size="small">
+        <Button
+          startIcon={<AddIcon />}
+          onClick={addRow}
+          size="small"
+          aria-label="add-category"
+        >
           Add category
         </Button>
         <Box flex={1} />
-        {/* Note 4: The Save button is disabled both while the API request is in
-            flight (`saving`) and when the name is empty. This prevents double
-            submission and enforces a basic required-field rule without a form tag. */}
+        {initialBudget && (
+          <Button onClick={onCancel} aria-label="cancel-edit">
+            Cancel
+          </Button>
+        )}
         <Button
           variant="contained"
           color="primary"
           onClick={saveBudget}
           disabled={saving || !name}
+          aria-label="save-budget"
         >
-          Save Budget
+          {initialBudget ? "Update Budget" : "Save Budget"}
         </Button>
       </Box>
     </Box>

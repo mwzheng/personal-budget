@@ -15,7 +15,15 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
+export function BudgetList({
+  onSelect,
+  onEdit,
+  reloadKey,
+}: {
+  onSelect?: (budget: any) => void;
+  onEdit?: (budget: any) => void;
+  reloadKey?: any;
+}) {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -87,22 +95,20 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
     }
   }
 
-  // Note 2: `useEffect(() => { ... }, [])` with an empty dependency array runs
-  // exactly once after the component first renders -- the equivalent of
-  // `componentDidMount` in class components. This is the correct place to
-  // initiate an initial data fetch.
+  // Note 2: Re-run load whenever `reloadKey` changes so parent components can
+  // request a refresh after creating/updating/deleting budgets without forcing
+  // a full page reload.
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadKey]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this budget?")) return;
     try {
       const res = await apiFetch(`/api/budgets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
-      // Note 3: Instead of calling `load()` again (another network round-trip),
-      // the deleted budget is removed optimistically from local state with
-      // `filter`. This keeps the UI snappy and avoids a flicker from re-fetching.
+      // Optimistically remove the deleted budget from local state.
       setBudgets((s) => s.filter((b) => b.budgetId !== id));
     } catch (err) {
       console.error(err);
@@ -115,9 +121,6 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
       <List dense>
         {loading && <div>Loading budgets…</div>}
         {budgets.map((b) => (
-          // Note 4: Use `ListItemButton` inside `ListItem` in MUI v6 instead of
-          // the removed `button` prop on `ListItem`. This keeps keyboard and
-          // focus behavior while matching the updated type definitions.
           <ListItem key={b.budgetId}>
             <ListItemButton onClick={() => onSelect?.(b)}>
               <ListItemText
@@ -132,10 +135,25 @@ export function BudgetList({ onSelect }: { onSelect?: (budget: any) => void }) {
               />
             </ListItemButton>
             <ListItemSecondaryAction>
-              <Button size="small" onClick={() => onSelect?.(b)}>
+              <Button
+                size="small"
+                onClick={() => onSelect?.(b)}
+                aria-label={`select-${b.budgetId}`}
+              >
                 Select
               </Button>
-              <IconButton edge="end" onClick={() => handleDelete(b.budgetId)}>
+              <Button
+                size="small"
+                onClick={() => onEdit?.(b)}
+                aria-label={`edit-${b.budgetId}`}
+              >
+                Edit
+              </Button>
+              <IconButton
+                edge="end"
+                onClick={() => handleDelete(b.budgetId)}
+                aria-label={`delete-${b.budgetId}`}
+              >
                 <DeleteIcon />
               </IconButton>
             </ListItemSecondaryAction>
