@@ -1,3 +1,5 @@
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. -->
+
 # Development Plan for Personal Budget App
 
 This document outlines a phased roadmap and detailed considerations for building the personal budgeting application.
@@ -196,8 +198,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 3. Add unit & integration tests for Budgets endpoints (POST/PUT/DELETE) — (todo: add-budgets-endpoint-tests).
 4. Add E2E smoke tests for Budgets → Sankey flow — (todo: add-budgets-e2e-smoke-tests).
 5. Create feature branches & open PRs for re-enable-eslint and test work — (todo: create-feature-branches).
-6. Document new API endpoints and auth setup in README and app/auth/README.md — (todo: docs-auth-api).
-7. Add CI job to run budgets endpoint tests and optional E2E smoke stage (mocked) — (todo: ci-add-budgets-tests).
+6. Add CI job to run budgets endpoint tests and optional E2E smoke stage (mocked) — (todo: ci-add-budgets-tests).
 
 (Completed work has been moved to `plan.completed.md`.)
 

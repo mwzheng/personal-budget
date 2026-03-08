@@ -1,3 +1,5 @@
+<!-- Note 1: Authentication notes: Documents the Cognito hosted UI flow and required env vars for local development. Keep in sync with infra/SAM-DEPLOY.md outputs. -->
+
 Authentication pages and setup for AWS Cognito
 
 This folder contains the pages and helpers used for the Cognito hosted sign-in flow (login, register, callback, signout), and the client-side token exchange.

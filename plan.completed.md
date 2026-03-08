@@ -407,3 +407,29 @@ Notes
 
 - This change addresses compatibility between saved budgets (which historically stored `allocations` as `{ category, amount }`) and the Sankey input form (which expects percentages). The normalisation logic supports mixed inputs and reasonable tolerances for floating-point rounding.
 - Remaining work for full CI/test coverage: add unit/integration tests for budgets endpoints (POST/PUT/DELETE), integration/E2E tests for the Sankey end-to-end flow, and hook tests into coverage reporting. These are tracked in `plan.md` under the tests task.
+
+---
+
+# Completed: Documentation updates (Auth & API)
+
+Date: 2026-03-08
+
+Summary:
+
+- Documented API endpoints and auth environment variables in README.md and app/auth/README.md.
+- Added developer-facing top-of-file notes to README.md, app/auth/README.md, and plan.md.
+- Updated plan.md to remove the docs-auth-api todo and recorded this completion here.
+
+Files changed:
+
+- README.md
+- app/auth/README.md
+- plan.md
+
+Commit:
+
+- docs: add developer note comments; mark docs-auth-api todo done
+
+Notes:
+
+- Marked the 'docs-auth-api' todo as done in the session todos DB.
