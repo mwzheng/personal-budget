@@ -103,18 +103,19 @@ Remaining / next priorities (high level):
   - Client-side auth refresh flow implemented in `lib/apiFetch.ts` (refresh on 401/403 using refresh_token).
 
 - Pending (next priorities):
-  1. Add Zod validation to server APIs (transactions, budgets, goals, salary, sankey/import) and return structured errors (todo: add-zod-validation).
-  2. Finish Budgets UI: implement update/delete, delete confirmations, accessibility labels (ARIA), keyboard navigation, and unit tests (todo: finish-budgets-ui).
-  3. Re-enable stricter ESLint/TypeScript rules (remove `no-explicit-any` relaxations) and fix typing issues across the codebase (todo: reenable-eslint-strict).
-  4. Expand tests & CI coverage: (in progress) added unit tests for Sankey and a CI workflow; remaining work: budgets endpoint unit/integration tests and E2E smoke tests (todo: add-tests-ci).
+  1. Re-enable stricter ESLint/TypeScript rules (todo: reenable-eslint-strict) — reintroduce strict `tsconfig` and enable `@typescript-eslint` recommended rules in a feature branch and fix issues incrementally.
+  2. Decide DynamoDB test mocking strategy (todo: decide-dynamodb-mock-strategy) — choose between AWS SDK client mocks (`aws-sdk-client-mock`), LocalStack, or an in-memory DynamoDB for CI and local integration tests; document trade-offs.
+  3. Add unit & integration tests for Budgets endpoints (POST/PUT/DELETE) (todo: add-budgets-endpoint-tests) — cover validation and allocations normalization.
+  4. Add E2E smoke tests for the Budgets → Sankey flow (todo: add-budgets-e2e-smoke-tests) — create minimal Playwright/Cypress tests for create → edit → select → preview → delete.
+  5. Create feature branches & PRs for the work above (todo: create-feature-branches) — `feat/reenable-eslint`, `feat/budgets-tests`, `feat/budgets-e2e`.
 
 Immediate next steps (developer tasks):
 
-1. Implement Zod schemas and validation on a single API (recommend starting with `app/api/budgets/route.ts`) and add tests — this creates a pattern to follow across APIs.
-2. Finish budgets update/delete UX in the Sankey page: wire PUT/DELETE endpoints, add confirmation dialog and accessible labels, and test flows end-to-end against DynamoDB.
-3. Enable ESLint strict rules in a feature branch, run the type-fix pass, and address failures incrementally (prefer small PRs). Re-run CI to ensure linting passes.
-4. Expand tests & CI: add unit tests for `lib/csvParser`, `lib/budgets.ts` sankey conversion, and integration tests for `app/api/reports/import` and `app/api/sankey`.
-5. Optional: consider adding a server-side refresh endpoint or proactive background refresh to reduce user-facing auth interrupts; document trade-offs.
+1. Decide and document the DynamoDB testing approach (client mocks vs LocalStack vs in-memory) — add a short RFC in `tests/README.md` describing CI implications.
+2. Implement unit tests for allocation normalization (`lib/sankey.ts`) and server-side unit tests for `app/api/budgets` (POST/PUT/DELETE) in `feat/budgets-tests` using the chosen mocking strategy.
+3. Add E2E smoke tests for the core Budgets flow in `feat/budgets-e2e` using Playwright or Cypress and make them runnable in CI using the selected test infra.
+4. Create feature branches: `feat/reenable-eslint`, `feat/budgets-tests`, `feat/budgets-e2e`, open PRs, and assign reviewers.
+5. After tests are in place, extend CI to run coverage and optionally a lightweight E2E/smoke stage (mocked or using test Dynamo infra).
 
 (Completed work moved to `plan.completed.md` — keep that file as the authoritative record of done items.)
 
@@ -190,10 +191,11 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 ### Todos (ordered)
 
-1. Add Zod validation to server APIs (transactions, budgets, goals, salary, sankey/import) — (todo: add-zod-validation).
-2. Finish budgets UI: implement update/delete flows, confirmation dialogs, accessibility (ARIA labels), keyboard navigation, and tests — (todo: finish-budgets-ui).
-3. Re-enable stricter ESLint/TypeScript rules (@typescript-eslint/no-explicit-any, ban-ts-comment) and fix typing issues across the codebase — (todo: reenable-eslint-strict).
-4. Expand tests & CI coverage: add unit/integration tests for CSV import, Sankey generation, and auth flows (token exchange and refresh); enforce coverage thresholds in CI — (todo: add-tests-ci).
+1. Re-enable stricter ESLint & TypeScript rules — (todo: reenable-eslint-strict).
+2. Decide DynamoDB test mocking strategy — (todo: decide-dynamodb-mock-strategy).
+3. Add unit & integration tests for Budgets endpoints (POST/PUT/DELETE) — (todo: add-budgets-endpoint-tests).
+4. Add E2E smoke tests for Budgets → Sankey flow — (todo: add-budgets-e2e-smoke-tests).
+5. Create feature branches & open PRs for re-enable-eslint and test work — (todo: create-feature-branches).
 
 (Completed work has been moved to `plan.completed.md`.)
 
