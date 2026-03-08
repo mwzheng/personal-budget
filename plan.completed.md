@@ -87,6 +87,15 @@ Date: 2026-03-08
 
 Notes: Update and delete for budgets, richer validation, and UI integration remain todo and are tracked in the main plan.
 
+## Completed: Goals API
+
+Date: 2026-03-08
+
+- Implemented Goals storage helpers in `lib/dynamo.ts` (put/get/delete) and estimation utilities in `lib/goals.ts`.
+- Implemented authenticated Goals API `app/api/goals/route.ts` (GET list, POST create, PUT update, DELETE) that returns estimated months-to-goal and projected date for each goal.
+
+Notes: Goals UI (page) and robust validation remain todo and are tracked in the main plan.
+
 
 Notes
 

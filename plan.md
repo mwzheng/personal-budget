@@ -193,7 +193,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 4. Implement Transaction CRUD endpoints + import/export (DynamoDB-backed).
 5. Implement Budgets table + CRUD endpoints.
 6. Add Budget UI to Sankey page and `lib/budgets.ts` budget→sankey conversion.
-7. Implement Goals table + endpoints and Goals UI with time-to-goal calculation.
+7. Implement Goals table + endpoints and Goals UI with time-to-goal calculation. (API implemented; UI pending)
 8. Implement Savings projection UI and projection utilities (client-side; optional server batch/export).
 9. Implement Salary history API + UI (manual per-year entries and year-over-year chart).
 10. Update reports UI to call server APIs and support server-side pagination/aggregation.

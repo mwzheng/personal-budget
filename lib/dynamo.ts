@@ -91,6 +91,61 @@ export async function deleteTransaction(userId: string, txId: string, date: stri
   return { ok: true };
 }
 
+export async function putGoal(userId: string, goal: { goalId?: string; name: string; targetAmount: number; currentSaved?: number; monthlyContribution?: number; expectedAnnualReturn?: number; createdAt?: string; updatedAt?: string }) {
+  const client = getDocClient();
+  if (!client) throw new Error('DynamoDB table not configured');
+  const now = new Date().toISOString();
+  const id = goal.goalId || (typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : Date.now().toString());
+  const item = {
+    pk: `user#${userId}`,
+    sk: `goal#${id}`,
+    goalId: id,
+    name: goal.name,
+    targetAmount: goal.targetAmount,
+    currentSaved: goal.currentSaved ?? 0,
+    monthlyContribution: goal.monthlyContribution ?? 0,
+    expectedAnnualReturn: goal.expectedAnnualReturn ?? 0,
+    createdAt: goal.createdAt || now,
+    updatedAt: now,
+  } as const;
+
+  await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getUserGoals(userId: string) {
+  const client = getDocClient();
+  if (!client) return [];
+  const pk = `user#${userId}`;
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
+    ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": "goal#" },
+  } as const;
+
+  const res = await client.send(new QueryCommand(params));
+  const items = (res.Items ?? []) as any[];
+  return items.map((item) => ({
+    goalId: String(item.goalId || ''),
+    name: String(item.name || ''),
+    targetAmount: Number(item.targetAmount || 0),
+    currentSaved: Number(item.currentSaved || 0),
+    monthlyContribution: Number(item.monthlyContribution || 0),
+    expectedAnnualReturn: Number(item.expectedAnnualReturn || 0),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  }));
+}
+
+export async function deleteGoal(userId: string, goalId: string) {
+  const client = getDocClient();
+  if (!client) throw new Error('DynamoDB table not configured');
+  const sk = `goal#${goalId}`;
+  await client.send(new DeleteCommand({ TableName: TABLE_NAME, Key: { pk: `user#${userId}`, sk } }));
+  return { ok: true };
+}
+
 export async function putBudget(userId: string, budget: { budgetId?: string; name: string; allocations: { category: string; amount: number }[]; createdAt?: string; updatedAt?: string }) {
   const client = getDocClient();
   if (!client) throw new Error('DynamoDB table not configured');
