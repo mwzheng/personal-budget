@@ -7,8 +7,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const startDateRaw = searchParams.get("startDate");
+    const endDateRaw = searchParams.get("endDate");
+    const startDate = startDateRaw ?? undefined;
+    const endDate = endDateRaw ?? undefined;
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
