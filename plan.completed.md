@@ -323,3 +323,32 @@ Commit
 - 94d6e2f — fix: resolve missing imports and unused variables after code review (apiFetch, cleanup)
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+# Completed: Developer sweep — educational comments, infra docs, Husky & hooks, build/dev verification, and code-quality fixes
+
+Date: 2026-03-08
+
+Summary
+This consolidated entry records the cross-cutting developer sweep performed during 2026-03-06 → 2026-03-08:
+
+- Added educational "Note N" comments across source files to explain design decisions and key patterns.
+- Added/updated infra documentation and deploy scripts (`infra/SAM-DEPLOY.md`, `package.json` deploy scripts).
+- Fixed and installed Husky + lint-staged: adjusted `.husky/pre-commit`, `.husky/post-commit`, ensured Prettier runs on staged files and hooks are executable.
+- Verified `pnpm build` completed successfully and started prod/dev servers for smoke tests; validated `GET /api/reports` returned 200 in production and dev modes.
+- Performed repository-wide code review and quality fixes: missing imports, null/undefined guards, unused-variable cleanup, and minor refactors for readability.
+
+Files changed (representative)
+
+- scripts/commit.sh, package.json, .github/skills/git-commit/SKILL.md
+- Many files under `app/`, `components/`, and `lib/` had educational comments and small fixes (see git history for per-file diffs).
+- Husky hooks: `.husky/pre-commit`, `.husky/post-commit`
+- infra: `infra/SAM-DEPLOY.md`
+
+Commit references
+
+- cc60768 — docs: add educational comments to all source files
+- 94d6e2f — fix: resolve missing imports and unused variables after code review
+- 92f029a — docs(plan): move completed items to plan.completed.md and append consolidated entry
+
+Notes
+Per project policy, `plan.md` was trimmed to remove the completed bullets and now points here for the authoritative history.

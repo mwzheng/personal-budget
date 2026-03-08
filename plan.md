@@ -89,17 +89,7 @@ Developer process note: When work is completed, update both `plan.md` and `plan.
 
 Status: Local implementation complete (reports + sankey). AWS infrastructure (DynamoDB + Cognito) deployed via SAM — stack `personal-budget-resources` live in `us-east-1`. Next priority: wire API routes to DynamoDB with Cognito JWT middleware, and build user data management (localStorage CRUD → DynamoDB).
 
-Summary of what was completed locally during this session:
-
-- Completed: repository-wide code review & quality fixes (2026-03-08) — missing imports, null guards, unused-variable cleanup, and small refactors. See `plan.completed.md` for details.
-
-- Implemented local APIs: `GET /api/reports` (reads sample-data) and `POST /api/sankey` (zod-validated allocations -> sankey nodes/links + budget suggestion).
-- Implemented Reports UI (`app/reports/page.tsx`) with `FilterBar`, summary cards, pie/time-series/tag charts, and `TransactionsTable` using client-side filtering against sample-data.
-- Implemented Sankey/Budget UI (`app/sankey/page.tsx`) with `SankeyForm` and `SankeyChart` (dynamic import) plus budget breakdown table.
-- Added lib utilities (`lib/types.ts`, `lib/csvParser.ts`, `lib/aggregations.ts`).
-- Fixed date-fns adapter for MUI: switched to `AdapterDateFnsV3` in `app/providers.tsx`.
-- Installed dependencies, verified `pnpm build` succeeded, and smoke-tested the dev server and APIs.
-- ✅ Provisioned DynamoDB + Cognito via SAM deploy; documented in `infra/SAM-DEPLOY.md`; added `deploy:infra` / `deploy:infra:prod` scripts to `package.json`.
+Completed work (moved): The full details of the recent completed work (Reports & Sankey implementation, infra provisioning and documentation, repository-wide educational comments, Husky + lint-staged setup and fixes, build & dev smoke-testing, and related code quality fixes) have been moved to `plan.completed.md`. See the top of `plan.completed.md` for a consolidated record and per-feature entries.
 
 Remaining / next priorities (high level):
 
