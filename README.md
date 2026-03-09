@@ -74,3 +74,7 @@ For local development the app uses `GET /api/reports` against `sample-data/expen
 ## Contributing
 
 This is a personal project; contributions and suggestions are welcome. For development, update `plan.md` and consult `plan.completed.md` for recent progress.
+
+## Acknowledgements
+
+A significant portion of this project's code, documentation, and tests were produced with the assistance of GitHub Copilot while exploring how to use Copilot to build a real application. Copilot suggested scaffolding, implementation snippets, and documentation which were reviewed and adapted by the author. All generated content has been manually reviewed; please verify behavior and security if reusing or contributing. Avoid committing secrets or credentials; treat AI-assisted code as guidance that requires human validation.
