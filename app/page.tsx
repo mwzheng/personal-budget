@@ -7,8 +7,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -17,21 +15,8 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 
 export default function Home() {
-  const router = useRouter();
-  useEffect(() => {
-    try {
-      if (process.env.NEXT_PUBLIC_DISABLE_AUTH === "true") return;
-      const hasToken =
-        typeof window !== "undefined" &&
-        (sessionStorage.getItem("access_token") ||
-          sessionStorage.getItem("id_token"));
-      if (hasToken) {
-        router.replace("/reports");
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, [router]);
+  // Allow both signed-in and unauthenticated users to view the home page.
+  // No client-side redirect so the logo and / route are accessible.
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
