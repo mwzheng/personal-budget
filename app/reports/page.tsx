@@ -21,6 +21,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { FilterBar } from "@/components/FilterBar";
 import { ImportCsvDialog } from "@/components/ImportCsvDialog";
@@ -171,12 +172,24 @@ export default function ReportsPage() {
     undefined,
   );
   const [importOpen, setImportOpen] = useState(false);
+  const router = useRouter();
 
   // Note 5: `useEffect` with an empty dependency array runs once after the
   // first render, on the client only. Reading from localStorage here (rather
   // than at module level) is safe because localStorage is unavailable on the
   // server where the component is pre-rendered.
   useEffect(() => {
+    const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+    const hasToken =
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("access_token") ||
+        sessionStorage.getItem("id_token"));
+    if (!disableAuth && !hasToken) {
+      // No token and auth is enabled — redirect to login page
+      router.replace("/auth/login");
+      return;
+    }
+
     setAllTransactions(getTransactions());
     setLoading(false);
   }, []);
