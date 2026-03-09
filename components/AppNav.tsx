@@ -13,42 +13,38 @@ import Box from "@mui/material/Box";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
+import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/cognitoClient";
+
 export function AppNav() {
   // Note 2: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").
   // It is used here to highlight the active tab. The `.startsWith` check means
   // all sub-routes under /sankey (e.g. /sankey/preview) keep that tab highlighted.
   const pathname = usePathname();
-  const value = pathname.startsWith("/sankey") ? "sankey" : "reports";
+  const value: string | false = pathname.startsWith("/sankey")
+    ? "sankey"
+    : pathname.startsWith("/reports")
+      ? "reports"
+      : false;
 
   // Note 3: Client-side auth detection uses sessionStorage so state is scoped to
   // the browser tab and can be observed via storage events in other tabs.
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkToken = () => {
-      try {
-        // Common token key names vary by implementation; check a few common ones.
-        const hasToken =
-          !!sessionStorage.getItem("accessToken") ||
-          !!sessionStorage.getItem("idToken") ||
-          !!sessionStorage.getItem("token");
-        setLoggedIn(hasToken);
-      } catch (e) {
-        setLoggedIn(false);
-      }
-    };
+    const checkToken = () => setLoggedIn(isAuthenticated());
 
     checkToken();
 
-    const onStorage = (e: StorageEvent) => {
-      if (e.storageArea === sessionStorage) {
-        checkToken();
-      }
-    };
+    const onStorage = () => checkToken();
+    const onAuthChanged = () => checkToken();
 
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    };
+  }, [pathname]);
 
   return (
     // Note 4: `elevation={0}` removes the default MUI shadow from the AppBar.

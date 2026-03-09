@@ -1,53 +1,86 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+
+import SignInButton from "@/components/Auth/SignInButton";
+import { isAuthenticated, storeCognitoTokens } from "@/lib/cognitoClient";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const cognitoConfigured = Boolean(
+    process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
+  );
 
-  const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "";
-  const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "";
-  const redirectUri =
-    typeof window !== "undefined"
-      ? window.location.origin + "/auth/callback"
-      : "/auth/callback";
-
-  const signUpHosted = () => {
-    if (!domain || !clientId)
-      return alert(
-        "Hosted Cognito not configured (NEXT_PUBLIC_COGNITO_DOMAIN/NEXT_PUBLIC_COGNITO_CLIENT_ID)",
-      );
-    // Cognito hosted UI exposes a /signup path for new user sign-up
-    const url = `${domain}/signup?response_type=token&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent("openid profile email")}`;
-    window.location.href = url;
-  };
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace("/reports");
+    }
+  }, [router]);
 
   const demoRegister = () => {
-    // For local/dev, just reuse demo sign-in
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("access_token", "demo-access-token");
-      window.sessionStorage.setItem("id_token", "demo-id-token");
-      window.sessionStorage.setItem("refresh_token", "demo-refresh-token");
-    }
-    router.push("/reports");
+    storeCognitoTokens({
+      access_token: "demo-access-token",
+      id_token: "demo-id-token",
+      refresh_token: "demo-refresh-token",
+    });
+    router.replace("/reports");
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Create account</h1>
-      <p>
-        Use the hosted Cognito registration flow, or create a demo account for
-        local development.
-      </p>
-      <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-        <button onClick={signUpHosted} style={{ padding: "8px 12px" }}>
-          Register with Cognito
-        </button>
-        <button onClick={demoRegister} style={{ padding: "8px 12px" }}>
-          Demo register
-        </button>
-      </div>
-    </div>
+    <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Card>
+        <CardContent sx={{ p: 4 }}>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="h4" fontWeight={700} gutterBottom>
+                Create account
+              </Typography>
+              <Typography color="text.secondary">
+                Register through the Cognito Hosted UI, then come back here with
+                a valid session.
+              </Typography>
+            </Box>
+
+            {!cognitoConfigured && (
+              <Alert severity="warning">
+                Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
+                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable the
+                hosted Cognito registration flow.
+              </Alert>
+            )}
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <SignInButton
+                mode="signup"
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={!cognitoConfigured}
+              >
+                Register with Cognito
+              </SignInButton>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={demoRegister}
+              >
+                Demo register
+              </Button>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Container>
   );
 }

@@ -1,3 +1,10 @@
+import {
+  clearCognitoTokens,
+  getStoredCognitoTokens,
+  normalizeCognitoDomain,
+  storeCognitoTokens,
+} from "./cognitoClient";
+
 // Note 1: `apiFetch` is a drop-in replacement for the native `fetch` API that
 // automatically attaches the user's JWT access token to every outgoing request.
 // It also handles silent token refresh when the server returns a 401/403 response,
@@ -17,9 +24,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
     // (SSR), so any code that uses browser APIs like `sessionStorage` must be
     // wrapped in this check to avoid runtime errors during server rendering.
     if (typeof window !== "undefined") {
-      const accessToken = window.sessionStorage.getItem("access_token");
-      const idToken = window.sessionStorage.getItem("id_token");
-      const refreshToken = window.sessionStorage.getItem("refresh_token");
+      const { accessToken, idToken, refreshToken } = getStoredCognitoTokens();
       // Note 3: Prefer the access token over the id token. The access token is
       // designed for authorizing API calls, while the id token contains identity
       // claims. Both are JWTs; using access_token is the OAuth 2.0 best practice.
@@ -36,7 +41,9 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
       // refresh using the OAuth 2.0 refresh_token grant before giving up.
       if ((res.status === 401 || res.status === 403) && refreshToken) {
         try {
-          const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
+          const domain = normalizeCognitoDomain(
+            process.env.NEXT_PUBLIC_COGNITO_DOMAIN,
+          );
           const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
           if (domain && clientId) {
             // Note 5: The token endpoint expects `application/x-www-form-urlencoded`
@@ -55,23 +62,14 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
             if (tokenRes.ok) {
               const data = await tokenRes.json();
-              // Update stored tokens if returned
-              if (data.access_token)
-                window.sessionStorage.setItem(
-                  "access_token",
-                  data.access_token,
-                );
-              if (data.id_token)
-                window.sessionStorage.setItem("id_token", data.id_token);
-              // Preserve existing refresh_token unless server returned a new one
-              // Note 6: Cognito does not rotate refresh tokens by default, so
-              // `data.refresh_token` is often absent. We keep the existing token
-              // unless the server explicitly provides a replacement.
-              if (data.refresh_token)
-                window.sessionStorage.setItem(
-                  "refresh_token",
-                  data.refresh_token,
-                );
+              // Preserve the existing refresh token unless Cognito rotates it.
+              // Note 6: Cognito usually omits `refresh_token` on refresh grants,
+              // so we merge the current value back in before storing the payload.
+              storeCognitoTokens({
+                access_token: data.access_token,
+                id_token: data.id_token,
+                refresh_token: data.refresh_token || refreshToken,
+              });
 
               const newToken = data.access_token || data.id_token;
               if (newToken) {
@@ -88,9 +86,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
               // Note 7: Clearing all three tokens forces the user back to the
               // login page on the next navigation, which is the safest recovery
               // path when the refresh token is expired or revoked.
-              window.sessionStorage.removeItem("access_token");
-              window.sessionStorage.removeItem("id_token");
-              window.sessionStorage.removeItem("refresh_token");
+              clearCognitoTokens();
             }
           }
         } catch (err) {

@@ -1,44 +1,82 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import {
+  clearPendingCognitoAuth,
+  handleCognitoCallback,
+} from "@/lib/cognitoClient";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Try to parse tokens from hash (implicit flow) or query (fallback)
-    const parseParams = (str: string) => {
-      const params: Record<string, string> = {};
-      str.split("&").forEach((pair) => {
-        const [k, v] = pair.split("=");
-        if (k && v) params[decodeURIComponent(k)] = decodeURIComponent(v);
-      });
-      return params;
+    let cancelled = false;
+
+    const completeSignIn = async () => {
+      try {
+        await handleCognitoCallback();
+        if (!cancelled) {
+          router.replace("/reports");
+        }
+      } catch (callbackError) {
+        clearPendingCognitoAuth();
+        if (!cancelled) {
+          setError(
+            callbackError instanceof Error
+              ? callbackError.message
+              : "Unable to complete the Cognito sign-in flow.",
+          );
+        }
+      }
     };
 
-    let params: Record<string, string> = {};
-    if (window.location.hash && window.location.hash.length > 1) {
-      params = parseParams(window.location.hash.substring(1));
-    } else if (window.location.search && window.location.search.length > 1) {
-      params = parseParams(window.location.search.substring(1));
-    }
+    void completeSignIn();
 
-    const accessToken = params["access_token"];
-    const idToken = params["id_token"];
-    const refreshToken = params["refresh_token"];
-
-    if (accessToken || idToken) {
-      if (accessToken) sessionStorage.setItem("access_token", accessToken);
-      if (idToken) sessionStorage.setItem("id_token", idToken);
-      if (refreshToken) sessionStorage.setItem("refresh_token", refreshToken);
-      // Navigate to the reports page after successful sign-in
-      router.replace("/reports");
-    } else {
-      // No tokens found - go to login page
-      router.replace("/auth/login");
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
-  return <div style={{ padding: 24 }}>Signing in...</div>;
+  return (
+    <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Stack spacing={3} alignItems="center" textAlign="center">
+        {error ? (
+          <>
+            <Typography variant="h4" fontWeight={700}>
+              Sign-in failed
+            </Typography>
+            <Alert severity="error" sx={{ width: "100%" }}>
+              {error}
+            </Alert>
+            <Button variant="contained" href="/auth/login">
+              Back to sign in
+            </Button>
+          </>
+        ) : (
+          <>
+            <Box>
+              <CircularProgress />
+            </Box>
+            <Typography variant="h5" fontWeight={700}>
+              Finishing sign-in
+            </Typography>
+            <Typography color="text.secondary">
+              Exchanging your Cognito authorization code for tokens.
+            </Typography>
+          </>
+        )}
+      </Stack>
+    </Container>
+  );
 }

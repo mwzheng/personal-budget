@@ -1,52 +1,85 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+
+import SignInButton from "@/components/Auth/SignInButton";
+import { isAuthenticated, storeCognitoTokens } from "@/lib/cognitoClient";
 
 export default function LoginPage() {
   const router = useRouter();
+  const cognitoConfigured = Boolean(
+    process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
+  );
 
-  const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || "";
-  const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "";
-  const redirectUri =
-    typeof window !== "undefined"
-      ? window.location.origin + "/auth/callback"
-      : "/auth/callback";
-
-  const signInHosted = () => {
-    if (!domain || !clientId)
-      return alert(
-        "Hosted Cognito not configured (NEXT_PUBLIC_COGNITO_DOMAIN/NEXT_PUBLIC_COGNITO_CLIENT_ID)",
-      );
-    const url = `${domain}/login?response_type=token&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent("openid profile email")}`;
-    window.location.href = url;
-  };
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace("/reports");
+    }
+  }, [router]);
 
   const demoSignIn = () => {
-    // Development-only convenience: set a dummy token to simulate login.
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("access_token", "demo-access-token");
-      window.sessionStorage.setItem("id_token", "demo-id-token");
-      window.sessionStorage.setItem("refresh_token", "demo-refresh-token");
-    }
-    router.push("/reports");
+    storeCognitoTokens({
+      access_token: "demo-access-token",
+      id_token: "demo-id-token",
+      refresh_token: "demo-refresh-token",
+    });
+    router.replace("/reports");
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Sign in</h1>
-      <p>
-        If you have an account, sign in using the hosted Cognito UI
-        (recommended) or use the demo sign-in for local development.
-      </p>
-      <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-        <button onClick={signInHosted} style={{ padding: "8px 12px" }}>
-          Sign in with Cognito
-        </button>
-        <button onClick={demoSignIn} style={{ padding: "8px 12px" }}>
-          Demo sign in
-        </button>
-      </div>
-    </div>
+    <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Card>
+        <CardContent sx={{ p: 4 }}>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="h4" fontWeight={700} gutterBottom>
+                Sign in
+              </Typography>
+              <Typography color="text.secondary">
+                Continue with your existing Cognito account to access your saved
+                budget data.
+              </Typography>
+            </Box>
+
+            {!cognitoConfigured && (
+              <Alert severity="warning">
+                Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
+                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable the
+                hosted Cognito sign-in flow.
+              </Alert>
+            )}
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <SignInButton
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={!cognitoConfigured}
+              >
+                Sign in with Cognito
+              </SignInButton>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={demoSignIn}
+              >
+                Demo sign in
+              </Button>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Container>
   );
 }
