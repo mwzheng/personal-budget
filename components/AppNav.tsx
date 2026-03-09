@@ -56,7 +56,12 @@ export function AppNav() {
       sx={{ borderBottom: "1px solid #333", bgcolor: "#1a1a1a" }}
     >
       <Toolbar>
-        <Typography variant="h6" sx={{ mr: 4, fontWeight: 700 }}>
+        <Typography
+          variant="h6"
+          sx={{ mr: 4, fontWeight: 700 }}
+          component={NextLink}
+          href="/"
+        >
           💰 Personal Budget
         </Typography>
 

@@ -502,3 +502,25 @@ Commit
 Notes
 
 - These are client-side guards; for stronger protection and to avoid flicker, add a Next.js `middleware.ts` or server-side checks for protected routes.
+
+---
+
+# Completed: Logo links to Home
+
+Date: 2026-03-09
+
+Summary
+
+- Updated the application header (AppNav) so the logo/brand in the top-left always links to the public home page (`/`) regardless of whether the user is signed in.
+
+Files changed
+
+- components/AppNav.tsx
+
+Commit
+
+- fix(ui): logo link goes to home
+
+Notes
+
+- This is a client-side navigation pattern using Next.js `Link` (MUI `component={NextLink}` + `href="/"`). No server-side changes were required.
