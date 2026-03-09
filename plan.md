@@ -1,4 +1,4 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). -->
 
 # Development Plan for Personal Budget App
 

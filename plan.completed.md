@@ -433,3 +433,26 @@ Commit:
 Notes:
 
 - Marked the 'docs-auth-api' todo as done in the session todos DB.
+
+---
+
+# Completed: Copilot instruction index update
+
+Date: 2026-03-09
+
+Summary
+
+- Updated .github/copilot-instructions.md to include all present Copilot skills and instruction files under `.github/skills/` and `.github/instructions/`.
+- Added `devops-rollout-plan` to the skills listing and ensured `.github/instructions/` files are referenced by the top-level index.
+
+Files changed
+
+- .github/copilot-instructions.md
+
+Commit
+
+- 9db76bb "docs: update copilot skills & instruction index"
+
+Notes
+
+- plan.md was annotated to mention this completion. This helps satisfy repository plan update rules that require updating both plan.md and plan.completed.md for completed work.
