@@ -478,3 +478,27 @@ Commit
 Notes
 
 - The guard checks for presence of `access_token` or `id_token` in `sessionStorage` and performs a client-side router.replace to `/auth/login` if not present. Consider adding server-side route protection for better UX and security in the future.
+
+---
+
+# Completed: Protect Sankey route & Add Home Page
+
+Date: 2026-03-09
+
+Summary
+
+- Protected `/sankey` (Budget Generator) with a client-side redirect to `/auth/login` when no tokens are present in sessionStorage and `NEXT_PUBLIC_DISABLE_AUTH` is not set to `true`.
+- Added a public Home page at `/` that describes core features (Transactions, Budgets, Reports, Budget Generator) and provides Sign in / View Reports / Budget generator links. Signed-in users are redirected to `/reports` (client-side).
+
+Files changed
+
+- app/sankey/page.tsx
+- app/page.tsx
+
+Commit
+
+- feat(auth): protect sankey route; feat(docs): add public home page
+
+Notes
+
+- These are client-side guards; for stronger protection and to avoid flicker, add a Next.js `middleware.ts` or server-side checks for protected routes.

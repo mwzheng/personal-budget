@@ -20,7 +20,8 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { SankeyForm } from "@/components/SankeyForm";
 import { SankeyResponse } from "@/lib/types";
@@ -50,6 +51,26 @@ export default function SankeyPage() {
   const [result, setResult] = useState<SankeyResponse | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<any | null>(null);
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
+
+  // Note N: Client-side auth guard — ensures unauthenticated users are
+  // redirected to the login page. This is a pragmatic client-only check;
+  // for stronger protection add Next.js `middleware.ts` for server-side redirect.
+  const router = useRouter();
+  useEffect(() => {
+    try {
+      if (process.env.NEXT_PUBLIC_DISABLE_AUTH === "true") return;
+      const hasToken =
+        typeof window !== "undefined" &&
+        (sessionStorage.getItem("access_token") ||
+          sessionStorage.getItem("id_token"));
+      if (!hasToken) {
+        router.replace("/auth/login");
+      }
+    } catch (e) {
+      // swallow errors; don't break the page if storage access fails
+      // (e.g., in strict privacy modes).
+    }
+  }, [router]);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
