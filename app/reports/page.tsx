@@ -23,10 +23,10 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { FilterBar } from "@/components/FilterBar";
-import { ImportCsvDialog } from "@/components/ImportCsvDialog";
-import { TransactionForm } from "@/components/TransactionForm";
-import { TransactionsTable } from "@/components/TransactionsTable";
+import { FilterBar } from "ui/FilterBar";
+import { ImportCsvDialog } from "transactions/ImportCsvDialog";
+import { TransactionForm } from "transactions/TransactionForm";
+import { TransactionsTable } from "transactions/TransactionsTable";
 import {
   filterTransactions,
   aggregateTransactions,
@@ -46,21 +46,21 @@ import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
 // During server-side rendering that DOM element does not exist, causing errors.
 // The `loading` prop renders a Skeleton placeholder while the bundle downloads.
 const SpendingPieChart = dynamic(
-  () => import("@/components/SpendingPieChart").then((m) => m.SpendingPieChart),
+  () => import("charts/SpendingPieChart").then((m) => m.SpendingPieChart),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={280} />,
   },
 );
 const SpendingBarChart = dynamic(
-  () => import("@/components/SpendingBarChart").then((m) => m.SpendingBarChart),
+  () => import("charts/SpendingBarChart").then((m) => m.SpendingBarChart),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={300} />,
   },
 );
 const TagBarChart = dynamic(
-  () => import("@/components/TagBarChart").then((m) => m.TagBarChart),
+  () => import("charts/TagBarChart").then((m) => m.TagBarChart),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={400} />,
