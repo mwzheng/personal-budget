@@ -19,6 +19,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 export type Allocation = { category: string; amount: number };
 
+const DEFAULT_ALLOCATIONS: Allocation[] = [
+  { category: "Needs", amount: 50 },
+  { category: "Wants", amount: 30 },
+  { category: "Savings", amount: 20 },
+];
+
 export function BudgetForm({
   initialBudget,
   onSaved,
@@ -28,22 +34,16 @@ export function BudgetForm({
   onSaved?: (budget: any) => void;
   onCancel?: () => void;
 }) {
-  const defaultAllocations: Allocation[] = [
-    { category: "Needs", amount: 50 },
-    { category: "Wants", amount: 30 },
-    { category: "Savings", amount: 20 },
-  ];
-
   const [name, setName] = useState<string>(initialBudget?.name ?? "");
   const [allocations, setAllocations] = useState<Allocation[]>(
-    initialBudget?.allocations ?? defaultAllocations,
+    initialBudget?.allocations ?? DEFAULT_ALLOCATIONS,
   );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (initialBudget) {
       setName(initialBudget.name || "");
-      setAllocations(initialBudget.allocations || defaultAllocations);
+      setAllocations(initialBudget.allocations || DEFAULT_ALLOCATIONS);
     }
   }, [initialBudget]);
 
@@ -89,7 +89,7 @@ export function BudgetForm({
       if (!initialBudget) {
         // reset to defaults for newly created
         setName("");
-        setAllocations(defaultAllocations);
+        setAllocations(DEFAULT_ALLOCATIONS);
       }
 
       onSaved?.(data);

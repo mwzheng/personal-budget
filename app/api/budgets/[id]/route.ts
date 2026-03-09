@@ -18,11 +18,11 @@ const BudgetSchema = z.object({
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getUserIdFromRequest(request);
-    const { id } = params;
+    const { id } = await context.params;
     await deleteBudget(userId, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
@@ -36,11 +36,11 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const userId = await getUserIdFromRequest(request);
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
 
     const parseResult = BudgetSchema.safeParse(body);

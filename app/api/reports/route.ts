@@ -8,6 +8,14 @@ import { getUserTransactions } from "@/lib/dynamo";
 
 export async function GET(request: NextRequest) {
   try {
+    const cognitoUserPoolId =
+      process.env.COGNITO_USER_POOL_ID ||
+      process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ||
+      "";
+    const cognitoClientId =
+      process.env.COGNITO_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ||
+      "";
     const { searchParams } = new URL(request.url);
 
     // Note 2: `?? undefined` converts null (returned by `searchParams.get` when the
@@ -41,14 +49,13 @@ export async function GET(request: NextRequest) {
     // Note 6: `DISABLE_AUTH` allows running the app in local development without
     // setting up Cognito. When auth is skipped, a fixed `local-demo` userId is
     // used so all sample data is consistently associated with the same "user".
-    const skipAuth =
-      process.env.DISABLE_AUTH === "true" || !process.env.COGNITO_USER_POOL_ID;
+    const skipAuth = process.env.DISABLE_AUTH === "true" || !cognitoUserPoolId;
     let userId = "local-demo";
     if (!skipAuth) {
       userId = await requireAuth(request, {
         region: process.env.AWS_REGION,
-        userPoolId: process.env.COGNITO_USER_POOL_ID!,
-        audience: process.env.COGNITO_CLIENT_ID,
+        userPoolId: cognitoUserPoolId,
+        audience: cognitoClientId || undefined,
       });
     }
 
@@ -136,6 +143,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ transactions, totalCount, aggregates, lastKey });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[/api/reports]", error);
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "Failed to load reports" } },

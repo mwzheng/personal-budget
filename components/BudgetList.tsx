@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "../lib/apiFetch";
+import { clearCognitoTokens } from "../lib/cognitoClient";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -44,7 +45,7 @@ export function BudgetList({
       let data: any = null;
       try {
         data = text ? JSON.parse(text) : null;
-      } catch (e) {
+      } catch {
         // ignore parse errors; we'll fall back to statusText
       }
 
@@ -58,40 +59,15 @@ export function BudgetList({
         // so the user can re-authenticate instead of showing a console error.
         if (res.status === 401 || res.status === 403) {
           if (typeof window !== "undefined") {
-            try {
-              window.sessionStorage.removeItem("access_token");
-              window.sessionStorage.removeItem("id_token");
-              window.sessionStorage.removeItem("refresh_token");
-            } catch (e) {
-              // ignore storage errors
-            }
-
-            // Prefer redirecting to the configured Cognito hosted UI if envs
-            // are available, otherwise fall back to a local /login page.
-            const domain =
-              (process.env.NEXT_PUBLIC_COGNITO_DOMAIN as string) || undefined;
-            const clientId =
-              (process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID as string) ||
-              undefined;
-            const redirectUri = window.location.origin;
-
-            if (domain && clientId) {
-              const loginUrl = `${domain}/login?client_id=${encodeURIComponent(
-                clientId,
-              )}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
-              window.location.href = loginUrl;
-              return;
-            }
-
-            window.location.href = "/login";
+            clearCognitoTokens();
+            window.location.href = "/auth/login";
             return;
           }
         }
 
         throw new Error(msg);
       }
-
-      setBudgets(data || []);
+      setBudgets(Array.isArray(data) ? data : (data?.budgets ?? []));
     } catch (err) {
       console.error("Failed to load budgets", err);
       setBudgets([]);
@@ -172,7 +148,7 @@ export function BudgetList({
               </Button>
               <IconButton
                 edge="end"
-                onClick={() => handleDelete(b.budgetId)}
+                onClick={() => openDelete({ id: b.budgetId, name: b.name })}
                 aria-label={`delete-${b.budgetId}`}
               >
                 <DeleteIcon />
@@ -189,8 +165,9 @@ export function BudgetList({
         <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the budget "{deleteCandidate?.name}
-            "? This action cannot be undone.
+            Are you sure you want to delete the budget &quot;
+            {deleteCandidate?.name}
+            &quot;? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

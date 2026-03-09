@@ -6,6 +6,14 @@ import { loadTransactionsFromCSV } from "@/lib/csvParser";
 
 export async function POST(request: NextRequest) {
   try {
+    const cognitoUserPoolId =
+      process.env.COGNITO_USER_POOL_ID ||
+      process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ||
+      "";
+    const cognitoClientId =
+      process.env.COGNITO_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ||
+      "";
     // Note 2: Content-type negotiation allows clients to send the CSV either as
     // raw text (`text/csv`) or wrapped in a JSON body (`{ "csv": "..." }`). The
     // raw text path is more efficient for large files; the JSON path is easier to
@@ -44,16 +52,15 @@ export async function POST(request: NextRequest) {
     // working when the DynamoDB module is unavailable (e.g. missing env vars at
     // build time). The `null` result causes the code to skip the DynamoDB path.
     const clientModule = await import("@/lib/dynamo").catch(() => null);
-    const skipAuth =
-      process.env.DISABLE_AUTH === "true" || !process.env.COGNITO_USER_POOL_ID;
+    const skipAuth = process.env.DISABLE_AUTH === "true" || !cognitoUserPoolId;
     let userId = "local-demo";
     if (!skipAuth) {
       userId = await (
         await import("@/lib/cognitoAuth")
       ).requireAuth(request, {
         region: process.env.AWS_REGION,
-        userPoolId: process.env.COGNITO_USER_POOL_ID!,
-        audience: process.env.COGNITO_CLIENT_ID,
+        userPoolId: cognitoUserPoolId,
+        audience: cognitoClientId || undefined,
       });
     }
 
@@ -88,6 +95,7 @@ export async function POST(request: NextRequest) {
       skipped,
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error("[/api/reports/import]", error);
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "Failed to parse CSV" } },
