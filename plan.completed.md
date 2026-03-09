@@ -456,3 +456,25 @@ Commit
 Notes
 
 - plan.md was annotated to mention this completion. This helps satisfy repository plan update rules that require updating both plan.md and plan.completed.md for completed work.
+
+---
+
+# Completed: Protect Reports Route (auth guard)
+
+Date: 2026-03-09
+
+Summary
+
+- Redirect unauthenticated users visiting `/reports` to `/auth/login` unless `NEXT_PUBLIC_DISABLE_AUTH=true` is set for local/demo runs.
+
+Files changed
+
+- app/reports/page.tsx
+
+Commit
+
+- 085488c "feat(auth): redirect unauthenticated users to login on reports page"
+
+Notes
+
+- The guard checks for presence of `access_token` or `id_token` in `sessionStorage` and performs a client-side router.replace to `/auth/login` if not present. Consider adding server-side route protection for better UX and security in the future.
