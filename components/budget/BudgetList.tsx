@@ -6,7 +6,6 @@
 
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
-import { clearCognitoTokens } from "@/lib/cognitoClient";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -55,14 +54,16 @@ export function BudgetList({
           data?.message ||
           res.statusText ||
           "Request failed";
-        // If unauthorized, clear stored tokens and redirect to the auth flow
-        // so the user can re-authenticate instead of showing a console error.
+        // If unauthorized, avoid forcefully clearing tokens here. The
+        // global apiFetch already attempts a refresh and will clear tokens
+        // on irrevocable refresh failures. For UI stability, show an empty
+        // list and let the user sign in again if needed.
         if (res.status === 401 || res.status === 403) {
-          if (typeof window !== "undefined") {
-            clearCognitoTokens();
-            window.location.href = "/auth/login";
-            return;
-          }
+          console.warn(
+            "Unauthorized when loading budgets; user may need to sign-in",
+          );
+          setBudgets([]);
+          return;
         }
 
         throw new Error(msg);
