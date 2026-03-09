@@ -524,3 +524,25 @@ Commit
 Notes
 
 - This is a client-side navigation pattern using Next.js `Link` (MUI `component={NextLink}` + `href="/"`). No server-side changes were required.
+
+---
+
+# Completed: Remove logo link styling
+
+Date: 2026-03-09
+
+Summary
+
+- Removed default link styling from the top-left brand text in the header and ensured hover/focus shows a pointer cursor while preserving the original typography and emoji.
+
+Files changed
+
+- components/AppNav.tsx
+
+Commit
+
+- fix(ui): logo hover shows pointer; remove link styling
+
+Notes
+
+- The logo remains a Next.js Link for client navigation but no longer shows underline or color changes; an `aria-label` was added for accessibility.

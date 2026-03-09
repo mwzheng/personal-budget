@@ -58,9 +58,16 @@ export function AppNav() {
       <Toolbar>
         <Typography
           variant="h6"
-          sx={{ mr: 4, fontWeight: 700 }}
+          sx={{
+            mr: 4,
+            fontWeight: 700,
+            textDecoration: "none",
+            color: "inherit",
+            "&:hover, &:focus": { cursor: "pointer", textDecoration: "none" },
+          }}
           component={NextLink}
           href="/"
+          aria-label="Personal Budget home"
         >
           💰 Personal Budget
         </Typography>
