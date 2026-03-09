@@ -28,7 +28,7 @@ export default function Home() {
       if (hasToken) {
         router.replace("/reports");
       }
-    } catch (e) {
+    } catch {
       // ignore storage errors
     }
   }, [router]);
@@ -58,7 +58,7 @@ export default function Home() {
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Typography variant="h6">Budgets</Typography>
             <Typography variant="body2" color="text.secondary">
-              Create, save, and apply budgets to analyse how well you're
+              Create, save, and apply budgets to analyse how well you are
               sticking to your plan.
             </Typography>
           </Paper>

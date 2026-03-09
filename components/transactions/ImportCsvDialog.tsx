@@ -19,7 +19,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
-import { apiFetch } from "../lib/apiFetch";
+import { apiFetch } from "@/lib/apiFetch";
 import type { Transaction } from "@/lib/types";
 import { appendTransactions } from "@/lib/storage";
 

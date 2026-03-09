@@ -5,8 +5,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { apiFetch } from "../lib/apiFetch";
-import { clearCognitoTokens } from "../lib/cognitoClient";
+import { apiFetch } from "@/lib/apiFetch";
+import { clearCognitoTokens } from "@/lib/cognitoClient";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";

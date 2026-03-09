@@ -14,7 +14,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { SankeyRequestBody, SankeyResponse } from "@/lib/types";
-import { apiFetch } from "../lib/apiFetch";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Props {
   onResult: (response: SankeyResponse) => void;

@@ -23,10 +23,10 @@ import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { SankeyForm } from "budget/SankeyForm";
+import { SankeyForm } from "@/components/budget/SankeyForm";
 import { SankeyResponse } from "@/lib/types";
-import { BudgetForm } from "budget/BudgetForm";
-import { BudgetList } from "budget/BudgetList";
+import { BudgetForm } from "@/components/budget/BudgetForm";
+import { BudgetList } from "@/components/budget/BudgetList";
 
 // Note 2: `dynamic(..., { ssr: false })` defers loading the SankeyChart bundle
 // to the browser. Nivo's Sankey chart relies on DOM APIs (SVG measurements)
@@ -34,7 +34,7 @@ import { BudgetList } from "budget/BudgetList";
 // server render would throw. The `loading` fallback renders a Skeleton while
 // the bundle downloads, keeping the page visually stable.
 const SankeyChart = dynamic(
-  () => import("charts/SankeyChart").then((m) => m.SankeyChart),
+  () => import("@/components/charts/SankeyChart").then((m) => m.SankeyChart),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={420} />,
@@ -66,7 +66,7 @@ export default function SankeyPage() {
       if (!hasToken) {
         router.replace("/auth/login");
       }
-    } catch (e) {
+    } catch {
       // swallow errors; don't break the page if storage access fails
       // (e.g., in strict privacy modes).
     }

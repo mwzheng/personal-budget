@@ -4,7 +4,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { apiFetch } from "../lib/apiFetch";
+import { apiFetch } from "@/lib/apiFetch";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";

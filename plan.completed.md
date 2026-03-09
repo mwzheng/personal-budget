@@ -1,3 +1,26 @@
+# Completed: Fix imports and build
+
+Date: 2026-03-09
+
+Summary
+
+Fixed broken imports caused by a recent component reorganization and standardized absolute import paths to use the '@/components/...' and '@/lib/...' aliases. Updated ProjectionView to import ProjectionForm and ProjectionChart from their moved locations, normalized several other component imports, addressed small ESLint issues (unescaped entities, unused catch variables), and verified that `pnpm build` completes successfully and smoke-tested /reports, /sankey, and /.
+
+Files changed (representative)
+
+- app/reports/page.tsx
+- app/sankey/page.tsx
+- components/ui/ProjectionView.tsx
+- components/forms/ProjectionForm.tsx
+- components/charts/ProjectionChart.tsx
+- components/\* (multiple import path fixes across ui, forms, charts, budget, transactions)
+
+Commit (suggested)
+
+- fix(build): repair broken imports after reorg and ensure build succeeds
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
 # Completed: Reports & Sankey Implementation
 
 Date: 2026-03-06

@@ -4,8 +4,8 @@
 // to keep the workflow fully client-side and instant.
 "use client";
 import React, { useState } from "react";
-import ProjectionForm from "./ProjectionForm";
-import ProjectionChart from "./ProjectionChart";
+import ProjectionForm from "@/components/forms/ProjectionForm";
+import ProjectionChart from "@/components/charts/ProjectionChart";
 
 // Note 2: `computeProjectionLocal` simulates month-by-month compound growth.
 // Each month, the balance grows by `monthlyRate` (interest) plus the fixed

@@ -14,9 +14,9 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
-import SalaryForm from "./SalaryForm";
-import { apiFetch } from "../lib/apiFetch";
-import SalaryChart from "./SalaryChart";
+import SalaryForm from "@/components/forms/SalaryForm";
+import { apiFetch } from "@/lib/apiFetch";
+import SalaryChart from "@/components/charts/SalaryChart";
 
 export default function SalaryList() {
   const [entries, setEntries] = useState<any[]>([]);

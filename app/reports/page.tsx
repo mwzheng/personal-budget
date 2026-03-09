@@ -23,10 +23,10 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { FilterBar } from "ui/FilterBar";
-import { ImportCsvDialog } from "transactions/ImportCsvDialog";
-import { TransactionForm } from "transactions/TransactionForm";
-import { TransactionsTable } from "transactions/TransactionsTable";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
+import { TransactionForm } from "@/components/transactions/TransactionForm";
+import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import {
   filterTransactions,
   aggregateTransactions,
@@ -46,21 +46,27 @@ import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
 // During server-side rendering that DOM element does not exist, causing errors.
 // The `loading` prop renders a Skeleton placeholder while the bundle downloads.
 const SpendingPieChart = dynamic(
-  () => import("charts/SpendingPieChart").then((m) => m.SpendingPieChart),
+  () =>
+    import("@/components/charts/SpendingPieChart").then(
+      (m) => m.SpendingPieChart,
+    ),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={280} />,
   },
 );
 const SpendingBarChart = dynamic(
-  () => import("charts/SpendingBarChart").then((m) => m.SpendingBarChart),
+  () =>
+    import("@/components/charts/SpendingBarChart").then(
+      (m) => m.SpendingBarChart,
+    ),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={300} />,
   },
 );
 const TagBarChart = dynamic(
-  () => import("charts/TagBarChart").then((m) => m.TagBarChart),
+  () => import("@/components/charts/TagBarChart").then((m) => m.TagBarChart),
   {
     ssr: false,
     loading: () => <Skeleton variant="rectangular" height={400} />,
@@ -192,7 +198,7 @@ export default function ReportsPage() {
 
     setAllTransactions(getTransactions());
     setLoading(false);
-  }, []);
+  }, [router]);
 
   function refreshFromStorage() {
     setAllTransactions(getTransactions());
