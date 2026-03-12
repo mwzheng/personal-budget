@@ -39,6 +39,8 @@ const BAR_COLORS = [
 
 interface Props {
   data: TagDataPoint[];
+  activeTags?: string[];
+  onTagClick?: (tag: string) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -48,7 +50,7 @@ function formatCurrency(value: number): string {
   });
 }
 
-export function TagBarChart({ data }: Props) {
+export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
   if (data.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
@@ -61,6 +63,10 @@ export function TagBarChart({ data }: Props) {
   // enough vertical space to be readable. `Math.max(300, ...)` sets a minimum
   // height for cases where there are only one or two tags.
   const height = Math.max(300, data.length * 32 + 60);
+  const activeTagSet = new Set(activeTags);
+  const hasVisibleActiveTags = data.some((entry) =>
+    activeTagSet.has(entry.name),
+  );
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -116,9 +122,38 @@ export function TagBarChart({ data }: Props) {
             each bar (top-right and bottom-right), giving them a polished look
             while keeping the left edge flush with the Y-axis. */}
         <Bar dataKey="value" radius={[0, 4, 4, 0]} activeBar={false}>
-          {data.map((_, i) => (
-            <Cell key={`cell-${i}`} fill={BAR_COLORS[i % BAR_COLORS.length]} />
-          ))}
+          {data.map((entry, i) => {
+            const isActive = activeTagSet.has(entry.name);
+
+            return (
+              <Cell
+                key={`cell-${entry.name}-${i}`}
+                fill={BAR_COLORS[i % BAR_COLORS.length]}
+                fillOpacity={hasVisibleActiveTags && !isActive ? 0.45 : 1}
+                stroke={isActive ? "#fff" : "none"}
+                strokeWidth={isActive ? 2 : 0}
+                role={onTagClick ? "button" : undefined}
+                tabIndex={onTagClick ? 0 : undefined}
+                aria-label={
+                  onTagClick
+                    ? `Filter transactions by tag ${entry.name}`
+                    : undefined
+                }
+                onClick={onTagClick ? () => onTagClick(entry.name) : undefined}
+                onKeyDown={
+                  onTagClick
+                    ? (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onTagClick(entry.name);
+                        }
+                      }
+                    : undefined
+                }
+                style={{ cursor: onTagClick ? "pointer" : "default" }}
+              />
+            );
+          })}
         </Bar>
       </BarChart>
     </ResponsiveContainer>

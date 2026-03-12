@@ -104,6 +104,21 @@ function buildYearFilters(year: string): FilterParams {
   };
 }
 
+function buildQuickTagFilters(
+  currentFilters: FilterParams,
+  tag: string,
+): FilterParams {
+  // Note 4a: Quick-tag clicks act as a focused drill-down. Keeping the current
+  // date/search filters intact while swapping to a single selected tag makes the
+  // shortcut predictable and easy to toggle off by clicking the same tag again.
+  const nextTags =
+    currentFilters.tags.length === 1 && currentFilters.tags[0] === tag
+      ? []
+      : [tag];
+
+  return { ...currentFilters, tags: nextTags };
+}
+
 interface StatCardProps {
   label: string;
   value: string;
@@ -185,9 +200,6 @@ function EmptyState({
 export default function ReportsPage() {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [defaultYear, setDefaultYear] = useState(() =>
-    String(new Date().getFullYear()),
-  );
   const [filters, setFilters] = useState<FilterParams>(EMPTY_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
@@ -219,7 +231,6 @@ export default function ReportsPage() {
     );
 
     setAllTransactions(storedTransactions);
-    setDefaultYear(resolvedYear);
     setFilters(buildYearFilters(resolvedYear));
     setLoading(false);
   }, [router]);
@@ -236,7 +247,6 @@ export default function ReportsPage() {
         storedTransactions,
         getLastSelectedReportYear(),
       );
-      setDefaultYear(resolvedYear);
       setFilters(buildYearFilters(resolvedYear));
     }
   }
@@ -269,6 +279,10 @@ export default function ReportsPage() {
 
   function handleExport() {
     downloadTransactionsCsv(filtered, "transactions_export.csv");
+  }
+
+  function handleQuickTagFilter(tag: string) {
+    setFilters((currentFilters) => buildQuickTagFilters(currentFilters, tag));
   }
 
   // Note 6: `useMemo` caches the result of these expensive operations and only
@@ -354,7 +368,7 @@ export default function ReportsPage() {
             <FilterBar
               availableTags={availableTags}
               availableYears={availableYears}
-              defaultYear={defaultYear}
+              filters={filters}
               onChange={setFilters}
             />
           )}
@@ -429,13 +443,17 @@ export default function ReportsPage() {
           <Card sx={{ mb: 3 }}>
             <CardHeader
               title="Top Spending Tags"
-              subheader="Aggregated spend by tag across filtered transactions"
+              subheader="Aggregated spend by tag across filtered transactions. Click a bar to focus on one tag."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
               subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
             <CardContent>
-              <TagBarChart data={agg.tagDiagramData} />
+              <TagBarChart
+                data={agg.tagDiagramData}
+                activeTags={filters.tags}
+                onTagClick={handleQuickTagFilter}
+              />
             </CardContent>
           </Card>
 
@@ -450,8 +468,10 @@ export default function ReportsPage() {
           </Box>
           <TransactionsTable
             transactions={filtered}
+            activeTags={filters.tags}
             onEdit={handleEditTransaction}
             onDelete={handleDeleteTransaction}
+            onTagClick={handleQuickTagFilter}
           />
         </>
       )}

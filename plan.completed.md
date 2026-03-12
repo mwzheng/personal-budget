@@ -1,3 +1,52 @@
+# Completed: Reports quick tag filtering & layout polish
+
+Date: 2026-03-12
+
+Summary
+
+- Added quick tag drill-down interactions so clicking a top-spending tag bar or a tag chip in the transactions table immediately applies that tag filter while preserving the current date/search context.
+- Reworked the reports filter bar so the year selector lives inline with the rest of the filters and scales with scrollable tabs when many years are present.
+- Centered the category breakdown pie chart in its card and separated chart legends from the plot areas to create clearer spacing for both the pie and spending-over-time charts.
+
+Completed items
+
+- Added quick single-tag toggle filtering in `app/reports/page.tsx`.
+- Synced `components/ui/FilterBar.tsx` with externally applied filters and replaced the year chip row with inline scrollable year tabs.
+- Updated `components/transactions/TransactionsTable.tsx` so tag chips are clickable quick filters and reset pagination when filtered results change.
+- Updated `components/charts/TagBarChart.tsx` so tag bars can be clicked (and keyboard-activated) to filter by tag and visually reflect the active selection.
+- Updated `components/charts/SpendingPieChart.tsx`, `components/charts/SpendingBarChart.tsx`, and `components/charts/ChartLegend.tsx` to center the pie chart and add cleaner legend spacing around both chart plot areas.
+- Verified the change with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/reports/page.tsx`
+- `components/ui/FilterBar.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/charts/TagBarChart.tsx`
+- `components/charts/SpendingPieChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/charts/ChartLegend.tsx`
+
+Commit reference
+
+- Commit message: `feat(reports): add quick tag filters and polish report layouts`
+
+Commit message:
+feat(reports): add quick tag filters and polish report layouts
+
+- add quick tag drill-down from the top tags chart and transactions table
+- move report years into inline scrollable tabs and sync FilterBar with applied filters
+- center the category pie chart and separate chart legends for cleaner spacing
+- keep tag chart bars keyboard-activatable for accessible quick filtering
+- run Prettier, lint, tests, and verified Next.js build
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+Notes / next steps
+
+- This work fits cleanly in a single commit because the interaction and layout changes all support the same reports UX update.
+- If you later add browser-based UI tests, the quick tag drill-down flow would be a good candidate for a focused visual + interaction regression check.
+
 # Completed: Reports default year persistence & chart polish
 
 Date: 2026-03-12

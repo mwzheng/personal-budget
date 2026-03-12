@@ -1,4 +1,4 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence and chart/filter polish moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, and report chart/filter polish moved to plan.completed.md. -->
 
 # Development Plan for Personal Budget App
 
@@ -91,7 +91,7 @@ Developer process note: When work is completed, update both `plan.md` and `plan.
 
 Status: Local implementation complete (reports + sankey). AWS infrastructure (DynamoDB + Cognito) deployed via SAM — stack `personal-budget-resources` live in `us-east-1`. Next priority: wire API routes to DynamoDB with Cognito JWT middleware, and build user data management (localStorage CRUD → DynamoDB).
 
-Completed work (moved): The full details of the recent completed work (Reports & Sankey implementation, infra provisioning and documentation, repository-wide educational comments, Husky + lint-staged setup and fixes, build & dev smoke-testing, related code quality fixes, and the 2026-03-12 reports default-year persistence plus chart/filter polish pass) have been moved to `plan.completed.md`. See the top of `plan.completed.md` for a consolidated record and per-feature entries. Additionally, Budgets API & UI wiring was completed on 2026-03-08 and its details are recorded in `plan.completed.md`.
+Completed work (moved): The full details of the recent completed work (Reports & Sankey implementation, infra provisioning and documentation, repository-wide educational comments, Husky + lint-staged setup and fixes, build & dev smoke-testing, related code quality fixes, and the 2026-03-12 reports default-year persistence plus the follow-up quick tag filtering and chart/filter layout polish passes) have been moved to `plan.completed.md`. See the top of `plan.completed.md` for a consolidated record and per-feature entries. Additionally, Budgets API & UI wiring was completed on 2026-03-08 and its details are recorded in `plan.completed.md`.
 
 Remaining / next priorities (high level):
 

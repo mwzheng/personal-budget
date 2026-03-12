@@ -39,7 +39,6 @@ export function ChartLegend({
         gap,
         listStyle: "none",
         m: 0,
-        mt: 1.5,
         p: 0,
       }}
     >

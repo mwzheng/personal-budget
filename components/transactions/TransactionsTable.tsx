@@ -24,7 +24,7 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CategoryType, Transaction } from "@/lib/types";
 
 // Note 2: CATEGORY_COLORS maps each CategoryType to a MUI `color` token.
@@ -41,11 +41,19 @@ type SortDir = "asc" | "desc";
 
 interface Props {
   transactions: Transaction[];
+  activeTags?: string[];
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (id: string) => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
+export function TransactionsTable({
+  transactions,
+  activeTags = [],
+  onEdit,
+  onDelete,
+  onTagClick,
+}: Props) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState<SortField>("date");
@@ -87,7 +95,12 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage,
   );
+  const activeTagSet = new Set(activeTags);
   const showActions = Boolean(onEdit || onDelete);
+
+  useEffect(() => {
+    setPage(0);
+  }, [transactions]);
 
   return (
     <>
@@ -160,8 +173,17 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                           key={tag}
                           label={tag}
                           size="small"
-                          variant="outlined"
-                          sx={{ fontSize: 11 }}
+                          color={activeTagSet.has(tag) ? "primary" : "default"}
+                          variant={
+                            activeTagSet.has(tag) ? "filled" : "outlined"
+                          }
+                          onClick={
+                            onTagClick ? () => onTagClick(tag) : undefined
+                          }
+                          sx={{
+                            fontSize: 11,
+                            cursor: onTagClick ? "pointer" : "default",
+                          }}
                         />
                       ))}
                     </Box>
