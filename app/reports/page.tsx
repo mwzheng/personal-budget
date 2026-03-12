@@ -28,14 +28,18 @@ import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import {
+  createYearDateRange,
   filterTransactions,
   aggregateTransactions,
   getAllTags,
+  getAvailableReportYears,
+  resolveDefaultReportYear,
 } from "@/lib/aggregations";
 import { downloadTransactionsCsv } from "@/lib/csvExport";
 import {
   getTransactions,
   addTransaction,
+  getLastSelectedReportYear,
   updateTransaction,
   deleteTransaction,
 } from "@/lib/storage";
@@ -90,6 +94,15 @@ const EMPTY_FILTERS: FilterParams = {
   tags: [],
   search: "",
 };
+
+function buildYearFilters(year: string): FilterParams {
+  const { startDate, endDate } = createYearDateRange(year);
+  return {
+    ...EMPTY_FILTERS,
+    startDate,
+    endDate,
+  };
+}
 
 interface StatCardProps {
   label: string;
@@ -172,6 +185,9 @@ function EmptyState({
 export default function ReportsPage() {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [defaultYear, setDefaultYear] = useState(() =>
+    String(new Date().getFullYear()),
+  );
   const [filters, setFilters] = useState<FilterParams>(EMPTY_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
@@ -196,12 +212,33 @@ export default function ReportsPage() {
       return;
     }
 
-    setAllTransactions(getTransactions());
+    const storedTransactions = getTransactions();
+    const resolvedYear = resolveDefaultReportYear(
+      storedTransactions,
+      getLastSelectedReportYear(),
+    );
+
+    setAllTransactions(storedTransactions);
+    setDefaultYear(resolvedYear);
+    setFilters(buildYearFilters(resolvedYear));
     setLoading(false);
   }, [router]);
 
   function refreshFromStorage() {
-    setAllTransactions(getTransactions());
+    const storedTransactions = getTransactions();
+    setAllTransactions(storedTransactions);
+
+    // Note 8: When the page transitions from empty -> non-empty (for example
+    // after the first import), reusing the startup default-year rule ensures the
+    // user immediately lands on a populated report instead of an empty fallback.
+    if (allTransactions.length === 0) {
+      const resolvedYear = resolveDefaultReportYear(
+        storedTransactions,
+        getLastSelectedReportYear(),
+      );
+      setDefaultYear(resolvedYear);
+      setFilters(buildYearFilters(resolvedYear));
+    }
   }
 
   function handleSaveTransaction(t: Transaction) {
@@ -238,6 +275,11 @@ export default function ReportsPage() {
   // recomputes when their dependencies change. Without memoization, `getAllTags`,
   // `filterTransactions`, and `aggregateTransactions` would run on every render
   // (e.g., when a dialog opens), wasting CPU on unchanged data.
+  const availableYears = useMemo(
+    () => getAvailableReportYears(allTransactions),
+    [allTransactions],
+  );
+
   const availableTags = useMemo(
     () => getAllTags(allTransactions),
     [allTransactions],
@@ -309,7 +351,12 @@ export default function ReportsPage() {
               sx={{ mb: 3, borderRadius: 1 }}
             />
           ) : (
-            <FilterBar availableTags={availableTags} onChange={setFilters} />
+            <FilterBar
+              availableTags={availableTags}
+              availableYears={availableYears}
+              defaultYear={defaultYear}
+              onChange={setFilters}
+            />
           )}
 
           {/* Summary stats */}

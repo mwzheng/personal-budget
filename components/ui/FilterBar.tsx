@@ -14,26 +14,48 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
+import { format } from "date-fns";
 import { useState } from "react";
+import {
+  clearLastSelectedReportYear,
+  setLastSelectedReportYear,
+} from "@/lib/storage";
 import { FilterParams } from "@/lib/types";
-
-const QUICK_YEARS = ["2021", "2022", "2023", "2024", "2025", "2026"];
 
 interface Props {
   availableTags: string[];
+  availableYears: string[];
+  defaultYear: string;
   onChange: (filters: FilterParams) => void;
 }
 
-export function FilterBar({ availableTags, onChange }: Props) {
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+function buildYearBounds(year: string): { startDate: Date; endDate: Date } {
+  return {
+    startDate: new Date(Number(year), 0, 1),
+    endDate: new Date(Number(year), 11, 31),
+  };
+}
+
+export function FilterBar({
+  availableTags,
+  availableYears,
+  defaultYear,
+  onChange,
+}: Props) {
+  const [startDate, setStartDate] = useState<Date | null>(
+    () => buildYearBounds(defaultYear).startDate,
+  );
+  const [endDate, setEndDate] = useState<Date | null>(
+    () => buildYearBounds(defaultYear).endDate,
+  );
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [activeYear, setActiveYear] = useState<string | null>(null);
+  const [activeYear, setActiveYear] = useState<string | null>(defaultYear);
 
   // Note 2: `applyFilters` converts the internal `Date` objects to "YYYY-MM-DD"
-  // ISO strings because `FilterParams.startDate` expects a string. The `.split("T")[0]`
-  // strips the time component that `toISOString()` appends (e.g. "2024-01-01T00:00:00.000Z").
+  // strings because `FilterParams.startDate` expects a string. Formatting the
+  // local calendar date avoids the timezone shifts that `toISOString()` can
+  // introduce for users outside UTC.
   function applyFilters(
     sd: Date | null,
     ed: Date | null,
@@ -41,11 +63,22 @@ export function FilterBar({ availableTags, onChange }: Props) {
     q: string,
   ) {
     onChange({
-      startDate: sd ? sd.toISOString().split("T")[0] : null,
-      endDate: ed ? ed.toISOString().split("T")[0] : null,
+      startDate: sd ? format(sd, "yyyy-MM-dd") : null,
+      endDate: ed ? format(ed, "yyyy-MM-dd") : null,
       tags,
       search: q,
     });
+  }
+
+  // Note 8: The stored year tracks the last applied quick-year selection rather
+  // than every intermediate edit. This keeps startup behavior aligned with the
+  // actual reports view the user chose to apply.
+  function persistAppliedYear(year: string | null) {
+    if (year) {
+      setLastSelectedReportYear(year);
+      return;
+    }
+    clearLastSelectedReportYear();
   }
 
   // Note 3: Clicking an already-active year chip deselects it (toggle behavior).
@@ -56,18 +89,20 @@ export function FilterBar({ availableTags, onChange }: Props) {
       setActiveYear(null);
       setStartDate(null);
       setEndDate(null);
+      persistAppliedYear(null);
       applyFilters(null, null, selectedTags, search);
     } else {
       setActiveYear(year);
-      const sd = new Date(`${year}-01-01`);
-      const ed = new Date(`${year}-12-31`);
+      const { startDate: sd, endDate: ed } = buildYearBounds(year);
       setStartDate(sd);
       setEndDate(ed);
+      persistAppliedYear(year);
       applyFilters(sd, ed, selectedTags, search);
     }
   }
 
   function handleApply() {
+    persistAppliedYear(activeYear);
     applyFilters(startDate, endDate, selectedTags, search);
   }
 
@@ -77,6 +112,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
     setSelectedTags([]);
     setSearch("");
     setActiveYear(null);
+    clearLastSelectedReportYear();
     onChange({ startDate: null, endDate: null, tags: [], search: "" });
   }
 
@@ -91,7 +127,7 @@ export function FilterBar({ availableTags, onChange }: Props) {
             to fill all remaining space between the "Filters" label and the year
             chips, pushing the chips to the right edge of the bar. */}
         <Box flex={1} />
-        {QUICK_YEARS.map((y) => (
+        {availableYears.map((y) => (
           <Chip
             key={y}
             label={y}
@@ -148,17 +184,25 @@ export function FilterBar({ availableTags, onChange }: Props) {
           onKeyDown={(e) => e.key === "Enter" && handleApply()}
           sx={{ width: 180 }}
         />
-        <Button variant="contained" size="small" onClick={handleApply}>
-          Apply
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ClearIcon />}
-          onClick={handleReset}
-        >
-          Reset
-        </Button>
+        <Box display="flex" gap={1} alignItems="stretch" sx={{ minHeight: 40 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleApply}
+            sx={{ minHeight: 40 }}
+          >
+            Apply
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ClearIcon />}
+            onClick={handleReset}
+            sx={{ minHeight: 40 }}
+          >
+            Reset
+          </Button>
+        </Box>
       </Box>
     </Paper>
   );

@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { TagDataPoint } from "@/lib/types";
 
 // Note 2: BAR_COLORS cycles through a palette of 15 distinct colors. Using
@@ -38,6 +39,13 @@ const BAR_COLORS = [
 
 interface Props {
   data: TagDataPoint[];
+}
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 }
 
 export function TagBarChart({ data }: Props) {
@@ -78,18 +86,36 @@ export function TagBarChart({ data }: Props) {
           width={115}
         />
         <Tooltip
-          formatter={(value: number) => [
-            `$${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-            "Total",
-          ]}
-          contentStyle={{ background: "#242424", border: "1px solid #444" }}
-          labelStyle={{ color: "#fff" }}
-          itemStyle={{ color: "#fff" }}
+          cursor={false}
+          content={({ active, label, payload }) => {
+            if (!active || !payload?.length) {
+              return null;
+            }
+
+            const entry = payload[0];
+            const title =
+              typeof label === "string"
+                ? label
+                : String(entry.payload?.name ?? "Tag");
+
+            return (
+              <ChartTooltipCard
+                title={title}
+                rows={[
+                  {
+                    label: "Amount",
+                    value: formatCurrency(Number(entry.value ?? 0)),
+                    color: entry.color,
+                  },
+                ]}
+              />
+            );
+          }}
         />
         {/* Note 5: `radius={[0, 4, 4, 0]}` rounds only the right corners of
             each bar (top-right and bottom-right), giving them a polished look
             while keeping the left edge flush with the Y-axis. */}
-        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} activeBar={false}>
           {data.map((_, i) => (
             <Cell key={`cell-${i}`} fill={BAR_COLORS[i % BAR_COLORS.length]} />
           ))}

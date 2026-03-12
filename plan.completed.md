@@ -1,3 +1,60 @@
+# Completed: Reports default year persistence & chart polish
+
+Date: 2026-03-12
+
+Summary
+
+- Updated the reports page to restore the last selected quick-year filter on load and to fall back to the latest year present in transaction data when no year preference exists.
+- Polished the reports filter bar and charts so the filter action buttons align with the other inputs, pie labels no longer clip as easily, legends render with cleaner spacing, tooltips show meaningful category labels, and the bar-chart hover overlay is removed.
+- Synced `pnpm-lock.yaml` with `package.json` by running `pnpm install --no-frozen-lockfile`, which restored the missing `vitest` install needed for the repository test script.
+
+Completed items
+
+- Added shared report-year helpers in `lib/aggregations.ts` and localStorage helpers in `lib/storage.ts`.
+- Updated `app/reports/page.tsx` and `components/ui/FilterBar.tsx` to derive available years from transactions, initialize the page with the resolved default year, and persist or clear the quick-year preference appropriately.
+- Added shared chart presentation helpers `components/charts/ChartLegend.tsx` and `components/charts/ChartTooltipCard.tsx`.
+- Updated `components/charts/SpendingPieChart.tsx`, `components/charts/SpendingBarChart.tsx`, and `components/charts/TagBarChart.tsx` to improve padding, legend spacing, tooltip labeling, and hover behavior.
+- Added `test/reports-aggregations.test.ts` to lock down default-year resolution and year-range helpers.
+- Verified the change with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/reports/page.tsx`
+- `components/ui/FilterBar.tsx`
+- `components/charts/SpendingPieChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/charts/TagBarChart.tsx`
+- `components/charts/ChartLegend.tsx`
+- `components/charts/ChartTooltipCard.tsx`
+- `lib/aggregations.ts`
+- `lib/storage.ts`
+- `test/reports-aggregations.test.ts`
+- `pnpm-lock.yaml`
+
+Commit reference
+
+- Commit: feat(reports): restore last-selected year and polish reports charts and filters
+
+Commit message:
+feat(reports): restore last-selected year and polish reports charts and filters
+
+- Persist last-selected quick-year to localStorage (key: personal-budget-last-report-year).
+- Derive available report years from transaction data and resolve a deterministic default year on load.
+- Wire FilterBar to accept availableYears and defaultYear, and persist/clear the applied year on Apply/Reset.
+- Align Apply/Reset buttons in FilterBar and ensure consistent small-control heights.
+- Add ChartLegend and ChartTooltipCard shared primitives and improve pie/bar tooltip content to include category/series and formatted amounts.
+- Adjust pie chart margins/radius to avoid label clipping and increase bar-chart legend spacing.
+- Remove bar hover overlay while keeping tooltips (cursor={false}, activeBar={false}).
+- Add tests: test/reports-aggregations.test.ts covering year derivation and date-range helpers.
+- Run Prettier, lint, tests, and verified Next.js build.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+Notes / next steps
+
+- If you want the year preference to be shareable in links later, the current localStorage-based preference can be moved into URL query parameters without changing the chart components again.
+- A true visual regression check would still be valuable for the reports charts if the project later adds browser-based UI tests.
+
 # Completed: Fix imports and build
 
 Date: 2026-03-09

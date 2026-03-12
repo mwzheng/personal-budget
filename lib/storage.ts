@@ -11,6 +11,7 @@ import type { Transaction } from "./types";
 // database (DynamoDB) should be used instead. The constant prevents typos in key
 // names that would silently create a second, disconnected data store.
 const STORAGE_KEY = "personal-budget-transactions";
+const REPORT_YEAR_STORAGE_KEY = "personal-budget-last-report-year";
 
 // Note 3: `typeof window === "undefined"` is true during SSR in Next.js. Returning
 // an empty array instead of throwing keeps server-side rendering safe, even though
@@ -98,4 +99,27 @@ export function appendTransactions(incoming: Transaction[]): {
 
 export function clearTransactions(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+// Note 11: Reports-year persistence uses a separate key so clearing or migrating
+// transaction data does not accidentally destroy an unrelated UI preference.
+export function getLastSelectedReportYear(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(REPORT_YEAR_STORAGE_KEY);
+}
+
+// Note 12: The selected year is stored as a plain string because the reports UI
+// only needs the year token itself; recomputing the date bounds from that token
+// avoids storing redundant start/end dates that could drift out of sync.
+export function setLastSelectedReportYear(year: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(REPORT_YEAR_STORAGE_KEY, year);
+}
+
+// Note 13: Resetting the reports preference is a first-class helper because the
+// reset button and "deselect active year" flow should both remove the stored
+// preference, not leave behind stale startup state.
+export function clearLastSelectedReportYear(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(REPORT_YEAR_STORAGE_KEY);
 }

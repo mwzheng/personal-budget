@@ -16,6 +16,8 @@ import {
   YAxis,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { ChartLegend } from "@/components/charts/ChartLegend";
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { TimeseriesPoint } from "@/lib/types";
 
 // Note 2: `formatMonth` converts the "YYYY-MM" period string into a short
@@ -35,6 +37,13 @@ function formatMonth(period: string): string {
 function formatDollar(value: number): string {
   if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
   return `$${value.toFixed(0)}`;
+}
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 }
 
 interface Props {
@@ -61,7 +70,7 @@ export function SpendingBarChart({ data }: Props) {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
         data={chartData}
-        margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
+        margin={{ top: 44, right: 20, bottom: 60, left: 20 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
         {/* Note 5: `angle={-45}` rotates X-axis labels 45 degrees to prevent
@@ -79,22 +88,65 @@ export function SpendingBarChart({ data }: Props) {
           tickFormatter={formatDollar}
         />
         <Tooltip
-          formatter={(value: number) => [
-            `$${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-            "",
-          ]}
-          contentStyle={{ background: "#242424", border: "1px solid #444" }}
-          labelStyle={{ color: "#fff" }}
-          itemStyle={{ color: "#fff" }}
+          cursor={false}
+          content={({ active, label, payload }) => {
+            if (!active || !payload?.length) {
+              return null;
+            }
+
+            const rows = payload
+              .filter((entry) => Number(entry.value ?? 0) > 0)
+              .map((entry) => ({
+                label: String(entry.name ?? entry.dataKey ?? "Amount"),
+                value: formatCurrency(Number(entry.value ?? 0)),
+                color: entry.color,
+              }));
+
+            return rows.length > 0 ? (
+              <ChartTooltipCard
+                title={typeof label === "string" ? label : undefined}
+                rows={rows}
+              />
+            ) : null;
+          }}
         />
-        <Legend />
+        <Legend
+          verticalAlign="top"
+          align="left"
+          height={36}
+          content={({ payload }) => (
+            <ChartLegend
+              payload={payload}
+              gap={3}
+              justifyContent="flex-start"
+            />
+          )}
+        />
         {/* Note 6: `stackId="a"` groups all three Bar components into one
             stacked series. All bars with the same stackId are stacked on top of
             each other per data point. The order of Bar elements determines the
             visual stacking order (bottom to top). */}
-        <Bar dataKey="Saving" stackId="a" fill="#66bb6a" name="Saving" />
-        <Bar dataKey="Need" stackId="a" fill="#ef5350" name="Need" />
-        <Bar dataKey="Want" stackId="a" fill="#42a5f5" name="Want">
+        <Bar
+          dataKey="Saving"
+          stackId="a"
+          fill="#66bb6a"
+          name="Saving"
+          activeBar={false}
+        />
+        <Bar
+          dataKey="Need"
+          stackId="a"
+          fill="#ef5350"
+          name="Need"
+          activeBar={false}
+        />
+        <Bar
+          dataKey="Want"
+          stackId="a"
+          fill="#42a5f5"
+          name="Want"
+          activeBar={false}
+        >
           <LabelList
             dataKey="amount"
             position="top"

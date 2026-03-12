@@ -114,3 +114,47 @@ export function getAllTags(transactions: Transaction[]): string[] {
   }
   return Array.from(set).sort();
 }
+
+/**
+ * Note 12: Deriving the quick-year list from transaction dates keeps the filter
+ * UI current as users import historical or future-looking data. Returning the
+ * years in descending order puts the most relevant option first.
+ */
+export function getAvailableReportYears(transactions: Transaction[]): string[] {
+  const years = new Set<string>();
+  for (const transaction of transactions) {
+    years.add(transaction.date.substring(0, 4));
+  }
+  return Array.from(years).sort((a, b) => b.localeCompare(a));
+}
+
+/**
+ * Note 13: The default-year resolver intentionally trusts a stored preference
+ * only when it still exists in the available data. This prevents the reports
+ * page from booting into an empty year after the underlying data changes.
+ */
+export function resolveDefaultReportYear(
+  transactions: Transaction[],
+  storedYear: string | null,
+  fallbackDate: Date = new Date(),
+): string {
+  const availableYears = getAvailableReportYears(transactions);
+  if (storedYear && availableYears.includes(storedYear)) {
+    return storedYear;
+  }
+  return availableYears[0] ?? String(fallbackDate.getFullYear());
+}
+
+/**
+ * Note 14: Returning ISO date strings here keeps the year shortcut consistent
+ * with the rest of the filter pipeline, which already compares dates as
+ * "YYYY-MM-DD" strings.
+ */
+export function createYearDateRange(
+  year: string,
+): Pick<FilterParams, "startDate" | "endDate"> {
+  return {
+    startDate: `${year}-01-01`,
+    endDate: `${year}-12-31`,
+  };
+}
