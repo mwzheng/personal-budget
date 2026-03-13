@@ -47,21 +47,26 @@ export function Providers({ children }: { children: ReactNode }) {
     // Note 5: Some browser extensions like Dark Reader inject CSS custom
     // properties (e.g. `--darkreader-bg-...`) as inline styles onto DOM
     // elements. These can conflict with MUI's own inline styles and cause
-    // visual glitches. This cleanup function strips those injected variables.
+    // visual glitches. This cleanup function strips those injected variables
+    // without touching untouched MUI styles, which keeps hydration stable.
     const removeDarkReaderVars = () => {
       document.querySelectorAll("[style]").forEach((el) => {
         const style = el.getAttribute("style");
-        if (!style) return;
-        // Note 6: `split(";")` splits the style string into individual
-        // declarations, `filter` removes the Dark Reader ones, and `join("; ")`
-        // reassembles a clean style string. The result is only written back
-        // when it changed (`!== style`) to avoid redundant DOM mutations.
+        if (!style || !style.includes("--darkreader-")) return;
+        // Note 6: The guard above is important: without it, merely trimming and
+        // rejoining declarations would rewrite equivalent inline styles (for
+        // example MUI's `overflow:hidden`) and create a hydration mismatch
+        // before React ever gets a chance to attach to the DOM.
         const cleaned = style
           .split(";")
           .map((s) => s.trim())
           .filter((s) => s && !s.includes("--darkreader-"))
           .join("; ");
-        if (cleaned !== style) el.setAttribute("style", cleaned);
+        if (cleaned) {
+          if (cleaned !== style) el.setAttribute("style", cleaned);
+        } else {
+          el.removeAttribute("style");
+        }
       });
     };
     removeDarkReaderVars();

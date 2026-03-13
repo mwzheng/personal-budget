@@ -4,6 +4,7 @@
 // server and sent as HTML to the browser before JavaScript hydrates the page.
 import type { Metadata } from "next";
 import Script from "next/script";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { AppNav } from "@/components/AppNav";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -36,22 +37,36 @@ export default function RootLayout({
         hydration to strip any Dark Reader style variables from elements.
 
         The <Script strategy="beforeInteractive"> component ensures the
-        cleanup runs before React hydrates client components.
+        cleanup runs before React hydrates client components, but the script
+        must avoid reformatting ordinary style attributes because even harmless
+        whitespace changes count as hydration mutations.
       */}
       <body suppressHydrationWarning>
-        <Script id="cleanup-darkreader" strategy="beforeInteractive">
-          {`(function cleanupDarkReaderVars(){
+        {/*
+          Note 5: `AppRouterCacheProvider` is MUI's official App Router bridge for
+          Emotion style collection during SSR. Wrapping the body contents here keeps
+          server-injected MUI styles and the first client render in sync, which is
+          especially important for components like `Tabs` that attach inline styles
+          derived from MUI's styling pipeline.
+        */}
+        <AppRouterCacheProvider>
+          <Script id="cleanup-darkreader" strategy="beforeInteractive">
+            {`(function cleanupDarkReaderVars(){
   try {
     function clean(){
       document.querySelectorAll('[style]').forEach(function(el){
         var style = el.getAttribute('style');
-        if (!style) return;
+        if (!style || style.indexOf('--darkreader-') === -1) return;
         var cleaned = style
           .split(';')
           .map(function(s){ return s.trim(); })
           .filter(function(s){ return s && s.indexOf('--darkreader-') === -1; })
           .join('; ');
-        if (cleaned !== style) el.setAttribute('style', cleaned);
+        if (cleaned) {
+          if (cleaned !== style) el.setAttribute('style', cleaned);
+        } else {
+          el.removeAttribute('style');
+        }
       });
     }
     clean();
@@ -60,12 +75,13 @@ export default function RootLayout({
     // Safe no-op if anything goes wrong during early cleanup
   }
 })();`}
-        </Script>
+          </Script>
 
-        <Providers>
-          <AppNav />
-          {children}
-        </Providers>
+          <Providers>
+            <AppNav />
+            {children}
+          </Providers>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
