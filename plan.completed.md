@@ -1,3 +1,45 @@
+# Completed: Code cleanup and progress module refactor
+
+Date: 2026-03-12
+
+Summary
+
+- Completed a focused repository cleanup pass targeting lint/build warnings and readability issues in progress and salary flows.
+- Improved type safety in multiple API handlers by replacing repeated payload casts with explicit helper-based user id extraction.
+- Optimized progress chart merge logic to use map-based yearly joins, reducing repeated array scans and making the implementation easier to follow.
+
+Completed items
+
+- Removed unused imports and stale values in `app/api/progress/goal/route.ts`, `app/api/progress/milestones/route.ts`, `app/api/progress/retirement/route.ts`, `app/api/salary/route.ts`, `app/page.tsx`, and `app/progress/page.tsx`.
+- Refactored progress/salary API handlers to centralize payload subject extraction and tightened numeric parsing for query/body year values.
+- Refined `components/progress/GoalEditor.tsx` with explicit interfaces, clearer payload construction, and correct percentage handling when latest progress is zero.
+- Refined `components/progress/MilestonesList.tsx` to use typed API responses, proper loading state usage, and deterministic refresh flow after create.
+- Refined `components/progress/ProgressCharts.tsx` to remove unused state and switch from repeated `find` calls to map-based O(n) merge logic for yearly chart data.
+- Verified the refactor with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/api/progress/goal/route.ts`
+- `app/api/progress/milestones/route.ts`
+- `app/api/progress/retirement/route.ts`
+- `app/api/salary/route.ts`
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `components/progress/GoalEditor.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Pending commit in current working tree.
+
+Notes / next steps
+
+- Consider extracting a shared authenticated-user helper for API routes currently split between `lib/auth.ts` and `lib/auth2.ts` to reduce future maintenance overhead.
+
 # Completed: Reports quick tag filtering & layout polish
 
 Date: 2026-03-12

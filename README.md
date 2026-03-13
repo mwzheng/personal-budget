@@ -68,6 +68,7 @@ For local development the app uses `GET /api/reports` against `sample-data/expen
 ## Notes & next steps
 
 - Currently the Reports page filters client-side against `sample-data/expenses.csv` for fast local iteration. Production persistence and auth (Cognito + DynamoDB) are pending.
+- A refactor and cleanup pass was completed on 2026-03-12: lint warnings were eliminated, progress/salary API handlers now use stricter payload-to-user extraction, and progress chart yearly merge logic was optimized from repeated lookups to map-based O(n) merging.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
 - Run `pnpm build` to verify TypeScript and lint checks.
 
