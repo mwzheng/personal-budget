@@ -174,6 +174,43 @@ export function FilterBar({
         </Typography>
       </Box>
 
+      <Box mb={2}>
+        <Typography
+          variant="body2"
+          fontWeight={500}
+          color="text.secondary"
+          sx={{ mb: 1 }}
+        >
+          Year
+        </Typography>
+        <Tabs
+          value={activeYear ?? false}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{
+            minHeight: 40,
+            width: "100%",
+            "& .MuiTab-root": {
+              minHeight: 40,
+              minWidth: 72,
+              px: 1.5,
+              py: 0.5,
+              textTransform: "none",
+            },
+          }}
+        >
+          {availableYears.map((year) => (
+            <Tab
+              key={year}
+              label={year}
+              value={year}
+              onClick={() => handleYearClick(year)}
+            />
+          ))}
+        </Tabs>
+      </Box>
+
       <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
         <DatePicker
           label="Start Date"
@@ -219,52 +256,7 @@ export function FilterBar({
           onKeyDown={(event) => event.key === "Enter" && handleApply()}
           sx={{ width: 180 }}
         />
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flex: "1 1 340px",
-            minWidth: { xs: "100%", lg: 340 },
-            overflow: "hidden",
-          }}
-        >
-          <Typography
-            variant="body2"
-            fontWeight={500}
-            color="text.secondary"
-            sx={{ whiteSpace: "nowrap" }}
-          >
-            Year
-          </Typography>
-          <Tabs
-            value={activeYear ?? false}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              minHeight: 40,
-              flex: 1,
-              minWidth: 0,
-              "& .MuiTab-root": {
-                minHeight: 40,
-                minWidth: 72,
-                px: 1.5,
-                py: 0.5,
-                textTransform: "none",
-              },
-            }}
-          >
-            {availableYears.map((year) => (
-              <Tab
-                key={year}
-                label={year}
-                value={year}
-                onClick={() => handleYearClick(year)}
-              />
-            ))}
-          </Tabs>
-        </Box>
+
         <Box
           display="flex"
           gap={1}
