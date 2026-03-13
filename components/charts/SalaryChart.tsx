@@ -1,65 +1,104 @@
-// Note 1: SalaryChart shows the user's annual salary progression as a bar chart.
-// Each bar represents one year. The YoY (year-over-year) growth rate is overlaid
-// as a secondary data series but note that `Line` on a `BarChart` requires a
-// matching `yAxisId` -- this is currently set to `yAxisId={1}` without a
-// corresponding secondary `<YAxis>`, which hides the line in practice.
+/**
+ * Note 1: SalaryChart shows the user's annual salary progression as a line chart.
+ * Each point represents one year. The YoY (year-over-year) growth rate is shown as
+ * a secondary line mapped to a right-side Y axis.
+ */
 "use client";
+
 import React from "react";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
-  Line,
 } from "recharts";
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+
+function formatCurrency(value: number) {
+  return `$${Number(value).toLocaleString()}`;
+}
 
 export default function SalaryChart({ data }: { data: any[] }) {
   if (!data || data.length === 0) return null;
-  // Note 2: Sorting by year before rendering ensures bars appear in
-  // chronological order regardless of the order DynamoDB returns items.
-  // DynamoDB returns items in sort-key order ("salary#2022", "salary#2023", etc.)
-  // which is already ascending, but defensive sorting here is still a good habit.
+
   const sorted = [...data].sort((a, b) => a.year - b.year);
   const chartData = sorted.map((d) => ({
     name: String(d.year),
     amount: d.amount,
     yoy: d.yoy ?? 0,
   }));
+
+  const tooltipContent = ({ active, label, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const rows = payload
+      .filter(
+        (entry: any) =>
+          entry && entry.value !== null && entry.value !== undefined,
+      )
+      .map((entry: any) => {
+        const labelText =
+          entry.dataKey === "amount"
+            ? "Salary"
+            : entry.dataKey === "yoy"
+              ? "YoY"
+              : String(entry.dataKey);
+        const value =
+          entry.dataKey === "yoy"
+            ? `${Number(entry.value ?? 0).toFixed(1)}%`
+            : formatCurrency(Number(entry.value ?? 0));
+        return { label: labelText, value, color: entry.color };
+      });
+
+    return rows.length > 0 ? (
+      <ChartTooltipCard
+        title={typeof label === "string" ? label : undefined}
+        rows={rows}
+      />
+    ) : null;
+  };
+
   return (
     <div style={{ width: "100%", height: 320, marginBottom: 16 }}>
       <ResponsiveContainer>
-        <BarChart
+        <LineChart
           data={chartData}
-          margin={{ top: 10, right: 20, left: 10, bottom: 5 }}
+          margin={{ top: 10, right: 60, left: 10, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip
-            // Note 3: The formatter receives `value` as `number | string`.
-            // The `typeof value === "number"` guard avoids calling `toLocaleString`
-            // on a string, which would produce unexpected output.
-            formatter={(value: any) =>
-              typeof value === "number"
-                ? `$${Number(value).toLocaleString()}`
-                : value
+          <XAxis dataKey="name" tick={{ fill: "#aaa" }} />
+          <YAxis
+            yAxisId={0}
+            tickFormatter={(v: number) =>
+              v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${v}`
             }
-            contentStyle={{ background: "#242424", border: "1px solid #444" }}
-            labelStyle={{ color: "#fff" }}
-            itemStyle={{ color: "#fff" }}
+            tick={{ fill: "#aaa" }}
           />
-          <Bar dataKey="amount" fill="#4caf50" />
+          <YAxis
+            yAxisId={1}
+            orientation="right"
+            tickFormatter={(v: number) => `${v}%`}
+            tick={{ fill: "#aaa" }}
+          />
+          <Tooltip content={tooltipContent} />
+          <Line
+            type="monotone"
+            dataKey="amount"
+            stroke="#4caf50"
+            strokeWidth={2}
+            dot
+          />
           <Line
             type="monotone"
             dataKey="yoy"
             stroke="#ff9800"
             strokeWidth={2}
+            dot
             yAxisId={1}
           />
-        </BarChart>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );

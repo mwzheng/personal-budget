@@ -2,6 +2,7 @@
 import React from "react";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import RetirementList from "@/components/ui/RetirementList";
 import MilestonesList from "@/components/progress/MilestonesList";
@@ -23,15 +24,16 @@ export default function Page() {
           <RetirementList />
         </Grid>
         <Grid item xs={12} md={6}>
-          <SalaryList />
-        </Grid>
-        <Grid item xs={12} md={6}>
           <MilestonesList />
         </Grid>
         <Grid item xs={12} md={6}>
           <GoalEditor />
         </Grid>
       </Grid>
+
+      <Box sx={{ mt: 3 }}>
+        <SalaryList />
+      </Box>
     </Container>
   );
 }

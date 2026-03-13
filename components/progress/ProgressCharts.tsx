@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 
 export default function ProgressCharts() {
   const [ret, setRet] = useState<any[]>([]);
@@ -48,6 +49,29 @@ export default function ProgressCharts() {
     fetchData();
   }, []);
 
+  const tooltipContent = ({ active, label, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const rows = payload
+      .filter(
+        (entry: any) =>
+          entry && entry.value !== null && entry.value !== undefined,
+      )
+      .map((entry: any) => {
+        const labelText = entry.name ?? entry.dataKey;
+        const value =
+          typeof entry.value === "number"
+            ? `$${Number(entry.value).toLocaleString()}`
+            : entry.value;
+        return { label: String(labelText), value, color: entry.color };
+      });
+    return rows.length > 0 ? (
+      <ChartTooltipCard
+        title={typeof label === "string" ? label : undefined}
+        rows={rows}
+      />
+    ) : null;
+  };
+
   return (
     <Box sx={{ width: "100%", height: 300 }}>
       <Typography variant="h6" sx={{ mb: 1 }}>
@@ -58,7 +82,7 @@ export default function ProgressCharts() {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
           <YAxis />
-          <Tooltip />
+          <Tooltip content={tooltipContent} />
           <Legend />
           <Line
             type="monotone"
