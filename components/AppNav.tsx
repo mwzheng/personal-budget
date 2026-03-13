@@ -24,7 +24,9 @@ export function AppNav() {
     ? "sankey"
     : pathname.startsWith("/reports")
       ? "reports"
-      : false;
+      : pathname.startsWith("/progress")
+        ? "progress"
+        : false;
 
   // Note 3: Client-side auth detection uses sessionStorage so state is scoped to
   // the browser tab and can be observed via storage events in other tabs.
@@ -80,6 +82,12 @@ export function AppNav() {
               value="reports"
               component={NextLink}
               href="/reports"
+            />
+            <Tab
+              label="Progress"
+              value="progress"
+              component={NextLink}
+              href="/progress"
             />
             <Tab
               label="Budget Generator"

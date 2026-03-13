@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../../lib/auth";
+import {
+  getUserIdFromRequest,
+  getPayloadFromRequest,
+} from "../../../../lib/auth2";
+import { upsertUserProfile } from "../../../../lib/users";
 import {
   getUserProgressGoals,
   putProgressGoal,
@@ -8,7 +12,9 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const goals = await getUserProgressGoals(userId);
     const goalsSorted = goals;
     const retirement = await getUserRetirement(userId);
@@ -33,7 +39,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (!body || typeof body.targetAmount !== "number")
       return NextResponse.json(
@@ -53,7 +61,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (!body || !body.goalId || typeof body.targetAmount !== "number")
       return NextResponse.json(

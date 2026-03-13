@@ -2,12 +2,18 @@
 // Year-over-year (YoY) growth is computed on the GET response so the client
 // can display it in a chart without extra computation.
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../lib/auth";
+import {
+  getUserIdFromRequest,
+  getPayloadFromRequest,
+} from "../../../lib/auth2";
+import { upsertUserProfile } from "../../../lib/users";
 import { putSalary, getUserSalary, deleteSalary } from "../../../lib/salary";
 
 export async function GET(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const entries = await getUserSalary(userId);
     // Note 2: Sorting by year ascending ensures the YoY calculation below can
     // always compare entry[i] against entry[i-1] safely without re-sorting.
@@ -36,7 +42,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     // Note 5: Both `year` and `amount` are validated with `typeof ... === "number"`
     // to distinguish missing values from zero (a valid amount). Checking the type
@@ -64,7 +72,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (
       !body ||
@@ -90,7 +100,9 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     let entryId: string | undefined;
     let year: number | undefined;
     try {

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../../lib/auth";
+import {
+  getUserIdFromRequest,
+  getPayloadFromRequest,
+} from "../../../../lib/auth2";
+import { upsertUserProfile } from "../../../../lib/users";
 import {
   getUserRetirement,
   putRetirement,
@@ -8,7 +12,9 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const entries = await getUserRetirement(userId);
     const sorted = entries.sort((a: any, b: any) => a.year - b.year);
     const withCalc = sorted.map((e: any) => {
@@ -31,7 +37,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (!body || typeof body.year !== "number")
       return NextResponse.json(
@@ -59,7 +67,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (!body || !body.entryId || typeof body.year !== "number")
       return NextResponse.json(
@@ -79,7 +89,9 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     let entryId: string | undefined;
     let year: number | undefined;
     try {

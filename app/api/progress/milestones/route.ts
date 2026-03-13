@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../../lib/auth";
+import {
+  getUserIdFromRequest,
+  getPayloadFromRequest,
+} from "../../../../lib/auth2";
+import { upsertUserProfile } from "../../../../lib/users";
 import {
   getUserMilestones,
   putMilestone,
@@ -8,7 +12,9 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const entries = await getUserMilestones(userId);
     return NextResponse.json({ ok: true, entries });
   } catch (err) {
@@ -21,7 +27,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     const body = await request.json();
     if (!body || typeof body.amount !== "number")
       return NextResponse.json(
@@ -41,7 +49,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = (payload && (payload as any).sub) as string;
     let milestoneId: string | undefined;
     let year: number | undefined;
     try {
