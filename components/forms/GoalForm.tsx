@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { apiFetch } from "@/lib/apiFetch";
+import { sanitizeNumberString } from "@/lib/format";
 
 type Goal = {
   goalId?: string;
@@ -51,11 +52,13 @@ export default function GoalForm({
     try {
       const body = {
         goalId: defaultGoal?.goalId,
-        name,
-        targetAmount: Number(targetAmount),
-        currentSaved: Number(currentSaved),
-        monthlyContribution: Number(monthlyContribution),
-        expectedAnnualReturn: Number(expectedAnnualReturn),
+        name: name.trim(),
+        targetAmount: Number(sanitizeNumberString(targetAmount)),
+        currentSaved: Number(sanitizeNumberString(currentSaved)),
+        monthlyContribution: Number(sanitizeNumberString(monthlyContribution)),
+        expectedAnnualReturn: Number(
+          sanitizeNumberString(expectedAnnualReturn),
+        ),
       };
       // Note 3: If `defaultGoal.goalId` exists we are editing an existing goal
       // so PUT is used. Otherwise POST creates a new goal. The API assigns the
@@ -90,26 +93,34 @@ export default function GoalForm({
         <TextField
           label="Target Amount"
           value={targetAmount}
-          onChange={(e) => setTargetAmount(e.target.value)}
+          onChange={(e) =>
+            setTargetAmount(sanitizeNumberString(e.target.value))
+          }
           type="number"
           required
         />
         <TextField
           label="Current Saved"
           value={currentSaved}
-          onChange={(e) => setCurrentSaved(e.target.value)}
+          onChange={(e) =>
+            setCurrentSaved(sanitizeNumberString(e.target.value))
+          }
           type="number"
         />
         <TextField
           label="Monthly Contribution"
           value={monthlyContribution}
-          onChange={(e) => setMonthlyContribution(e.target.value)}
+          onChange={(e) =>
+            setMonthlyContribution(sanitizeNumberString(e.target.value))
+          }
           type="number"
         />
         <TextField
           label="Expected Annual Return (decimal, e.g., 0.05)"
           value={expectedAnnualReturn}
-          onChange={(e) => setExpectedAnnualReturn(e.target.value)}
+          onChange={(e) =>
+            setExpectedAnnualReturn(sanitizeNumberString(e.target.value))
+          }
           type="number"
         />
         <Stack direction="row" spacing={2}>

@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
 import Container from "@mui/material/Container";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import RetirementList from "@/components/ui/RetirementList";
 import MilestonesList from "@/components/progress/MilestonesList";
@@ -17,23 +18,33 @@ export default function Page() {
         Progress Tracker
       </Typography>
 
-      <ProgressCharts />
+      <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+        <GoalEditor />
+      </Paper>
 
-      <Grid container spacing={3} sx={{ mt: 3 }}>
-        <Grid item xs={12} md={6}>
-          <RetirementList />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <MilestonesList />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <GoalEditor />
-        </Grid>
-      </Grid>
+      <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ mt: 3 }}>
+      <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+        <ProgressCharts />
+      </Paper>
+
+      <Divider sx={{ mb: 3 }} />
+
+      <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+        <RetirementList />
+      </Paper>
+
+      <Divider sx={{ mb: 3 }} />
+
+      <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+        <MilestonesList />
+      </Paper>
+
+      <Divider sx={{ mb: 3 }} />
+
+      <Paper sx={{ p: 2 }} elevation={1}>
         <SalaryList />
-      </Box>
+      </Paper>
     </Container>
   );
 }

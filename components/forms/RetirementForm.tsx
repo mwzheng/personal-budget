@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { apiFetch } from "@/lib/apiFetch";
+import { sanitizeNumberString } from "@/lib/format";
 
 export default function RetirementForm({
   defaultEntry,
@@ -30,9 +31,9 @@ export default function RetirementForm({
     setLoading(true);
     try {
       const body: any = {
-        year: Number(year),
-        startAmount: Number(startAmount),
-        endAmount: Number(endAmount),
+        year: Number(sanitizeNumberString(year)),
+        startAmount: Number(sanitizeNumberString(startAmount)),
+        endAmount: Number(sanitizeNumberString(endAmount)),
       };
       if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
       const res = await apiFetch("/api/progress/retirement", {
@@ -56,21 +57,21 @@ export default function RetirementForm({
         <TextField
           label="Year"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => setYear(sanitizeNumberString(e.target.value))}
           required
           type="number"
         />
         <TextField
           label="Start amount"
           value={startAmount}
-          onChange={(e) => setStartAmount(e.target.value)}
+          onChange={(e) => setStartAmount(sanitizeNumberString(e.target.value))}
           required
           type="number"
         />
         <TextField
           label="End amount"
           value={endAmount}
-          onChange={(e) => setEndAmount(e.target.value)}
+          onChange={(e) => setEndAmount(sanitizeNumberString(e.target.value))}
           required
           type="number"
         />

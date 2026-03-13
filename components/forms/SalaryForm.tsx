@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { apiFetch } from "@/lib/apiFetch";
+import { sanitizeNumberString } from "@/lib/format";
 
 export default function SalaryForm({
   defaultEntry,
@@ -31,7 +32,11 @@ export default function SalaryForm({
     setError(null);
     setLoading(true);
     try {
-      const body: any = { year: Number(year), amount: Number(amount), note };
+      const body: any = {
+        year: Number(sanitizeNumberString(year)),
+        amount: Number(sanitizeNumberString(amount)),
+        note: note?.trim(),
+      };
       // Note 3: `entryId` is only included in the payload when editing.
       // The API route needs it to construct the DynamoDB sort key
       // ("salary#<year>#<entryId>") for the UpdateItem call.
@@ -57,14 +62,14 @@ export default function SalaryForm({
         <TextField
           label="Year"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => setYear(sanitizeNumberString(e.target.value))}
           required
           type="number"
         />
         <TextField
           label="Amount"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => setAmount(sanitizeNumberString(e.target.value))}
           required
           type="number"
         />

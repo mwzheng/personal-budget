@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { apiFetch } from "@/lib/apiFetch";
+import { sanitizeNumberString } from "@/lib/format";
 
 export default function MilestonesList() {
   const [items, setItems] = useState<any[]>([]);
@@ -42,9 +43,9 @@ export default function MilestonesList() {
   const add = async () => {
     if (!amount) return;
     try {
-      const body: any = { amount: Number(amount) };
-      if (year) body.year = Number(year);
-      if (age) body.age = Number(age);
+      const body: any = { amount: Number(sanitizeNumberString(amount)) };
+      if (year) body.year = Number(sanitizeNumberString(year));
+      if (age) body.age = Number(sanitizeNumberString(age));
       const res = await apiFetch("/api/progress/milestones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,19 +71,19 @@ export default function MilestonesList() {
         <TextField
           label="Amount"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => setAmount(sanitizeNumberString(e.target.value))}
           type="number"
         />
         <TextField
           label="Year"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => setYear(sanitizeNumberString(e.target.value))}
           type="number"
         />
         <TextField
           label="Age"
           value={age}
-          onChange={(e) => setAge(e.target.value)}
+          onChange={(e) => setAge(sanitizeNumberString(e.target.value))}
           type="number"
         />
         <Button variant="contained" onClick={add}>
