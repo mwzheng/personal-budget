@@ -9,10 +9,13 @@
 import Link from "next/link";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import SavingsIcon from "@mui/icons-material/Savings";
 
 export default function Home() {
   // Allow both signed-in and unauthenticated users to view the home page.
@@ -20,10 +23,10 @@ export default function Home() {
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
-      <Typography variant="h3" component="h1" gutterBottom>
+      <Typography variant="h3" component="h1" gutterBottom align="center">
         Personal Budget
       </Typography>
-      <Typography variant="h6" color="text.secondary" paragraph>
+      <Typography variant="h6" color="text.secondary" paragraph align="center">
         Track income, plan budgets, and visualise spending with interactive
         reports and a budget generator.
       </Typography>
@@ -31,8 +34,13 @@ export default function Home() {
       <Grid container spacing={2} sx={{ mt: 4 }}>
         <Grid item xs={12} md={6}>
           <Paper variant="outlined" sx={{ p: 3 }}>
-            <Typography variant="h6">Transactions</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <ReceiptLongIcon color="primary" sx={{ fontSize: 40 }} />
+            </Box>
+            <Typography variant="h6" align="center">
+              Transactions
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center">
               Import and view your transactions to get accurate spending
               reports.
             </Typography>
@@ -41,8 +49,13 @@ export default function Home() {
 
         <Grid item xs={12} md={6}>
           <Paper variant="outlined" sx={{ p: 3 }}>
-            <Typography variant="h6">Budgets</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <SavingsIcon color="primary" sx={{ fontSize: 40 }} />
+            </Box>
+            <Typography variant="h6" align="center">
+              Budgets
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center">
               Create, save, and apply budgets to analyse how well you are
               sticking to your plan.
             </Typography>
@@ -51,8 +64,13 @@ export default function Home() {
 
         <Grid item xs={12} md={6}>
           <Paper variant="outlined" sx={{ p: 3 }}>
-            <Typography variant="h6">Reports</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <BarChartIcon color="primary" sx={{ fontSize: 40 }} />
+            </Box>
+            <Typography variant="h6" align="center">
+              Reports
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center">
               Visualise spending over time and by category with charts and
               tables.
             </Typography>
@@ -61,25 +79,20 @@ export default function Home() {
 
         <Grid item xs={12} md={6}>
           <Paper variant="outlined" sx={{ p: 3 }}>
-            <Typography variant="h6">Budget Generator</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <AutoGraphIcon color="primary" sx={{ fontSize: 40 }} />
+            </Box>
+            <Typography variant="h6" align="center">
+              Budget Generator
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center">
               Try the Sankey budget generator to explore allocation strategies.
             </Typography>
           </Paper>
         </Grid>
       </Grid>
 
-      <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-        <Button variant="contained" component={Link} href="/auth/login">
-          Sign in / Register
-        </Button>
-        <Button variant="outlined" component={Link} href="/reports">
-          View reports
-        </Button>
-        <Button variant="outlined" component={Link} href="/sankey">
-          Budget generator
-        </Button>
-      </Box>
+      {/* Removed the Sign in / Register and quick action buttons per request */}
     </Container>
   );
 }
