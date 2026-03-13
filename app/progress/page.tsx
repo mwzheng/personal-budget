@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
@@ -12,6 +11,8 @@ import ProgressCharts from "@/components/progress/ProgressCharts";
 import SalaryList from "@/components/ui/SalaryList";
 
 export default function Page() {
+  // Note N: Section wrappers stay intentionally flat here so each major
+  // progress module remains visually and structurally independent.
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>

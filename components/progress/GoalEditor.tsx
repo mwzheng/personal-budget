@@ -3,8 +3,20 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, TextField, Stack, Typography } from "@mui/material";
 import { apiFetch } from "@/lib/apiFetch";
 
+interface ProgressGoal {
+  goalId?: string;
+  targetAmount: number;
+}
+
+interface GoalApiResponse {
+  ok: boolean;
+  goals?: ProgressGoal[];
+  latestEnd?: number;
+  error?: string;
+}
+
 export default function GoalEditor() {
-  const [goal, setGoal] = useState<any | null>(null);
+  const [goal, setGoal] = useState<ProgressGoal | null>(null);
   const [target, setTarget] = useState("");
   const [latestEnd, setLatestEnd] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -12,13 +24,14 @@ export default function GoalEditor() {
   const fetchGoal = async () => {
     try {
       const res = await apiFetch("/api/progress/goal");
-      const data = await res.json();
+      const data = (await res.json()) as GoalApiResponse;
       if (data.ok) {
-        setGoal((data.goals && data.goals[0]) || null);
+        const primaryGoal = data.goals?.[0] ?? null;
+        setGoal(primaryGoal);
         setLatestEnd(data.latestEnd ?? null);
-        setTarget(((data.goals && data.goals[0])?.targetAmount ?? "") + "");
+        setTarget(String(primaryGoal?.targetAmount ?? ""));
       }
-    } catch (err) {
+    } catch {
       /*ignore*/
     }
   };
@@ -31,7 +44,10 @@ export default function GoalEditor() {
     if (!target) return;
     setLoading(true);
     try {
-      const body: any = { targetAmount: Number(target) };
+      // Note N: Build payload explicitly to avoid drifting request shapes.
+      const body: { targetAmount: number; goalId?: string } = {
+        targetAmount: Number(target),
+      };
       if (goal?.goalId) body.goalId = goal.goalId;
       const method = goal?.goalId ? "PUT" : "POST";
       const res = await apiFetch("/api/progress/goal", {
@@ -42,15 +58,15 @@ export default function GoalEditor() {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Save failed");
       await fetchGoal();
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const pct =
-    goal && latestEnd
+    goal && latestEnd !== null
       ? Math.round((latestEnd / goal.targetAmount) * 10000) / 100
       : null;
 
@@ -66,7 +82,11 @@ export default function GoalEditor() {
           onChange={(e) => setTarget(e.target.value)}
           type="number"
         />
-        <Button variant="contained" onClick={save} disabled={loading}>
+        <Button
+          variant="contained"
+          onClick={save}
+          disabled={loading || !target}
+        >
           Save
         </Button>
       </Stack>

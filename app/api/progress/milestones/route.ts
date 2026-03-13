@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getUserIdFromRequest,
-  getPayloadFromRequest,
-} from "../../../../lib/auth2";
+import { getPayloadFromRequest } from "../../../../lib/auth2";
 import { upsertUserProfile } from "../../../../lib/users";
 import {
   getUserMilestones,
@@ -10,11 +7,20 @@ import {
   deleteMilestone,
 } from "../../../../lib/progress";
 
+// Note 1: Centralize payload -> userId extraction to avoid repeated `any` casts.
+function getUserIdFromPayload(payload: Record<string, unknown>): string {
+  const sub = payload.sub;
+  if (typeof sub !== "string" || !sub) {
+    throw new Error("Token missing subject (sub) claim");
+  }
+  return sub;
+}
+
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const entries = await getUserMilestones(userId);
     return NextResponse.json({ ok: true, entries });
   } catch (err) {
@@ -29,7 +35,7 @@ export async function POST(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const body = await request.json();
     if (!body || typeof body.amount !== "number")
       return NextResponse.json(
@@ -51,7 +57,7 @@ export async function DELETE(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     let milestoneId: string | undefined;
     let year: number | undefined;
     try {
@@ -64,9 +70,13 @@ export async function DELETE(request: Request) {
     if (!milestoneId) {
       const url = new URL(request.url);
       milestoneId = url.searchParams.get("milestoneId") || undefined;
-      year = url.searchParams.get("year")
-        ? Number(url.searchParams.get("year"))
-        : year;
+      const rawYear = url.searchParams.get("year");
+      if (rawYear) {
+        const parsedYear = Number(rawYear);
+        if (Number.isFinite(parsedYear)) {
+          year = parsedYear;
+        }
+      }
     }
     if (!milestoneId)
       return NextResponse.json(

@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getUserIdFromRequest,
-  getPayloadFromRequest,
-} from "../../../../lib/auth2";
+import { getPayloadFromRequest } from "../../../../lib/auth2";
 import { upsertUserProfile } from "../../../../lib/users";
 import {
   getUserRetirement,
@@ -10,14 +7,24 @@ import {
   deleteRetirement,
 } from "../../../../lib/progress";
 
+// Note 1: Keep subject extraction in one helper for stricter type safety.
+function getUserIdFromPayload(payload: Record<string, unknown>): string {
+  const sub = payload.sub;
+  if (typeof sub !== "string" || !sub) {
+    throw new Error("Token missing subject (sub) claim");
+  }
+  return sub;
+}
+
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const entries = await getUserRetirement(userId);
-    const sorted = entries.sort((a: any, b: any) => a.year - b.year);
-    const withCalc = sorted.map((e: any) => {
+    // Note 2: Sort a copy so the original array remains unchanged.
+    const sorted = [...entries].sort((a, b) => a.year - b.year);
+    const withCalc = sorted.map((e) => {
       const change = Number(e.endAmount || 0) - Number(e.startAmount || 0);
       const pct = e.startAmount ? (change / e.startAmount) * 100 : null;
       return {
@@ -39,7 +46,7 @@ export async function POST(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const body = await request.json();
     if (!body || typeof body.year !== "number")
       return NextResponse.json(
@@ -69,7 +76,7 @@ export async function PUT(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const body = await request.json();
     if (!body || !body.entryId || typeof body.year !== "number")
       return NextResponse.json(
@@ -91,7 +98,7 @@ export async function DELETE(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     let entryId: string | undefined;
     let year: number | undefined;
     try {
@@ -104,11 +111,15 @@ export async function DELETE(request: Request) {
     if (!entryId) {
       const url = new URL(request.url);
       entryId = url.searchParams.get("entryId") || undefined;
-      year = url.searchParams.get("year")
-        ? Number(url.searchParams.get("year"))
-        : year;
+      const rawYear = url.searchParams.get("year");
+      if (rawYear) {
+        const parsedYear = Number(rawYear);
+        if (Number.isFinite(parsedYear)) {
+          year = parsedYear;
+        }
+      }
     }
-    if (!entryId || !year)
+    if (!entryId || year === undefined)
       return NextResponse.json(
         { ok: false, error: "Missing entryId or year" },
         { status: 400 },

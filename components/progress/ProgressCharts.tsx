@@ -15,10 +15,29 @@ import {
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 
+interface RetirementEntry {
+  year: number;
+  endAmount: number;
+}
+
+interface SalaryEntry {
+  year: number;
+  amount: number;
+}
+
+interface ApiResponse<T> {
+  ok: boolean;
+  entries?: T[];
+}
+
+interface ProgressChartRow {
+  year: string;
+  retirement: number | null;
+  salary: number | null;
+}
+
 export default function ProgressCharts() {
-  const [ret, setRet] = useState<any[]>([]);
-  const [sal, setSal] = useState<any[]>([]);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ProgressChartRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -27,30 +46,42 @@ export default function ProgressCharts() {
     (async () => {
       setLoading(true);
       try {
-        const r = await (await apiFetch("/api/progress/retirement")).json();
-        const s = await (await apiFetch("/api/salary")).json();
-        const re = r.ok ? r.entries : [];
-        const se = s.ok ? s.entries : [];
+        const retirementResponse = (await (
+          await apiFetch("/api/progress/retirement")
+        ).json()) as ApiResponse<RetirementEntry>;
+        const salaryResponse = (await (
+          await apiFetch("/api/salary")
+        ).json()) as ApiResponse<SalaryEntry>;
+        const retirementEntries = retirementResponse.ok
+          ? (retirementResponse.entries ?? [])
+          : [];
+        const salaryEntries = salaryResponse.ok
+          ? (salaryResponse.entries ?? [])
+          : [];
+
+        // Note N: Build maps by year first so merge is O(n) instead of O(n^2).
+        const retirementByYear = new Map<number, number>();
+        for (const entry of retirementEntries) {
+          retirementByYear.set(entry.year, entry.endAmount);
+        }
+        const salaryByYear = new Map<number, number>();
+        for (const entry of salaryEntries) {
+          salaryByYear.set(entry.year, entry.amount);
+        }
 
         const years = Array.from(
-          new Set([
-            ...(re || []).map((x: any) => x.year),
-            ...(se || []).map((x: any) => x.year),
-          ]),
-        ).sort((a: any, b: any) => a - b);
+          new Set([...retirementByYear.keys(), ...salaryByYear.keys()]),
+        ).sort((a, b) => a - b);
 
-        const merged = years.map((y: any) => ({
-          year: String(y),
-          retirement:
-            (re || []).find((x: any) => x.year === y)?.endAmount ?? null,
-          salary: (se || []).find((x: any) => x.year === y)?.amount ?? null,
+        const merged: ProgressChartRow[] = years.map((year) => ({
+          year: String(year),
+          retirement: retirementByYear.get(year) ?? null,
+          salary: salaryByYear.get(year) ?? null,
         }));
 
         if (!mounted) return;
-        setRet(re);
-        setSal(se);
         setData(merged);
-      } catch (err) {
+      } catch {
         // ignore errors; leave data empty
       } finally {
         if (mounted) setLoading(false);

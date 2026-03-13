@@ -2,22 +2,28 @@
 // Year-over-year (YoY) growth is computed on the GET response so the client
 // can display it in a chart without extra computation.
 import { NextResponse } from "next/server";
-import {
-  getUserIdFromRequest,
-  getPayloadFromRequest,
-} from "../../../lib/auth2";
+import { getPayloadFromRequest } from "../../../lib/auth2";
 import { upsertUserProfile } from "../../../lib/users";
 import { putSalary, getUserSalary, deleteSalary } from "../../../lib/salary";
+
+// Note 8: Keep payload-to-user extraction in one helper for stronger typing.
+function getUserIdFromPayload(payload: Record<string, unknown>): string {
+  const sub = payload.sub;
+  if (typeof sub !== "string" || !sub) {
+    throw new Error("Token missing subject (sub) claim");
+  }
+  return sub;
+}
 
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const entries = await getUserSalary(userId);
     // Note 2: Sorting by year ascending ensures the YoY calculation below can
     // always compare entry[i] against entry[i-1] safely without re-sorting.
-    const sorted = entries.sort((a, b) => a.year - b.year);
+    const sorted = [...entries].sort((a, b) => a.year - b.year);
     const withYoY = sorted.map((e, i) => {
       const prev = i > 0 ? sorted[i - 1] : null;
       // Note 3: YoY growth is (currentAmount - prevAmount) / prevAmount * 100.
@@ -44,7 +50,7 @@ export async function POST(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const body = await request.json();
     // Note 5: Both `year` and `amount` are validated with `typeof ... === "number"`
     // to distinguish missing values from zero (a valid amount). Checking the type
@@ -74,7 +80,7 @@ export async function PUT(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     const body = await request.json();
     if (
       !body ||
@@ -102,7 +108,7 @@ export async function DELETE(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
-    const userId = (payload && (payload as any).sub) as string;
+    const userId = getUserIdFromPayload(payload);
     let entryId: string | undefined;
     let year: number | undefined;
     try {
@@ -118,11 +124,15 @@ export async function DELETE(request: Request) {
     if (!entryId) {
       const url = new URL(request.url);
       entryId = url.searchParams.get("entryId") || undefined;
-      year = url.searchParams.get("year")
-        ? Number(url.searchParams.get("year"))
-        : year;
+      const rawYear = url.searchParams.get("year");
+      if (rawYear) {
+        const parsedYear = Number(rawYear);
+        if (Number.isFinite(parsedYear)) {
+          year = parsedYear;
+        }
+      }
     }
-    if (!entryId || !year)
+    if (!entryId || year === undefined)
       return NextResponse.json(
         { ok: false, error: "Missing entryId or year" },
         { status: 400 },

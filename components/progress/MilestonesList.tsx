@@ -13,8 +13,21 @@ import {
 import { apiFetch } from "@/lib/apiFetch";
 import { sanitizeNumberString } from "@/lib/format";
 
+interface Milestone {
+  milestoneId: string;
+  amount: number;
+  year: number | null;
+  age: number | null;
+}
+
+interface MilestonesApiResponse {
+  ok: boolean;
+  entries?: Milestone[];
+  error?: string;
+}
+
 export default function MilestonesList() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Milestone[]>([]);
   const [amount, setAmount] = useState("");
   const [year, setYear] = useState("");
   const [age, setAge] = useState("");
@@ -26,11 +39,11 @@ export default function MilestonesList() {
     setError(null);
     try {
       const res = await apiFetch("/api/progress/milestones");
-      const data = await res.json();
+      const data = (await res.json()) as MilestonesApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
       setItems(data.entries || []);
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
@@ -41,9 +54,11 @@ export default function MilestonesList() {
   }, []);
 
   const add = async () => {
-    if (!amount) return;
+    if (!amount || loading) return;
     try {
-      const body: any = { amount: Number(sanitizeNumberString(amount)) };
+      const body: { amount: number; year?: number; age?: number } = {
+        amount: Number(sanitizeNumberString(amount)),
+      };
       if (year) body.year = Number(sanitizeNumberString(year));
       if (age) body.age = Number(sanitizeNumberString(age));
       const res = await apiFetch("/api/progress/milestones", {
@@ -51,14 +66,14 @@ export default function MilestonesList() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      const data = (await res.json()) as MilestonesApiResponse;
       if (!data.ok) throw new Error(data.error || "Create failed");
       setAmount("");
       setYear("");
       setAge("");
-      fetchItems();
-    } catch (err: any) {
-      setError(err.message || String(err));
+      await fetchItems();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -86,12 +101,17 @@ export default function MilestonesList() {
           onChange={(e) => setAge(sanitizeNumberString(e.target.value))}
           type="number"
         />
-        <Button variant="contained" onClick={add}>
-          Add
+        <Button variant="contained" onClick={add} disabled={loading || !amount}>
+          {loading ? "Loading..." : "Add"}
         </Button>
       </Stack>
       {error && <Box sx={{ color: "error.main", mb: 1 }}>{error}</Box>}
       <List>
+        {items.length === 0 && !loading ? (
+          <ListItem>
+            <ListItemText primary="No milestones yet" />
+          </ListItem>
+        ) : null}
         {items.map((it) => (
           <ListItem key={it.milestoneId}>
             <ListItemText

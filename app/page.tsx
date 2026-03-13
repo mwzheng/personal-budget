@@ -6,7 +6,6 @@
 
 "use client";
 
-import Link from "next/link";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -18,8 +17,8 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import SavingsIcon from "@mui/icons-material/Savings";
 
 export default function Home() {
-  // Allow both signed-in and unauthenticated users to view the home page.
-  // No client-side redirect so the logo and / route are accessible.
+  // Note N: Keep the home page public so users can always recover navigation
+  // by returning to `/`, even when authentication state is stale.
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
@@ -92,7 +91,7 @@ export default function Home() {
         </Grid>
       </Grid>
 
-      {/* Removed the Sign in / Register and quick action buttons per request */}
+      {/* Note N: Intentionally no quick-action auth buttons on this landing page. */}
     </Container>
   );
 }
