@@ -1,5 +1,9 @@
 <!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. -->
 
+## Status: Completed 2026-03-14
+
+All planned work for Reports & Progress fixes completed (milestone deletion, DynamoDB transaction-scope fix, transaction-query tests, UI and skill updates). See `plan.completed.md` entry dated 2026-03-14 for details.
+
 # Development Plan for Personal Budget App
 
 This document outlines a phased roadmap and detailed considerations for building the personal budgeting application.

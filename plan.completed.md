@@ -199,6 +199,64 @@ Notes
 - Filtering currently runs client-side against the sample CSV (hybrid approach planned for production).
 - Persistence, authentication (Cognito), and DynamoDB integration remain TODO (listed in the main plan).
 
+---
+
+# Completed: Reports & Progress — final fixes
+
+Date: 2026-03-14
+
+Summary
+
+- Added milestone deletion UI to the Progress page and wired client delete to the existing DELETE API.
+- Tightened DynamoDB transaction queries to only read sort keys starting with `date#`, preventing non-transaction entities (salary, milestone, retirement) from leaking into reports and transactions lists.
+- Added regression tests for the transaction-query builder to prevent future regressions.
+- Standardized several progress UI flows (dialogs for add/edit) and ensured progress charts refresh after mutations (already rolled out in earlier changes).
+- Updated internal skill docs to require running repository formatting and validation steps before producing changes.
+
+Completed items
+
+- `components/progress/MilestonesList.tsx` — add Delete action and wiring to DELETE /api/progress/milestones
+- `lib/dynamo.ts` — add `buildTransactionsQuery()` and update `getUserTransactions()` / `getUserTransactionsPaged()` to use it
+- Tests: `test/dynamo-transactions.test.ts`, `test/reports-aggregations.test.ts`, `test/reports-user-scope.test.ts` (updated/added)
+- Reports and charts updates across: `app/reports/page.tsx`, `components/ui/FilterBar.tsx`, `components/charts/SpendingBarChart.tsx`, `lib/aggregations.ts`, `lib/storage.ts` (previously added and verified)
+- Skill docs updates: `.github/skills/git-commit/SKILL.md`, `.github/skills/add-educational-comments/SKILL.md`
+
+Files changed
+
+- app/api/reports/export/route.ts
+- app/api/reports/route.ts
+- app/progress/page.tsx
+- app/reports/page.tsx
+- components/charts/SalaryChart.tsx
+- components/charts/SpendingBarChart.tsx
+- components/forms/MilestoneForm.tsx
+- components/progress/GoalEditor.tsx
+- components/progress/MilestonesList.tsx
+- components/progress/ProgressCharts.tsx
+- components/progress/ProgressEntryDialog.tsx
+- components/progress/ProgressYearFilter.tsx
+- components/progress/SectionHeader.tsx
+- components/ui/FilterBar.tsx
+- components/ui/RetirementList.tsx
+- components/ui/SalaryList.tsx
+- lib/aggregations.ts
+- lib/dynamo.ts
+- lib/storage.ts
+- lib/types.ts
+- test/dynamo-transactions.test.ts
+- test/reports-aggregations.test.ts
+- test/reports-user-scope.test.ts
+
+Commit references
+
+- 9afa40d fix(progress,reports): milestone delete, tighten transaction queries, add transaction-query tests
+- e71975b docs(git-commit): add pre-commit guidance
+- e868da7 docs(skills): require formatting and validation after add-educational-comments edits
+
+Notes / next steps
+
+- All todos related to Reports & Progress fixes are complete. Remaining plan items are higher-level refactors and new feature work (see `plan.md`).
+
 Commit
 
 All changes were committed and pushed in the working branch. See the git history for per-file commits.
