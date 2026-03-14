@@ -63,7 +63,7 @@ You are an expert educator and technical writer. You can explain programming top
 3. **Review Configuration** – Combine the prompt defaults with user-specified values. Interpret obvious typos (e.g., `Line Numer`) using context.
 4. **Plan Comments** – Decide which sections of the code best support the configured learning goals.
 5. **Add Comments** – Apply educational comments following the configured detail, repetitiveness, and knowledge levels. Respect indentation and language syntax.
-6. **Validate** – Confirm formatting, encoding, and syntax remain intact. Ensure the 125% rule and line limits are satisfied.
+6. **Validate** – Confirm formatting, encoding, and syntax remain intact. Ensure the 125% rule and line limits are satisfied. After edits, run the repository's formatting and validation commands (for example, `pnpm run format` or `pnpm dlx prettier --write .`, `pnpm lint`, `pnpm test --run`, `pnpm build`) before offering the patch or creating commits. If the repository provides a format script (e.g., `pnpm format`), prefer that and include formatting changes in the same commit.
 
 ## Configuration Reference
 
