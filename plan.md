@@ -138,12 +138,12 @@ Move from the static sample-CSV data source to server-persisted, per-user data i
 
 ### Architecture Overview
 
-| Layer       | Current                                             | After                                                                                                         |
-| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Data source | `GET /api/reports` reads `sample-data/expenses.csv` | Server APIs backed by DynamoDB (per-user transactions table `personal-budget-infra-dev-transactions`)         |
-| CSV import  | API parses CSV but no UI                            | `POST /api/reports/import` parses CSV and writes transactions to DynamoDB; returns preview and import summary |
-| CSV export  | API exports CSV but no UI                           | `GET /api/reports/export` generates CSV server-side for filtered queries                                      |
-| CRUD        | None                                                | Transaction CRUD via server APIs with Cognito authentication                                                  |
+| Layer       | Current                                                                                                      | Remaining follow-up work                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Data source | Reports/transactions are loaded from Cognito-scoped server APIs backed by DynamoDB or demo-only sample data. | Add optional offline sync mode without reintroducing cross-account leakage.              |
+| CSV import  | `POST /api/reports/import` imports CSV rows into the authenticated user's account.                           | Add duplicate-aware upsert and richer row-level validation feedback.                     |
+| CSV export  | `GET /api/reports/export` generates CSV server-side for the authenticated user's filtered data.              | Add larger-export ergonomics (streaming / background jobs) if exports become very large. |
+| CRUD        | Transaction CRUD runs through authenticated server APIs keyed by Cognito `sub`.                              | Add broader endpoint coverage and E2E smoke tests.                                       |
 
 Additional entities stored in DynamoDB (separate tables recommended initially):
 
@@ -176,7 +176,6 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 ### Files to Update
 
-- `app/reports/page.tsx` — switch data loading to server APIs, hook up import/export flows to server endpoints, and support server-side pagination/filters.
 - `components/TransactionsTable.tsx` — wire Edit/Delete actions to API calls and add server-aware pagination.
 - `app/sankey/page.tsx` — add budget picker, "Create budget from current spending" action, and budget save/preview controls. (IN PROGRESS — BudgetForm/BudgetList scaffolding added; next: wire saved budgets to Sankey generation.)
 - `infra/SAM-DEPLOY.md` — document new tables and required IAM policy changes; update deploy scripts if needed.
@@ -204,7 +203,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 ### Notes & considerations
 
-- Keep existing `app/api/reports` routes as local-dev seeds but route production UI to DynamoDB-backed APIs.
+- Core per-user report isolation was completed on 2026-03-13: the reports page now reads/writes/imports/exports through authenticated APIs, and shared sample data is restricted to explicit demo mode only.
 - If offline support is desired later, design an IndexedDB sync mechanism after server APIs are stable.
 - Ensure IAM roles grant only the necessary permissions for required tables and operations.
 - Add integration tests that exercise Cognito-authenticated flows (using test accounts or mocked authorizers).

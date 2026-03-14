@@ -9,22 +9,22 @@ A personal budgeting application built with TypeScript, Next.js, and serverless 
 - **Charts:** Recharts (time-series/pie) and @nivo (sankey/treemap)
 - **State management:** Redux Toolkit (planned)
 - **Backend:** AWS Lambda functions (DynamoDB for persistence)
-- **Authentication:** AWS Cognito (planned)
+- **Authentication:** AWS Cognito
 
 ## New / Available Pages (local)
 
-- `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, and a transactions table (client-side filtering for sample data).
+- `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, and a transactions table backed by authenticated per-user APIs.
 - `/sankey` — Budget Generator page: supply monthly income and category allocations; generates a Sankey diagram and a suggested monthly budget breakdown.
 
 ## APIs (local)
 
-- `GET /api/reports` — Returns transactions and aggregates from `sample-data/expenses.csv` (local development) or from DynamoDB when backend persistence is configured. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `category`.
-- `POST /api/reports/import` — Upload a CSV (multipart/form-data); server parses and returns a preview with per-row validation errors and, when available, persists rows to DynamoDB.
-- `GET /api/reports/export` — Export filtered transactions as CSV for the current user/filters.
-- `GET /api/transactions` — (Authenticated) List transactions for the current user; supports filters and pagination.
-- `POST /api/transactions` — (Authenticated) Create or upsert a transaction for the current user.
-- `PUT /api/transactions/:id` — (Authenticated) Update a transaction.
-- `DELETE /api/transactions/:id` — (Authenticated) Delete a transaction.
+- `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `tags`, `search`.
+- `POST /api/reports/import` — (Authenticated) Accepts `text/csv` or `{ csv }` JSON payloads and imports rows into the signed-in user's account only.
+- `GET /api/reports/export` — (Authenticated) Exports only the signed-in user's filtered transactions as CSV.
+- `GET /api/transactions` — (Authenticated) Lists transactions for the current user.
+- `POST /api/transactions` — (Authenticated) Creates a transaction for the current user.
+- `PUT /api/transactions` — (Authenticated) Updates a transaction for the current user.
+- `DELETE /api/transactions` — (Authenticated) Deletes a transaction for the current user when `id` and `date` are supplied.
 - `GET /api/budgets` — (Authenticated) List budgets for the current user.
 - `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload).
 - `GET /api/budgets/:id` — (Authenticated) Fetch a budget by id.
@@ -42,11 +42,11 @@ NEXT_PUBLIC_COGNITO_CLIENT_ID=<cognito_app_client_id>
 NEXT_PUBLIC_COGNITO_USER_POOL_ID=<cognito_user_pool_id>
 COGNITO_CLIENT_ID=<cognito_app_client_id>
 COGNITO_USER_POOL_ID=<cognito_user_pool_id>
-DYNAMODB_TABLE_NAME=<transactions_table_name>
+DYNAMODB_TABLE=<transactions_table_name>
 AWS_REGION=us-east-1
 ```
 
-For local development the app uses `GET /api/reports` against `sample-data/expenses.csv`. To enable backend persistence and authenticated APIs, deploy the SAM template and populate `.env.local` with the CloudFormation outputs (see `infra/SAM-DEPLOY.md`).
+Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
 
 ## Getting Started (local development)
 
@@ -67,7 +67,7 @@ For local development the app uses `GET /api/reports` against `sample-data/expen
 
 ## Notes & next steps
 
-- Currently the Reports page filters client-side against `sample-data/expenses.csv` for fast local iteration. Production persistence and auth (Cognito + DynamoDB) are pending.
+- Reports, CSV import/export, and transaction CRUD are now bound to the authenticated Cognito user. Shared sample CSV data is only exposed in explicit demo mode (`DISABLE_AUTH=true`).
 - A refactor and cleanup pass was completed on 2026-03-12: lint warnings were eliminated, progress/salary API handlers now use stricter payload-to-user extraction, and progress chart yearly merge logic was optimized from repeated lookups to map-based O(n) merging.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
 - Run `pnpm build` to verify TypeScript and lint checks.

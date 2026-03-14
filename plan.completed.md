@@ -630,6 +630,44 @@ Notes
 
 ---
 
+# Completed: Scope reports data to the authenticated Cognito user
+
+Date: 2026-03-13
+
+Summary
+
+- Moved the Reports page off browser-local transaction storage and onto authenticated transaction APIs.
+- Restricted report import/export and transaction loading to the current Cognito `sub`, with demo/sample data available only when `DISABLE_AUTH=true` is set explicitly.
+- Added route and auth helper tests that lock down per-user isolation for reports/import/export flows.
+
+Files changed
+
+- app/api/reports/route.ts
+- app/api/reports/import/route.ts
+- app/api/reports/export/route.ts
+- app/api/transactions/route.ts
+- app/reports/page.tsx
+- components/transactions/ImportCsvDialog.tsx
+- lib/auth.ts
+- lib/dynamo.ts
+- lib/requestUser.ts
+- README.md
+- plan.md
+- test/request-user.test.ts
+- test/reports-user-scope.test.ts
+- vitest.config.ts
+
+Commit
+
+- Pending commit: implement Cognito user-scoped reports/import/export transaction flows
+
+Notes
+
+- Signed-in users no longer see the shared sample CSV through reports APIs or browser-local transaction state. The only remaining sample-data path is the explicit local demo user used when `DISABLE_AUTH=true`.
+- This update intentionally keeps the existing non-report entity APIs (budgets, goals, salary, progress) on their current server-side storage model, while making the report flows consistent with that user-scoped approach.
+
+---
+
 # Completed: Protect Reports Route (auth guard)
 
 Date: 2026-03-09
