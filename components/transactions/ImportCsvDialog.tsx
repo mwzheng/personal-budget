@@ -21,7 +21,6 @@ import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import type { Transaction } from "@/lib/types";
-import { appendTransactions } from "@/lib/storage";
 
 // Note 2: The discriminated union uses `stage` as the discriminant property.
 // TypeScript can narrow the type based on `state.stage`, giving compile-time
@@ -29,18 +28,24 @@ import { appendTransactions } from "@/lib/storage";
 type ImportState =
   | { stage: "idle" }
   | { stage: "parsing" }
-  | { stage: "preview"; all: Transaction[]; sample: Transaction[] }
+  | {
+      stage: "preview";
+      csvText: string;
+      all: Transaction[];
+      sample: Transaction[];
+    }
   | { stage: "error"; message: string };
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Called after the user confirms import and rows are saved to localStorage. */
+  /** Called after the server import succeeds so the parent can refetch account data. */
   onImported: () => void;
 }
 
 export function ImportCsvDialog({ open, onClose, onImported }: Props) {
   const [state, setState] = useState<ImportState>({ stage: "idle" });
+  const [confirming, setConfirming] = useState(false);
   // Note 3: `useRef` stores a reference to the hidden <input type="file"> element.
   // Unlike `useState`, updating a ref does not trigger a re-render.
   // It is used here to imperatively reset the file input value after each import
@@ -49,6 +54,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
 
   function reset() {
     setState({ stage: "idle" });
+    setConfirming(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -65,59 +71,18 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
 
     try {
       const text = await file.text();
-      // Note 4: The server-first strategy sends the CSV to `/api/reports/import`
-      // which saves rows directly to DynamoDB. If auth is not configured or the
-      // server errors out, the catch block falls back to client-side parsing
-      // via `csvParser` and saves to localStorage instead.
-      let data: {
-        importedCount: number;
-        transactions: Transaction[];
-        sample: Transaction[];
-      } | null = null;
-      try {
-        const res = await apiFetch("/api/reports/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ csv: text }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(
-            (err as { error?: { message?: string } }).error?.message ??
-              `Parse failed (${res.status})`,
-          );
-        }
-        data = (await res.json()) as any;
-      } catch (err) {
-        // Note 5: Dynamic `import("@/lib/csvParser")` loads the parser module on
-        // demand. This keeps it out of the initial bundle since it is only needed
-        // when the user actually selects a file and the server import fails.
-        console.warn(
-          "Server import failed, falling back to client-side parse",
-          err,
-        );
-        const parsed = (
-          await import("@/lib/csvParser")
-        ).loadTransactionsFromCSV(text);
-        data = {
-          importedCount: parsed.length,
-          transactions: parsed,
-          sample: parsed.slice(0, 5),
-        };
-      }
-
-      if (!data) {
-        setState({
-          stage: "error",
-          message: "Import failed: no data returned from import",
-        });
-        return;
-      }
+      // Note 4: The dialog parses locally for preview only. The actual write
+      // still happens on the server after the user confirms, which keeps the
+      // imported rows tied to the authenticated Cognito account.
+      const parsed = (await import("@/lib/csvParser")).loadTransactionsFromCSV(
+        text,
+      );
 
       setState({
         stage: "preview",
-        all: data.transactions,
-        sample: data.sample,
+        csvText: text,
+        all: parsed,
+        sample: parsed.slice(0, 5),
       });
     } catch (err) {
       setState({
@@ -128,14 +93,36 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
     }
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (state.stage !== "preview") return;
-    const { appended, skipped } = appendTransactions(state.all);
-    onImported();
-    handleClose();
-    // Slight delay so the parent re-renders with fresh data before dialog fully unmounts
-    void appended;
-    void skipped;
+    setConfirming(true);
+
+    try {
+      const res = await apiFetch("/api/reports/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv: state.csvText }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          (data as { error?: { message?: string } }).error?.message ??
+            `Import failed (${res.status})`,
+        );
+      }
+
+      onImported();
+      handleClose();
+    } catch (err) {
+      setState({
+        stage: "error",
+        message:
+          err instanceof Error ? err.message : "Failed to import transactions",
+      });
+    } finally {
+      setConfirming(false);
+    }
   }
 
   const isParsing = state.stage === "parsing";
@@ -167,9 +154,8 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               Name,Amount,Category,Date,Notes,Payment Method,Tags
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Imported rows are <strong>appended</strong> to your existing data.
-              Duplicate rows (same date, name, and amount) are automatically
-              skipped.
+              Imported rows are written to your signed-in account after you
+              confirm the preview. Duplicate handling is managed server-side.
             </Typography>
           </Box>
         )}
@@ -192,7 +178,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             <Alert severity="info" sx={{ mb: 2 }}>
               <strong>{state.all.length}</strong> transaction
               {state.all.length !== 1 ? "s" : ""} ready to import. Click{" "}
-              <strong>Confirm Import</strong> to append them to your data.
+              <strong>Confirm Import</strong> to save them to your account.
             </Alert>
 
             {state.sample.length > 0 && (
@@ -231,12 +217,16 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} disabled={isParsing}>
+        <Button onClick={handleClose} disabled={isParsing || confirming}>
           Cancel
         </Button>
 
         {(state.stage === "idle" || isError) && (
-          <Button variant="contained" component="label" disabled={isParsing}>
+          <Button
+            variant="contained"
+            component="label"
+            disabled={isParsing || confirming}
+          >
             Choose CSV File
             <input
               ref={fileInputRef}
@@ -249,8 +239,12 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         )}
 
         {isPreview && (
-          <Button variant="contained" onClick={handleConfirm}>
-            Confirm Import
+          <Button
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={confirming}
+          >
+            {confirming ? "Importing…" : "Confirm Import"}
           </Button>
         )}
       </DialogActions>

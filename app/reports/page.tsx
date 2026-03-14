@@ -1,12 +1,12 @@
-// Note 1: ReportsPage is the main data entry and analytics view. It manages
-// all transaction CRUD via localStorage (client-side) so the app works without
-// a live backend. Three chart bundles are lazy-loaded to keep the initial
-// JavaScript payload small; they only download when this route is visited.
+// Note 1: ReportsPage is the main data entry and analytics view. Transaction
+// CRUD/import/export flows all go through authenticated API routes so the page
+// state always reflects the currently signed-in Cognito user.
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -27,6 +27,7 @@ import { FilterBar } from "@/components/ui/FilterBar";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
+import { apiFetch } from "@/lib/apiFetch";
 import {
   createYearDateRange,
   filterTransactions,
@@ -35,14 +36,7 @@ import {
   getAvailableReportYears,
   resolveDefaultReportYear,
 } from "@/lib/aggregations";
-import { downloadTransactionsCsv } from "@/lib/csvExport";
-import {
-  getTransactions,
-  addTransaction,
-  getLastSelectedReportYear,
-  updateTransaction,
-  deleteTransaction,
-} from "@/lib/storage";
+import { getLastSelectedReportYear } from "@/lib/storage";
 import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
 
 // Note 2: All three chart components use `{ ssr: false }` because they depend
@@ -197,9 +191,16 @@ function EmptyState({
   );
 }
 
+interface TransactionsApiResponse {
+  ok?: boolean;
+  error?: string;
+  transactions?: Transaction[];
+}
+
 export default function ReportsPage() {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterParams>(EMPTY_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
@@ -208,58 +209,98 @@ export default function ReportsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const router = useRouter();
 
-  // Note 5: `useEffect` with an empty dependency array runs once after the
-  // first render, on the client only. Reading from localStorage here (rather
-  // than at module level) is safe because localStorage is unavailable on the
-  // server where the component is pre-rendered.
-  useEffect(() => {
-    const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
-    const hasToken =
-      typeof window !== "undefined" &&
-      (sessionStorage.getItem("access_token") ||
-        sessionStorage.getItem("id_token"));
-    if (!disableAuth && !hasToken) {
-      // No token and auth is enabled — redirect to login page
-      router.replace("/auth/login");
-      return;
-    }
+  function applyTransactions(
+    transactions: Transaction[],
+    opts?: { resetFilters?: boolean },
+  ) {
+    setAllTransactions(transactions);
 
-    const storedTransactions = getTransactions();
-    const resolvedYear = resolveDefaultReportYear(
-      storedTransactions,
-      getLastSelectedReportYear(),
-    );
-
-    setAllTransactions(storedTransactions);
-    setFilters(buildYearFilters(resolvedYear));
-    setLoading(false);
-  }, [router]);
-
-  function refreshFromStorage() {
-    const storedTransactions = getTransactions();
-    setAllTransactions(storedTransactions);
-
-    // Note 8: When the page transitions from empty -> non-empty (for example
-    // after the first import), reusing the startup default-year rule ensures the
-    // user immediately lands on a populated report instead of an empty fallback.
-    if (allTransactions.length === 0) {
+    if (opts?.resetFilters) {
       const resolvedYear = resolveDefaultReportYear(
-        storedTransactions,
+        transactions,
         getLastSelectedReportYear(),
       );
       setFilters(buildYearFilters(resolvedYear));
     }
   }
 
-  function handleSaveTransaction(t: Transaction) {
-    if (editTarget) {
-      updateTransaction(t);
-    } else {
-      addTransaction(t);
+  async function loadTransactions(opts?: { resetFilters?: boolean }) {
+    setLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await apiFetch("/api/transactions");
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      const data = (await res.json()) as TransactionsApiResponse;
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to load transactions");
+      }
+
+      applyTransactions(data.transactions ?? [], opts);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to load transactions",
+      );
+    } finally {
+      setLoading(false);
     }
-    refreshFromStorage();
-    setFormOpen(false);
-    setEditTarget(undefined);
+  }
+
+  useEffect(() => {
+    const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+    const hasToken =
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("access_token") ||
+        sessionStorage.getItem("id_token"));
+
+    if (!disableAuth && !hasToken) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    void loadTransactions({ resetFilters: true });
+    // Note 5: The initial load should happen once on mount. `router` is stable
+    // enough for this redirect flow, and the inline async call avoids reading
+    // transaction data from browser storage before the auth-scoped API responds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
+
+  async function handleSaveTransaction(t: Transaction) {
+    const wasEmpty = allTransactions.length === 0;
+    setErrorMessage(null);
+
+    try {
+      const res = await apiFetch("/api/transactions", {
+        method: editTarget ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(t),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to save transaction");
+      }
+
+      await loadTransactions({ resetFilters: wasEmpty });
+      setFormOpen(false);
+      setEditTarget(undefined);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to save transaction",
+      );
+    }
   }
 
   function handleEditTransaction(t: Transaction) {
@@ -267,9 +308,38 @@ export default function ReportsPage() {
     setFormOpen(true);
   }
 
-  function handleDeleteTransaction(id: string) {
-    deleteTransaction(id);
-    refreshFromStorage();
+  async function handleDeleteTransaction(id: string) {
+    const transaction = allTransactions.find((item) => item.id === id);
+    if (!transaction) return;
+
+    setErrorMessage(null);
+
+    try {
+      const res = await apiFetch("/api/transactions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, date: transaction.date }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to delete transaction");
+      }
+
+      await loadTransactions();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to delete transaction",
+      );
+    }
   }
 
   function handleFormClose() {
@@ -277,8 +347,46 @@ export default function ReportsPage() {
     setEditTarget(undefined);
   }
 
-  function handleExport() {
-    downloadTransactionsCsv(filtered, "transactions_export.csv");
+  async function handleExport() {
+    setErrorMessage(null);
+
+    try {
+      const params = new URLSearchParams();
+      if (filters.startDate) params.set("startDate", filters.startDate);
+      if (filters.endDate) params.set("endDate", filters.endDate);
+      if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+      if (filters.search) params.set("search", filters.search);
+
+      const query = params.toString();
+      const res = await apiFetch(
+        `/api/reports/export${query ? `?${query}` : ""}`,
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error("Failed to export transactions");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "transactions_export.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to export transactions",
+      );
+    }
   }
 
   function handleQuickTagFilter(tag: string) {
@@ -350,6 +458,12 @@ export default function ReportsPage() {
           </Stack>
         )}
       </Box>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
       {isEmpty ? (
         <EmptyState
@@ -488,7 +602,9 @@ export default function ReportsPage() {
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        onImported={refreshFromStorage}
+        onImported={() => {
+          void loadTransactions({ resetFilters: allTransactions.length === 0 });
+        }}
       />
 
       {/* Note 7: The Floating Action Button (FAB) is a Material Design pattern

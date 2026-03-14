@@ -2,18 +2,19 @@
 // becomes an HTTP endpoint. Exporting async functions named `GET`, `POST`, `PUT`,
 // and `DELETE` maps them to the corresponding HTTP methods automatically.
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../lib/auth";
 import { getUserTransactions, putTransaction } from "../../../lib/dynamo";
+import { getRequestUserId } from "@/lib/requestUser";
 
 // Note 2: `GET /api/transactions` returns all transactions for the authenticated
 // user. Authentication is performed by `getUserIdFromRequest`, which validates the
 // Bearer JWT in the Authorization header before any data is read.
 export async function GET(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getRequestUserId(request);
     const txs = await getUserTransactions(userId);
     return NextResponse.json({ ok: true, transactions: txs });
   } catch (err) {
+    if (err instanceof Response) return err;
     // Note 3: Returning a 401 status code tells the client the request failed due
     // to authentication (not a server error). The error string is included in the
     // body for debugging purposes -- in production you may want to sanitize this.
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 // This allows clients to omit the id and let the server assign it.
 export async function POST(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getRequestUserId(request);
     const body = await request.json();
     const tx = body || {};
     if (!tx.id)
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     await putTransaction(userId, tx);
     return NextResponse.json({ ok: true, created: tx });
   } catch (err) {
+    if (err instanceof Response) return err;
     console.error(err);
     return NextResponse.json(
       { ok: false, error: String(err) },
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
 // to ensure we update the correct item.
 export async function PUT(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getRequestUserId(request);
     const body = await request.json();
     const tx = body || {};
     if (!tx.id)
@@ -66,6 +68,7 @@ export async function PUT(request: Request) {
     await putTransaction(userId, tx);
     return NextResponse.json({ ok: true, updated: tx });
   } catch (err) {
+    if (err instanceof Response) return err;
     console.error(err);
     return NextResponse.json(
       { ok: false, error: String(err) },
@@ -80,7 +83,7 @@ export async function PUT(request: Request) {
 // delete URL). The `date` is required because it is part of the DynamoDB sort key.
 export async function DELETE(request: Request) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getRequestUserId(request);
     // Accept JSON body { id, date } or query params
     let id: string | undefined;
     let date: string | undefined;
@@ -109,6 +112,7 @@ export async function DELETE(request: Request) {
     ).deleteTransaction(userId, id, date);
     return NextResponse.json({ ok: true });
   } catch (err) {
+    if (err instanceof Response) return err;
     console.error(err);
     return NextResponse.json(
       { ok: false, error: String(err) },

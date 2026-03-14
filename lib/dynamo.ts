@@ -12,6 +12,7 @@ import {
 import { readFileSync } from "fs";
 import { join } from "path";
 import { loadTransactionsFromCSV } from "./csvParser";
+import { isDemoUserId } from "./requestUser";
 import type { Transaction } from "./types";
 
 // Note 2: Reading the table name from an environment variable means the same
@@ -46,7 +47,13 @@ export async function getUserTransactions(
 ): Promise<Transaction[]> {
   const client = getDocClient();
   if (!client) {
-    // Fallback to local sample CSV when DynamoDB table not configured
+    // Note 5: The sample CSV is only safe for the explicit demo user. Returning it
+    // for authenticated Cognito users would leak the same shared dataset across
+    // accounts, so real users get an empty list when DynamoDB is unavailable.
+    if (!isDemoUserId(userId)) {
+      return [];
+    }
+
     const csvPath = join(process.cwd(), "sample-data", "expenses.csv");
     const csvContent = readFileSync(csvPath, "utf-8");
     return loadTransactionsFromCSV(csvContent);
