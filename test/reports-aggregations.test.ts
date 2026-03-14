@@ -3,13 +3,20 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  aggregateTransactions,
   createYearDateRange,
+  filterTransactions,
   getAvailableReportYears,
   resolveDefaultReportYear,
+  resolveDefaultReportYears,
 } from "../lib/aggregations";
 import type { Transaction } from "../lib/types";
 
-function buildTransaction(id: string, date: string): Transaction {
+function buildTransaction(
+  id: string,
+  date: string,
+  overrides?: Partial<Transaction>,
+): Transaction {
   return {
     id,
     name: `transaction-${id}`,
@@ -19,6 +26,7 @@ function buildTransaction(id: string, date: string): Transaction {
     notes: "",
     paymentMethod: "card",
     tags: [],
+    ...overrides,
   };
 }
 
@@ -42,6 +50,13 @@ describe("reports year helpers", () => {
     expect(resolveDefaultReportYear(transactions, "2023")).toBe("2023");
   });
 
+  it("restores multiple stored years when they still exist in the data", () => {
+    expect(resolveDefaultReportYears(transactions, ["2023", "2022"])).toEqual([
+      "2023",
+      "2022",
+    ]);
+  });
+
   it("falls back to the latest transaction year when the stored year is missing", () => {
     expect(resolveDefaultReportYear(transactions, null)).toBe("2024");
   });
@@ -61,5 +76,39 @@ describe("reports year helpers", () => {
       startDate: "2024-01-01",
       endDate: "2024-12-31",
     });
+  });
+
+  it("filters transactions by multiple selected years", () => {
+    const filtered = filterTransactions(transactions, {
+      years: ["2024", "2022"],
+      startDate: null,
+      endDate: null,
+      tags: [],
+      search: "",
+    });
+
+    expect(filtered.map((transaction) => transaction.id)).toEqual([
+      "1",
+      "2",
+      "4",
+    ]);
+  });
+
+  it("normalizes legacy category labels and excludes savings from spendingAmount", () => {
+    const aggregates = aggregateTransactions([
+      buildTransaction("want", "2025-01-01", {
+        amount: 30,
+        category: "Wants" as Transaction["category"],
+      }),
+      buildTransaction("saving", "2025-01-02", {
+        amount: 20,
+        category: "Savings" as Transaction["category"],
+      }),
+    ]);
+
+    expect(aggregates.totalByCategoryType.Want).toBe(30);
+    expect(aggregates.totalByCategoryType.Saving).toBe(20);
+    expect(aggregates.spendingAmount).toBe(30);
+    expect(aggregates.totalAmount).toBe(50);
   });
 });

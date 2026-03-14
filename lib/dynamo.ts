@@ -42,6 +42,39 @@ function getDocClient(): DynamoDBDocumentClient | null {
 // key: `pk` (partition key) and `sk` (sort key). All data for a user shares the
 // same `pk = "user#<userId>"`, and different entity types are distinguished by
 // the `sk` prefix (e.g. "date#...", "goal#...", "budget#...").
+// Note 5a: Reports must only read items whose sort key starts with `date#`. That
+// guard prevents progress/salary/milestone entities in the same partition from
+// leaking into transaction charts and tables.
+export function buildTransactionsQuery(
+  userId: string,
+  opts?: { startDate?: string; endDate?: string },
+) {
+  const pk = `user#${userId}`;
+  const exprNames: Record<string, string> = { "#pk": "pk", "#sk": "sk" };
+
+  if (opts?.startDate || opts?.endDate) {
+    const start = opts.startDate || "0000-01-01";
+    const end = opts.endDate || "9999-12-31";
+    return {
+      TableName: TABLE_NAME,
+      KeyConditionExpression: "#pk = :pk and #sk BETWEEN :skStart and :skEnd",
+      ExpressionAttributeNames: exprNames,
+      ExpressionAttributeValues: {
+        ":pk": pk,
+        ":skStart": `date#${start}#`,
+        ":skEnd": `date#${end}#\uffff`,
+      },
+    } as const;
+  }
+
+  return {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
+    ExpressionAttributeNames: exprNames,
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": "date#" },
+  } as const;
+}
+
 export async function getUserTransactions(
   userId: string,
 ): Promise<Transaction[]> {
@@ -59,18 +92,10 @@ export async function getUserTransactions(
     return loadTransactionsFromCSV(csvContent);
   }
 
-  const pk = `user#${userId}`;
-
-  // Note 6: `KeyConditionExpression` filters on the primary key. DynamoDB
-  // requires that you reference attribute names with placeholders (#pk) when
-  // the name is a reserved word, and values with :pk notation. This prevents
-  // name conflicts with DynamoDB's own reserved keywords like "status" or "name".
-  const params = {
-    TableName: TABLE_NAME,
-    KeyConditionExpression: "#pk = :pk",
-    ExpressionAttributeNames: { "#pk": "pk" },
-    ExpressionAttributeValues: { ":pk": pk },
-  } as const;
+  // Note 6: Querying with `begins_with(#sk, "date#")` keeps the single-table
+  // design safe: the user partition can store many entity types, but reports and
+  // transactions pages should only hydrate true transaction records here.
+  const params = buildTransactionsQuery(userId);
 
   const res = await client.send(new QueryCommand(params));
   // Note 7: `res.Items` may be undefined if no items match the query.
@@ -115,27 +140,11 @@ export async function getUserTransactionsPaged(
 ) {
   const client = getDocClient();
   if (!client) throw new Error("DynamoDB table not configured");
-  const pk = `user#${userId}`;
-  let keyCond = "#pk = :pk";
-  const exprNames: Record<string, string> = { "#pk": "pk", "#sk": "sk" };
-  const exprValues: Record<string, any> = { ":pk": pk };
-  if (opts?.startDate || opts?.endDate) {
-    const start = opts?.startDate || "0000-01-01";
-    const end = opts?.endDate || "9999-12-31";
-    // Note 10: The sort key format "date#YYYY-MM-DD#<id>" enables efficient range
-    // queries. BETWEEN on the sk scans only the date range requested, avoiding a
-    // full table scan. The \uffff suffix on the end key is the highest Unicode
-    // character, ensuring all IDs for the end date are included in the range.
-    // sk format: date#YYYY-MM-DD#id --> between date#start and date#end~
-    keyCond += " and #sk BETWEEN :skStart and :skEnd";
-    exprValues[":skStart"] = `date#${start}#`;
-    exprValues[":skEnd"] = `date#${end}#\uffff`;
-  }
+  // Note 10: The shared query builder keeps the "transactions only" constraint in
+  // one place, so both full and paginated readers stay aligned when the schema grows.
+  const query = buildTransactionsQuery(userId, opts);
   const params: any = {
-    TableName: TABLE_NAME,
-    KeyConditionExpression: keyCond,
-    ExpressionAttributeNames: exprNames,
-    ExpressionAttributeValues: exprValues,
+    ...query,
     // Note 11: `ScanIndexForward: false` returns items in descending sort key
     // order (newest dates first). This is typically what users expect when
     // browsing recent transactions.

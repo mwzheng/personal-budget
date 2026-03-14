@@ -3,6 +3,7 @@
 // SalaryChart. Splitting into List, Form, and Chart sub-components keeps each
 // piece focused and independently testable.
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -14,18 +15,35 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
-import SalaryForm from "@/components/forms/SalaryForm";
-import { apiFetch } from "@/lib/apiFetch";
 import SalaryChart from "@/components/charts/SalaryChart";
+import SalaryForm from "@/components/forms/SalaryForm";
+import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
+import { SectionHeader } from "@/components/progress/SectionHeader";
+import { apiFetch } from "@/lib/apiFetch";
+import type { SalaryEntry } from "@/lib/types";
 
-export default function SalaryList() {
-  const [entries, setEntries] = useState<any[]>([]);
+interface SalaryApiResponse {
+  ok: boolean;
+  entries?: SalaryEntry[];
+  error?: string;
+}
+
+interface Props {
+  selectedYears?: string[];
+  onEntriesChanged?: () => void | Promise<void>;
+}
+
+export default function SalaryList({
+  selectedYears = [],
+  onEntriesChanged,
+}: Props) {
+  const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   // Note 2: `editing` holds the full salary object being edited, or `null` when
   // the form is in "create new" mode. Passing it as `defaultEntry` pre-fills the
   // SalaryForm fields when the user clicks Edit.
-  const [editing, setEditing] = useState<any | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<SalaryEntry | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEntries = async () => {
@@ -33,7 +51,7 @@ export default function SalaryList() {
     setError(null);
     try {
       const res = await apiFetch("/api/salary");
-      const data = await res.json();
+      const data = (await res.json()) as SalaryApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
       setEntries(data.entries ?? []);
     } catch (err: any) {
@@ -44,16 +62,21 @@ export default function SalaryList() {
   };
 
   useEffect(() => {
-    fetchEntries();
+    void fetchEntries();
   }, []);
 
-  const handleSaved = () => {
-    // Note 3: After a successful save the form is dismissed and the list is
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditing(null);
+  };
+
+  const handleSaved = async () => {
+    // Note 3: After a successful save the dialog is dismissed and the list is
     // re-fetched. Re-fetching from the server guarantees the list reflects the
     // freshly stored data (including any server-computed YoY values).
-    setShowForm(false);
-    setEditing(null);
-    fetchEntries();
+    closeDialog();
+    await fetchEntries();
+    await Promise.resolve(onEntriesChanged?.());
   };
 
   const handleDelete = async (entryId?: string, year?: number) => {
@@ -72,7 +95,8 @@ export default function SalaryList() {
       );
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Delete failed");
-      fetchEntries();
+      await fetchEntries();
+      await Promise.resolve(onEntriesChanged?.());
     } catch (err: any) {
       setError(err.message || String(err));
     }
@@ -80,52 +104,51 @@ export default function SalaryList() {
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
+      <SectionHeader
+        title="Salary History"
         sx={{ mb: 2 }}
-      >
-        <Typography variant="h4">Salary History</Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          Add Entry
-        </Button>
-      </Stack>
+        action={
+          <Button
+            variant="contained"
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
+          >
+            Add Entry
+          </Button>
+        }
+      />
 
-      {showForm && (
-        <Box sx={{ mb: 2 }}>
+      {dialogOpen ? (
+        <ProgressEntryDialog
+          open={dialogOpen}
+          title={editing ? "Edit Salary Entry" : "Add Salary Entry"}
+          onClose={closeDialog}
+        >
           <SalaryForm
             defaultEntry={editing || undefined}
             onSaved={handleSaved}
-            onCancel={() => {
-              setShowForm(false);
-              setEditing(null);
-            }}
+            onCancel={closeDialog}
           />
-        </Box>
-      )}
+        </ProgressEntryDialog>
+      ) : null}
 
-      {error && <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box>}
+      {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
 
-      <SalaryChart data={entries} />
+      <SalaryChart data={entries} selectedYears={selectedYears} />
 
       <List>
-        {entries.map((e) => (
-          <React.Fragment key={e.entryId}>
+        {entries.map((entry) => (
+          <React.Fragment key={entry.entryId}>
             <ListItem
               secondaryAction={
                 <Stack direction="row" spacing={1}>
                   <Button
                     size="small"
                     onClick={() => {
-                      setEditing(e);
-                      setShowForm(true);
+                      setEditing(entry);
+                      setDialogOpen(true);
                     }}
                   >
                     Edit
@@ -133,7 +156,7 @@ export default function SalaryList() {
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => handleDelete(e.entryId, e.year)}
+                    onClick={() => handleDelete(entry.entryId, entry.year)}
                   >
                     Delete
                   </Button>
@@ -141,8 +164,8 @@ export default function SalaryList() {
               }
             >
               <ListItemText
-                primary={`${e.year} — $${Number(e.amount).toLocaleString()}`}
-                secondary={e.yoy !== null ? `YoY: ${e.yoy}%` : ""}
+                primary={`${entry.year} — $${Number(entry.amount).toLocaleString()}`}
+                secondary={entry.yoy !== null ? `YoY: ${entry.yoy}%` : ""}
               />
             </ListItem>
             <Divider component="li" />
@@ -150,9 +173,9 @@ export default function SalaryList() {
         ))}
       </List>
 
-      {entries.length === 0 && !loading && (
+      {entries.length === 0 && !loading ? (
         <Typography>No salary history yet.</Typography>
-      )}
+      ) : null}
     </Box>
   );
 }

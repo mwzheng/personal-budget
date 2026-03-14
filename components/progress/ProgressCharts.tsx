@@ -1,8 +1,11 @@
+// Note 1: ProgressCharts is now a pure view over parent-owned salary and
+// retirement data. Lifting the fetch up keeps refresh behavior explicit and lets
+// the same year filter drive multiple charts consistently.
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useMemo } from "react";
 import { Box, Typography } from "@mui/material";
 import Skeleton from "@mui/material/Skeleton";
-import { apiFetch } from "@/lib/apiFetch";
 import {
   ResponsiveContainer,
   LineChart,
@@ -14,21 +17,8 @@ import {
   Legend,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-
-interface RetirementEntry {
-  year: number;
-  endAmount: number;
-}
-
-interface SalaryEntry {
-  year: number;
-  amount: number;
-}
-
-interface ApiResponse<T> {
-  ok: boolean;
-  entries?: T[];
-}
+import { SectionHeader } from "@/components/progress/SectionHeader";
+import type { RetirementEntry, SalaryEntry } from "@/lib/types";
 
 interface ProgressChartRow {
   year: string;
@@ -36,62 +26,64 @@ interface ProgressChartRow {
   salary: number | null;
 }
 
-export default function ProgressCharts() {
-  const [data, setData] = useState<ProgressChartRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+interface Props {
+  salaryEntries: SalaryEntry[];
+  retirementEntries: RetirementEntry[];
+  selectedYears?: string[];
+  loading?: boolean;
+  error?: string | null;
+}
 
-  useEffect(() => {
-    let mounted = true;
+export default function ProgressCharts({
+  salaryEntries,
+  retirementEntries,
+  selectedYears = [],
+  loading = false,
+  error = null,
+}: Props) {
+  const data = useMemo(() => {
+    const selectedYearSet = new Set(selectedYears);
 
-    (async () => {
-      setLoading(true);
-      try {
-        const retirementResponse = (await (
-          await apiFetch("/api/progress/retirement")
-        ).json()) as ApiResponse<RetirementEntry>;
-        const salaryResponse = (await (
-          await apiFetch("/api/salary")
-        ).json()) as ApiResponse<SalaryEntry>;
-        const retirementEntries = retirementResponse.ok
-          ? (retirementResponse.entries ?? [])
-          : [];
-        const salaryEntries = salaryResponse.ok
-          ? (salaryResponse.entries ?? [])
-          : [];
+    // Note 2: Filtering before the merge keeps the X-axis stable for both lines.
+    // That means a selected year disappears from both salary and retirement at the
+    // same time instead of leaving partial rows behind.
+    const filteredRetirementEntries =
+      selectedYearSet.size === 0
+        ? retirementEntries
+        : retirementEntries.filter((entry) =>
+            selectedYearSet.has(String(entry.year)),
+          );
+    const filteredSalaryEntries =
+      selectedYearSet.size === 0
+        ? salaryEntries
+        : salaryEntries.filter((entry) =>
+            selectedYearSet.has(String(entry.year)),
+          );
 
-        // Note N: Build maps by year first so merge is O(n) instead of O(n^2).
-        const retirementByYear = new Map<number, number>();
-        for (const entry of retirementEntries) {
-          retirementByYear.set(entry.year, entry.endAmount);
-        }
-        const salaryByYear = new Map<number, number>();
-        for (const entry of salaryEntries) {
-          salaryByYear.set(entry.year, entry.amount);
-        }
+    // Note 3: Build maps by year first so the merge stays linear instead of
+    // repeatedly searching the arrays for matching years.
+    const retirementByYear = new Map<number, number>();
+    for (const entry of filteredRetirementEntries) {
+      retirementByYear.set(entry.year, entry.endAmount);
+    }
 
-        const years = Array.from(
-          new Set([...retirementByYear.keys(), ...salaryByYear.keys()]),
-        ).sort((a, b) => a - b);
+    const salaryByYear = new Map<number, number>();
+    for (const entry of filteredSalaryEntries) {
+      salaryByYear.set(entry.year, entry.amount);
+    }
 
-        const merged: ProgressChartRow[] = years.map((year) => ({
-          year: String(year),
-          retirement: retirementByYear.get(year) ?? null,
-          salary: salaryByYear.get(year) ?? null,
-        }));
+    const years = Array.from(
+      new Set([...retirementByYear.keys(), ...salaryByYear.keys()]),
+    ).sort((left, right) => left - right);
 
-        if (!mounted) return;
-        setData(merged);
-      } catch {
-        // ignore errors; leave data empty
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    return years.map(
+      (year): ProgressChartRow => ({
+        year: String(year),
+        retirement: retirementByYear.get(year) ?? null,
+        salary: salaryByYear.get(year) ?? null,
+      }),
+    );
+  }, [retirementEntries, salaryEntries, selectedYears]);
 
   const tooltipContent = ({ active, label, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -117,40 +109,70 @@ export default function ProgressCharts() {
   };
 
   return (
-    <Box sx={{ width: "100%", height: 300 }}>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Progress Over Time
-      </Typography>
+    <Box>
+      <SectionHeader title="Progress Over Time" sx={{ mb: 2 }} />
 
-      {loading ? (
-        <Skeleton variant="rectangular" width="100%" height={240} />
-      ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="year" />
-            <YAxis />
-            <Tooltip content={tooltipContent} />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="retirement"
-              name="Retirement End"
-              stroke="#8884d8"
-              strokeWidth={2}
-              dot
-            />
-            <Line
-              type="monotone"
-              dataKey="salary"
-              name="Salary"
-              stroke="#82ca9d"
-              strokeWidth={2}
-              dot
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
+      <Box sx={{ width: "100%", height: 320 }}>
+        {loading ? (
+          <Skeleton variant="rectangular" width="100%" height="100%" />
+        ) : error ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              px: 2,
+            }}
+          >
+            <Typography color="error.main">{error}</Typography>
+          </Box>
+        ) : data.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              px: 2,
+            }}
+          >
+            <Typography color="text.secondary">
+              {selectedYears.length > 0
+                ? "No progress data for the selected years."
+                : "Add salary or retirement history to see progress over time."}
+            </Typography>
+          </Box>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis />
+              <Tooltip content={tooltipContent} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="retirement"
+                name="Retirement End"
+                stroke="#8884d8"
+                strokeWidth={2}
+                dot
+              />
+              <Line
+                type="monotone"
+                dataKey="salary"
+                name="Salary"
+                stroke="#82ca9d"
+                strokeWidth={2}
+                dot
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </Box>
     </Box>
   );
 }

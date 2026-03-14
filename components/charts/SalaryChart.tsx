@@ -6,6 +6,8 @@
 "use client";
 
 import React from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,20 +18,36 @@ import {
   CartesianGrid,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import type { SalaryEntry } from "@/lib/types";
 
 function formatCurrency(value: number) {
   return `$${Number(value).toLocaleString()}`;
 }
 
-export default function SalaryChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) return null;
+export default function SalaryChart({
+  data,
+  selectedYears = [],
+}: {
+  data: SalaryEntry[];
+  selectedYears?: string[];
+}) {
+  // Note 2: The year filter is chart-only. The list can keep showing the full
+  // salary history while the graph focuses on the subset the user selected.
+  const chartData = React.useMemo(() => {
+    const selectedYearSet = new Set(selectedYears);
+    const filtered =
+      selectedYearSet.size === 0
+        ? data
+        : data.filter((entry) => selectedYearSet.has(String(entry.year)));
 
-  const sorted = [...data].sort((a, b) => a.year - b.year);
-  const chartData = sorted.map((d) => ({
-    name: String(d.year),
-    amount: d.amount,
-    yoy: d.yoy ?? 0,
-  }));
+    return [...filtered]
+      .sort((left, right) => left.year - right.year)
+      .map((entry) => ({
+        name: String(entry.year),
+        amount: entry.amount,
+        yoy: entry.yoy ?? 0,
+      }));
+  }, [data, selectedYears]);
 
   const tooltipContent = ({ active, label, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -60,9 +78,32 @@ export default function SalaryChart({ data }: { data: any[] }) {
     ) : null;
   };
 
+  if (chartData.length === 0) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: 220,
+          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          px: 2,
+        }}
+      >
+        <Typography color="text.secondary">
+          {selectedYears.length > 0
+            ? "No salary data for the selected years."
+            : "Add salary history to see the chart."}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
-    <div style={{ width: "100%", height: 320, marginBottom: 16 }}>
-      <ResponsiveContainer>
+    <Box sx={{ width: "100%", height: 320, mb: 2 }}>
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={chartData}
           margin={{ top: 10, right: 60, left: 10, bottom: 5 }}
@@ -71,15 +112,15 @@ export default function SalaryChart({ data }: { data: any[] }) {
           <XAxis dataKey="name" tick={{ fill: "#aaa" }} />
           <YAxis
             yAxisId={0}
-            tickFormatter={(v: number) =>
-              v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${v}`
+            tickFormatter={(value: number) =>
+              value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value}`
             }
             tick={{ fill: "#aaa" }}
           />
           <YAxis
             yAxisId={1}
             orientation="right"
-            tickFormatter={(v: number) => `${v}%`}
+            tickFormatter={(value: number) => `${value}%`}
             tick={{ fill: "#aaa" }}
           />
           <Tooltip content={tooltipContent} />
@@ -100,6 +141,6 @@ export default function SalaryChart({ data }: { data: any[] }) {
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </Box>
   );
 }

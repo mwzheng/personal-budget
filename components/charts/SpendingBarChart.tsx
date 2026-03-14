@@ -77,11 +77,6 @@ export function SpendingBarChart({ data }: Props) {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <ChartLegend
-        payload={legendPayload}
-        gap={3}
-        justifyContent="flex-start"
-      />
       <Box sx={{ width: "100%", height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -161,6 +156,14 @@ export function SpendingBarChart({ data }: Props) {
           </BarChart>
         </ResponsiveContainer>
       </Box>
+      {/* Note 7: Moving the legend under the chart keeps the bar area visually
+          contiguous. That makes month-to-month comparisons easier before the eye
+          moves down to decode the category colors. */}
+      <ChartLegend
+        payload={legendPayload}
+        gap={3}
+        justifyContent="flex-start"
+      />
     </Box>
   );
 }

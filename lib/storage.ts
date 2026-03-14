@@ -103,23 +103,58 @@ export function clearTransactions(): void {
 
 // Note 11: Reports-year persistence uses a separate key so clearing or migrating
 // transaction data does not accidentally destroy an unrelated UI preference.
-export function getLastSelectedReportYear(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REPORT_YEAR_STORAGE_KEY);
+// The stored value is now a JSON array, but the reader still accepts the older
+// single-string format so existing browsers migrate without losing preferences.
+export function getLastSelectedReportYears(): string[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(REPORT_YEAR_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(
+        (value): value is string => typeof value === "string",
+      );
+    }
+    if (typeof parsed === "string") {
+      return [parsed];
+    }
+  } catch {
+    // Note 11a: Old builds stored a plain string instead of JSON. Treat that as
+    // a one-item selection so the new multi-year picker can restore it cleanly.
+    return [raw];
+  }
+  return typeof raw === "string" ? [raw] : [];
 }
 
-// Note 12: The selected year is stored as a plain string because the reports UI
-// only needs the year token itself; recomputing the date bounds from that token
-// avoids storing redundant start/end dates that could drift out of sync.
-export function setLastSelectedReportYear(year: string): void {
+export function getLastSelectedReportYear(): string | null {
+  return getLastSelectedReportYears()[0] ?? null;
+}
+
+// Note 12: The selected years are stored as raw year tokens instead of derived
+// date bounds, which keeps the persisted state aligned with the quick-filter UI
+// and avoids reconstructing non-contiguous multi-year selections from dates.
+export function setLastSelectedReportYears(years: string[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(REPORT_YEAR_STORAGE_KEY, year);
+  if (years.length === 0) {
+    localStorage.removeItem(REPORT_YEAR_STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(REPORT_YEAR_STORAGE_KEY, JSON.stringify(years));
+}
+
+export function setLastSelectedReportYear(year: string): void {
+  setLastSelectedReportYears([year]);
 }
 
 // Note 13: Resetting the reports preference is a first-class helper because the
 // reset button and "deselect active year" flow should both remove the stored
 // preference, not leave behind stale startup state.
-export function clearLastSelectedReportYear(): void {
+export function clearLastSelectedReportYears(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(REPORT_YEAR_STORAGE_KEY);
+}
+
+export function clearLastSelectedReportYear(): void {
+  clearLastSelectedReportYears();
 }

@@ -7,21 +7,20 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Autocomplete from "@mui/material/Autocomplete";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 
-import { createYearDateRange } from "@/lib/aggregations";
 import {
-  clearLastSelectedReportYear,
-  setLastSelectedReportYear,
+  clearLastSelectedReportYears,
+  setLastSelectedReportYears,
 } from "@/lib/storage";
 import { FilterParams } from "@/lib/types";
 
@@ -41,33 +40,6 @@ function parseFilterDate(value: string | null): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function buildYearBounds(year: string): { startDate: Date; endDate: Date } {
-  const { startDate, endDate } = createYearDateRange(year);
-
-  return {
-    startDate: parseFilterDate(startDate) ?? new Date(Number(year), 0, 1),
-    endDate: parseFilterDate(endDate) ?? new Date(Number(year), 11, 31),
-  };
-}
-
-function deriveActiveYear(
-  filters: FilterParams,
-  availableYears: string[],
-): string | null {
-  if (!filters.startDate || !filters.endDate) {
-    return null;
-  }
-
-  const startMatch = filters.startDate.match(/^(\d{4})-01-01$/);
-  const endMatch = filters.endDate.match(/^(\d{4})-12-31$/);
-
-  if (!startMatch || !endMatch || startMatch[1] !== endMatch[1]) {
-    return null;
-  }
-
-  return availableYears.includes(startMatch[1]) ? startMatch[1] : null;
-}
-
 export function FilterBar({
   availableTags,
   availableYears,
@@ -84,8 +56,8 @@ export function FilterBar({
     () => filters.tags,
   );
   const [search, setSearch] = useState(() => filters.search);
-  const [activeYear, setActiveYear] = useState<string | null>(() =>
-    deriveActiveYear(filters, availableYears),
+  const [selectedYears, setSelectedYears] = useState<string[]>(
+    () => filters.years,
   );
 
   // Note 2: Chart bars and table chips can apply filters from outside this form.
@@ -96,20 +68,22 @@ export function FilterBar({
     setEndDate(parseFilterDate(filters.endDate));
     setSelectedTags(filters.tags);
     setSearch(filters.search);
-    setActiveYear(deriveActiveYear(filters, availableYears));
-  }, [availableYears, filters]);
+    setSelectedYears(filters.years);
+  }, [filters]);
 
   // Note 3: `applyFilters` converts the internal `Date` objects to "YYYY-MM-DD"
   // strings because `FilterParams.startDate` expects a string. Formatting the
   // local calendar date avoids the timezone shifts that `toISOString()` can
   // introduce for users outside UTC.
   function applyFilters(
+    years: string[],
     sd: Date | null,
     ed: Date | null,
     tags: string[],
     q: string,
   ) {
     onChange({
+      years,
       startDate: sd ? format(sd, "yyyy-MM-dd") : null,
       endDate: ed ? format(ed, "yyyy-MM-dd") : null,
       tags,
@@ -117,42 +91,32 @@ export function FilterBar({
     });
   }
 
-  // Note 4: The stored year tracks the last applied quick-year selection rather
-  // than every intermediate edit. This keeps startup behavior aligned with the
-  // actual reports view the user chose to apply.
-  function persistAppliedYear(year: string | null) {
-    if (year) {
-      setLastSelectedReportYear(year);
+  // Note 4: The stored years track only the quick-year shortcut state. Persisting
+  // the raw year tokens instead of synthetic date bounds means the app can restore
+  // non-contiguous selections such as [2025, 2023] on the next visit.
+  function persistAppliedYears(years: string[]) {
+    if (years.length > 0) {
+      setLastSelectedReportYears(years);
       return;
     }
 
-    clearLastSelectedReportYear();
+    clearLastSelectedReportYears();
   }
 
-  // Note 5: Clicking an already-active year tab toggles it off. That preserves
-  // the same discoverable quick-filter behavior the old chip row had while using
-  // scrollable tabs that scale better when many years are available.
-  function handleYearClick(year: string) {
-    if (activeYear === year) {
-      setActiveYear(null);
-      setStartDate(null);
-      setEndDate(null);
-      persistAppliedYear(null);
-      applyFilters(null, null, selectedTags, search);
-      return;
-    }
-
-    const { startDate: sd, endDate: ed } = buildYearBounds(year);
-    setActiveYear(year);
-    setStartDate(sd);
-    setEndDate(ed);
-    persistAppliedYear(year);
-    applyFilters(sd, ed, selectedTags, search);
+  // Note 5: The quick year-picker applies immediately because it behaves like a
+  // shortcut rather than a draft input. Selecting any year clears the custom date
+  // range so the filter state never mixes one-off dates with explicit year tokens.
+  function handleYearsChange(nextYears: string[]) {
+    setSelectedYears(nextYears);
+    setStartDate(null);
+    setEndDate(null);
+    persistAppliedYears(nextYears);
+    applyFilters(nextYears, null, null, selectedTags, search);
   }
 
   function handleApply() {
-    persistAppliedYear(activeYear);
-    applyFilters(startDate, endDate, selectedTags, search);
+    persistAppliedYears(selectedYears);
+    applyFilters(selectedYears, startDate, endDate, selectedTags, search);
   }
 
   function handleReset() {
@@ -160,9 +124,15 @@ export function FilterBar({
     setEndDate(null);
     setSelectedTags([]);
     setSearch("");
-    setActiveYear(null);
-    clearLastSelectedReportYear();
-    onChange({ startDate: null, endDate: null, tags: [], search: "" });
+    setSelectedYears([]);
+    clearLastSelectedReportYears();
+    onChange({
+      years: [],
+      startDate: null,
+      endDate: null,
+      tags: [],
+      search: "",
+    });
   }
 
   return (
@@ -183,32 +153,45 @@ export function FilterBar({
         >
           Year
         </Typography>
-        <Tabs
-          value={activeYear ?? false}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{
-            minHeight: 40,
-            width: "100%",
-            "& .MuiTab-root": {
-              minHeight: 40,
-              minWidth: 72,
-              px: 1.5,
-              py: 0.5,
-              textTransform: "none",
-            },
-          }}
-        >
-          {availableYears.map((year) => (
-            <Tab
-              key={year}
-              label={year}
-              value={year}
-              onClick={() => handleYearClick(year)}
-            />
-          ))}
-        </Tabs>
+        {availableYears.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            Add transactions to filter the reports by year.
+          </Typography>
+        ) : (
+          <Box sx={{ overflowX: "auto", pb: 0.5 }}>
+            <ToggleButtonGroup
+              value={selectedYears}
+              onChange={(_event, nextYears) =>
+                handleYearsChange(Array.isArray(nextYears) ? nextYears : [])
+              }
+              size="small"
+              aria-label="Filter reports by year"
+              sx={{
+                display: "inline-flex",
+                flexWrap: "nowrap",
+                minWidth: "max-content",
+                gap: 1,
+                "& .MuiToggleButtonGroup-grouped": {
+                  borderRadius: 1,
+                  borderColor: "divider",
+                  px: 1.5,
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                },
+              }}
+            >
+              {availableYears.map((year) => (
+                <ToggleButton
+                  key={year}
+                  value={year}
+                  aria-label={`Toggle reports year ${year}`}
+                >
+                  {year}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
+        )}
       </Box>
 
       <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
@@ -217,10 +200,9 @@ export function FilterBar({
           value={startDate}
           onChange={(value) => {
             setStartDate(value);
-            // Note 6: Selecting a specific date clears the active year shortcut to
-            // avoid the confusion of showing both a canned year range and a custom
-            // date range as active at the same time.
-            setActiveYear(null);
+            // Note 6: Selecting a specific date clears the quick-year shortcut to
+            // avoid showing both a custom range and multiple explicit years as active.
+            setSelectedYears([]);
           }}
           slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
         />
@@ -229,7 +211,7 @@ export function FilterBar({
           value={endDate}
           onChange={(value) => {
             setEndDate(value);
-            setActiveYear(null);
+            setSelectedYears([]);
           }}
           slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
         />
@@ -241,7 +223,7 @@ export function FilterBar({
           size="small"
           options={availableTags}
           value={selectedTags}
-          onChange={(_, value) => setSelectedTags(value)}
+          onChange={(_event, value) => setSelectedTags(value)}
           renderInput={(params) => <TextField {...params} label="Tags" />}
           sx={{ minWidth: 220, flex: "1 1 220px" }}
           limitTags={3}
@@ -251,7 +233,7 @@ export function FilterBar({
           size="small"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          // Note 8: `onKeyDown` with `e.key === "Enter"` lets the user submit
+          // Note 8: `onKeyDown` with `event.key === "Enter"` lets the user submit
           // the search filter by pressing Enter without needing to click Apply.
           onKeyDown={(event) => event.key === "Enter" && handleApply()}
           sx={{ width: 180 }}

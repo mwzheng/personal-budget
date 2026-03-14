@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -11,13 +12,28 @@ import {
   Divider,
 } from "@mui/material";
 import RetirementForm from "@/components/forms/RetirementForm";
+import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
+import { SectionHeader } from "@/components/progress/SectionHeader";
 import { apiFetch } from "@/lib/apiFetch";
+import type { RetirementEntry } from "@/lib/types";
 
-export default function RetirementList() {
-  const [entries, setEntries] = useState<any[]>([]);
+interface RetirementApiResponse {
+  ok: boolean;
+  entries?: RetirementEntry[];
+  error?: string;
+}
+
+interface Props {
+  onEntriesChanged?: () => void | Promise<void>;
+}
+
+export default function RetirementList({ onEntriesChanged }: Props) {
+  // Note 1: RetirementList still owns its CRUD list state locally, but it now
+  // also notifies the parent page after mutations so sibling charts can refetch.
+  const [entries, setEntries] = useState<RetirementEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<RetirementEntry | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchEntries = async () => {
@@ -25,9 +41,9 @@ export default function RetirementList() {
     setError(null);
     try {
       const res = await apiFetch("/api/progress/retirement");
-      const data = await res.json();
+      const data = (await res.json()) as RetirementApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
-      setEntries(data.entries || []);
+      setEntries(data.entries ?? []);
     } catch (err: any) {
       setError(err.message || String(err));
     } finally {
@@ -36,13 +52,18 @@ export default function RetirementList() {
   };
 
   useEffect(() => {
-    fetchEntries();
+    void fetchEntries();
   }, []);
 
-  const handleSaved = () => {
-    setShowForm(false);
+  const closeDialog = () => {
+    setDialogOpen(false);
     setEditing(null);
-    fetchEntries();
+  };
+
+  const handleSaved = async () => {
+    closeDialog();
+    await fetchEntries();
+    await Promise.resolve(onEntriesChanged?.());
   };
 
   const handleDelete = async (entryId?: string, year?: number) => {
@@ -55,7 +76,8 @@ export default function RetirementList() {
       );
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Delete failed");
-      fetchEntries();
+      await fetchEntries();
+      await Promise.resolve(onEntriesChanged?.());
     } catch (err: any) {
       setError(err.message || String(err));
     }
@@ -63,50 +85,49 @@ export default function RetirementList() {
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
+      <SectionHeader
+        title="Retirement Accounts"
         sx={{ mb: 2 }}
-      >
-        <Typography variant="h5">Retirement Accounts</Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          Add Entry
-        </Button>
-      </Stack>
+        action={
+          <Button
+            variant="contained"
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
+          >
+            Add Entry
+          </Button>
+        }
+      />
 
-      {showForm && (
-        <Box sx={{ mb: 2 }}>
+      {dialogOpen ? (
+        <ProgressEntryDialog
+          open={dialogOpen}
+          title={editing ? "Edit Retirement Entry" : "Add Retirement Entry"}
+          onClose={closeDialog}
+        >
           <RetirementForm
             defaultEntry={editing || undefined}
             onSaved={handleSaved}
-            onCancel={() => {
-              setShowForm(false);
-              setEditing(null);
-            }}
+            onCancel={closeDialog}
           />
-        </Box>
-      )}
+        </ProgressEntryDialog>
+      ) : null}
 
-      {error && <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box>}
+      {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
 
       <List>
-        {entries.map((e) => (
-          <React.Fragment key={e.entryId}>
+        {entries.map((entry) => (
+          <React.Fragment key={entry.entryId}>
             <ListItem
               secondaryAction={
                 <Stack direction="row" spacing={1}>
                   <Button
                     size="small"
                     onClick={() => {
-                      setEditing(e);
-                      setShowForm(true);
+                      setEditing(entry);
+                      setDialogOpen(true);
                     }}
                   >
                     Edit
@@ -114,7 +135,7 @@ export default function RetirementList() {
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => handleDelete(e.entryId, e.year)}
+                    onClick={() => handleDelete(entry.entryId, entry.year)}
                   >
                     Delete
                   </Button>
@@ -122,8 +143,8 @@ export default function RetirementList() {
               }
             >
               <ListItemText
-                primary={`${e.year} — start: $${Number(e.startAmount).toLocaleString()} end: $${Number(e.endAmount).toLocaleString()}`}
-                secondary={`Change: $${Number(e.change || e.endAmount - e.startAmount).toLocaleString()} ${e.pct !== null ? `(${e.pct}%)` : ""}`}
+                primary={`${entry.year} — start: $${Number(entry.startAmount).toLocaleString()} end: $${Number(entry.endAmount).toLocaleString()}`}
+                secondary={`Change: $${Number(entry.change ?? entry.endAmount - entry.startAmount).toLocaleString()} ${entry.pct !== null && entry.pct !== undefined ? `(${entry.pct}%)` : ""}`}
               />
             </ListItem>
             <Divider component="li" />
@@ -131,9 +152,9 @@ export default function RetirementList() {
         ))}
       </List>
 
-      {entries.length === 0 && !loading && (
+      {entries.length === 0 && !loading ? (
         <Typography>No retirement entries yet.</Typography>
-      )}
+      ) : null}
     </Box>
   );
 }

@@ -29,14 +29,13 @@ import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import { apiFetch } from "@/lib/apiFetch";
 import {
-  createYearDateRange,
   filterTransactions,
   aggregateTransactions,
   getAllTags,
   getAvailableReportYears,
-  resolveDefaultReportYear,
+  resolveDefaultReportYears,
 } from "@/lib/aggregations";
-import { getLastSelectedReportYear } from "@/lib/storage";
+import { getLastSelectedReportYears } from "@/lib/storage";
 import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
 
 // Note 2: All three chart components use `{ ssr: false }` because they depend
@@ -77,24 +76,24 @@ const TagBarChart = dynamic(
 // component, simplifying their props interface.
 const EMPTY_AGGREGATES: ReportsAggregates = {
   totalAmount: 0,
+  spendingAmount: 0,
   totalByCategoryType: { Need: 0, Want: 0, Saving: 0 },
   timeseries: [],
   tagDiagramData: [],
 };
 
 const EMPTY_FILTERS: FilterParams = {
+  years: [],
   startDate: null,
   endDate: null,
   tags: [],
   search: "",
 };
 
-function buildYearFilters(year: string): FilterParams {
-  const { startDate, endDate } = createYearDateRange(year);
+function buildYearFilters(years: string[]): FilterParams {
   return {
     ...EMPTY_FILTERS,
-    startDate,
-    endDate,
+    years,
   };
 }
 
@@ -216,11 +215,11 @@ export default function ReportsPage() {
     setAllTransactions(transactions);
 
     if (opts?.resetFilters) {
-      const resolvedYear = resolveDefaultReportYear(
+      const resolvedYears = resolveDefaultReportYears(
         transactions,
-        getLastSelectedReportYear(),
+        getLastSelectedReportYears(),
       );
-      setFilters(buildYearFilters(resolvedYear));
+      setFilters(buildYearFilters(resolvedYears));
     }
   }
 
@@ -352,6 +351,8 @@ export default function ReportsPage() {
 
     try {
       const params = new URLSearchParams();
+      if (filters.years.length > 0)
+        params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
@@ -493,7 +494,7 @@ export default function ReportsPage() {
               [
                 {
                   label: "Total Spending",
-                  value: fmt(agg.totalAmount),
+                  value: fmt(agg.spendingAmount),
                   color: "#ddd",
                 },
                 {

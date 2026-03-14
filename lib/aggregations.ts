@@ -2,11 +2,22 @@
 // both the API layer (server-side) and optionally in-browser without re-fetching.
 // Pure functions with no side effects are easy to unit test and reason about.
 import {
+  CategoryType,
   Transaction,
   FilterParams,
   ReportsAggregates,
   TimeseriesPoint,
 } from "./types";
+
+// Note 1a: Historical data can contain legacy plural labels such as "Wants" or
+// "Savings". Normalizing them here keeps summary cards and charts stable even if
+// older records were stored before the stricter UI/category validation existed.
+function normalizeReportCategory(raw: string): CategoryType {
+  const value = raw.trim().toLowerCase();
+  if (value === "need" || value === "needs") return "Need";
+  if (value === "saving" || value === "savings") return "Saving";
+  return "Want";
+}
 
 /**
  * Note 2: Returns only the transactions that match every active filter.
@@ -21,6 +32,12 @@ export function filterTransactions(
   filters: FilterParams,
 ): Transaction[] {
   return transactions.filter((t) => {
+    if (
+      filters.years.length > 0 &&
+      !filters.years.includes(t.date.substring(0, 4))
+    ) {
+      return false;
+    }
     if (filters.startDate && t.date < filters.startDate) return false;
     if (filters.endDate && t.date > filters.endDate) return false;
     // Note 3: `Array.some` returns true if at least one of the filter tags is
@@ -63,8 +80,10 @@ export function aggregateTransactions(
   // exist for a given category.
   const totalByCategoryType = { Need: 0, Want: 0, Saving: 0 };
   for (const t of transactions) {
-    totalByCategoryType[t.category] += t.amount;
+    const category = normalizeReportCategory(t.category);
+    totalByCategoryType[category] += t.amount;
   }
+  const spendingAmount = totalByCategoryType.Need + totalByCategoryType.Want;
 
   // Monthly time series
   // Note 8: A plain object is used as a hash map keyed by "YYYY-MM". This is
@@ -76,8 +95,9 @@ export function aggregateTransactions(
     if (!tsMap[period]) {
       tsMap[period] = { period, amount: 0, Need: 0, Want: 0, Saving: 0 };
     }
+    const category = normalizeReportCategory(t.category);
     tsMap[period].amount += t.amount;
-    tsMap[period][t.category] += t.amount;
+    tsMap[period][category] += t.amount;
   }
   // Note 9: `Object.values` returns the hash map values as an array.
   // `localeCompare` on the "YYYY-MM" period strings sorts them chronologically.
@@ -99,7 +119,13 @@ export function aggregateTransactions(
     .sort((a, b) => b.value - a.value)
     .slice(0, 15);
 
-  return { totalAmount, totalByCategoryType, timeseries, tagDiagramData };
+  return {
+    totalAmount,
+    spendingAmount,
+    totalByCategoryType,
+    timeseries,
+    tagDiagramData,
+  };
 }
 
 /**
@@ -138,11 +164,31 @@ export function resolveDefaultReportYear(
   storedYear: string | null,
   fallbackDate: Date = new Date(),
 ): string {
+  return resolveDefaultReportYears(
+    transactions,
+    storedYear ? [storedYear] : [],
+    fallbackDate,
+  )[0];
+}
+
+/**
+ * Note 13a: Restoring multiple stored years keeps the quick-filter consistent
+ * with the user's last reports view, but stale years are dropped if they no
+ * longer exist in the current dataset.
+ */
+export function resolveDefaultReportYears(
+  transactions: Transaction[],
+  storedYears: string[],
+  fallbackDate: Date = new Date(),
+): string[] {
   const availableYears = getAvailableReportYears(transactions);
-  if (storedYear && availableYears.includes(storedYear)) {
-    return storedYear;
+  const validStoredYears = availableYears.filter((year) =>
+    storedYears.includes(year),
+  );
+  if (validStoredYears.length > 0) {
+    return validStoredYears;
   }
-  return availableYears[0] ?? String(fallbackDate.getFullYear());
+  return [availableYears[0] ?? String(fallbackDate.getFullYear())];
 }
 
 /**

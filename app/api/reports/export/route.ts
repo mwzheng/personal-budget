@@ -10,6 +10,8 @@ import { getRequestUserId } from "@/lib/requestUser";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const yearsParam = searchParams.get("years");
+    const years = yearsParam ? yearsParam.split(",").filter(Boolean) : [];
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const tagsParam = searchParams.get("tags");
@@ -19,6 +21,7 @@ export async function GET(request: NextRequest) {
     const userId = await getRequestUserId(request);
     const allTransactions = await getUserTransactions(userId);
     const filtered = filterTransactions(allTransactions, {
+      years,
       startDate,
       endDate,
       tags,

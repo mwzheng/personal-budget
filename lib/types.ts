@@ -26,17 +26,51 @@ export interface Transaction {
   tags: string[];
 }
 
-// Note 6: FilterParams is used by the aggregations layer and the reports API to
-// express which subset of transactions the user wants to view. `null` means the
-// filter is not active; an empty string/array means "match all".
+// Note 6: SalaryEntry represents one stored salary record. `yoy` is optional
+// because the GET route computes it for charting, but create/update responses do
+// not necessarily echo that derived field back.
+export interface SalaryEntry {
+  entryId: string;
+  year: number;
+  amount: number;
+  note?: string;
+  yoy?: number | null;
+}
+
+// Note 7: RetirementEntry keeps the raw yearly balances plus optional derived
+// fields (`change`, `pct`) that the retirement API enriches for list rendering.
+export interface RetirementEntry {
+  entryId: string;
+  year: number;
+  startAmount: number;
+  endAmount: number;
+  change?: number;
+  pct?: number | null;
+}
+
+// Note 8: MilestoneEntry supports either a calendar-year milestone, an age
+// milestone, or both. The nullable fields let the UI represent whichever anchor
+// the user provided without inventing placeholder values.
+export interface MilestoneEntry {
+  milestoneId: string;
+  amount: number;
+  year: number | null;
+  age: number | null;
+}
+
+// Note 9: FilterParams is used by the aggregations layer and the reports API to
+// express which subset of transactions the user wants to view. `years` models the
+// quick year-picker state directly, while `startDate`/`endDate` support custom
+// date ranges when the user needs something more precise.
 export interface FilterParams {
+  years: string[];
   startDate: string | null;
   endDate: string | null;
   tags: string[];
   search: string;
 }
 
-// Note 7: A time-series groups financial data by month so charts can plot how
+// Note 10: A time-series groups financial data by month so charts can plot how
 // spending changed over time. Each TimeseriesPoint carries the totals broken down
 // by category, enabling stacked bar or area charts.
 export interface TimeseriesPoint {
@@ -47,24 +81,25 @@ export interface TimeseriesPoint {
   Saving: number;
 }
 
-// Note 8: TagDataPoint is the minimal shape required by chart libraries (e.g.
+// Note 11: TagDataPoint is the minimal shape required by chart libraries (e.g.
 // Recharts PieChart) that expect a `name`/`value` pair for each data slice.
 export interface TagDataPoint {
   name: string;
   value: number;
 }
 
-// Note 9: ReportsAggregates bundles all pre-computed summary statistics that the
-// reports page needs. Returning them together in one API call avoids multiple
-// round trips and keeps the frontend logic simple.
+// Note 12: ReportsAggregates bundles all pre-computed summary statistics that the
+// reports page needs. `spendingAmount` excludes Savings so the UI can label the
+// main card as "Total Spending" without conflating it with money moved into savings.
 export interface ReportsAggregates {
   totalAmount: number;
+  spendingAmount: number;
   totalByCategoryType: { Need: number; Want: number; Saving: number };
   timeseries: TimeseriesPoint[];
   tagDiagramData: TagDataPoint[];
 }
 
-// Note 10: ReportsResponse is the full payload returned by GET /api/reports.
+// Note 13: ReportsResponse is the full payload returned by GET /api/reports.
 // Wrapping transactions + metadata in one typed object makes the API contract
 // explicit and is easy to validate with tools like Zod.
 export interface ReportsResponse {
@@ -73,7 +108,7 @@ export interface ReportsResponse {
   aggregates: ReportsAggregates;
 }
 
-// Note 11: The Sankey diagram represents money flowing from a source (income)
+// Note 14: The Sankey diagram represents money flowing from a source (income)
 // to target nodes (expense categories). Each node must have a unique `id` string,
 // and each link records the flow amount between two node ids.
 export interface SankeyNode {
@@ -86,7 +121,7 @@ export interface SankeyLink {
   value: number;
 }
 
-// Note 12: SankeyData is the exact shape required by the @nivo/sankey chart
+// Note 15: SankeyData is the exact shape required by the @nivo/sankey chart
 // library. Keeping this interface here rather than in the component file allows
 // the API route to return correctly typed data without importing UI dependencies.
 export interface SankeyData {
@@ -99,7 +134,7 @@ export interface SankeyAllocation {
   percentage: number;
 }
 
-// Note 13: SankeyRequestBody is validated on the server with Zod before use.
+// Note 16: SankeyRequestBody is validated on the server with Zod before use.
 // Defining the interface separately from the Zod schema still helps TypeScript
 // callers on the client side get autocompletion when building the request payload.
 export interface SankeyRequestBody {
@@ -108,7 +143,7 @@ export interface SankeyRequestBody {
   allocations: SankeyAllocation[];
 }
 
-// Note 14: `Record<string, number>` is a TypeScript utility type equivalent to
+// Note 17: `Record<string, number>` is a TypeScript utility type equivalent to
 // { [key: string]: number }. It is used here to hold a flexible dictionary of
 // category names mapped to their suggested dollar amounts.
 export interface SankeyResponse {

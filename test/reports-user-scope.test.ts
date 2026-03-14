@@ -78,6 +78,33 @@ describe("reports routes user scoping", () => {
     });
   });
 
+  it("supports multi-year filters on the reports route", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-a");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("tx-2025", { date: "2025-01-15", amount: 25 }),
+      buildTransaction("tx-2024", { date: "2024-01-15", amount: 30 }),
+      buildTransaction("tx-2023", { date: "2023-01-15", amount: 35 }),
+    ]);
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?years=2025,2023&page=1&pageSize=10&includeAggregates=true",
+      ) as any,
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 2,
+      transactions: [
+        expect.objectContaining({ id: "tx-2025" }),
+        expect.objectContaining({ id: "tx-2023" }),
+      ],
+      aggregates: expect.objectContaining({
+        totalAmount: 60,
+        spendingAmount: 60,
+      }),
+    });
+  });
+
   it("exports only the authenticated user's filtered transactions", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-b");
     mockedGetUserTransactions.mockResolvedValue([

@@ -1,6 +1,8 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { Box, Button, TextField, Stack, Typography } from "@mui/material";
+import { SectionHeader } from "@/components/progress/SectionHeader";
 import { apiFetch } from "@/lib/apiFetch";
 
 interface ProgressGoal {
@@ -32,19 +34,19 @@ export default function GoalEditor() {
         setTarget(String(primaryGoal?.targetAmount ?? ""));
       }
     } catch {
-      /*ignore*/
+      /* ignore */
     }
   };
 
   useEffect(() => {
-    fetchGoal();
+    void fetchGoal();
   }, []);
 
   const save = async () => {
     if (!target) return;
     setLoading(true);
     try {
-      // Note N: Build payload explicitly to avoid drifting request shapes.
+      // Note 1: Build payload explicitly to avoid drifting request shapes.
       const body: { targetAmount: number; goalId?: string } = {
         targetAmount: Number(target),
       };
@@ -72,14 +74,12 @@ export default function GoalEditor() {
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Progress Goal
-      </Typography>
+      <SectionHeader title="Progress Goal" sx={{ mb: 1.5 }} />
       <Stack direction="row" spacing={2} alignItems="center">
         <TextField
           label="Target amount"
           value={target}
-          onChange={(e) => setTarget(e.target.value)}
+          onChange={(event) => setTarget(event.target.value)}
           type="number"
         />
         <Button
@@ -91,7 +91,7 @@ export default function GoalEditor() {
         </Button>
       </Stack>
       <Box sx={{ mt: 1 }}>
-        {goal && (
+        {goal ? (
           <Typography>
             Current target: ${Number(goal.targetAmount).toLocaleString()} —
             Latest progress:{" "}
@@ -100,7 +100,7 @@ export default function GoalEditor() {
               : "N/A"}{" "}
             {pct !== null ? `(${pct}%)` : ""}
           </Typography>
-        )}
+        ) : null}
       </Box>
     </Box>
   );
