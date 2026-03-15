@@ -941,3 +941,33 @@ Commit
 Notes
 
 - The logo remains a Next.js Link for client navigation but no longer shows underline or color changes; an `aria-label` was added for accessibility.
+
+---
+
+# Completed: Narrow Expense and Sankey Path inputs; update plans
+
+Date: 2026-03-15
+
+Summary
+
+- Narrowed the Expense name and Sankey Path input widths to reduce truncation and horizontal scroll on the Budget page. Reduced table cell padding and set inputs to dense to improve alignment and vertical rhythm.
+
+Completed items
+
+- Adjusted budget form column widths and input density so amount and category values are readable and aligned.
+- Removed extraneous helperText when not needed to reduce row height variance.
+- Updated `plan.md` and appended this record to `plan.completed.md` in the same commit.
+
+Files changed
+
+- components/budget/BudgetForm.tsx
+- plan.md
+- plan.completed.md
+
+Commit
+
+- fix(budget): narrow expense & sankey path inputs; update plans
+
+Notes
+
+- Expense column adjusted from 34% → 32%; Sankey Path column from 26% → 24%; row action icon sizes reduced for visual balance. Changes were committed and merged to `main` in a single commit that updates both plan files and the UI code.

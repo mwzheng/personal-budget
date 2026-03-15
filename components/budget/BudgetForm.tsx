@@ -200,11 +200,11 @@ export function BudgetForm({
         >
           <TableHead>
             <TableRow>
-              <TableCell width="34%">Expense</TableCell>
-              <TableCell width="16%">Amount</TableCell>
+              <TableCell width="32%">Expense</TableCell>
+              <TableCell width="18%">Amount</TableCell>
               <TableCell width="14%">Category</TableCell>
-              <TableCell width="26%">Sankey Path</TableCell>
-              <TableCell align="right" width="10%">
+              <TableCell width="24%">Sankey Path</TableCell>
+              <TableCell align="right" width="12%">
                 Actions
               </TableCell>
             </TableRow>
