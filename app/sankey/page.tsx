@@ -1,250 +1,382 @@
-// Note 1: `"use client"` is required because this page uses `useState` and
-// event handlers. Next.js App Router renders components on the server by default;
-// the directive opts this entire module into client-side execution.
+// Note 1: This page is a Client Component because the planner is entirely
+// interactive: the user edits draft rows, previews the pie chart and Sankey in
+// real time, and saves budgets without leaving the page.
 "use client";
 
 import { apiFetch } from "../../lib/apiFetch";
 
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { SankeyForm } from "@/components/budget/SankeyForm";
-import { SankeyResponse } from "@/lib/types";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { BudgetList } from "@/components/budget/BudgetList";
+import { BudgetPieChart } from "@/components/charts/BudgetPieChart";
+import {
+  buildBudgetInsights,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  createDefaultBudgetDraft,
+  BudgetDraft,
+  normalizeBudgetForEditor,
+  normalizeBudgetForStorage,
+} from "@/lib/budget-planner";
+import { SavedBudget } from "@/lib/types";
 
-// Note 2: `dynamic(..., { ssr: false })` defers loading the SankeyChart bundle
-// to the browser. Nivo's Sankey chart relies on DOM APIs (SVG measurements)
-// that are unavailable during server-side rendering. Without `ssr: false`, the
-// server render would throw. The `loading` fallback renders a Skeleton while
-// the bundle downloads, keeping the page visually stable.
 const SankeyChart = dynamic(
-  () => import("@/components/charts/SankeyChart").then((m) => m.SankeyChart),
+  () =>
+    import("@/components/charts/SankeyChart").then(
+      (module) => module.SankeyChart,
+    ),
   {
     ssr: false,
-    loading: () => <Skeleton variant="rectangular" height={420} />,
+    loading: () => <Skeleton variant="rectangular" height={520} />,
   },
 );
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+const SUMMARY_CARD_SX = {
+  flex: 1,
+  minWidth: 180,
+  p: 2,
+  border: "1px solid",
+  borderColor: "divider",
+  borderRadius: 2,
 };
 
 export default function SankeyPage() {
-  const [result, setResult] = useState<SankeyResponse | null>(null);
-  const [selectedBudget, setSelectedBudget] = useState<any | null>(null);
+  const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Note N: Client-side auth guard — ensures unauthenticated users are
-  // redirected to the login page. This is a pragmatic client-only check;
-  // for stronger protection add Next.js `middleware.ts` for server-side redirect.
   const router = useRouter();
+
   useEffect(() => {
-    try {
-      if (process.env.NEXT_PUBLIC_DISABLE_AUTH === "true") return;
-      const hasToken =
-        typeof window !== "undefined" &&
-        (sessionStorage.getItem("access_token") ||
-          sessionStorage.getItem("id_token"));
-      if (!hasToken) {
-        router.replace("/auth/login");
-      }
-    } catch {
-      // swallow errors; don't break the page if storage access fails
-      // (e.g., in strict privacy modes).
+    if (process.env.NEXT_PUBLIC_DISABLE_AUTH === "true") {
+      return;
+    }
+
+    const accessToken =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("access_token")
+        : null;
+    const idToken =
+      typeof window !== "undefined" ? sessionStorage.getItem("id_token") : null;
+
+    if (!accessToken && !idToken) {
+      router.replace("/auth/login");
     }
   }, [router]);
+
+  const insights = useMemo(() => buildBudgetInsights(draft), [draft]);
+
+  async function saveBudget() {
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const payload = normalizeBudgetForStorage({
+        ...draft,
+        budgetId: editingBudgetId ?? draft.budgetId,
+      });
+      const isEditing = Boolean(editingBudgetId);
+      const response = await apiFetch(
+        isEditing ? `/api/budgets/${editingBudgetId}` : "/api/budgets",
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error?.message ?? data?.error ?? response.statusText,
+        );
+      }
+
+      const persisted = normalizeBudgetForEditor(
+        (data?.updated ?? data?.created ?? data) as SavedBudget,
+      );
+
+      setDraft(persisted);
+      setEditingBudgetId(persisted.budgetId ?? null);
+      setBudgetsReloadKey((current) => current + 1);
+    } catch (caughtError) {
+      setSaveError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Failed to save budget.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function loadBudget(budget: SavedBudget) {
+    setDraft({
+      ...normalizeBudgetForEditor(budget),
+      budgetId: undefined,
+    });
+    setEditingBudgetId(null);
+    setSaveError(null);
+  }
+
+  function editBudget(budget: SavedBudget) {
+    const normalized = normalizeBudgetForEditor(budget);
+    setDraft(normalized);
+    setEditingBudgetId(normalized.budgetId ?? null);
+    setSaveError(null);
+  }
+
+  function startFresh() {
+    setDraft(createDefaultBudgetDraft());
+    setEditingBudgetId(null);
+    setSaveError(null);
+  }
+
+  const hasExpenses = insights.validExpenses.length > 0;
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" fontWeight={700} mb={1}>
-        Budget Generator
+        Budget Planner
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={4}>
-        Enter your monthly income and set how to allocate it across needs,
-        wants, and savings. The Sankey diagram visualises your money flow.
+        Plan monthly expenses, see each line item in the pie chart, and follow
+        the grouped Sankey flow below.
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Left: form */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12}>
           <Card>
             <CardHeader
-              title="Configure Budget"
-              subheader="Uses the 50/30/20 rule as default"
-              titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
+              title="Budget section"
+              subheader="Build an expense-based monthly budget and save reusable versions."
+              titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
             <CardContent>
-              <SankeyForm onResult={setResult} />
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                Saved Budgets
-              </Typography>
-              <Box>
-                <Box mb={2}>
-                  {/* BudgetForm now accepts `initialBudget` so it can be used for
-                      both create and edit flows. onSaved triggers a list refresh */}
+              <Grid container spacing={3}>
+                <Grid item xs={12} lg={5}>
                   <BudgetForm
-                    initialBudget={selectedBudget ?? undefined}
-                    onSaved={() => {
-                      setSelectedBudget(null);
-                      setBudgetsReloadKey((k) => k + 1);
-                    }}
-                    onCancel={() => setSelectedBudget(null)}
+                    value={draft}
+                    saving={saving}
+                    saveError={saveError}
+                    isEditing={Boolean(editingBudgetId)}
+                    onChange={setDraft}
+                    onSave={saveBudget}
+                    onStartFresh={startFresh}
                   />
-                </Box>
-                <Box>
-                  {/* BudgetList supports selection and an explicit edit action. */}
-                  {/* @ts-ignore */}
+
+                  <Divider sx={{ my: 3 }} />
+
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    gap={1}
+                    mb={1.5}
+                  >
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Saved budgets
+                    </Typography>
+                    {editingBudgetId ? (
+                      <Chip
+                        label="Editing saved budget"
+                        size="small"
+                        color="info"
+                      />
+                    ) : null}
+                  </Box>
+
                   <BudgetList
                     reloadKey={budgetsReloadKey}
-                    onSelect={(b: any) => {
-                      (async () => {
-                        const resp = await apiFetch("/api/sankey", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ allocations: b.allocations }),
-                        });
-                        const data = await resp.json();
-                        setResult(data);
-                      })();
-                    }}
-                    onEdit={(b: any) => setSelectedBudget(b)}
+                    onLoad={loadBudget}
+                    onEdit={editBudget}
                   />
-                </Box>
-              </Box>
+                </Grid>
+
+                <Grid item xs={12} lg={7}>
+                  <Stack spacing={2.5}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                      <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
+                        <Typography variant="caption" color="text.secondary">
+                          Monthly income
+                        </Typography>
+                        <Typography variant="h6" fontWeight={700}>
+                          {formatCurrency(insights.monthlyIncome)}
+                        </Typography>
+                      </Paper>
+                      <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
+                        <Typography variant="caption" color="text.secondary">
+                          Planned expenses
+                        </Typography>
+                        <Typography variant="h6" fontWeight={700}>
+                          {formatCurrency(insights.totalExpenses)}
+                        </Typography>
+                      </Paper>
+                      <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
+                        <Typography variant="caption" color="text.secondary">
+                          {insights.overspending > 0
+                            ? "Overspending"
+                            : insights.leftoverSavings > 0
+                              ? "Leftover savings"
+                              : "Balance"}
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          fontWeight={700}
+                          color={
+                            insights.overspending > 0
+                              ? "warning.main"
+                              : "success.main"
+                          }
+                        >
+                          {formatCurrency(
+                            insights.overspending > 0
+                              ? insights.overspending
+                              : insights.leftoverSavings,
+                          )}
+                        </Typography>
+                      </Paper>
+                    </Stack>
+
+                    {hasExpenses && insights.overspending > 0 ? (
+                      <Alert severity="warning">
+                        You&apos;re overspending by{" "}
+                        {formatCurrency(insights.overspending)}. Lower your
+                        planned expenses or raise monthly income to get back on
+                        budget.
+                      </Alert>
+                    ) : null}
+
+                    {hasExpenses && insights.overspending === 0 ? (
+                      <Alert severity="success">
+                        {insights.leftoverSavings > 0
+                          ? `${formatCurrency(insights.leftoverSavings)} is automatically added to Leftover savings.`
+                          : "Your planned expenses exactly match monthly income."}
+                      </Alert>
+                    ) : null}
+
+                    <Card variant="outlined">
+                      <CardHeader
+                        title="Expense pie chart"
+                        subheader="Each expense is a slice. Remaining income is added as Leftover savings."
+                        titleTypographyProps={{
+                          variant: "subtitle1",
+                          fontWeight: 700,
+                        }}
+                        subheaderTypographyProps={{ variant: "caption" }}
+                      />
+                      <Divider />
+                      <CardContent>
+                        <BudgetPieChart
+                          data={insights.pieData}
+                          monthlyIncome={insights.monthlyIncome}
+                          leftoverSavings={insights.leftoverSavings}
+                          overspending={insights.overspending}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+                      <Table size="small">
+                        <TableBody>
+                          {CATEGORY_ORDER.map((category) => {
+                            const amount = insights.categoryTotals[category];
+                            const share =
+                              insights.monthlyIncome > 0
+                                ? Math.min(
+                                    (amount / insights.monthlyIncome) * 100,
+                                    999,
+                                  )
+                                : 0;
+
+                            return (
+                              <TableRow key={category} hover>
+                                <TableCell>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    sx={{ color: CATEGORY_COLORS[category] }}
+                                  >
+                                    {CATEGORY_LABELS[category]}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell align="right">
+                                  <Typography variant="body2">
+                                    {formatCurrency(amount)}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell align="right">
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {share.toFixed(0)}% of income
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </Paper>
+                  </Stack>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Right: chart + suggestion */}
-        <Grid item xs={12} md={8}>
-          <Box display="flex" flexDirection="column" gap={3}>
-            {/* Sankey diagram */}
-            <Card>
-              <CardHeader
-                title="Budget Flow"
-                subheader="Income -> category allocation"
-                titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
-                subheaderTypographyProps={{ variant: "caption" }}
-              />
-              <Divider />
-              <CardContent>
-                <SankeyChart
-                  data={result?.sankeyData ?? { nodes: [], links: [] }}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Budget suggestion table */}
-            {result && (
-              <Card>
-                <CardHeader
-                  title="Monthly Budget Breakdown"
-                  titleTypographyProps={{
-                    variant: "subtitle1",
-                    fontWeight: 600,
-                  }}
-                />
-                <Divider />
-                <CardContent>
-                  <Paper variant="outlined">
-                    <Table size="small">
-                      <TableBody>
-                        {Object.entries(result.budgetSuggestion).map(
-                          ([category, amount]) => (
-                            <TableRow key={category} hover>
-                              <TableCell>
-                                <Typography
-                                  variant="body2"
-                                  fontWeight={600}
-                                  sx={{
-                                    color:
-                                      CATEGORY_COLORS[category] ??
-                                      "text.primary",
-                                  }}
-                                >
-                                  {category}
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="right">
-                                <Typography variant="body2">
-                                  ${amount.toLocaleString()}/month
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="right">
-                                {/* Note 5: The percentage is computed on the fly by
-                                    dividing each category's amount by the running
-                                    total of all categories. This avoids storing a
-                                    separate percentage field on the server response. */}
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {(
-                                    (amount /
-                                      Object.values(
-                                        result.budgetSuggestion,
-                                      ).reduce((s, v) => s + v, 0)) *
-                                    100
-                                  ).toFixed(0)}
-                                  %
-                                </Typography>
-                              </TableCell>
-                            </TableRow>
-                          ),
-                        )}
-                        <TableRow sx={{ bgcolor: "action.hover" }}>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={700}>
-                              Total
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight={700}>
-                              $
-                              {Object.values(result.budgetSuggestion)
-                                .reduce((s, v) => s + v, 0)
-                                .toLocaleString()}
-                              /month
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography
-                              variant="body2"
-                              fontWeight={700}
-                              color="success.main"
-                            >
-                              100%
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Paper>
-                </CardContent>
-              </Card>
-            )}
-          </Box>
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader
+              title="Sankey section"
+              subheader="Money flows from net income into category branches, optional group rollups, and the final expense leaves."
+              titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
+              subheaderTypographyProps={{ variant: "caption" }}
+            />
+            <Divider />
+            <CardContent>
+              <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
+                <Chip label="Need / Want / Saving categories" size="small" />
+                <Chip label="Optional group rollups" size="small" />
+                <Chip label="Expense-level leaves" size="small" />
+              </Box>
+              <SankeyChart data={insights.sankeyData} />
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Container>

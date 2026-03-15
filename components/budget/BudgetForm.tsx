@@ -1,181 +1,309 @@
-// Note 1: BudgetForm provides an editable table of allocation rows, each with a
-// category name and a percentage/amount value. The three default rows reflect
-// the popular 50/30/20 personal finance rule (Needs/Wants/Savings).
+/**
+ * Note 1: BudgetForm is a controlled editor for the expense-driven planner.
+ * The parent page owns the draft state so the pie chart and Sankey diagram can
+ * update instantly as the user edits rows instead of waiting for a separate
+ * "generate" submit step.
+ */
 "use client";
-
-import React, { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/apiFetch";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import TextField from "@mui/material/TextField";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
 
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
-export type Allocation = { category: string; amount: number };
+import {
+  CATEGORY_LABELS,
+  BudgetDraft,
+  createBudgetExpense,
+  hasBudgetRowContent,
+} from "@/lib/budget-planner";
+import { BudgetExpense, CategoryType } from "@/lib/types";
 
-const DEFAULT_ALLOCATIONS: Allocation[] = [
-  { category: "Needs", amount: 50 },
-  { category: "Wants", amount: 30 },
-  { category: "Savings", amount: 20 },
-];
+interface Props {
+  value: BudgetDraft;
+  saving: boolean;
+  saveError: string | null;
+  isEditing: boolean;
+  onChange: (next: BudgetDraft) => void;
+  onSave: () => void;
+  onStartFresh: () => void;
+}
+
+const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
 
 export function BudgetForm({
-  initialBudget,
-  onSaved,
-  onCancel,
-}: {
-  initialBudget?: any;
-  onSaved?: (budget: any) => void;
-  onCancel?: () => void;
-}) {
-  const [name, setName] = useState<string>(initialBudget?.name ?? "");
-  const [allocations, setAllocations] = useState<Allocation[]>(
-    initialBudget?.allocations ?? DEFAULT_ALLOCATIONS,
-  );
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (initialBudget) {
-      setName(initialBudget.name || "");
-      setAllocations(initialBudget.allocations || DEFAULT_ALLOCATIONS);
-    }
-  }, [initialBudget]);
-
-  function addRow() {
-    setAllocations((s) => [...s, { category: "", amount: 0 }]);
+  value,
+  saving,
+  saveError,
+  isEditing,
+  onChange,
+  onSave,
+  onStartFresh,
+}: Props) {
+  function updateDraft<K extends keyof BudgetDraft>(
+    field: K,
+    next: BudgetDraft[K],
+  ) {
+    onChange({ ...value, [field]: next });
   }
-  function removeRow(idx: number) {
-    setAllocations((s) => s.filter((_, i) => i !== idx));
-  }
-  function updateRow(idx: number, field: keyof Allocation, value: any) {
-    setAllocations((s) => {
-      const copy = [...s];
-      copy[idx] = { ...copy[idx], [field]: value };
-      return copy;
+
+  function updateExpenseRow(
+    expenseId: string,
+    field: keyof BudgetExpense,
+    next: string | number,
+  ) {
+    onChange({
+      ...value,
+      expenses: value.expenses.map((expense) =>
+        expense.expenseId === expenseId
+          ? {
+              ...expense,
+              [field]: next,
+            }
+          : expense,
+      ),
     });
   }
 
-  async function saveBudget() {
-    setSaving(true);
-    try {
-      const payload = { name, allocations };
-
-      let res: Response;
-      if (initialBudget && initialBudget.budgetId) {
-        // Update existing budget
-        res = await apiFetch(`/api/budgets/${initialBudget.budgetId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        // Create new
-        res = await apiFetch("/api/budgets", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || res.statusText);
-
-      if (!initialBudget) {
-        // reset to defaults for newly created
-        setName("");
-        setAllocations(DEFAULT_ALLOCATIONS);
-      }
-
-      onSaved?.(data);
-    } catch (err) {
-      console.error("Failed to save budget", err);
-      alert("Failed to save budget: " + String(err));
-    } finally {
-      setSaving(false);
-    }
+  function addExpenseRow() {
+    onChange({
+      ...value,
+      expenses: [...value.expenses, createBudgetExpense()],
+    });
   }
 
+  function removeExpenseRow(expenseId: string) {
+    const nextExpenses = value.expenses.filter(
+      (expense) => expense.expenseId !== expenseId,
+    );
+
+    onChange({
+      ...value,
+      expenses: nextExpenses.length ? nextExpenses : [createBudgetExpense()],
+    });
+  }
+
+  const hasInvalidRows = value.expenses.some(
+    (expense) =>
+      hasBudgetRowContent(expense) &&
+      (!expense.name.trim() || Number(expense.amount) <= 0),
+  );
+  const validExpenseCount = value.expenses.filter(
+    (expense) => expense.name.trim() && Number(expense.amount) > 0,
+  ).length;
+  const canSave =
+    value.name.trim().length > 0 &&
+    Number(value.monthlyIncome) > 0 &&
+    validExpenseCount > 0 &&
+    !hasInvalidRows;
+
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Stack spacing={2.5}>
       <TextField
         label="Budget name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        value={value.name}
+        onChange={(event) => updateDraft("name", event.target.value)}
         size="small"
         fullWidth
-        inputProps={{ "aria-label": "Budget name" }}
+      />
+      <TextField
+        label="Monthly income"
+        type="number"
+        value={value.monthlyIncome}
+        onChange={(event) =>
+          updateDraft("monthlyIncome", Number(event.target.value || 0))
+        }
+        size="small"
+        fullWidth
+        slotProps={{
+          input: {
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          },
+        }}
       />
 
-      <Table size="small">
-        <TableBody>
-          {allocations.map((row, idx) => (
-            <TableRow key={idx}>
-              <TableCell>
-                <TextField
-                  placeholder="Category"
-                  value={row.category}
-                  onChange={(e) => updateRow(idx, "category", e.target.value)}
-                  size="small"
-                  inputProps={{ "aria-label": `category-${idx}` }}
-                />
-              </TableCell>
-              <TableCell>
-                <TextField
-                  placeholder="Amount"
-                  type="number"
-                  value={String(row.amount)}
-                  onChange={(e) =>
-                    updateRow(idx, "amount", Number(e.target.value || 0))
-                  }
-                  size="small"
-                  inputProps={{ "aria-label": `amount-${idx}` }}
-                />
-              </TableCell>
-              <TableCell align="right">
-                <IconButton
-                  onClick={() => removeRow(idx)}
-                  size="small"
-                  aria-label={`delete-row-${idx}`}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+      <Box>
+        <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+          Expense rows
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Add a Sankey group only when multiple expenses should branch from the
+          same rollup, for example a `Car` group with `Gas` and `Car note`
+          expenses underneath it.
+        </Typography>
+      </Box>
+
+      <Box sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={{ minWidth: 680 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Expense</TableCell>
+              <TableCell width={140}>Amount</TableCell>
+              <TableCell width={150}>Category</TableCell>
+              <TableCell>Sankey group</TableCell>
+              <TableCell align="right" width={56}>
+                Actions
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {value.expenses.map((expense, index) => {
+              const rowHasError =
+                hasBudgetRowContent(expense) &&
+                (!expense.name.trim() || Number(expense.amount) <= 0);
 
-      <Box display="flex" gap={1}>
-        <Button
-          startIcon={<AddIcon />}
-          onClick={addRow}
-          size="small"
-          aria-label="add-category"
-        >
-          Add category
-        </Button>
-        <Box flex={1} />
-        {initialBudget && (
-          <Button onClick={onCancel} aria-label="cancel-edit">
-            Cancel
-          </Button>
-        )}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={saveBudget}
-          disabled={saving || !name}
-          aria-label="save-budget"
-        >
-          {initialBudget ? "Update Budget" : "Save Budget"}
-        </Button>
+              return (
+                <TableRow key={expense.expenseId} hover>
+                  <TableCell>
+                    <TextField
+                      placeholder={`Expense ${index + 1}`}
+                      value={expense.name}
+                      onChange={(event) =>
+                        updateExpenseRow(
+                          expense.expenseId,
+                          "name",
+                          event.target.value,
+                        )
+                      }
+                      error={rowHasError && !expense.name.trim()}
+                      helperText={
+                        rowHasError && !expense.name.trim()
+                          ? "Name is required when a row has a value."
+                          : " "
+                      }
+                      size="small"
+                      fullWidth
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      placeholder="0"
+                      type="number"
+                      value={expense.amount === 0 ? "" : String(expense.amount)}
+                      onChange={(event) =>
+                        updateExpenseRow(
+                          expense.expenseId,
+                          "amount",
+                          Number(event.target.value || 0),
+                        )
+                      }
+                      error={rowHasError && Number(expense.amount) <= 0}
+                      size="small"
+                      fullWidth
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position="start">$</InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      select
+                      value={expense.category}
+                      onChange={(event) =>
+                        updateExpenseRow(
+                          expense.expenseId,
+                          "category",
+                          event.target.value,
+                        )
+                      }
+                      size="small"
+                      fullWidth
+                    >
+                      {CATEGORY_OPTIONS.map((category) => (
+                        <MenuItem key={category} value={category}>
+                          {CATEGORY_LABELS[category]}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      placeholder="Optional group"
+                      value={expense.group ?? ""}
+                      onChange={(event) =>
+                        updateExpenseRow(
+                          expense.expenseId,
+                          "group",
+                          event.target.value,
+                        )
+                      }
+                      size="small"
+                      fullWidth
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      onClick={() => removeExpenseRow(expense.expenseId)}
+                      size="small"
+                      aria-label={`delete-expense-${index}`}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </Box>
-    </Box>
+
+      {saveError ? <Alert severity="error">{saveError}</Alert> : null}
+
+      <Box
+        display="flex"
+        flexWrap="wrap"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={1.5}
+      >
+        <Box display="flex" gap={1}>
+          <Button startIcon={<AddIcon />} onClick={addExpenseRow} size="small">
+            Add expense
+          </Button>
+          <Button onClick={onStartFresh} size="small">
+            Start fresh
+          </Button>
+        </Box>
+        <Box textAlign="right">
+          <Typography
+            variant="caption"
+            display="block"
+            color={hasInvalidRows ? "error.main" : "text.secondary"}
+          >
+            {validExpenseCount} ready expense
+            {validExpenseCount === 1 ? "" : "s"}
+            {hasInvalidRows ? " - fix incomplete rows before saving" : ""}
+          </Typography>
+          {/* Note 2: Save stays disabled until the persisted budget would be
+              internally consistent. The preview can tolerate temporary draft
+              rows, but storage should not quietly create unnamed or zero-value
+              expenses that would confuse the saved-budget list later. */}
+          <Button
+            variant="contained"
+            onClick={onSave}
+            disabled={!canSave || saving}
+            sx={{ mt: 0.75 }}
+          >
+            {saving ? "Saving..." : isEditing ? "Update budget" : "Save budget"}
+          </Button>
+        </Box>
+      </Box>
+    </Stack>
   );
 }

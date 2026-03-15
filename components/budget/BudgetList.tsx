@@ -1,179 +1,196 @@
-// Note 1: BudgetList fetches all saved budgets on mount and renders them as a
-// selectable, deletable list. The `onSelect` callback lets the parent page
-// (SankeyPage) receive the chosen budget and pass its allocations to the
-// SankeyChart -- this is the "lifting state up" React pattern.
+/**
+ * Note 1: BudgetList stays intentionally thin: it fetches the user's saved
+ * budgets, handles deletion, and delegates the actual load/edit behavior back to
+ * the page. That keeps persistence concerns here while the page owns the draft.
+ */
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/apiFetch";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
-import IconButton from "@mui/material/IconButton";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import DeleteIcon from "@mui/icons-material/Delete";
+import ListItemText from "@mui/material/ListItemText";
+import Typography from "@mui/material/Typography";
+import { useEffect, useState } from "react";
 
-export function BudgetList({
-  onSelect,
-  onEdit,
-  reloadKey,
-}: {
-  onSelect?: (budget: any) => void;
-  onEdit?: (budget: any) => void;
-  reloadKey?: any;
-}) {
-  const [budgets, setBudgets] = useState<any[]>([]);
+import { apiFetch } from "@/lib/apiFetch";
+import { normalizeBudgetForEditor } from "@/lib/budget-planner";
+import { SavedBudget } from "@/lib/types";
+
+interface Props {
+  onLoad?: (budget: SavedBudget) => void;
+  onEdit?: (budget: SavedBudget) => void;
+  reloadKey?: number;
+}
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
+  const [budgets, setBudgets] = useState<SavedBudget[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
-  async function load() {
+  async function loadBudgets() {
     setLoading(true);
+    setError(null);
+
     try {
-      const res = await apiFetch("/api/budgets");
+      const response = await apiFetch("/api/budgets");
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
 
-      // Read the body as text and attempt to parse JSON. This is safer than
-      // calling res.json() unconditionally because some error responses may
-      // be non-JSON and calling json() would throw.
-      const text = await res.text();
-      let data: any = null;
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        // ignore parse errors; we'll fall back to statusText
+      if (!response.ok) {
+        throw new Error(
+          data?.error?.message ?? data?.error ?? response.statusText,
+        );
       }
 
-      if (!res.ok) {
-        const msg =
-          data?.error?.message ||
-          data?.message ||
-          res.statusText ||
-          "Request failed";
-        // If unauthorized, avoid forcefully clearing tokens here. The
-        // global apiFetch already attempts a refresh and will clear tokens
-        // on irrevocable refresh failures. For UI stability, show an empty
-        // list and let the user sign in again if needed.
-        if (res.status === 401 || res.status === 403) {
-          console.warn(
-            "Unauthorized when loading budgets; user may need to sign-in",
-          );
-          setBudgets([]);
-          return;
-        }
-
-        throw new Error(msg);
-      }
-      setBudgets(Array.isArray(data) ? data : (data?.budgets ?? []));
-    } catch (err) {
-      console.error("Failed to load budgets", err);
+      const nextBudgets = Array.isArray(data) ? data : (data?.budgets ?? []);
+      setBudgets(
+        Array.isArray(nextBudgets) ? (nextBudgets as SavedBudget[]) : [],
+      );
+    } catch (caughtError) {
       setBudgets([]);
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Failed to load saved budgets.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  // Note 2: Re-run load whenever `reloadKey` changes so parent components can
-  // request a refresh after creating/updating/deleting budgets without forcing
-  // a full page reload.
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadBudgets();
+    // Note 2: `reloadKey` gives the parent an imperative "refresh now" hook
+    // without forcing this component to know why the list changed.
   }, [reloadKey]);
 
-  const [deleteCandidate, setDeleteCandidate] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  async function confirmDelete() {
+    if (!deleteCandidate) {
+      return;
+    }
 
-  function openDelete(candidate: { id: string; name: string }) {
-    setDeleteCandidate(candidate);
-    setConfirmOpen(true);
-  }
-
-  async function performDelete() {
-    if (!deleteCandidate) return;
     try {
-      const res = await apiFetch(`/api/budgets/${deleteCandidate.id}`, {
+      const response = await apiFetch(`/api/budgets/${deleteCandidate.id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Delete failed");
-      // Optimistically remove the deleted budget from local state.
-      setBudgets((s) => s.filter((b) => b.budgetId !== deleteCandidate.id));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete budget");
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (!response.ok) {
+        throw new Error(data?.error?.message ?? data?.error ?? "Delete failed");
+      }
+
+      setBudgets((current) =>
+        current.filter((budget) => budget.budgetId !== deleteCandidate.id),
+      );
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Failed to delete budget.",
+      );
     } finally {
-      setConfirmOpen(false);
       setDeleteCandidate(null);
     }
   }
 
   return (
     <div>
-      <List dense>
-        {loading && <div>Loading budgets…</div>}
-        {budgets.map((b) => (
-          <ListItem key={b.budgetId}>
-            <ListItemButton onClick={() => onSelect?.(b)}>
-              <ListItemText
-                primary={b.name}
-                secondary={
-                  b.allocations
-                    ? b.allocations
-                        .map((a: any) => `${a.category}: ${a.amount}`)
-                        .join(", ")
-                    : ""
-                }
-              />
-            </ListItemButton>
-            <ListItemSecondaryAction>
-              <Button
-                size="small"
-                onClick={() => onSelect?.(b)}
-                aria-label={`select-${b.budgetId}`}
-              >
-                Select
-              </Button>
-              <Button
-                size="small"
-                onClick={() => onEdit?.(b)}
-                aria-label={`edit-${b.budgetId}`}
-              >
-                Edit
-              </Button>
-              <IconButton
-                edge="end"
-                onClick={() => openDelete({ id: b.budgetId, name: b.name })}
-                aria-label={`delete-${b.budgetId}`}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
+      {error ? (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      ) : null}
+
+      <List dense disablePadding>
+        {loading ? (
+          <Typography variant="body2" color="text.secondary">
+            Loading budgets...
+          </Typography>
+        ) : null}
+
+        {!loading && budgets.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            Save a budget to reuse the same expense plan later.
+          </Typography>
+        ) : null}
+
+        {budgets.map((budget) => {
+          const normalized = normalizeBudgetForEditor(budget);
+          const expenseCount = normalized.expenses.filter(
+            (expense) => expense.name.trim() && expense.amount > 0,
+          ).length;
+
+          return (
+            <ListItem key={budget.budgetId ?? budget.name} disableGutters>
+              <ListItemButton onClick={() => onLoad?.(budget)}>
+                <ListItemText
+                  primary={budget.name}
+                  secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
+                />
+              </ListItemButton>
+              <ListItemSecondaryAction>
+                <Button size="small" onClick={() => onLoad?.(budget)}>
+                  Load
+                </Button>
+                <Button size="small" onClick={() => onEdit?.(budget)}>
+                  Edit
+                </Button>
+                <IconButton
+                  edge="end"
+                  onClick={() =>
+                    setDeleteCandidate({
+                      id: budget.budgetId ?? "",
+                      name: budget.name,
+                    })
+                  }
+                  aria-label={`delete-${budget.budgetId}`}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            </ListItem>
+          );
+        })}
       </List>
+
       <Dialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        open={Boolean(deleteCandidate)}
+        onClose={() => setDeleteCandidate(null)}
         aria-labelledby="delete-budget-dialog-title"
       >
-        <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
+        <DialogTitle id="delete-budget-dialog-title">Delete budget</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the budget &quot;
-            {deleteCandidate?.name}
-            &quot;? This action cannot be undone.
+            Are you sure you want to delete &quot;{deleteCandidate?.name}&quot;?
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={performDelete} autoFocus>
+          <Button onClick={() => setDeleteCandidate(null)}>Cancel</Button>
+          <Button color="error" onClick={confirmDelete} autoFocus>
             Delete
           </Button>
         </DialogActions>
