@@ -23,19 +23,25 @@ export const CATEGORY_LABELS: Record<CategoryType, string> = {
 };
 
 export const CATEGORY_COLORS: Record<CategoryType, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
+  Need: "#ef4444",
+  Want: "#38bdf8",
+  Saving: "#22c55e",
+};
+
+const GROUP_COLORS: Record<CategoryType, string> = {
+  Need: "#fb7185",
+  Want: "#60a5fa",
+  Saving: "#4ade80",
 };
 
 const CATEGORY_SHADE_PALETTES: Record<CategoryType, string[]> = {
-  Need: ["#ef5350", "#f26d6a", "#d84343", "#ff8a80"],
-  Want: ["#42a5f5", "#64b5f6", "#1e88e5", "#90caf9"],
-  Saving: ["#66bb6a", "#81c784", "#43a047", "#a5d6a7"],
+  Need: ["#fca5a5", "#fda4af", "#fecaca", "#fb7185"],
+  Want: ["#7dd3fc", "#93c5fd", "#bfdbfe", "#60a5fa"],
+  Saving: ["#86efac", "#6ee7b7", "#bbf7d0", "#4ade80"],
 };
 
-const LEFTOVER_SAVINGS_COLOR = "#2e7d32";
-const NET_INCOME_COLOR = "#00897b";
+const LEFTOVER_SAVINGS_COLOR = "#4ade80";
+const NET_INCOME_COLOR = "#22d3ee";
 
 type BudgetExpenseInput = Partial<BudgetExpense>;
 
@@ -211,7 +217,7 @@ function buildPieData(
   if (leftoverSavings > 0) {
     slices.push({
       key: "leftover-savings",
-      name: "Leftover savings",
+      name: "Leftover Savings",
       value: leftoverSavings,
       color: LEFTOVER_SAVINGS_COLOR,
       category: "Saving",
@@ -254,7 +260,7 @@ function buildSankeyData(
 
   pushNode({
     id: "income",
-    label: "Net income",
+    label: "Net Income",
     color: NET_INCOME_COLOR,
     kind: "income",
   });
@@ -308,7 +314,7 @@ function buildSankeyData(
     pushNode({
       id: groupId,
       label: metadata.label,
-      color: CATEGORY_COLORS[metadata.category],
+      color: GROUP_COLORS[metadata.category],
       kind: "group",
       category: metadata.category,
     });
@@ -318,7 +324,7 @@ function buildSankeyData(
       target: groupId,
       value: metadata.total,
       startColor: CATEGORY_COLORS[metadata.category],
-      endColor: CATEGORY_COLORS[metadata.category],
+      endColor: GROUP_COLORS[metadata.category],
       kind: "category-group",
     });
   }
@@ -345,7 +351,9 @@ function buildSankeyData(
         : getCategoryNodeId(expense.category),
       target: `expense:${expense.expenseId}`,
       value: expense.amount,
-      startColor: CATEGORY_COLORS[expense.category],
+      startColor: usesGroup
+        ? GROUP_COLORS[expense.category]
+        : CATEGORY_COLORS[expense.category],
       endColor: expenseColor,
       kind: usesGroup ? "group-expense" : "category-expense",
     });
@@ -354,7 +362,7 @@ function buildSankeyData(
   if (leftoverSavings > 0) {
     pushNode({
       id: "balance:leftover-savings",
-      label: "Leftover savings",
+      label: "Leftover Savings",
       color: LEFTOVER_SAVINGS_COLOR,
       kind: "balance",
       category: "Saving",
@@ -465,6 +473,36 @@ export function normalizeBudgetForStorage(
     createdAt: budget.createdAt,
     updatedAt: budget.updatedAt,
   };
+}
+
+function getBudgetTimestamp(budget: Partial<SavedBudget>): number {
+  const rawTimestamp = budget.updatedAt ?? budget.createdAt;
+  if (!rawTimestamp) {
+    return 0;
+  }
+
+  const parsed = Date.parse(rawTimestamp);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Note 4: Saved budgets are surfaced to users as "recent work", so the list and
+ * the initial page load both sort by the freshest write timestamp first. Keeping
+ * the comparison in one helper avoids subtle drift between the list order and
+ * whichever item the page auto-selects on first render.
+ */
+export function sortSavedBudgets<T extends Partial<SavedBudget>>(
+  budgets: T[],
+): T[] {
+  return [...budgets].sort((left, right) => {
+    const recencyDelta = getBudgetTimestamp(right) - getBudgetTimestamp(left);
+
+    if (recencyDelta !== 0) {
+      return recencyDelta;
+    }
+
+    return (left.name ?? "").localeCompare(right.name ?? "");
+  });
 }
 
 export function buildBudgetInsights(

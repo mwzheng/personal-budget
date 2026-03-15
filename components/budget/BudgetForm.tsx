@@ -7,7 +7,9 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -42,6 +44,17 @@ interface Props {
 }
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
+const ROW_ACTION_BUTTON_SX = {
+  width: 34,
+  height: 34,
+  borderRadius: 1.25,
+  border: "1px solid",
+  borderColor: "divider",
+  backgroundColor: "background.paper",
+};
+const FORM_ACTION_BUTTON_SX = {
+  minWidth: 132,
+};
 
 export function BudgetForm({
   value,
@@ -84,6 +97,30 @@ export function BudgetForm({
     });
   }
 
+  function moveExpenseRow(expenseId: string, direction: -1 | 1) {
+    const currentIndex = value.expenses.findIndex(
+      (expense) => expense.expenseId === expenseId,
+    );
+    const nextIndex = currentIndex + direction;
+
+    if (
+      currentIndex < 0 ||
+      nextIndex < 0 ||
+      nextIndex >= value.expenses.length
+    ) {
+      return;
+    }
+
+    const nextExpenses = [...value.expenses];
+    const [movedExpense] = nextExpenses.splice(currentIndex, 1);
+    nextExpenses.splice(nextIndex, 0, movedExpense);
+
+    onChange({
+      ...value,
+      expenses: nextExpenses,
+    });
+  }
+
   function removeExpenseRow(expenseId: string) {
     const nextExpenses = value.expenses.filter(
       (expense) => expense.expenseId !== expenseId,
@@ -112,14 +149,14 @@ export function BudgetForm({
   return (
     <Stack spacing={2.5}>
       <TextField
-        label="Budget name"
+        label="Budget Name"
         value={value.name}
         onChange={(event) => updateDraft("name", event.target.value)}
         size="small"
         fullWidth
       />
       <TextField
-        label="Monthly income"
+        label="Monthly Income"
         type="number"
         value={value.monthlyIncome}
         onChange={(event) =>
@@ -136,7 +173,7 @@ export function BudgetForm({
 
       <Box>
         <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-          Expense rows
+          Expense Rows
         </Typography>
         <Typography variant="caption" color="text.secondary">
           Add a Sankey group only when multiple expenses should branch from the
@@ -146,14 +183,14 @@ export function BudgetForm({
       </Box>
 
       <Box sx={{ overflowX: "auto" }}>
-        <Table size="small" sx={{ minWidth: 680 }}>
+        <Table size="small" sx={{ minWidth: 820 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Expense</TableCell>
+              <TableCell width="34%">Expense</TableCell>
               <TableCell width={140}>Amount</TableCell>
               <TableCell width={150}>Category</TableCell>
-              <TableCell>Sankey group</TableCell>
-              <TableCell align="right" width={56}>
+              <TableCell width="28%">Sankey Group</TableCell>
+              <TableCell align="right" width={156}>
                 Actions
               </TableCell>
             </TableRow>
@@ -165,7 +202,11 @@ export function BudgetForm({
                 (!expense.name.trim() || Number(expense.amount) <= 0);
 
               return (
-                <TableRow key={expense.expenseId} hover>
+                <TableRow
+                  key={expense.expenseId}
+                  hover
+                  sx={{ "& > *": { verticalAlign: "top", py: 1 } }}
+                >
                   <TableCell>
                     <TextField
                       placeholder={`Expense ${index + 1}`}
@@ -234,7 +275,7 @@ export function BudgetForm({
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Optional group"
+                      placeholder="Optional Group"
                       value={expense.group ?? ""}
                       onChange={(event) =>
                         updateExpenseRow(
@@ -248,13 +289,43 @@ export function BudgetForm({
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      onClick={() => removeExpenseRow(expense.expenseId)}
-                      size="small"
-                      aria-label={`delete-expense-${index}`}
+                    {/* Note 3: Row controls stay icon-sized and visually matched so
+                        reordering reads as part of the same affordance as delete,
+                        instead of looking like three unrelated controls jammed into
+                        the final column. */}
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.75}
                     >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                      <IconButton
+                        onClick={() => moveExpenseRow(expense.expenseId, -1)}
+                        size="small"
+                        aria-label={`move-expense-up-${index}`}
+                        disabled={index === 0}
+                        sx={ROW_ACTION_BUTTON_SX}
+                      >
+                        <KeyboardArrowUpRoundedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => moveExpenseRow(expense.expenseId, 1)}
+                        size="small"
+                        aria-label={`move-expense-down-${index}`}
+                        disabled={index === value.expenses.length - 1}
+                        sx={ROW_ACTION_BUTTON_SX}
+                      >
+                        <KeyboardArrowDownRoundedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => removeExpenseRow(expense.expenseId)}
+                        size="small"
+                        aria-label={`delete-expense-${index}`}
+                        sx={ROW_ACTION_BUTTON_SX}
+                        color="error"
+                      >
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               );
@@ -265,45 +336,55 @@ export function BudgetForm({
 
       {saveError ? <Alert severity="error">{saveError}</Alert> : null}
 
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={1.5}
-      >
-        <Box display="flex" gap={1}>
-          <Button startIcon={<AddIcon />} onClick={addExpenseRow} size="small">
-            Add expense
-          </Button>
-          <Button onClick={onStartFresh} size="small">
-            Start fresh
-          </Button>
-        </Box>
-        <Box textAlign="right">
-          <Typography
-            variant="caption"
-            display="block"
-            color={hasInvalidRows ? "error.main" : "text.secondary"}
-          >
-            {validExpenseCount} ready expense
-            {validExpenseCount === 1 ? "" : "s"}
-            {hasInvalidRows ? " - fix incomplete rows before saving" : ""}
-          </Typography>
-          {/* Note 2: Save stays disabled until the persisted budget would be
-              internally consistent. The preview can tolerate temporary draft
-              rows, but storage should not quietly create unnamed or zero-value
-              expenses that would confuse the saved-budget list later. */}
+      <Stack spacing={1.25}>
+        <Typography
+          variant="caption"
+          color={hasInvalidRows ? "error.main" : "text.secondary"}
+        >
+          {validExpenseCount} ready expense{validExpenseCount === 1 ? "" : "s"}
+          {hasInvalidRows ? " - fix incomplete rows before saving" : ""}
+        </Typography>
+
+        {/* Note 2: The form actions intentionally share one row on larger
+            screens so "Add Expense", "Start Fresh", and the save action read as
+            one workflow instead of three disconnected controls. */}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "center" }}
+          gap={1}
+        >
+          <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
+            <Button
+              startIcon={<AddIcon />}
+              onClick={addExpenseRow}
+              size="small"
+              variant="outlined"
+              sx={FORM_ACTION_BUTTON_SX}
+            >
+              Add Expense
+            </Button>
+            <Button
+              onClick={onStartFresh}
+              size="small"
+              variant="outlined"
+              sx={FORM_ACTION_BUTTON_SX}
+            >
+              Start Fresh
+            </Button>
+          </Stack>
           <Button
             variant="contained"
             onClick={onSave}
             disabled={!canSave || saving}
-            sx={{ mt: 0.75 }}
+            size="small"
+            sx={FORM_ACTION_BUTTON_SX}
           >
-            {saving ? "Saving..." : isEditing ? "Update budget" : "Save budget"}
+            {saving ? "Saving..." : isEditing ? "Update Budget" : "Save Budget"}
           </Button>
-        </Box>
-      </Box>
+        </Stack>
+      </Stack>
     </Stack>
   );
 }

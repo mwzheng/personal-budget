@@ -43,7 +43,7 @@ export default function RegisterPage() {
           <Stack spacing={3}>
             <Box>
               <Typography variant="h4" fontWeight={700} gutterBottom>
-                Create account
+                Create Account
               </Typography>
               <Typography color="text.secondary">
                 Register through the Cognito Hosted UI, then come back here with
@@ -75,7 +75,7 @@ export default function RegisterPage() {
                 fullWidth
                 onClick={demoRegister}
               >
-                Demo register
+                Demo Register
               </Button>
             </Stack>
           </Stack>

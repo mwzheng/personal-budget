@@ -6,6 +6,7 @@
 "use client";
 
 import { ResponsiveSankey } from "@nivo/sankey";
+import { useTheme } from "@mui/material/styles";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { SankeyData } from "@/lib/types";
@@ -27,13 +28,15 @@ function getNodeColor(node: { id: string | number; color?: string }): string {
 }
 
 export function SankeyChart({ data }: Props) {
+  const theme = useTheme();
+
   if (!data.nodes.length || !data.links.length) {
     return (
       <div
         style={{
           textAlign: "center",
           padding: "72px 40px",
-          color: "#666",
+          color: theme.palette.text.secondary,
           height: 460,
           display: "flex",
           alignItems: "center",
@@ -52,24 +55,23 @@ export function SankeyChart({ data }: Props) {
     <div style={{ height: 520 }}>
       <ResponsiveSankey
         data={data}
-        margin={{ top: 24, right: 220, bottom: 24, left: 56 }}
+        margin={{ top: 24, right: 260, bottom: 24, left: 72 }}
         align="justify"
         sort="input"
         label="label"
         colors={getNodeColor}
         valueFormat={formatCurrency}
-        nodeOpacity={0.92}
-        nodeThickness={18}
+        nodeOpacity={0.96}
+        nodeThickness={20}
         nodeInnerPadding={4}
-        nodeSpacing={20}
+        nodeSpacing={24}
         nodeBorderWidth={0}
-        linkOpacity={0.42}
+        linkOpacity={0.52}
         linkHoverOthersOpacity={0.08}
         enableLinkGradient
         labelPosition="outside"
         labelOrientation="horizontal"
-        labelPadding={14}
-        labelTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
+        labelPadding={18}
         nodeTooltip={({ node }) => (
           <ChartTooltipCard
             title={node.label}
@@ -95,7 +97,18 @@ export function SankeyChart({ data }: Props) {
           />
         )}
         theme={{
-          text: { fill: "#111827", fontSize: 13, fontWeight: 600 },
+          text: {
+            fill: theme.palette.text.primary,
+            fontSize: 14,
+            fontWeight: 700,
+          },
+          labels: {
+            text: {
+              fill: theme.palette.text.primary,
+              fontSize: 14,
+              fontWeight: 700,
+            },
+          },
           tooltip: {
             container: {
               background: "transparent",

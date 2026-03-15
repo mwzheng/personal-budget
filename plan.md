@@ -1,8 +1,8 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish and latest-saved-budget restore moved to plan.completed.md. -->
 
-## Status: Completed 2026-03-14
+## Status: Completed 2026-03-15
 
-All planned work for Reports & Progress fixes completed (milestone deletion, DynamoDB transaction-scope fix, transaction-query tests, UI and skill updates). See `plan.completed.md` entry dated 2026-03-14 for details.
+Latest completed work: the budget planner polish pass (expense-row reordering and deletion controls, latest-saved-budget restore on first load, title-case header cleanup, and chart readability improvements) is recorded in `plan.completed.md` under the 2026-03-15 entry. Earlier Reports & Progress fixes remain recorded under the 2026-03-14 entry.
 
 # Development Plan for Personal Budget App
 

@@ -1,3 +1,46 @@
+# Completed: Budget Planner UI polish and latest-saved-budget restore
+
+Date: 2026-03-15
+
+Summary
+
+- Polished the `/sankey` budget planner so expense rows align cleanly, row actions share one visual style, and users can reorder or delete specific expenses without fighting the layout.
+- Updated the page to restore the most recently saved budget on first load, making the planner feel stateful instead of always dropping users into a blank draft.
+- Improved dark-theme readability by refreshing the pie-center text and Sankey label colors, strengthening Sankey subsection color separation, and converting visible section/page headers to title case.
+
+Completed items
+
+- Updated `components/budget/BudgetForm.tsx` to align row cells, add move-up / move-down actions, keep delete obvious, and line up `Add Expense`, `Start Fresh`, and `Save Budget` in one action row.
+- Updated `components/budget/BudgetList.tsx` plus shared helpers in `lib/budget-planner.ts` so saved budgets sort by recency and the page can auto-load the freshest saved budget on first render.
+- Updated `app/sankey/page.tsx` to restore the latest saved budget once, align section cards and headers more consistently, and title-case the main budget-section headings.
+- Updated `components/charts/BudgetPieChart.tsx` and `components/charts/SankeyChart.tsx` to improve contrast on dark backgrounds and make Sankey labels and subsection colors easier to scan.
+- Updated auth-page headings to title case in `app/auth/login/page.tsx`, `app/auth/register/page.tsx`, `app/auth/callback/page.tsx`, and `app/auth/signout/page.tsx`.
+- Added a budget-recency sort test in `test/budget-planner.test.ts` and re-verified the repository with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/sankey/page.tsx`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/charts/BudgetPieChart.tsx`
+- `components/charts/SankeyChart.tsx`
+- `lib/budget-planner.ts`
+- `test/budget-planner.test.ts`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/auth/callback/page.tsx`
+- `app/auth/signout/page.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(budget-ui): polish planner layout and chart readability`
+
+Notes / next steps
+
+- If the planner gets another visual pass later, consider extracting a shared card-header/layout token so `/reports`, `/progress`, and `/sankey` can all reuse the same section framing.
+
 # Completed: Budget planner expense rewrite
 
 Date: 2026-03-15
