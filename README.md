@@ -1,6 +1,6 @@
-# Personal Budget
+# Porridge Budget
 
-A personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, and investment progress with CSV import/export and interactive charts.
+Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, and investment progress with CSV import/export and interactive charts.
 
 ## Tech Stack
 

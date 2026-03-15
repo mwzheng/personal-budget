@@ -4,7 +4,7 @@
 
 Latest completed work: the budget planner follow-up pass (wider expense editor layout, path-based Sankey branches, overlap reduction, and an in-page Sankey instructions dialog) is recorded in `plan.completed.md` under the latest 2026-03-15 entry. On 2026-03-15 a small UI polish narrowed the Expense and Sankey Path inputs to avoid truncation and horizontal scrolling; these plan files were updated and merged to `main`. Earlier budget-planner polish work and Reports & Progress fixes remain recorded under their earlier 2026-03-15 and 2026-03-14 entries.
 
-# Development Plan for Personal Budget App
+# Development Plan for Porridge Budget
 
 This document outlines a phased roadmap and detailed considerations for building the personal budgeting application.
 

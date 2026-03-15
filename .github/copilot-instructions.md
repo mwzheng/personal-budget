@@ -1,6 +1,6 @@
-# Copilot Instructions for Personal Budget Project
+# Copilot Instructions for Porridge Budget Project
 
-This file is the top-level guidance for GitHub Copilot when working on the Personal Budget application. It provides project context and high-level rules; detailed, per-topic rules live under `.github/instructions/` and take precedence when present. When new skills or instruction files are added, update this document to reflect them.
+This file is the top-level guidance for GitHub Copilot when working on the Porridge Budget application. It provides project context and high-level rules; detailed, per-topic rules live under `.github/instructions/` and take precedence when present. When new skills or instruction files are added, update this document to reflect them.
 
 ## Available Copilot skills (local agent capabilities)
 

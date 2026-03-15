@@ -69,9 +69,9 @@ export function AppNav() {
           }}
           component={NextLink}
           href="/"
-          aria-label="Personal Budget home"
+          aria-label="Porridge Budget home"
         >
-          💰 Personal Budget
+          🥣 Porridge Budget
         </Typography>
 
         {/* Tabs are allowed to grow, pushing auth buttons to the right */}

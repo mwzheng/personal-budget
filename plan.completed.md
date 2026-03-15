@@ -1,3 +1,62 @@
+# Completed: Google Analytics integration (env-configured)
+
+Date: 2026-03-15
+
+Summary
+
+- Integrated Google Analytics (gtag.js) into the Next.js app using non-blocking next/script and client route-change reporting.
+- Moved the GA measurement ID to an environment variable (NEXT_PUBLIC_GA_ID) with examples in env.example and guards to avoid injecting scripts when empty.
+
+Completed items
+
+- Injected conditional gtag script and init snippet in `app/layout.tsx`.
+- Added client-side pageview reporting in `app/providers.tsx`.
+- Added `NEXT_PUBLIC_GA_ID` example to `env.example`.
+- Ran format / lint / tests / build and verified success.
+
+Files changed
+
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `env.example`
+
+Commit reference
+
+- Commit message: `chore(analytics): add Google Analytics (env-configured)`
+
+# Completed: Rename app to Porridge Budget (branding)
+
+Date: 2026-03-15
+
+Summary
+
+- Renamed user-facing strings and documentation from "Personal Budget" to "Porridge Budget".
+- Replaced the favicon with a porridge bowl icon and updated relevant docs.
+- Updated package metadata to reflect the new project name.
+
+Completed items
+
+- Updated app header and aria labels in `components/AppNav.tsx`.
+- Updated site metadata in `app/layout.tsx` and the public home title in `app/page.tsx`.
+- Replaced `public/favicon.svg` with a porridge bowl icon.
+- Updated `README.md`, `package.json`, `infra/SAM-DEPLOY.md`, and `infra/template.yaml` to use the new name.
+
+Files changed
+
+- `components/AppNav.tsx`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `public/favicon.svg`
+- `README.md`
+- `package.json`
+- `infra/SAM-DEPLOY.md`
+- `infra/template.yaml`
+- `plan.md`
+
+Commit reference
+
+- Commit message: `chore(branding): rename to Porridge Budget and update docs`
+
 # Completed: Budget Planner path-based Sankey follow-up
 
 Date: 2026-03-15

@@ -9,6 +9,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { ReactNode, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Note 2: `createTheme` builds an MUI theme object at module load time (once).
 // Defining it outside the component prevents the theme object from being
@@ -76,6 +77,28 @@ export function Providers({ children }: { children: ReactNode }) {
     const t = setTimeout(removeDarkReaderVars, 100);
     return () => clearTimeout(t);
   }, []);
+
+  // Note 9: Send a page_view event to Google Analytics when the client-side
+  // pathname changes in the App Router. Providers is a client component so it
+  // can observe route changes and forward them to gtag when available.
+  const pathname = usePathname();
+  const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+
+  useEffect(() => {
+    if (!pathname || !GA_ID) return;
+    // Safe no-op if gtag isn't loaded yet
+    const sendPageview = () => {
+      if ((window as any).gtag) {
+        (window as any).gtag("config", GA_ID, { page_path: pathname });
+      } else if ((window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event: "page_view",
+          page_path: pathname,
+        });
+      }
+    };
+    sendPageview();
+  }, [pathname, GA_ID]);
 
   return (
     // Note 8: `ThemeProvider` makes the `darkTheme` available to all nested

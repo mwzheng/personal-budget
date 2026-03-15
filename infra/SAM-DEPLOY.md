@@ -1,6 +1,6 @@
 # SAM Deploy — DynamoDB + Cognito
 
-This document covers everything needed to provision (or redeploy) the AWS infrastructure for Personal Budget: a DynamoDB transactions table and a Cognito User Pool.
+This document covers everything needed to provision (or redeploy) the AWS infrastructure for Porridge Budget: a DynamoDB transactions table and a Cognito User Pool.
 
 ## What gets deployed
 
