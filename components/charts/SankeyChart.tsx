@@ -100,32 +100,33 @@ function getSankeyLayoutMetrics(data: SankeyData) {
     maxNodesInLayer >= 10 ? 48 : maxNodesInLayer >= 7 ? 36 : 28;
 
   // Compute a node thickness that scales with the largest link value so relative differences are visible.
-  // Start from a conservative base and multiply by 5x to satisfy the user's request for much wider branches.
+  // Use a much larger multiplier and higher minimum so very small flows remain hoverable.
+  // Also allow a much larger max and grow spacing/inner padding proportionally so layout expands rather than overlaps.
   const maxLinkValue = Math.max(
     1,
     ...data.links.map((l) => Number(l.value ?? 0)),
   );
   const baseThickness = Math.round(8 + Math.log10(maxLinkValue + 1) * 6);
   const nodeThickness = Math.min(
-    500,
-    Math.max(18, Math.round(baseThickness * 5)),
+    1200,
+    Math.max(28, Math.round(baseThickness * 15)),
   );
 
   // Inner padding between stacked subnodes should grow with thickness so links remain visible
-  const nodeInnerPadding = Math.max(6, Math.round(nodeThickness / 6));
+  const nodeInnerPadding = Math.max(8, Math.round(nodeThickness / 4));
 
   // Ensure spacing is large enough to avoid overlap when nodes are thicker
   const nodeSpacing = Math.max(
     defaultNodeSpacing,
-    Math.round(nodeThickness * 0.6),
+    Math.round(nodeThickness * 0.8),
   );
 
   // Estimate height with the new spacing so the chart can expand vertically when needed
   const height = Math.min(
-    2400,
+    6000,
     Math.max(
-      420,
-      160 + maxNodesInLayer * nodeSpacing + Math.max(maxDepth - 2, 0) * 32,
+      520,
+      200 + maxNodesInLayer * nodeSpacing + Math.max(maxDepth - 2, 0) * 48,
     ),
   );
 
