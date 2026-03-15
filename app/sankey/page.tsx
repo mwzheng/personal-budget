@@ -509,10 +509,16 @@ Sankey Path: Home > Security
 Expense: Ring
 Resulting flow: Net Income → Home → Security → Ring
 
-Example 3 (no path):
-Sankey Path: (blank)
+Example 3 (single-level):
+Sankey Path: Utilities
 Expense: Internet
-Resulting flow: Net Income → Internet`}</Box>
+Resulting flow: Net Income → Utilities → Internet
+
+Notes:
+- Use '>' as the primary separator (slashes '/', the '›' character, and HTML entity '&gt;' are also accepted).
+- Do NOT include the expense name in the Sankey Path; enter the expense itself in the Expense column.
+- Paths can have many nested levels, for example: Subscriptions > Software > Design
+`}</Box>
 
             <Typography variant="body2" color="text.secondary">
               Tip: Category still controls pie-chart colors and summaries. Paths

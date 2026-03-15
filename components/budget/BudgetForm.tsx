@@ -189,11 +189,11 @@ export function BudgetForm({
         <Table size="small" sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
             <TableRow>
-              <TableCell width="38%">Expense</TableCell>
-              <TableCell width="17%">Amount</TableCell>
-              <TableCell width="15%">Category</TableCell>
-              <TableCell width="18%">Sankey Path</TableCell>
-              <TableCell align="right" width="12%">
+              <TableCell width="60%">Expense</TableCell>
+              <TableCell width="14%">Amount</TableCell>
+              <TableCell width="12%">Category</TableCell>
+              <TableCell width="10%">Sankey Path</TableCell>
+              <TableCell align="right" width="4%">
                 Actions
               </TableCell>
             </TableRow>

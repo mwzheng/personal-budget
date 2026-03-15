@@ -94,14 +94,16 @@ function getSankeyLayoutMetrics(data: SankeyData) {
 
   return {
     height: Math.min(
-      1120,
+      1400,
       Math.max(
-        580,
-        180 + maxNodesInLayer * 82 + Math.max(maxDepth - 2, 0) * 24,
+        640,
+        220 + maxNodesInLayer * 100 + Math.max(maxDepth - 2, 0) * 36,
       ),
     ),
-    nodeSpacing: maxNodesInLayer >= 10 ? 16 : maxNodesInLayer >= 7 ? 22 : 28,
-    rightMargin: Math.min(360, Math.max(260, 56 + maxLabelLength * 7)),
+    // Increase node spacing for dense layers so labels and nodes don't overlap
+    nodeSpacing: maxNodesInLayer >= 10 ? 24 : maxNodesInLayer >= 7 ? 32 : 40,
+    // Give extra right margin when labels are long so they don't collide with edges
+    rightMargin: Math.min(420, Math.max(300, 72 + maxLabelLength * 8)),
   };
 }
 
