@@ -8,6 +8,7 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import Alert from "@mui/material/Alert";
@@ -23,8 +24,8 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import Chip from "@mui/material/Chip";
 
 import {
   CATEGORY_LABELS,
@@ -226,26 +227,36 @@ export function BudgetForm({
                   sx={{ "& > *": { verticalAlign: "middle", py: 1 } }}
                 >
                   <TableCell>
-                    <TextField
-                      placeholder={`Expense ${index + 1}`}
-                      value={expense.name}
-                      onChange={(event) =>
-                        updateExpenseRow(
-                          expense.expenseId,
-                          "name",
-                          event.target.value,
-                        )
-                      }
-                      error={rowHasError && !expense.name.trim()}
-                      helperText={
-                        rowHasError && !expense.name.trim()
-                          ? "Name is required when a row has a value."
-                          : undefined
-                      }
-                      margin="dense"
-                      size="small"
-                      fullWidth
-                    />
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <TextField
+                        placeholder={`Expense ${index + 1}`}
+                        value={expense.name}
+                        onChange={(event) =>
+                          updateExpenseRow(
+                            expense.expenseId,
+                            "name",
+                            event.target.value,
+                          )
+                        }
+                        error={rowHasError && !expense.name.trim()}
+                        margin="dense"
+                        size="small"
+                        fullWidth
+                      />
+                      {rowHasError && !expense.name.trim() && (
+                        <Tooltip title="Name is required when a row has a value.">
+                          <ErrorOutlineIcon
+                            sx={{
+                              fontSize: 20,
+                              color: "error.main",
+                              flexShrink: 0,
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <TextField

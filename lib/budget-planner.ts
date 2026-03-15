@@ -335,7 +335,7 @@ function buildSankeyData(
 
   pushNode({
     id: "income",
-    label: "Net",
+    label: "Gross",
     color: NET_INCOME_COLOR,
     kind: "income",
   });
