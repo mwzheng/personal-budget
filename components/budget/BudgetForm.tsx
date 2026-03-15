@@ -45,8 +45,8 @@ interface Props {
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
 const ROW_ACTION_BUTTON_SX = {
-  width: 34,
-  height: 34,
+  width: 32,
+  height: 32,
   borderRadius: 1.25,
   border: "1px solid",
   borderColor: "divider",
@@ -54,6 +54,7 @@ const ROW_ACTION_BUTTON_SX = {
 };
 const FORM_ACTION_BUTTON_SX = {
   minWidth: 132,
+  height: 36,
 };
 
 export function BudgetForm({
@@ -176,21 +177,21 @@ export function BudgetForm({
           Expense Rows
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Add a Sankey group only when multiple expenses should branch from the
-          same rollup, for example a `Car` group with `Gas` and `Car note`
-          expenses underneath it.
+          Use the Sankey Path field only when an expense should sit inside one
+          or more flow branches. Separate layers with `&gt;`, for example
+          `Subscriptions &gt; AI Tools`.
         </Typography>
       </Box>
 
-      <Box sx={{ overflowX: "auto" }}>
-        <Table size="small" sx={{ minWidth: 820 }}>
+      <Box sx={{ overflowX: { xs: "auto", lg: "visible" } }}>
+        <Table size="small" sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
             <TableRow>
-              <TableCell width="34%">Expense</TableCell>
-              <TableCell width={140}>Amount</TableCell>
-              <TableCell width={150}>Category</TableCell>
-              <TableCell width="28%">Sankey Group</TableCell>
-              <TableCell align="right" width={156}>
+              <TableCell width="38%">Expense</TableCell>
+              <TableCell width="17%">Amount</TableCell>
+              <TableCell width="15%">Category</TableCell>
+              <TableCell width="18%">Sankey Path</TableCell>
+              <TableCell align="right" width="12%">
                 Actions
               </TableCell>
             </TableRow>
@@ -275,7 +276,7 @@ export function BudgetForm({
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Optional Group"
+                      placeholder="Optional Path"
                       value={expense.group ?? ""}
                       onChange={(event) =>
                         updateExpenseRow(
@@ -360,7 +361,7 @@ export function BudgetForm({
               startIcon={<AddIcon />}
               onClick={addExpenseRow}
               size="small"
-              variant="outlined"
+              variant="contained"
               sx={FORM_ACTION_BUTTON_SX}
             >
               Add Expense
@@ -368,7 +369,8 @@ export function BudgetForm({
             <Button
               onClick={onStartFresh}
               size="small"
-              variant="outlined"
+              variant="contained"
+              color="inherit"
               sx={FORM_ACTION_BUTTON_SX}
             >
               Start Fresh

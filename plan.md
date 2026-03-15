@@ -1,8 +1,8 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish and latest-saved-budget restore moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, and the path-based Sankey follow-up moved to plan.completed.md. -->
 
 ## Status: Completed 2026-03-15
 
-Latest completed work: the budget planner polish pass (expense-row reordering and deletion controls, latest-saved-budget restore on first load, title-case header cleanup, and chart readability improvements) is recorded in `plan.completed.md` under the 2026-03-15 entry. Earlier Reports & Progress fixes remain recorded under the 2026-03-14 entry.
+Latest completed work: the budget planner follow-up pass (wider expense editor layout, path-based Sankey branches, overlap reduction, and an in-page Sankey instructions dialog) is recorded in `plan.completed.md` under the latest 2026-03-15 entry. Earlier budget-planner polish work and Reports & Progress fixes remain recorded under their earlier 2026-03-15 and 2026-03-14 entries.
 
 # Development Plan for Personal Budget App
 

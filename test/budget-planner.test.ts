@@ -67,7 +67,7 @@ describe("buildBudgetInsights", () => {
     );
   });
 
-  it("creates grouped Sankey branches when expenses share a group label", () => {
+  it("creates shared path branches when expenses reuse the same Sankey path", () => {
     const result = buildBudgetInsights({
       monthlyIncome: 3000,
       expenses: [
@@ -104,9 +104,52 @@ describe("buildBudgetInsights", () => {
     expect(result.sankeyData.links).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          source: "category:Need",
-          target: "group:Need:car",
+          source: "income",
+          target: "path:car",
           value: 540,
+        }),
+      ]),
+    );
+    expect(sankeyLabels).not.toContain("Needs");
+  });
+
+  it("supports nested Sankey path layers without fixed category branches", () => {
+    const result = buildBudgetInsights({
+      monthlyIncome: 2500,
+      expenses: [
+        {
+          expenseId: "copilot",
+          name: "Copilot",
+          amount: 20,
+          category: "Want",
+          group: "Subscriptions > AI Tools",
+        },
+        {
+          expenseId: "ring",
+          name: "Ring",
+          amount: 14,
+          category: "Want",
+          group: "Subscriptions > Home",
+        },
+      ],
+    });
+
+    expect(result.sankeyData.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "income",
+          target: "path:subscriptions",
+          value: 34,
+        }),
+        expect.objectContaining({
+          source: "path:subscriptions",
+          target: "path:subscriptions/ai-tools",
+          value: 20,
+        }),
+        expect.objectContaining({
+          source: "path:subscriptions/ai-tools",
+          target: "expense:copilot",
+          value: 20,
         }),
       ]),
     );

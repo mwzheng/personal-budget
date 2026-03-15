@@ -1,3 +1,42 @@
+# Completed: Budget Planner path-based Sankey follow-up
+
+Date: 2026-03-15
+
+Summary
+
+- Rebalanced the `/sankey` budget layout so the expense editor gets more horizontal room, the pie-chart column gives back unused space, and the expense table avoids a desktop horizontal scroll in normal use.
+- Reworked the Sankey builder to remove the fixed Needs / Wants / Savings branch layer and replace it with optional user-defined path segments, so flows can render as `Net Income -> Subscriptions -> Copilot` or deeper nested branches when needed.
+- Added a first-class instructions dialog to explain the path syntax and increased the chart’s adaptive height / spacing so dense Sankey branches overlap less often.
+
+Completed items
+
+- Updated `components/budget/BudgetForm.tsx` to widen the editor table, rename `Sankey Group` to `Sankey Path`, support better fixed-width desktop layout, and make `Add Expense` / `Start Fresh` match the `Save Budget` button style.
+- Updated `lib/budget-planner.ts` and `lib/types.ts` so Sankey data now branches directly from `Net Income` into optional nested path nodes derived from `group` strings using `>` separators.
+- Updated `components/charts/SankeyChart.tsx` to size itself dynamically based on node density, which reduces overlap when a budget contains many branches or deeper nesting.
+- Updated `app/sankey/page.tsx` to narrow the chart column, add the Sankey instructions dialog, and refresh the Sankey summary copy / chips to describe the new path-based behavior.
+- Updated `components/charts/BudgetPieChart.tsx` so tooltip copy refers to the stored Sankey path instead of the older group wording.
+- Extended `test/budget-planner.test.ts` with nested-path coverage and re-verified the repository with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/sankey/page.tsx`
+- `components/budget/BudgetForm.tsx`
+- `components/charts/BudgetPieChart.tsx`
+- `components/charts/SankeyChart.tsx`
+- `lib/budget-planner.ts`
+- `lib/types.ts`
+- `test/budget-planner.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `feat(sankey): support path-based branches and rebalance planner layout`
+
+Notes / next steps
+
+- If users start creating very deep branch trees, the next refinement would be persisting a dedicated `sankeyPath` field instead of continuing to reuse the legacy `group` property name under the hood.
+
 # Completed: Budget Planner UI polish and latest-saved-budget restore
 
 Date: 2026-03-15

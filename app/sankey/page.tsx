@@ -7,12 +7,17 @@ import { apiFetch } from "../../lib/apiFetch";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
@@ -23,6 +28,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -85,6 +91,7 @@ export default function SankeyPage() {
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
   const hasAutoLoadedLatestBudget = useRef(false);
   const hasDraftChangesRef = useRef(false);
 
@@ -227,12 +234,22 @@ export default function SankeyPage() {
               subheader="Build an expense-based monthly budget and save reusable versions."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}
+              action={
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<InfoOutlinedIcon />}
+                  onClick={() => setInstructionsOpen(true)}
+                >
+                  Sankey Instructions
+                </Button>
+              }
               sx={SECTION_HEADER_SX}
             />
             <Divider />
             <CardContent sx={SECTION_CONTENT_SX}>
               <Grid container spacing={3} alignItems="start">
-                <Grid item xs={12} lg={5}>
+                <Grid item xs={12} lg={8} xl={8}>
                   <Stack spacing={3}>
                     <BudgetForm
                       value={draft}
@@ -275,9 +292,9 @@ export default function SankeyPage() {
                   </Stack>
                 </Grid>
 
-                <Grid item xs={12} lg={7}>
+                <Grid item xs={12} lg={4} xl={4}>
                   <Stack spacing={2.5}>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <Box display="flex" flexWrap="wrap" gap={2}>
                       <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
                         <Typography variant="caption" color="text.secondary">
                           Monthly Income
@@ -318,7 +335,7 @@ export default function SankeyPage() {
                           )}
                         </Typography>
                       </Paper>
-                    </Stack>
+                    </Box>
 
                     {hasExpenses && insights.overspending > 0 ? (
                       <Alert severity="warning">
@@ -413,7 +430,7 @@ export default function SankeyPage() {
           <Card>
             <CardHeader
               title="Sankey Section"
-              subheader="Money flows from net income into category branches, optional group rollups, and the final expense leaves."
+              subheader="Money flows from Net Income into optional user-defined path layers and then into the final expense leaves."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}
               sx={SECTION_HEADER_SX}
@@ -421,15 +438,59 @@ export default function SankeyPage() {
             <Divider />
             <CardContent sx={SECTION_CONTENT_SX}>
               <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-                <Chip label="Need / Want / Saving Categories" size="small" />
-                <Chip label="Optional Group Rollups" size="small" />
-                <Chip label="Expense-Level Leaves" size="small" />
+                <Chip label="Expenses Branch from Net Income" size="small" />
+                <Chip label={"Use '>' for Nested Path Layers"} size="small" />
+                <Chip
+                  label="Expense Name Becomes the Final Leaf"
+                  size="small"
+                />
               </Box>
               <SankeyChart data={insights.sankeyData} />
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={instructionsOpen}
+        onClose={() => setInstructionsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Sankey Path Instructions</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              The Sankey diagram now flows from <strong>Net Income</strong> into
+              any optional path layers you define, and then into the final
+              expense name. The <strong>Category</strong> field still powers the
+              budget summary and pie chart colors, but it no longer creates
+              Sankey branches on its own.
+            </Typography>
+
+            <Box component="ul" sx={{ pl: 2.5, m: 0 }}>
+              <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                Leave <strong>Sankey Path</strong> blank to connect an expense
+                directly to <strong>Net Income</strong>.
+              </Typography>
+              <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                Use <strong>{">"}</strong> between levels to create nested
+                branches, for example{" "}
+                <strong>Subscriptions &gt; AI Tools</strong>.
+              </Typography>
+              <Typography component="li" variant="body2">
+                The <strong>Expense</strong> field becomes the final leaf, so a
+                row named <strong>Copilot</strong> with a Sankey Path of
+                <strong>Subscriptions</strong> renders as
+                <strong> Net Income -&gt; Subscriptions -&gt; Copilot</strong>.
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInstructionsOpen(false)}>Got It</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

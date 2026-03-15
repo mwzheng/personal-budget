@@ -7,6 +7,7 @@
 
 import { ResponsiveSankey } from "@nivo/sankey";
 import { useTheme } from "@mui/material/styles";
+import { useMemo } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { SankeyData } from "@/lib/types";
@@ -27,8 +28,86 @@ function getNodeColor(node: { id: string | number; color?: string }): string {
   return node.color ?? "#2D7DD2";
 }
 
+function getLinkEndpointId(
+  value: string | number | { id?: string | number },
+): string {
+  if (typeof value === "object" && value !== null && "id" in value) {
+    return String(value.id ?? "");
+  }
+
+  return String(value);
+}
+
+function getSankeyLayoutMetrics(data: SankeyData) {
+  const nodeIds = data.nodes.map((node) => node.id);
+  const labels = data.nodes.map((node) => node.label ?? node.id);
+  const indegree = new Map(nodeIds.map((id) => [id, 0]));
+  const pendingIndegree = new Map(nodeIds.map((id) => [id, 0]));
+  const outgoing = new Map(nodeIds.map((id) => [id, [] as string[]]));
+
+  for (const link of data.links) {
+    const sourceId = getLinkEndpointId(link.source);
+    const targetId = getLinkEndpointId(link.target);
+
+    outgoing.set(sourceId, [...(outgoing.get(sourceId) ?? []), targetId]);
+    const nextIndegree = (indegree.get(targetId) ?? 0) + 1;
+    indegree.set(targetId, nextIndegree);
+    pendingIndegree.set(targetId, nextIndegree);
+  }
+
+  const queue = nodeIds.filter((id) => (indegree.get(id) ?? 0) === 0);
+  const depth = new Map<string, number>(queue.map((id) => [id, 0]));
+
+  while (queue.length > 0) {
+    const nodeId = queue.shift();
+
+    if (!nodeId) {
+      continue;
+    }
+
+    for (const targetId of outgoing.get(nodeId) ?? []) {
+      depth.set(
+        targetId,
+        Math.max(depth.get(targetId) ?? 0, (depth.get(nodeId) ?? 0) + 1),
+      );
+      pendingIndegree.set(targetId, (pendingIndegree.get(targetId) ?? 0) - 1);
+
+      if ((pendingIndegree.get(targetId) ?? 0) === 0) {
+        queue.push(targetId);
+      }
+    }
+  }
+
+  const layerCounts = new Map<number, number>();
+
+  for (const nodeId of nodeIds) {
+    const layer = depth.get(nodeId) ?? 0;
+    layerCounts.set(layer, (layerCounts.get(layer) ?? 0) + 1);
+  }
+
+  const maxNodesInLayer = Math.max(1, ...Array.from(layerCounts.values()));
+  const maxDepth = Math.max(
+    1,
+    ...Array.from(depth.values(), (value) => value + 1),
+  );
+  const maxLabelLength = Math.max(12, ...labels.map((label) => label.length));
+
+  return {
+    height: Math.min(
+      1120,
+      Math.max(
+        580,
+        180 + maxNodesInLayer * 82 + Math.max(maxDepth - 2, 0) * 24,
+      ),
+    ),
+    nodeSpacing: maxNodesInLayer >= 10 ? 16 : maxNodesInLayer >= 7 ? 22 : 28,
+    rightMargin: Math.min(360, Math.max(260, 56 + maxLabelLength * 7)),
+  };
+}
+
 export function SankeyChart({ data }: Props) {
   const theme = useTheme();
+  const metrics = useMemo(() => getSankeyLayoutMetrics(data), [data]);
 
   if (!data.nodes.length || !data.links.length) {
     return (
@@ -46,16 +125,16 @@ export function SankeyChart({ data }: Props) {
         }}
       >
         <div style={{ fontSize: 32, fontWeight: 700 }}>[Flow]</div>
-        <div>Add expenses to generate the grouped Sankey flow.</div>
+        <div>Add expenses and optional Sankey paths to generate the flow.</div>
       </div>
     );
   }
 
   return (
-    <div style={{ height: 520 }}>
+    <div style={{ height: metrics.height }}>
       <ResponsiveSankey
         data={data}
-        margin={{ top: 24, right: 260, bottom: 24, left: 72 }}
+        margin={{ top: 24, right: metrics.rightMargin, bottom: 24, left: 72 }}
         align="justify"
         sort="input"
         label="label"
@@ -64,7 +143,7 @@ export function SankeyChart({ data }: Props) {
         nodeOpacity={0.96}
         nodeThickness={20}
         nodeInnerPadding={4}
-        nodeSpacing={24}
+        nodeSpacing={metrics.nodeSpacing}
         nodeBorderWidth={0}
         linkOpacity={0.52}
         linkHoverOthersOpacity={0.08}
@@ -81,6 +160,14 @@ export function SankeyChart({ data }: Props) {
                 value: formatCurrency(Number(node.value ?? 0)),
                 color: getNodeColor(node),
               },
+              ...(node.kind === "path"
+                ? [
+                    {
+                      label: "Branch",
+                      value: "Intermediate path node",
+                    },
+                  ]
+                : []),
             ]}
           />
         )}

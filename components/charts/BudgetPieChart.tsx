@@ -167,7 +167,7 @@ export function BudgetPieChart({
                       ...(source?.group
                         ? [
                             {
-                              label: "Group",
+                              label: "Sankey Path",
                               value: source.group,
                             },
                           ]
