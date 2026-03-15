@@ -63,7 +63,7 @@ describe("getSankeyLayoutMetrics", () => {
     const metrics = getSankeyLayoutMetrics(denseData);
 
     expect(metrics.nodeSpacing).toBeLessThanOrEqual(14);
-    expect(metrics.height).toBeLessThan(920);
-    expect(metrics.height).toBeGreaterThanOrEqual(420);
+    expect(metrics.height).toBeLessThan(1200);
+    expect(metrics.height).toBeGreaterThanOrEqual(540);
   });
 });

@@ -86,9 +86,11 @@ export function getSankeyLayoutMetrics(data: SankeyData): SankeyLayoutMetrics {
   const nodeSpacing =
     maxNodesInLayer >= 12 ? 10 : maxNodesInLayer >= 8 ? 14 : 18;
   const nodeInnerPadding = 0;
+  // Note 2: Increased height multiplier to make flow bands thicker and easier to hover over.
+  // Changed from 40 to 60 per node, and base from 180 to 240, allowing max height of 1200.
   const height = Math.min(
-    920,
-    Math.max(420, 180 + maxNodesInLayer * 40 + Math.max(maxDepth - 3, 0) * 24),
+    1200,
+    Math.max(540, 240 + maxNodesInLayer * 60 + Math.max(maxDepth - 3, 0) * 32),
   );
   const rightMargin = Math.min(380, Math.max(160, 72 + maxLabelLength * 7));
   const labelFontSize =
