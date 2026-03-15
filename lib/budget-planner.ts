@@ -23,19 +23,29 @@ export const CATEGORY_LABELS: Record<CategoryType, string> = {
 };
 
 export const CATEGORY_COLORS: Record<CategoryType, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
+  Need: "#ef4444",
+  Want: "#38bdf8",
+  Saving: "#22c55e",
 };
 
 const CATEGORY_SHADE_PALETTES: Record<CategoryType, string[]> = {
-  Need: ["#ef5350", "#f26d6a", "#d84343", "#ff8a80"],
-  Want: ["#42a5f5", "#64b5f6", "#1e88e5", "#90caf9"],
-  Saving: ["#66bb6a", "#81c784", "#43a047", "#a5d6a7"],
+  Need: ["#fca5a5", "#fda4af", "#fecaca", "#fb7185"],
+  Want: ["#7dd3fc", "#93c5fd", "#bfdbfe", "#60a5fa"],
+  Saving: ["#86efac", "#6ee7b7", "#bbf7d0", "#4ade80"],
 };
 
-const LEFTOVER_SAVINGS_COLOR = "#2e7d32";
-const NET_INCOME_COLOR = "#00897b";
+const PATH_ROOT_COLORS = [
+  "#38bdf8",
+  "#818cf8",
+  "#f59e0b",
+  "#f472b6",
+  "#34d399",
+  "#fb7185",
+  "#22d3ee",
+  "#a78bfa",
+];
+const LEFTOVER_SAVINGS_COLOR = "#4ade80";
+const NET_INCOME_COLOR = "#22d3ee";
 
 type BudgetExpenseInput = Partial<BudgetExpense>;
 
@@ -107,12 +117,83 @@ function getExpensePaletteColor(category: CategoryType, index: number): string {
   return palette[index % palette.length];
 }
 
-function getCategoryNodeId(category: CategoryType): string {
-  return `category:${category}`;
+function hashString(value: string): number {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
 }
 
-function getGroupNodeId(category: CategoryType, group: string): string {
-  return `group:${category}:${slugify(group)}`;
+function mixHexColors(left: string, right: string, weight: number): string {
+  const normalizedWeight = Math.min(Math.max(weight, 0), 1);
+  const leftHex = left.replace("#", "");
+  const rightHex = right.replace("#", "");
+
+  const mixed = [0, 2, 4]
+    .map((offset) => {
+      const leftChannel = parseInt(leftHex.slice(offset, offset + 2), 16);
+      const rightChannel = parseInt(rightHex.slice(offset, offset + 2), 16);
+      const channel = Math.round(
+        leftChannel + (rightChannel - leftChannel) * normalizedWeight,
+      );
+
+      return channel.toString(16).padStart(2, "0");
+    })
+    .join("");
+
+  return `#${mixed}`;
+}
+
+export function parseSankeyPathSegments(
+  pathValue: string | undefined,
+  expenseName?: string,
+): string[] {
+  const raw = trimText(pathValue);
+  if (!raw) return [];
+
+  // Accept several common separators and HTML-encoded forms so users can
+  // paste different examples. Normalize everything to the simple '>' token
+  // then split. Also trim each segment and ignore empties.
+  const normalized = raw
+    .replace(/&gt;|&#62;/gi, ">") // HTML entities
+    .replace(/›|\u203A/g, ">") // single right-pointing angle quote
+    .replace(/[\/]/g, ">") // allow slash as alternative separator
+    .replace(/>{2,}/g, ">"); // collapse repeated separators
+
+  const segments = normalized
+    .split(">")
+    .map((s) => trimText(s))
+    .filter(Boolean);
+
+  const normalizedExpenseName = trimText(expenseName).toLowerCase();
+
+  while (
+    segments.length > 0 &&
+    segments[segments.length - 1].toLowerCase() === normalizedExpenseName
+  ) {
+    segments.pop();
+  }
+
+  return segments;
+}
+
+function getPathNodeId(pathSegments: string[]): string {
+  return `path:${pathSegments.map(slugify).join("/")}`;
+}
+
+function getPathNodeColor(pathSegments: string[]): string {
+  const rootSegment = pathSegments[0] ?? "branch";
+  const baseColor =
+    PATH_ROOT_COLORS[hashString(rootSegment) % PATH_ROOT_COLORS.length];
+
+  return mixHexColors(
+    baseColor,
+    "#ffffff",
+    Math.min(Math.max(pathSegments.length - 1, 0) * 0.16, 0.45),
+  );
 }
 
 function inferLegacyCategoryType(label: string): CategoryType {
@@ -211,7 +292,7 @@ function buildPieData(
   if (leftoverSavings > 0) {
     slices.push({
       key: "leftover-savings",
-      name: "Leftover savings",
+      name: "Leftover Savings",
       value: leftoverSavings,
       color: LEFTOVER_SAVINGS_COLOR,
       category: "Saving",
@@ -228,7 +309,7 @@ function buildSankeyData(
   colorByExpenseId: Map<string, string>,
 ): SankeyData {
   const nodes: SankeyNode[] = [];
-  const links: SankeyLink[] = [];
+  const links = new Map<string, SankeyLink>();
   const seenNodes = new Set<string>();
 
   const pushNode = (node: SankeyNode) => {
@@ -240,96 +321,57 @@ function buildSankeyData(
     nodes.push(node);
   };
 
-  const categoryTotals: Record<CategoryType, number> = {
-    Need: 0,
-    Want: 0,
-    Saving: leftoverSavings,
-  };
+  const pushLink = (link: SankeyLink) => {
+    const key = `${link.source}->${link.target}`;
+    const current = links.get(key);
 
-  for (const expense of expenses) {
-    categoryTotals[expense.category] = roundCurrency(
-      categoryTotals[expense.category] + expense.amount,
-    );
-  }
+    if (current) {
+      current.value = roundCurrency(current.value + link.value);
+      return;
+    }
+
+    links.set(key, { ...link });
+  };
 
   pushNode({
     id: "income",
-    label: "Net income",
+    label: "Net",
     color: NET_INCOME_COLOR,
     kind: "income",
   });
-
-  for (const category of CATEGORY_ORDER) {
-    if (categoryTotals[category] <= 0) {
-      continue;
-    }
-
-    pushNode({
-      id: getCategoryNodeId(category),
-      label: CATEGORY_LABELS[category],
-      color: CATEGORY_COLORS[category],
-      kind: "category",
-      category,
-    });
-
-    links.push({
-      source: "income",
-      target: getCategoryNodeId(category),
-      value: categoryTotals[category],
-      startColor: NET_INCOME_COLOR,
-      endColor: CATEGORY_COLORS[category],
-      kind: "income-category",
-    });
-  }
-
-  const groupTotals = new Map<
-    string,
-    { category: CategoryType; label: string; total: number }
-  >();
-
-  for (const expense of expenses) {
-    const group = trimText(expense.group);
-    if (!group || group.toLowerCase() === expense.name.toLowerCase()) {
-      continue;
-    }
-
-    const groupId = getGroupNodeId(expense.category, group);
-    const current = groupTotals.get(groupId) ?? {
-      category: expense.category,
-      label: group,
-      total: 0,
-    };
-
-    current.total = roundCurrency(current.total + expense.amount);
-    groupTotals.set(groupId, current);
-  }
-
-  for (const [groupId, metadata] of groupTotals) {
-    pushNode({
-      id: groupId,
-      label: metadata.label,
-      color: CATEGORY_COLORS[metadata.category],
-      kind: "group",
-      category: metadata.category,
-    });
-
-    links.push({
-      source: getCategoryNodeId(metadata.category),
-      target: groupId,
-      value: metadata.total,
-      startColor: CATEGORY_COLORS[metadata.category],
-      endColor: CATEGORY_COLORS[metadata.category],
-      kind: "category-group",
-    });
-  }
 
   for (const expense of expenses) {
     const expenseColor =
       colorByExpenseId.get(expense.expenseId) ??
       CATEGORY_COLORS[expense.category];
-    const group = trimText(expense.group);
-    const usesGroup =
-      Boolean(group) && group.toLowerCase() !== expense.name.toLowerCase();
+    const pathSegments = parseSankeyPathSegments(expense.group, expense.name);
+    let sourceId = "income";
+    let sourceColor = NET_INCOME_COLOR;
+
+    for (let index = 0; index < pathSegments.length; index += 1) {
+      const currentPath = pathSegments.slice(0, index + 1);
+      const pathId = getPathNodeId(currentPath);
+      const pathColor = getPathNodeColor(currentPath);
+
+      pushNode({
+        id: pathId,
+        label: currentPath[currentPath.length - 1],
+        color: pathColor,
+        kind: "path",
+      });
+
+      pushLink({
+        source: sourceId,
+        target: pathId,
+        value: expense.amount,
+        startColor: sourceColor,
+        endColor: pathColor,
+        kind: sourceId === "income" ? "income-path" : "path-path",
+      });
+
+      sourceId = pathId;
+      sourceColor = pathColor;
+    }
 
     pushNode({
       id: `expense:${expense.expenseId}`,
@@ -339,38 +381,36 @@ function buildSankeyData(
       category: expense.category,
     });
 
-    links.push({
-      source: usesGroup
-        ? getGroupNodeId(expense.category, group)
-        : getCategoryNodeId(expense.category),
+    pushLink({
+      source: sourceId,
       target: `expense:${expense.expenseId}`,
       value: expense.amount,
-      startColor: CATEGORY_COLORS[expense.category],
+      startColor: sourceColor,
       endColor: expenseColor,
-      kind: usesGroup ? "group-expense" : "category-expense",
+      kind: pathSegments.length > 0 ? "path-expense" : "income-expense",
     });
   }
 
   if (leftoverSavings > 0) {
     pushNode({
       id: "balance:leftover-savings",
-      label: "Leftover savings",
+      label: "Leftover Savings",
       color: LEFTOVER_SAVINGS_COLOR,
       kind: "balance",
       category: "Saving",
     });
 
-    links.push({
-      source: getCategoryNodeId("Saving"),
+    pushLink({
+      source: "income",
       target: "balance:leftover-savings",
       value: leftoverSavings,
-      startColor: CATEGORY_COLORS.Saving,
+      startColor: NET_INCOME_COLOR,
       endColor: LEFTOVER_SAVINGS_COLOR,
-      kind: "category-balance",
+      kind: "income-balance",
     });
   }
 
-  return { nodes, links };
+  return { nodes, links: Array.from(links.values()) };
 }
 
 export function createBudgetExpense(
@@ -465,6 +505,36 @@ export function normalizeBudgetForStorage(
     createdAt: budget.createdAt,
     updatedAt: budget.updatedAt,
   };
+}
+
+function getBudgetTimestamp(budget: Partial<SavedBudget>): number {
+  const rawTimestamp = budget.updatedAt ?? budget.createdAt;
+  if (!rawTimestamp) {
+    return 0;
+  }
+
+  const parsed = Date.parse(rawTimestamp);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Note 4: Saved budgets are surfaced to users as "recent work", so the list and
+ * the initial page load both sort by the freshest write timestamp first. Keeping
+ * the comparison in one helper avoids subtle drift between the list order and
+ * whichever item the page auto-selects on first render.
+ */
+export function sortSavedBudgets<T extends Partial<SavedBudget>>(
+  budgets: T[],
+): T[] {
+  return [...budgets].sort((left, right) => {
+    const recencyDelta = getBudgetTimestamp(right) - getBudgetTimestamp(left);
+
+    if (recencyDelta !== 0) {
+      return recencyDelta;
+    }
+
+    return (left.name ?? "").localeCompare(right.name ?? "");
+  });
 }
 
 export function buildBudgetInsights(

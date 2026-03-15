@@ -1,8 +1,8 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, and the path-based Sankey follow-up moved to plan.completed.md. -->
 
-## Status: Completed 2026-03-14
+## Status: Completed 2026-03-15
 
-All planned work for Reports & Progress fixes completed (milestone deletion, DynamoDB transaction-scope fix, transaction-query tests, UI and skill updates). See `plan.completed.md` entry dated 2026-03-14 for details.
+Latest completed work: the budget planner follow-up pass (wider expense editor layout, path-based Sankey branches, overlap reduction, and an in-page Sankey instructions dialog) is recorded in `plan.completed.md` under the latest 2026-03-15 entry. On 2026-03-15 a small UI polish narrowed the Expense and Sankey Path inputs to avoid truncation and horizontal scrolling; these plan files were updated and merged to `main`. Earlier budget-planner polish work and Reports & Progress fixes remain recorded under their earlier 2026-03-15 and 2026-03-14 entries.
 
 # Development Plan for Personal Budget App
 

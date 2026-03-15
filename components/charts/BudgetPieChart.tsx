@@ -6,6 +6,7 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 import {
   Cell,
   Label,
@@ -40,10 +41,17 @@ export function BudgetPieChart({
   leftoverSavings,
   overspending,
 }: Props) {
+  const theme = useTheme();
+
   if (!data.length) {
     return (
       <div
-        style={{ textAlign: "center", padding: 40, color: "#666", height: 320 }}
+        style={{
+          textAlign: "center",
+          padding: 40,
+          color: theme.palette.text.secondary,
+          height: 320,
+        }}
       >
         Add expense rows to populate the pie chart.
       </div>
@@ -56,11 +64,14 @@ export function BudgetPieChart({
   }));
   const statusLabel =
     overspending > 0
-      ? `Over by ${formatCurrency(overspending)}`
+      ? `Over Budget ${formatCurrency(overspending)}`
       : leftoverSavings > 0
         ? `Leftover ${formatCurrency(leftoverSavings)}`
-        : "On budget";
-  const statusColor = overspending > 0 ? "#ed6c02" : "#2e7d32";
+        : "Fully Allocated";
+  const statusColor =
+    overspending > 0
+      ? theme.palette.warning.light
+      : theme.palette.success.light;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -81,9 +92,10 @@ export function BudgetPieChart({
               {data.map((entry) => (
                 <Cell key={entry.key} fill={entry.color} />
               ))}
-              {/* Note 2: The center label anchors the pie back to monthly income.
-                  Without this, an overspending plan would render valid expense
-                  slices but give no in-chart hint that the total exceeds income. */}
+              {/* Note 2: The center copy mirrors the page summary in a
+                   dark-theme-safe palette so the chart keeps its own readable
+                   status context even when the surrounding card background is
+                   much darker than the default SVG text color. */}
               <Label
                 position="center"
                 content={({ viewBox }) => {
@@ -99,17 +111,18 @@ export function BudgetPieChart({
                         x={cx}
                         y={cy - 18}
                         textAnchor="middle"
-                        fill="#6b7280"
-                        fontSize="12"
+                        fill={theme.palette.text.secondary}
+                        fontSize="13"
+                        fontWeight="600"
                       >
-                        Monthly income
+                        Monthly Income
                       </text>
                       <text
                         x={cx}
                         y={cy + 4}
                         textAnchor="middle"
-                        fill="#111827"
-                        fontSize="18"
+                        fill={theme.palette.text.primary}
+                        fontSize="20"
                         fontWeight="700"
                       >
                         {formatCurrency(monthlyIncome)}
@@ -154,7 +167,7 @@ export function BudgetPieChart({
                       ...(source?.group
                         ? [
                             {
-                              label: "Group",
+                              label: "Sankey Path",
                               value: source.group,
                             },
                           ]

@@ -32,7 +32,7 @@ export default function SignOutPage() {
         height: "60vh",
       }}
     >
-      <Typography variant="h6">Signing out…</Typography>
+      <Typography variant="h6">Signing Out…</Typography>
     </Box>
   );
 }

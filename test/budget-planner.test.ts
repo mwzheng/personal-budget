@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildBudgetInsights,
   normalizeBudgetForEditor,
+  sortSavedBudgets,
 } from "../lib/budget-planner";
 
 describe("buildBudgetInsights", () => {
@@ -34,7 +35,7 @@ describe("buildBudgetInsights", () => {
     expect(result.overspending).toBe(0);
     expect(result.categoryTotals.Saving).toBe(2550);
     expect(result.pieData.map((slice) => slice.name)).toContain(
-      "Leftover savings",
+      "Leftover Savings",
     );
   });
 
@@ -62,11 +63,11 @@ describe("buildBudgetInsights", () => {
     expect(result.leftoverSavings).toBe(0);
     expect(result.overspending).toBe(150);
     expect(result.pieData.map((slice) => slice.name)).not.toContain(
-      "Leftover savings",
+      "Leftover Savings",
     );
   });
 
-  it("creates grouped Sankey branches when expenses share a group label", () => {
+  it("creates shared path branches when expenses reuse the same Sankey path", () => {
     const result = buildBudgetInsights({
       monthlyIncome: 3000,
       expenses: [
@@ -103,9 +104,52 @@ describe("buildBudgetInsights", () => {
     expect(result.sankeyData.links).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          source: "category:Need",
-          target: "group:Need:car",
+          source: "income",
+          target: "path:car",
           value: 540,
+        }),
+      ]),
+    );
+    expect(sankeyLabels).not.toContain("Needs");
+  });
+
+  it("supports nested Sankey path layers without fixed category branches", () => {
+    const result = buildBudgetInsights({
+      monthlyIncome: 2500,
+      expenses: [
+        {
+          expenseId: "copilot",
+          name: "Copilot",
+          amount: 20,
+          category: "Want",
+          group: "Subscriptions > AI Tools",
+        },
+        {
+          expenseId: "ring",
+          name: "Ring",
+          amount: 14,
+          category: "Want",
+          group: "Subscriptions > Home",
+        },
+      ],
+    });
+
+    expect(result.sankeyData.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "income",
+          target: "path:subscriptions",
+          value: 34,
+        }),
+        expect.objectContaining({
+          source: "path:subscriptions",
+          target: "path:subscriptions/ai-tools",
+          value: 20,
+        }),
+        expect.objectContaining({
+          source: "path:subscriptions/ai-tools",
+          target: "expense:copilot",
+          value: 20,
         }),
       ]),
     );
@@ -127,5 +171,33 @@ describe("normalizeBudgetForEditor", () => {
     expect(result.expenses).toHaveLength(2);
     expect(result.expenses[0].category).toBe("Saving");
     expect(result.expenses[1].category).toBe("Need");
+  });
+});
+
+describe("sortSavedBudgets", () => {
+  it("sorts saved budgets by the most recent update first", () => {
+    const result = sortSavedBudgets([
+      {
+        budgetId: "older",
+        name: "Older",
+        updatedAt: "2026-03-14T10:00:00.000Z",
+      },
+      {
+        budgetId: "newer",
+        name: "Newer",
+        updatedAt: "2026-03-15T10:00:00.000Z",
+      },
+      {
+        budgetId: "fallback-created",
+        name: "Created",
+        createdAt: "2026-03-13T10:00:00.000Z",
+      },
+    ]);
+
+    expect(result.map((budget) => budget.budgetId)).toEqual([
+      "newer",
+      "older",
+      "fallback-created",
+    ]);
   });
 });

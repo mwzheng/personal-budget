@@ -20,15 +20,19 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/apiFetch";
-import { normalizeBudgetForEditor } from "@/lib/budget-planner";
+import {
+  normalizeBudgetForEditor,
+  sortSavedBudgets,
+} from "@/lib/budget-planner";
 import { SavedBudget } from "@/lib/types";
 
 interface Props {
   onLoad?: (budget: SavedBudget) => void;
   onEdit?: (budget: SavedBudget) => void;
+  onBudgetsLoaded?: (budgets: SavedBudget[]) => void;
   reloadKey?: number;
 }
 
@@ -40,7 +44,12 @@ function formatCurrency(value: number): string {
   });
 }
 
-export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
+export function BudgetList({
+  onLoad,
+  onEdit,
+  onBudgetsLoaded,
+  reloadKey,
+}: Props) {
   const [budgets, setBudgets] = useState<SavedBudget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +58,7 @@ export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
     name: string;
   } | null>(null);
 
-  async function loadBudgets() {
+  const loadBudgets = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -65,9 +74,12 @@ export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
       }
 
       const nextBudgets = Array.isArray(data) ? data : (data?.budgets ?? []);
-      setBudgets(
+      const sortedBudgets = sortSavedBudgets(
         Array.isArray(nextBudgets) ? (nextBudgets as SavedBudget[]) : [],
       );
+
+      setBudgets(sortedBudgets);
+      onBudgetsLoaded?.(sortedBudgets);
     } catch (caughtError) {
       setBudgets([]);
       setError(
@@ -78,13 +90,13 @@ export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [onBudgetsLoaded]);
 
   useEffect(() => {
     void loadBudgets();
     // Note 2: `reloadKey` gives the parent an imperative "refresh now" hook
     // without forcing this component to know why the list changed.
-  }, [reloadKey]);
+  }, [loadBudgets, reloadKey]);
 
   async function confirmDelete() {
     if (!deleteCandidate) {
@@ -102,9 +114,13 @@ export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
         throw new Error(data?.error?.message ?? data?.error ?? "Delete failed");
       }
 
-      setBudgets((current) =>
-        current.filter((budget) => budget.budgetId !== deleteCandidate.id),
-      );
+      setBudgets((current) => {
+        const nextBudgets = current.filter(
+          (budget) => budget.budgetId !== deleteCandidate.id,
+        );
+        onBudgetsLoaded?.(nextBudgets);
+        return nextBudgets;
+      });
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -181,7 +197,7 @@ export function BudgetList({ onLoad, onEdit, reloadKey }: Props) {
         onClose={() => setDeleteCandidate(null)}
         aria-labelledby="delete-budget-dialog-title"
       >
-        <DialogTitle id="delete-budget-dialog-title">Delete budget</DialogTitle>
+        <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete &quot;{deleteCandidate?.name}&quot;?

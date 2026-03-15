@@ -7,12 +7,17 @@ import { apiFetch } from "../../lib/apiFetch";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
@@ -23,7 +28,8 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { BudgetForm } from "@/components/budget/BudgetForm";
@@ -36,8 +42,10 @@ import {
   CATEGORY_ORDER,
   createDefaultBudgetDraft,
   BudgetDraft,
+  hasBudgetRowContent,
   normalizeBudgetForEditor,
   normalizeBudgetForStorage,
+  sortSavedBudgets,
 } from "@/lib/budget-planner";
 import { SavedBudget } from "@/lib/types";
 
@@ -68,6 +76,14 @@ const SUMMARY_CARD_SX = {
   borderColor: "divider",
   borderRadius: 2,
 };
+const SECTION_HEADER_SX = {
+  px: { xs: 2.5, sm: 3 },
+  py: 2.25,
+};
+const SECTION_CONTENT_SX = {
+  px: { xs: 2.5, sm: 3 },
+  py: { xs: 2.5, sm: 3 },
+};
 
 export default function SankeyPage() {
   const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
@@ -75,6 +91,9 @@ export default function SankeyPage() {
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const hasAutoLoadedLatestBudget = useRef(false);
+  const hasDraftChangesRef = useRef(false);
 
   const router = useRouter();
 
@@ -96,6 +115,38 @@ export default function SankeyPage() {
   }, [router]);
 
   const insights = useMemo(() => buildBudgetInsights(draft), [draft]);
+  const hasDraftChanges =
+    Boolean(editingBudgetId) ||
+    draft.name.trim().length > 0 ||
+    draft.monthlyIncome !== 5000 ||
+    draft.expenses.length > 1 ||
+    draft.expenses.some(hasBudgetRowContent);
+
+  useEffect(() => {
+    hasDraftChangesRef.current = hasDraftChanges;
+  }, [hasDraftChanges]);
+
+  const handleBudgetsLoaded = useCallback((budgets: SavedBudget[]) => {
+    if (hasAutoLoadedLatestBudget.current) {
+      return;
+    }
+
+    hasAutoLoadedLatestBudget.current = true;
+    if (hasDraftChangesRef.current) {
+      return;
+    }
+
+    const latestBudget = sortSavedBudgets(budgets)[0];
+
+    if (!latestBudget) {
+      return;
+    }
+
+    const normalized = normalizeBudgetForEditor(latestBudget);
+    setDraft(normalized);
+    setEditingBudgetId(normalized.budgetId ?? null);
+    setSaveError(null);
+  }, []);
 
   async function saveBudget() {
     setSaving(true);
@@ -179,59 +230,74 @@ export default function SankeyPage() {
         <Grid item xs={12}>
           <Card>
             <CardHeader
-              title="Budget section"
+              title="Budget Section"
               subheader="Build an expense-based monthly budget and save reusable versions."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}
+              action={
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<InfoOutlinedIcon />}
+                  onClick={() => setInstructionsOpen(true)}
+                >
+                  Sankey Instructions
+                </Button>
+              }
+              sx={SECTION_HEADER_SX}
             />
             <Divider />
-            <CardContent>
-              <Grid container spacing={3}>
-                <Grid item xs={12} lg={5}>
-                  <BudgetForm
-                    value={draft}
-                    saving={saving}
-                    saveError={saveError}
-                    isEditing={Boolean(editingBudgetId)}
-                    onChange={setDraft}
-                    onSave={saveBudget}
-                    onStartFresh={startFresh}
-                  />
+            <CardContent sx={SECTION_CONTENT_SX}>
+              <Grid container spacing={3} alignItems="start">
+                <Grid item xs={12} lg={8} xl={8}>
+                  <Stack spacing={3}>
+                    <BudgetForm
+                      value={draft}
+                      saving={saving}
+                      saveError={saveError}
+                      isEditing={Boolean(editingBudgetId)}
+                      onChange={setDraft}
+                      onSave={saveBudget}
+                      onStartFresh={startFresh}
+                    />
 
-                  <Divider sx={{ my: 3 }} />
-
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    gap={1}
-                    mb={1.5}
-                  >
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Saved budgets
-                    </Typography>
-                    {editingBudgetId ? (
-                      <Chip
-                        label="Editing saved budget"
-                        size="small"
-                        color="info"
+                    <Card variant="outlined">
+                      <CardHeader
+                        title="Saved Budgets"
+                        titleTypographyProps={{
+                          variant: "subtitle1",
+                          fontWeight: 700,
+                        }}
+                        action={
+                          editingBudgetId ? (
+                            <Chip
+                              label="Editing Saved Budget"
+                              size="small"
+                              color="info"
+                            />
+                          ) : undefined
+                        }
+                        sx={SECTION_HEADER_SX}
                       />
-                    ) : null}
-                  </Box>
-
-                  <BudgetList
-                    reloadKey={budgetsReloadKey}
-                    onLoad={loadBudget}
-                    onEdit={editBudget}
-                  />
+                      <Divider />
+                      <CardContent sx={SECTION_CONTENT_SX}>
+                        <BudgetList
+                          reloadKey={budgetsReloadKey}
+                          onLoad={loadBudget}
+                          onEdit={editBudget}
+                          onBudgetsLoaded={handleBudgetsLoaded}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Stack>
                 </Grid>
 
-                <Grid item xs={12} lg={7}>
+                <Grid item xs={12} lg={4} xl={4}>
                   <Stack spacing={2.5}>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <Box display="flex" flexWrap="wrap" gap={2}>
                       <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
                         <Typography variant="caption" color="text.secondary">
-                          Monthly income
+                          Monthly Income
                         </Typography>
                         <Typography variant="h6" fontWeight={700}>
                           {formatCurrency(insights.monthlyIncome)}
@@ -239,7 +305,7 @@ export default function SankeyPage() {
                       </Paper>
                       <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
                         <Typography variant="caption" color="text.secondary">
-                          Planned expenses
+                          Planned Expenses
                         </Typography>
                         <Typography variant="h6" fontWeight={700}>
                           {formatCurrency(insights.totalExpenses)}
@@ -250,7 +316,7 @@ export default function SankeyPage() {
                           {insights.overspending > 0
                             ? "Overspending"
                             : insights.leftoverSavings > 0
-                              ? "Leftover savings"
+                              ? "Leftover Savings"
                               : "Balance"}
                         </Typography>
                         <Typography
@@ -269,7 +335,7 @@ export default function SankeyPage() {
                           )}
                         </Typography>
                       </Paper>
-                    </Stack>
+                    </Box>
 
                     {hasExpenses && insights.overspending > 0 ? (
                       <Alert severity="warning">
@@ -283,23 +349,24 @@ export default function SankeyPage() {
                     {hasExpenses && insights.overspending === 0 ? (
                       <Alert severity="success">
                         {insights.leftoverSavings > 0
-                          ? `${formatCurrency(insights.leftoverSavings)} is automatically added to Leftover savings.`
+                          ? `${formatCurrency(insights.leftoverSavings)} is automatically added to Leftover Savings.`
                           : "Your planned expenses exactly match monthly income."}
                       </Alert>
                     ) : null}
 
                     <Card variant="outlined">
                       <CardHeader
-                        title="Expense pie chart"
-                        subheader="Each expense is a slice. Remaining income is added as Leftover savings."
+                        title="Expense Pie Chart"
+                        subheader="Each expense is a slice. Remaining income is added as Leftover Savings."
                         titleTypographyProps={{
                           variant: "subtitle1",
                           fontWeight: 700,
                         }}
                         subheaderTypographyProps={{ variant: "caption" }}
+                        sx={SECTION_HEADER_SX}
                       />
                       <Divider />
-                      <CardContent>
+                      <CardContent sx={SECTION_CONTENT_SX}>
                         <BudgetPieChart
                           data={insights.pieData}
                           monthlyIncome={insights.monthlyIncome}
@@ -362,23 +429,107 @@ export default function SankeyPage() {
         <Grid item xs={12}>
           <Card>
             <CardHeader
-              title="Sankey section"
-              subheader="Money flows from net income into category branches, optional group rollups, and the final expense leaves."
+              title="Sankey Section"
+              subheader="Money flows from Net Income into optional user-defined path layers and then into the final expense leaves."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}
+              sx={SECTION_HEADER_SX}
             />
             <Divider />
-            <CardContent>
+            <CardContent sx={SECTION_CONTENT_SX}>
               <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-                <Chip label="Need / Want / Saving categories" size="small" />
-                <Chip label="Optional group rollups" size="small" />
-                <Chip label="Expense-level leaves" size="small" />
+                <Chip label="Expenses Branch from Net Income" size="small" />
+                <Chip label={"Use '>' for Nested Path Layers"} size="small" />
+                <Chip
+                  label="Expense Name Becomes the Final Leaf"
+                  size="small"
+                />
               </Box>
               <SankeyChart data={insights.sankeyData} />
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={instructionsOpen}
+        onClose={() => setInstructionsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Sankey Path Instructions</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              The Sankey diagram flows from <strong>Net Income</strong> into
+              optional user-defined path layers and then into the final expense
+              leaf. Use the <strong>Sankey Path</strong> field to specify one or
+              more nested layers.
+            </Typography>
+
+            <Typography variant="subtitle2" fontWeight={700}>
+              How to write a Sankey Path
+            </Typography>
+
+            <Box component="ul" sx={{ pl: 2.5, m: 0 }}>
+              <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                Separate nested layers with{" "}
+                <Box component="span" sx={{ fontFamily: "monospace" }}>
+                  {" > "}
+                </Box>{" "}
+                (greater-than sign).
+              </Typography>
+              <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                Do not include the expense name in the path; the{" "}
+                <strong>Expense</strong> column is the final leaf.
+              </Typography>
+            </Box>
+
+            <Typography variant="subtitle2" fontWeight={700}>
+              Examples
+            </Typography>
+
+            <Box
+              component="pre"
+              sx={{
+                fontFamily: "monospace",
+                backgroundColor: (theme) => theme.palette.action.hover,
+                p: 1,
+                borderRadius: 1,
+                whiteSpace: "pre-wrap",
+                mb: 1,
+              }}
+            >{`Example 1:
+Sankey Path: Subscriptions > AI Tools
+Expense: Copilot
+Resulting flow: Net Income → Subscriptions → AI Tools → Copilot
+
+Example 2:
+Sankey Path: Home > Security
+Expense: Ring
+Resulting flow: Net Income → Home → Security → Ring
+
+Example 3 (single-level):
+Sankey Path: Utilities
+Expense: Internet
+Resulting flow: Net Income → Utilities → Internet
+
+Notes:
+- Use '>' as the primary separator (slashes '/', the '›' character, and HTML entity '&gt;' are also accepted).
+- Do NOT include the expense name in the Sankey Path; enter the expense itself in the Expense column.
+- Paths can have many nested levels, for example: Subscriptions > Software > Design
+`}</Box>
+
+            <Typography variant="body2" color="text.secondary">
+              Tip: Category still controls pie-chart colors and summaries. Paths
+              control Sankey structure only.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInstructionsOpen(false)}>Got It</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

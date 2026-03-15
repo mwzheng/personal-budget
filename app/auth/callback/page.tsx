@@ -54,13 +54,13 @@ export default function AuthCallbackPage() {
         {error ? (
           <>
             <Typography variant="h4" fontWeight={700}>
-              Sign-in failed
+              Sign-In Failed
             </Typography>
             <Alert severity="error" sx={{ width: "100%" }}>
               {error}
             </Alert>
             <Button variant="contained" href="/auth/login">
-              Back to sign in
+              Back to Sign In
             </Button>
           </>
         ) : (
@@ -69,7 +69,7 @@ export default function AuthCallbackPage() {
               <CircularProgress />
             </Box>
             <Typography variant="h5" fontWeight={700}>
-              Finishing sign-in
+              Finishing Sign-In
             </Typography>
             <Typography color="text.secondary">
               Exchanging your Cognito authorization code for tokens.

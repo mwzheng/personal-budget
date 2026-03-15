@@ -43,7 +43,7 @@ export default function LoginPage() {
           <Stack spacing={3}>
             <Box>
               <Typography variant="h4" fontWeight={700} gutterBottom>
-                Sign in
+                Sign In
               </Typography>
               <Typography color="text.secondary">
                 Continue with your existing Cognito account to access your saved
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 fullWidth
                 disabled={!cognitoConfigured}
               >
-                Sign in with Cognito
+                Sign In with Cognito
               </SignInButton>
               <Button
                 variant="outlined"
@@ -74,7 +74,7 @@ export default function LoginPage() {
                 fullWidth
                 onClick={demoSignIn}
               >
-                Demo sign in
+                Demo Sign In
               </Button>
             </Stack>
           </Stack>

@@ -117,9 +117,10 @@ export interface BudgetAllocationEntry {
   amount: number;
 }
 
-// Note 15: BudgetExpense is the row shape edited on the budget page. `group` is
-// optional because most expenses can flow directly from a category, while related
-// items like "Gas" and "Car note" can share a rollup branch such as "Car".
+// Note 15: BudgetExpense is the row shape edited on the budget page. `group`
+// stores the optional Sankey path string entered by the user, such as
+// `Subscriptions > Work`, so one field can describe zero, one, or many
+// intermediate Sankey branches before the final expense leaf.
 export interface BudgetExpense {
   expenseId: string;
   name: string;
@@ -141,16 +142,12 @@ export interface SavedBudget {
   updatedAt?: string;
 }
 
-export type SankeyNodeKind =
-  | "income"
-  | "category"
-  | "group"
-  | "expense"
-  | "balance";
+export type SankeyNodeKind = "income" | "path" | "expense" | "balance";
 
 // Note 17: The Sankey diagram represents money flowing from a source (income)
-// to target nodes (expense categories). Each node must have a unique `id` string,
-// and each link records the flow amount between two node ids.
+// into optional path nodes and then into individual expense leaves. Each node
+// must have a unique `id` string, and each link records the flow amount between
+// two node ids.
 export interface SankeyNode {
   id: string;
   label?: string;
