@@ -90,20 +90,36 @@ function getSankeyLayoutMetrics(data: SankeyData) {
     1,
     ...Array.from(depth.values(), (value) => value + 1),
   );
-  const maxLabelLength = Math.max(12, ...labels.map((label) => label.length));
+  const maxLabelLength = Math.max(
+    12,
+    ...labels.map((label) => String(label).length),
+  );
+
+  // Choose node spacing larger for dense layers to avoid label overlap
+  const nodeSpacing =
+    maxNodesInLayer >= 10 ? 48 : maxNodesInLayer >= 7 ? 36 : 28;
+
+  // Estimate compact height but scale with computed node spacing so dense layers grow vertically
+  const height = Math.min(
+    1200,
+    Math.max(
+      420,
+      160 + maxNodesInLayer * nodeSpacing + Math.max(maxDepth - 2, 0) * 32,
+    ),
+  );
+
+  // Reserve a reasonable right margin for labels without forcing the diagram to become narrow
+  const rightMargin = Math.min(360, Math.max(140, 48 + maxLabelLength * 7));
+
+  // Adjust label font size based on label length to improve readability
+  const labelFontSize =
+    maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
 
   return {
-    height: Math.min(
-      1400,
-      Math.max(
-        640,
-        220 + maxNodesInLayer * 100 + Math.max(maxDepth - 2, 0) * 36,
-      ),
-    ),
-    // Increase node spacing for dense layers so labels and nodes don't overlap
-    nodeSpacing: maxNodesInLayer >= 10 ? 24 : maxNodesInLayer >= 7 ? 32 : 40,
-    // Give extra right margin when labels are long so they don't collide with edges
-    rightMargin: Math.min(420, Math.max(300, 72 + maxLabelLength * 8)),
+    height,
+    nodeSpacing,
+    rightMargin,
+    labelFontSize,
   };
 }
 
@@ -133,18 +149,18 @@ export function SankeyChart({ data }: Props) {
   }
 
   return (
-    <div style={{ height: metrics.height }}>
+    <div style={{ height: metrics.height, width: "100%" }}>
       <ResponsiveSankey
         data={data}
-        margin={{ top: 24, right: metrics.rightMargin, bottom: 24, left: 72 }}
+        margin={{ top: 24, right: metrics.rightMargin, bottom: 24, left: 48 }}
         align="justify"
         sort="input"
         label="label"
         colors={getNodeColor}
         valueFormat={formatCurrency}
         nodeOpacity={0.96}
-        nodeThickness={20}
-        nodeInnerPadding={4}
+        nodeThickness={16}
+        nodeInnerPadding={6}
         nodeSpacing={metrics.nodeSpacing}
         nodeBorderWidth={0}
         linkOpacity={0.52}
@@ -152,7 +168,7 @@ export function SankeyChart({ data }: Props) {
         enableLinkGradient
         labelPosition="outside"
         labelOrientation="horizontal"
-        labelPadding={18}
+        labelPadding={20}
         nodeTooltip={({ node }) => (
           <ChartTooltipCard
             title={node.label}
@@ -188,14 +204,14 @@ export function SankeyChart({ data }: Props) {
         theme={{
           text: {
             fill: theme.palette.text.primary,
-            fontSize: 14,
-            fontWeight: 800,
+            fontSize: metrics.labelFontSize,
+            fontWeight: 700,
           },
           labels: {
             text: {
               fill: theme.palette.text.primary,
-              fontSize: 14,
-              fontWeight: 800,
+              fontSize: metrics.labelFontSize,
+              fontWeight: 700,
             },
           },
           tooltip: {
