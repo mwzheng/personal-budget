@@ -286,22 +286,22 @@ export default function SankeyPage() {
                       />
                       <Divider />
                       <CardContent sx={SECTION_CONTENT_SX}>
-                        {sankeyLoading ? (
-                          <Stack spacing={1}>
+                        {sankeyLoading && (
+                          <Stack spacing={1} sx={{ mb: 2 }}>
                             <Skeleton variant="text" width="70%" />
                             <Skeleton variant="text" width="60%" />
                             <Skeleton variant="text" width="80%" />
                             <Skeleton variant="text" width="50%" />
                           </Stack>
-                        ) : (
-                          <BudgetList
-                            reloadKey={budgetsReloadKey}
-                            onLoad={loadBudget}
-                            onEdit={editBudget}
-                            onBudgetsLoaded={handleBudgetsLoaded}
-                            onLoadingChange={setSankeyLoading}
-                          />
                         )}
+
+                        <BudgetList
+                          reloadKey={budgetsReloadKey}
+                          onLoad={loadBudget}
+                          onEdit={editBudget}
+                          onBudgetsLoaded={handleBudgetsLoaded}
+                          onLoadingChange={setSankeyLoading}
+                        />
                       </CardContent>
                     </Card>
                   </Stack>
