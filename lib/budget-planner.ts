@@ -147,15 +147,28 @@ function mixHexColors(left: string, right: string, weight: number): string {
   return `#${mixed}`;
 }
 
-function parseSankeyPathSegments(
+export function parseSankeyPathSegments(
   pathValue: string | undefined,
   expenseName?: string,
 ): string[] {
-  const normalizedExpenseName = trimText(expenseName).toLowerCase();
-  const segments = trimText(pathValue)
+  const raw = trimText(pathValue);
+  if (!raw) return [];
+
+  // Accept several common separators and HTML-encoded forms so users can
+  // paste different examples. Normalize everything to the simple '>' token
+  // then split. Also trim each segment and ignore empties.
+  const normalized = raw
+    .replace(/&gt;|&#62;/gi, ">") // HTML entities
+    .replace(/›|\u203A/g, ">") // single right-pointing angle quote
+    .replace(/[\/]/g, ">") // allow slash as alternative separator
+    .replace(/>{2,}/g, ">"); // collapse repeated separators
+
+  const segments = normalized
     .split(">")
-    .map((segment) => trimText(segment))
+    .map((s) => trimText(s))
     .filter(Boolean);
+
+  const normalizedExpenseName = trimText(expenseName).toLowerCase();
 
   while (
     segments.length > 0 &&

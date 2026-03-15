@@ -24,12 +24,14 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
 
 import {
   CATEGORY_LABELS,
   BudgetDraft,
   createBudgetExpense,
   hasBudgetRowContent,
+  parseSankeyPathSegments,
 } from "@/lib/budget-planner";
 import { BudgetExpense, CategoryType } from "@/lib/types";
 
@@ -198,6 +200,10 @@ export function BudgetForm({
           </TableHead>
           <TableBody>
             {value.expenses.map((expense, index) => {
+              const parsedSegments = parseSankeyPathSegments(
+                expense.group,
+                expense.name,
+              );
               const rowHasError =
                 hasBudgetRowContent(expense) &&
                 (!expense.name.trim() || Number(expense.amount) <= 0);
@@ -206,7 +212,7 @@ export function BudgetForm({
                 <TableRow
                   key={expense.expenseId}
                   hover
-                  sx={{ "& > *": { verticalAlign: "top", py: 1 } }}
+                  sx={{ "& > *": { verticalAlign: "middle", py: 1 } }}
                 >
                   <TableCell>
                     <TextField
@@ -288,6 +294,25 @@ export function BudgetForm({
                       size="small"
                       fullWidth
                     />
+                    {parsedSegments.length > 0 ? (
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          display: "flex",
+                          gap: 0.5,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {parsedSegments.map((seg, i) => (
+                          <Chip
+                            key={i}
+                            label={seg}
+                            size="small"
+                            sx={{ fontFamily: "monospace" }}
+                          />
+                        ))}
+                      </Box>
+                    ) : null}
                   </TableCell>
                   <TableCell align="right">
                     {/* Note 3: Row controls stay icon-sized and visually matched so
@@ -297,6 +322,7 @@ export function BudgetForm({
                     <Stack
                       direction="row"
                       justifyContent="flex-end"
+                      alignItems="center"
                       spacing={0.75}
                     >
                       <IconButton
