@@ -95,13 +95,34 @@ function getSankeyLayoutMetrics(data: SankeyData) {
     ...labels.map((label) => String(label).length),
   );
 
-  // Choose node spacing larger for dense layers to avoid label overlap
-  const nodeSpacing =
+  // Default spacing based on density
+  const defaultNodeSpacing =
     maxNodesInLayer >= 10 ? 48 : maxNodesInLayer >= 7 ? 36 : 28;
 
-  // Estimate compact height but scale with computed node spacing so dense layers grow vertically
+  // Compute a node thickness that scales with the largest link value so relative differences are visible.
+  // Start from a conservative base and multiply by 5x to satisfy the user's request for much wider branches.
+  const maxLinkValue = Math.max(
+    1,
+    ...data.links.map((l) => Number(l.value ?? 0)),
+  );
+  const baseThickness = Math.round(8 + Math.log10(maxLinkValue + 1) * 6);
+  const nodeThickness = Math.min(
+    500,
+    Math.max(18, Math.round(baseThickness * 5)),
+  );
+
+  // Inner padding between stacked subnodes should grow with thickness so links remain visible
+  const nodeInnerPadding = Math.max(6, Math.round(nodeThickness / 6));
+
+  // Ensure spacing is large enough to avoid overlap when nodes are thicker
+  const nodeSpacing = Math.max(
+    defaultNodeSpacing,
+    Math.round(nodeThickness * 0.6),
+  );
+
+  // Estimate height with the new spacing so the chart can expand vertically when needed
   const height = Math.min(
-    1200,
+    2400,
     Math.max(
       420,
       160 + maxNodesInLayer * nodeSpacing + Math.max(maxDepth - 2, 0) * 32,
@@ -109,24 +130,11 @@ function getSankeyLayoutMetrics(data: SankeyData) {
   );
 
   // Reserve a reasonable right margin for labels without forcing the diagram to become narrow
-  const rightMargin = Math.min(360, Math.max(140, 48 + maxLabelLength * 7));
+  const rightMargin = Math.min(480, Math.max(140, 48 + maxLabelLength * 7));
 
   // Adjust label font size based on label length to improve readability
   const labelFontSize =
     maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
-
-  // Compute a node thickness that scales with the largest link value so relative differences are visible.
-  // Increase sensitivity so small differences are more noticeable while clamping to avoid overlap.
-  const maxLinkValue = Math.max(
-    1,
-    ...data.links.map((l) => Number(l.value ?? 0)),
-  );
-  // Higher multiplier gives wider nodes for the same values; tuned to avoid overlap with nodeSpacing/height
-  const rawThickness = Math.round(8 + Math.log10(maxLinkValue + 1) * 14);
-  const nodeThickness = Math.min(100, Math.max(18, rawThickness));
-
-  // Inner padding between stacked subnodes should grow with thickness so links remain visible
-  const nodeInnerPadding = Math.max(6, Math.round(nodeThickness / 6));
 
   return {
     height,
