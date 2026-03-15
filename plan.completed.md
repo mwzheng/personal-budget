@@ -1,3 +1,49 @@
+# Completed: Budget planner expense rewrite
+
+Date: 2026-03-15
+
+Summary
+
+- Reworked `/sankey` from a percentage-only generator into an expense-driven budget planner with two clear sections: a budget section with editable expense rows plus a pie chart, and a grouped Sankey section inspired by the provided reference.
+- Added automatic leftover-savings handling when planned expenses are below income and explicit overspending warnings when the plan exceeds monthly income.
+- Extended saved-budget persistence so monthly income and detailed expense rows round-trip through the existing budgets API while remaining compatible with older saved budgets.
+
+Completed items
+
+- Replaced the old planner flow in `app/sankey/page.tsx` with a live, expense-based editor and derived summary cards.
+- Rebuilt `components/budget/BudgetForm.tsx` around named expense rows (`name`, `amount`, `category`, optional `group`) and refreshed `components/budget/BudgetList.tsx` to load/edit the richer saved-budget shape.
+- Added `components/charts/BudgetPieChart.tsx` and updated `components/charts/SankeyChart.tsx` to render per-expense pie slices and grouped Sankey branches with improved tooltips.
+- Added `lib/budget-planner.ts`, extended shared types/schemas/persistence for monthly income plus expense rows, and preserved the legacy `allocations` field for compatibility.
+- Added `test/budget-planner.test.ts` to cover leftover savings, overspending, grouped Sankey branches, and legacy budget normalization.
+- Updated `README.md`, `app/page.tsx`, and `plan.md` to reflect the new budget-planner experience.
+
+Files changed
+
+- `app/page.tsx`
+- `app/sankey/page.tsx`
+- `app/api/budgets/route.ts`
+- `app/api/budgets/[id]/route.ts`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/charts/BudgetPieChart.tsx`
+- `components/charts/SankeyChart.tsx`
+- `lib/budget-planner.ts`
+- `lib/dynamo.ts`
+- `lib/schemas.ts`
+- `lib/types.ts`
+- `test/budget-planner.test.ts`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Pending commit in current working tree.
+
+Notes / next steps
+
+- Consider adding lightweight UI tests around the planner form and saved-budget flows now that the budgeting experience is driven by richer client-side state.
+
 # Completed: Code cleanup and progress module refactor
 
 Date: 2026-03-12

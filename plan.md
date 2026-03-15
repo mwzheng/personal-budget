@@ -181,15 +181,14 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 ### Files to Update
 
 - `components/TransactionsTable.tsx` — wire Edit/Delete actions to API calls and add server-aware pagination.
-- `app/sankey/page.tsx` — add budget picker, "Create budget from current spending" action, and budget save/preview controls. (IN PROGRESS — BudgetForm/BudgetList scaffolding added; next: wire saved budgets to Sankey generation.)
 - `infra/SAM-DEPLOY.md` — document new tables and required IAM policy changes; update deploy scripts if needed.
 
 ### Key Design Decisions
 
 - Use Cognito for authentication; use Cognito `sub` as `userId` (partition key) for per-user data.
 - Start with separate DynamoDB tables for budgets, goals, and salary for clarity; consider consolidating to a single-table design later.
-- Budget model: `{ budgetId, name, allocations: [{ category: string, amount: number }], createdAt, updatedAt }`.
-- Sankey generation: `lib/budgets.ts` converts allocations → sankey nodes/links; budgets can be previewed client-side by fetching a budget by id and rendering via `components/SankeyChart`.
+- Budget model: `{ budgetId, name, monthlyIncome, expenses: [{ expenseId, name, amount, category, group? }], allocations, createdAt, updatedAt }`, where `allocations` remains as a compatibility field for older saved-budget readers.
+- Sankey generation: `lib/budget-planner.ts` derives grouped Sankey nodes/links plus pie-chart slices from the same expense list so the budget page can preview both views without a separate generate step.
 - Goals model: `{ goalId, name, targetAmount, currentSaved, monthlyContribution, expectedAnnualReturn, createdAt }` — server returns ETA based on assumptions.
 - Salary entries: manual per-year entries `{ year, amount, note }`; compute YoY percentage changes server-side or client-side as needed.
 - Validation: use Zod on server endpoints to validate inputs and return structured errors.

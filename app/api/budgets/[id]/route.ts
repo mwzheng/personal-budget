@@ -1,20 +1,8 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getUserIdFromRequest } from "../../../../lib/auth";
+import { normalizeBudgetForStorage } from "../../../../lib/budget-planner";
 import { deleteBudget, putBudget } from "../../../../lib/dynamo";
-
-const BudgetSchema = z.object({
-  name: z.string().min(1).optional(),
-  allocations: z
-    .union([
-      z.record(z.number()),
-      z.array(z.object({ category: z.string().min(1), amount: z.number() })),
-    ])
-    .optional(),
-  notes: z.string().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-});
+import { BudgetSchema } from "../../../../lib/schemas";
 
 export async function DELETE(
   request: Request,
@@ -58,31 +46,16 @@ export async function PUT(
     }
 
     const payload = parseResult.data;
-    // Normalize allocations to array form expected by lib.putBudget
-    let allocationsArray: { category: string; amount: number }[] = [];
-    if (payload.allocations) {
-      if (Array.isArray(payload.allocations)) {
-        allocationsArray = payload.allocations as any;
-      } else {
-        allocationsArray = Object.entries(payload.allocations).map(
-          ([k, v]) => ({
-            category: k,
-            amount: Number(v as any) || 0,
-          }),
-        );
-      }
-    }
-
     const now = new Date().toISOString();
-    const bud = {
-      budgetId: id,
-      name: payload.name || "",
-      allocations: allocationsArray,
-      createdAt: payload.createdAt,
-      updatedAt: now,
-    } as any;
-
-    const updated = await putBudget(userId, bud);
+    const updated = await putBudget(
+      userId,
+      normalizeBudgetForStorage({
+        ...payload,
+        budgetId: id,
+        createdAt: payload.createdAt,
+        updatedAt: now,
+      }),
+    );
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
     console.error(err);

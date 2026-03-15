@@ -347,7 +347,15 @@ export async function putBudget(
   budget: {
     budgetId?: string;
     name: string;
-    allocations: { category: string; amount: number }[];
+    monthlyIncome?: number;
+    expenses?: {
+      expenseId?: string;
+      name: string;
+      amount: number;
+      category: string;
+      group?: string;
+    }[];
+    allocations?: { category: string; amount: number }[];
     createdAt?: string;
     updatedAt?: string;
   },
@@ -365,6 +373,8 @@ export async function putBudget(
     sk: `budget#${id}`,
     budgetId: id,
     name: budget.name,
+    monthlyIncome: budget.monthlyIncome,
+    expenses: budget.expenses || [],
     allocations: budget.allocations || [],
     createdAt: budget.createdAt || now,
     updatedAt: now,
@@ -390,6 +400,9 @@ export async function getUserBudgets(userId: string) {
   return items.map((item) => ({
     budgetId: String(item.budgetId || ""),
     name: String(item.name || ""),
+    monthlyIncome:
+      typeof item.monthlyIncome === "number" ? item.monthlyIncome : undefined,
+    expenses: Array.isArray(item.expenses) ? item.expenses : [],
     allocations: Array.isArray(item.allocations) ? item.allocations : [],
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,

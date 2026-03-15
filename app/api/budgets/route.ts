@@ -1,8 +1,9 @@
 // Note 1: `GET /api/budgets` and `POST /api/budgets` serve the Budget CRUD
-// resource. Budgets represent a named allocation plan (e.g. "Monthly Plan")
-// where spending categories are assigned percentage or dollar targets.
+// resource. Budgets now store expense rows plus monthly income so the page can
+// render both the pie chart and the grouped Sankey view from one saved payload.
 import { NextResponse } from "next/server";
 import { getUserIdFromRequest } from "../../../lib/auth";
+import { normalizeBudgetForStorage } from "../../../lib/budget-planner";
 import { getUserBudgets, putBudget } from "../../../lib/dynamo";
 import { BudgetSchema } from "../../../lib/schemas";
 
@@ -47,31 +48,21 @@ export async function POST(request: Request) {
         { status: 422 },
       );
     }
-    const bud = parseResult.data;
+    const budget = parseResult.data;
     // Ensure timestamps / id are set server-side if missing
     // Note 5: Setting `updatedAt` server-side (rather than trusting the client
     // to send a timestamp) prevents clock skew and ensures the database always
     // reflects when the record was last written. `createdAt` is preserved if
     // already present (i.e. during an update) so creation history is not lost.
     const now = new Date().toISOString();
-    (bud as any).createdAt = (bud as any).createdAt || now;
-    (bud as any).updatedAt = now;
-
-    // Normalize `allocations` so the DB always stores an array of
-    // { category, amount } objects. Support legacy record shape too.
-    let normalizedAllocations: { category: string; amount: number }[] = [];
-    if ((bud as any).allocations) {
-      if (Array.isArray((bud as any).allocations)) {
-        normalizedAllocations = (bud as any).allocations;
-      } else {
-        normalizedAllocations = Object.entries((bud as any).allocations).map(
-          ([category, amount]) => ({ category, amount: Number(amount) }),
-        );
-      }
-    }
-    (bud as any).allocations = normalizedAllocations;
-
-    const created = await putBudget(userId, bud as any);
+    const created = await putBudget(
+      userId,
+      normalizeBudgetForStorage({
+        ...budget,
+        createdAt: budget.createdAt || now,
+        updatedAt: now,
+      }),
+    );
     return NextResponse.json({ ok: true, created });
   } catch (err) {
     console.error(err);

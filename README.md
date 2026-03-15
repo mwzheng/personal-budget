@@ -14,7 +14,7 @@ A personal budgeting application built with TypeScript, Next.js, and serverless 
 ## New / Available Pages (local)
 
 - `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, and a transactions table backed by authenticated per-user APIs.
-- `/sankey` — Budget Generator page: supply monthly income and category allocations; generates a Sankey diagram and a suggested monthly budget breakdown.
+- `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
 
 ## APIs (local)
 
@@ -25,8 +25,8 @@ A personal budgeting application built with TypeScript, Next.js, and serverless 
 - `POST /api/transactions` — (Authenticated) Creates a transaction for the current user.
 - `PUT /api/transactions` — (Authenticated) Updates a transaction for the current user.
 - `DELETE /api/transactions` — (Authenticated) Deletes a transaction for the current user when `id` and `date` are supplied.
-- `GET /api/budgets` — (Authenticated) List budgets for the current user.
-- `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload).
+- `GET /api/budgets` — (Authenticated) List saved budgets for the current user, including monthly income and expense rows when available.
+- `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload) with monthly income, expense rows, and legacy allocation compatibility.
 - `GET /api/budgets/:id` — (Authenticated) Fetch a budget by id.
 - `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`.
 - `GET /api/goals`, `POST /api/goals`, `PUT /api/goals/:id`, `DELETE /api/goals/:id` — Goals CRUD with estimates/ETA in responses.
@@ -63,7 +63,7 @@ Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and
    - Sankey Budget: http://localhost:3000/sankey
    - Example API requests:
      - `GET http://localhost:3000/api/reports?pageSize=5`
-     - `POST http://localhost:3000/api/sankey` (see `components/SankeyForm` for request shape)
+     - `POST http://localhost:3000/api/sankey` (see `app/api/sankey/route.ts` for the allocation payload shape)
 
 ## Notes & next steps
 
