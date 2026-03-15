@@ -187,13 +187,13 @@ export function SankeyChart({ data }: Props) {
           text: {
             fill: theme.palette.text.primary,
             fontSize: 14,
-            fontWeight: 700,
+            fontWeight: 800,
           },
           labels: {
             text: {
               fill: theme.palette.text.primary,
               fontSize: 14,
-              fontWeight: 700,
+              fontWeight: 800,
             },
           },
           tooltip: {

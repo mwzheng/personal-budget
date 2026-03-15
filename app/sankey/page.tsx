@@ -461,30 +461,63 @@ export default function SankeyPage() {
         <DialogContent dividers>
           <Stack spacing={2}>
             <Typography variant="body2" color="text.secondary">
-              The Sankey diagram now flows from <strong>Net Income</strong> into
-              any optional path layers you define, and then into the final
-              expense name. The <strong>Category</strong> field still powers the
-              budget summary and pie chart colors, but it no longer creates
-              Sankey branches on its own.
+              The Sankey diagram flows from <strong>Net Income</strong> into
+              optional user-defined path layers and then into the final expense
+              leaf. Use the <strong>Sankey Path</strong> field to specify one or
+              more nested layers.
+            </Typography>
+
+            <Typography variant="subtitle2" fontWeight={700}>
+              How to write a Sankey Path
             </Typography>
 
             <Box component="ul" sx={{ pl: 2.5, m: 0 }}>
               <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                Leave <strong>Sankey Path</strong> blank to connect an expense
-                directly to <strong>Net Income</strong>.
+                Separate nested layers with{" "}
+                <Box component="span" sx={{ fontFamily: "monospace" }}>
+                  {" > "}
+                </Box>{" "}
+                (greater-than sign).
               </Typography>
               <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                Use <strong>{">"}</strong> between levels to create nested
-                branches, for example{" "}
-                <strong>Subscriptions &gt; AI Tools</strong>.
-              </Typography>
-              <Typography component="li" variant="body2">
-                The <strong>Expense</strong> field becomes the final leaf, so a
-                row named <strong>Copilot</strong> with a Sankey Path of
-                <strong>Subscriptions</strong> renders as
-                <strong> Net Income -&gt; Subscriptions -&gt; Copilot</strong>.
+                Do not include the expense name in the path; the{" "}
+                <strong>Expense</strong> column is the final leaf.
               </Typography>
             </Box>
+
+            <Typography variant="subtitle2" fontWeight={700}>
+              Examples
+            </Typography>
+
+            <Box
+              component="pre"
+              sx={{
+                fontFamily: "monospace",
+                backgroundColor: (theme) => theme.palette.action.hover,
+                p: 1,
+                borderRadius: 1,
+                whiteSpace: "pre-wrap",
+                mb: 1,
+              }}
+            >{`Example 1:
+Sankey Path: Subscriptions > AI Tools
+Expense: Copilot
+Resulting flow: Net Income → Subscriptions → AI Tools → Copilot
+
+Example 2:
+Sankey Path: Home > Security
+Expense: Ring
+Resulting flow: Net Income → Home → Security → Ring
+
+Example 3 (no path):
+Sankey Path: (blank)
+Expense: Internet
+Resulting flow: Net Income → Internet`}</Box>
+
+            <Typography variant="body2" color="text.secondary">
+              Tip: Category still controls pie-chart colors and summaries. Paths
+              control Sankey structure only.
+            </Typography>
           </Stack>
         </DialogContent>
         <DialogActions>
