@@ -49,6 +49,7 @@ export function BudgetList({
   onLoad,
   onEdit,
   onBudgetsLoaded,
+  onLoadingChange,
   reloadKey,
 }: Props) {
   const [budgets, setBudgets] = useState<SavedBudget[]>([]);
@@ -93,7 +94,7 @@ export function BudgetList({
       setLoading(false);
       onLoadingChange?.(false);
     }
-  }, [onBudgetsLoaded]);
+  }, [onBudgetsLoaded, onLoadingChange]);
 
   useEffect(() => {
     void loadBudgets();
