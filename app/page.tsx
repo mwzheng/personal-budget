@@ -85,7 +85,8 @@ export default function Home() {
               Budget Generator
             </Typography>
             <Typography variant="body2" color="text.secondary" align="center">
-              Try the Sankey budget generator to explore allocation strategies.
+              Plan named expenses, preview a pie chart, and explore grouped
+              Sankey flows.
             </Typography>
           </Paper>
         </Grid>
