@@ -1,29 +1,29 @@
-// Note 1: SankeyChart wraps the `@nivo/sankey` library. Nivo is a React data
-// visualization library built on D3. It handles all the layout math (node
-// placement, link bezier curves) and exposes the result as SVG. The component
-// is only loaded client-side (`"use client"`) because D3 needs the browser DOM.
+/**
+ * Note 1: SankeyChart is intentionally presentation-only. The parent computes a
+ * fully grouped `{ nodes, links }` dataset so this component can focus on layout,
+ * labels, and tooltip ergonomics without duplicating the budget math.
+ */
 "use client";
 
 import { ResponsiveSankey } from "@nivo/sankey";
+
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { SankeyData } from "@/lib/types";
-
-// Note 2: CATEGORY_COLORS maps each budget category name to a hex color.
-// These same colors are used across multiple components (SankeyChart, SankeyForm,
-// SankeyPage) to maintain visual consistency without a centralized theme token.
-const CATEGORY_COLORS: Record<string, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
-};
-
-function getNodeColor(node: { id: string | number }): string {
-  // Note 3: The `?? "#2D7DD2"` fallback is the primary blue, used for nodes
-  // that are not category nodes -- in this case "Income" or any custom label.
-  return CATEGORY_COLORS[String(node.id)] ?? "#2D7DD2";
-}
 
 interface Props {
   data: SankeyData;
+}
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+function getNodeColor(node: { id: string | number; color?: string }): string {
+  return node.color ?? "#2D7DD2";
 }
 
 export function SankeyChart({ data }: Props) {
@@ -32,9 +32,9 @@ export function SankeyChart({ data }: Props) {
       <div
         style={{
           textAlign: "center",
-          padding: "60px 40px",
+          padding: "72px 40px",
           color: "#666",
-          height: 400,
+          height: 460,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -42,44 +42,64 @@ export function SankeyChart({ data }: Props) {
           gap: 8,
         }}
       >
-        <div style={{ fontSize: 40 }}>📊</div>
-        <div>Fill in the form to generate your budget Sankey diagram</div>
+        <div style={{ fontSize: 32, fontWeight: 700 }}>[Flow]</div>
+        <div>Add expenses to generate the grouped Sankey flow.</div>
       </div>
     );
   }
 
   return (
-    // Note 4: The outer `div` has a fixed height so the `ResponsiveSankey` can
-    // fill 100% of it. Without a concrete pixel height the container collapses
-    // to zero and the chart becomes invisible.
-    <div style={{ height: 420 }}>
+    <div style={{ height: 520 }}>
       <ResponsiveSankey
         data={data}
-        margin={{ top: 40, right: 160, bottom: 40, left: 50 }}
-        // Note 5: `align="justify"` distributes nodes vertically so source nodes
-        // are flush with the left edge and target nodes are flush with the right edge.
+        margin={{ top: 24, right: 220, bottom: 24, left: 56 }}
         align="justify"
+        sort="input"
+        label="label"
         colors={getNodeColor}
-        nodeOpacity={0.9}
-        nodeThickness={22}
-        nodeInnerPadding={3}
-        nodeSpacing={24}
+        valueFormat={formatCurrency}
+        nodeOpacity={0.92}
+        nodeThickness={18}
+        nodeInnerPadding={4}
+        nodeSpacing={20}
         nodeBorderWidth={0}
-        nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
-        linkOpacity={0.4}
-        linkHoverOthersOpacity={0.1}
+        linkOpacity={0.42}
+        linkHoverOthersOpacity={0.08}
         enableLinkGradient
         labelPosition="outside"
         labelOrientation="horizontal"
-        labelPadding={16}
-        labelTextColor={{ from: "color", modifiers: [["brighter", 1]] }}
+        labelPadding={14}
+        labelTextColor={{ from: "color", modifiers: [["darker", 2.2]] }}
+        nodeTooltip={({ node }) => (
+          <ChartTooltipCard
+            title={node.label}
+            rows={[
+              {
+                label: "Amount",
+                value: formatCurrency(Number(node.value ?? 0)),
+                color: getNodeColor(node),
+              },
+            ]}
+          />
+        )}
+        linkTooltip={({ link }) => (
+          <ChartTooltipCard
+            title={`${link.source.label} -> ${link.target.label}`}
+            rows={[
+              {
+                label: "Flow",
+                value: formatCurrency(Number(link.value ?? 0)),
+                color: link.color,
+              },
+            ]}
+          />
+        )}
         theme={{
-          text: { fill: "#ddd", fontSize: 13 },
+          text: { fill: "#111827", fontSize: 13, fontWeight: 600 },
           tooltip: {
             container: {
-              background: "#242424",
-              border: "1px solid #444",
-              color: "#ddd",
+              background: "transparent",
+              boxShadow: "none",
             },
           },
         }}
