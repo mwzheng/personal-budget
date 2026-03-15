@@ -48,6 +48,11 @@ AWS_REGION=us-east-1
 
 Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
 
+If you just want to explore the UI, the login and register screens also provide a
+`Demo Sign In` / `Demo Register` flow. That mode seeds browser-local demo data for
+reports, progress, goals, and budgets, and all demo edits stay in local storage
+until sign-out instead of writing to DynamoDB.
+
 ## Getting Started (local development)
 
 1. Clone the repo and install dependencies:

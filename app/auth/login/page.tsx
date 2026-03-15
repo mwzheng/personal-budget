@@ -9,13 +9,15 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import SignInButton from "@/components/Auth/SignInButton";
-import { isAuthenticated, storeCognitoTokens } from "@/lib/cognitoClient";
+import { isAuthenticated, startDemoSession } from "@/lib/cognitoClient";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
   const cognitoConfigured = Boolean(
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
     process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
@@ -27,13 +29,23 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const demoSignIn = () => {
-    storeCognitoTokens({
-      access_token: "demo-access-token",
-      id_token: "demo-id-token",
-      refresh_token: "demo-refresh-token",
-    });
-    router.replace("/reports");
+  const demoSignIn = async () => {
+    setDemoBusy(true);
+    setDemoError(null);
+
+    try {
+      // Note 1: Demo sign-in creates a dedicated browser-only session instead of
+      // fake Cognito JWTs. That gives the user realistic sample data across pages
+      // while ensuring all writes stay in localStorage and never reach DynamoDB.
+      await startDemoSession();
+      router.replace("/reports");
+    } catch (error) {
+      setDemoError(
+        error instanceof Error ? error.message : "Failed to start demo mode.",
+      );
+    } finally {
+      setDemoBusy(false);
+    }
   };
 
   return (
@@ -59,6 +71,14 @@ export default function LoginPage() {
               </Alert>
             )}
 
+            <Alert severity="info">
+              Demo Sign In loads seeded sample data in this browser only. Demo
+              edits persist locally until you sign out and never write to
+              DynamoDB.
+            </Alert>
+
+            {demoError ? <Alert severity="error">{demoError}</Alert> : null}
+
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <SignInButton
                 variant="contained"
@@ -73,8 +93,9 @@ export default function LoginPage() {
                 size="large"
                 fullWidth
                 onClick={demoSignIn}
+                disabled={demoBusy}
               >
-                Demo Sign In
+                {demoBusy ? "Starting Demo…" : "Demo Sign In"}
               </Button>
             </Stack>
           </Stack>

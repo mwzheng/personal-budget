@@ -1,15 +1,26 @@
 import {
   clearCognitoTokens,
   getStoredCognitoTokens,
+  isDemoSessionActive,
   normalizeCognitoDomain,
   storeCognitoTokens,
 } from "./cognitoClient";
 
 // Note 1: `apiFetch` is a drop-in replacement for the native `fetch` API that
-// automatically attaches the user's JWT access token to every outgoing request.
-// It also handles silent token refresh when the server returns a 401/403 response,
-// so the rest of the app never needs to manage token lifecycle directly.
+// routes demo sessions to a browser-only local store and automatically attaches
+// Cognito JWTs for real users. That keeps all pages on one fetch abstraction
+// while preserving the correct persistence layer for each auth mode.
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
+  if (typeof window !== "undefined" && isDemoSessionActive()) {
+    const requestUrl = typeof input === "string" ? input : input.url;
+    const url = new URL(requestUrl, window.location.origin);
+
+    if (url.pathname.startsWith("/api/")) {
+      const { handleDemoApiRequest } = await import("./demoApi");
+      return handleDemoApiRequest(input, init);
+    }
+  }
+
   // Attach Authorization header from sessionStorage if present (access_token or id_token)
   const headers = new Headers((init?.headers as HeadersInit) || {});
 

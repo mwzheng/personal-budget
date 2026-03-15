@@ -9,13 +9,15 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import SignInButton from "@/components/Auth/SignInButton";
-import { isAuthenticated, storeCognitoTokens } from "@/lib/cognitoClient";
+import { isAuthenticated, startDemoSession } from "@/lib/cognitoClient";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
   const cognitoConfigured = Boolean(
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
     process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
@@ -27,13 +29,23 @@ export default function RegisterPage() {
     }
   }, [router]);
 
-  const demoRegister = () => {
-    storeCognitoTokens({
-      access_token: "demo-access-token",
-      id_token: "demo-id-token",
-      refresh_token: "demo-refresh-token",
-    });
-    router.replace("/reports");
+  const demoRegister = async () => {
+    setDemoBusy(true);
+    setDemoError(null);
+
+    try {
+      // Note 1: The register page reuses the same client-only demo session as the
+      // login page so users can explore the product immediately without creating a
+      // Cognito account or writing any sample actions to shared backend storage.
+      await startDemoSession();
+      router.replace("/reports");
+    } catch (error) {
+      setDemoError(
+        error instanceof Error ? error.message : "Failed to start demo mode.",
+      );
+    } finally {
+      setDemoBusy(false);
+    }
   };
 
   return (
@@ -59,6 +71,13 @@ export default function RegisterPage() {
               </Alert>
             )}
 
+            <Alert severity="info">
+              Demo Register loads local sample data only. Nothing you change in
+              demo mode is sent to Cognito or DynamoDB.
+            </Alert>
+
+            {demoError ? <Alert severity="error">{demoError}</Alert> : null}
+
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <SignInButton
                 mode="signup"
@@ -74,8 +93,9 @@ export default function RegisterPage() {
                 size="large"
                 fullWidth
                 onClick={demoRegister}
+                disabled={demoBusy}
               >
-                Demo Register
+                {demoBusy ? "Starting Demo…" : "Demo Register"}
               </Button>
             </Stack>
           </Stack>

@@ -1,3 +1,47 @@
+# Completed: Browser-only demo sign-in and local demo data
+
+Date: 2026-03-15
+
+Summary
+
+- Replaced the old fake-token demo login with a dedicated browser-only demo session, so clicking `Demo Sign In` now reliably opens the app with seeded sample data instead of bouncing off real auth-protected APIs.
+- Added a client-side API shim that serves reports, progress, goals, milestones, and budget CRUD from local storage, which keeps demo actions persistent across pages and refreshes without touching DynamoDB.
+- Updated sign-out and protected-page auth checks so demo users behave like signed-in users in the UI while still clearing cleanly back to the login screen.
+
+Completed items
+
+- Added `lib/demoData.ts` with seeded transactions, salary history, retirement progress, goals, milestones, and saved budgets for demo sessions.
+- Added `lib/demoApi.ts` so demo sessions can handle transaction CRUD, CSV import/export, progress data, goals, milestones, and budget CRUD entirely in the browser.
+- Updated `lib/cognitoClient.ts` to track a dedicated demo-session flag and updated `lib/apiFetch.ts` to route demo `/api/*` requests through the local demo API instead of the network.
+- Updated `app/auth/login/page.tsx`, `app/auth/register/page.tsx`, and `app/auth/signout/page.tsx` so demo sign-in seeds local data, sign-out clears it, and real Cognito logout still runs only for real sessions.
+- Updated `app/reports/page.tsx` and `app/sankey/page.tsx` to treat demo sessions as authenticated for protected-page access.
+- Added `test/demo-mode.test.ts` and re-verified the repository with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to document the new demo-mode behavior.
+
+Files changed
+
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/auth/signout/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `lib/apiFetch.ts`
+- `lib/cognitoClient.ts`
+- `lib/demoApi.ts`
+- `lib/demoData.ts`
+- `test/demo-mode.test.ts`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(demo): keep demo data client-side`
+
+Notes / next steps
+
+- If the app ever needs a shareable hosted demo later, prefer a dedicated seeded backend account or resettable fixture API instead of reintroducing fake JWTs into the main auth flow.
+
 # Completed: Google Analytics integration (env-configured)
 
 Date: 2026-03-15
