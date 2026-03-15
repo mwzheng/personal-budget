@@ -115,15 +115,18 @@ function getSankeyLayoutMetrics(data: SankeyData) {
   const labelFontSize =
     maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
 
-  // Compute a node thickness that scales with the largest link value so relative differences are visible
+  // Compute a node thickness that scales with the largest link value so relative differences are visible.
+  // Increase sensitivity so small differences are more noticeable while clamping to avoid overlap.
   const maxLinkValue = Math.max(
     1,
     ...data.links.map((l) => Number(l.value ?? 0)),
   );
-  const nodeThickness = Math.min(
-    40,
-    Math.max(12, Math.round(8 + Math.log10(maxLinkValue + 1) * 6)),
-  );
+  // Higher multiplier gives wider nodes for the same values; tuned to avoid overlap with nodeSpacing/height
+  const rawThickness = Math.round(8 + Math.log10(maxLinkValue + 1) * 14);
+  const nodeThickness = Math.min(100, Math.max(18, rawThickness));
+
+  // Inner padding between stacked subnodes should grow with thickness so links remain visible
+  const nodeInnerPadding = Math.max(6, Math.round(nodeThickness / 6));
 
   return {
     height,
@@ -131,6 +134,7 @@ function getSankeyLayoutMetrics(data: SankeyData) {
     rightMargin,
     labelFontSize,
     nodeThickness,
+    nodeInnerPadding,
   };
 }
 
@@ -171,11 +175,11 @@ export function SankeyChart({ data }: Props) {
         valueFormat={formatCurrency}
         nodeOpacity={0.96}
         nodeThickness={metrics.nodeThickness}
-        nodeInnerPadding={6}
+        nodeInnerPadding={metrics.nodeInnerPadding}
         nodeSpacing={metrics.nodeSpacing}
         nodeBorderWidth={0}
-        linkOpacity={0.52}
-        linkHoverOthersOpacity={0.08}
+        linkOpacity={0.8}
+        linkHoverOthersOpacity={0.12}
         enableLinkGradient
         labelPosition="outside"
         labelOrientation="horizontal"

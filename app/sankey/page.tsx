@@ -252,15 +252,19 @@ export default function SankeyPage() {
               <Grid container spacing={3} alignItems="start">
                 <Grid item xs={12} lg={8} xl={8}>
                   <Stack spacing={3}>
-                    <BudgetForm
-                      value={draft}
-                      saving={saving}
-                      saveError={saveError}
-                      isEditing={Boolean(editingBudgetId)}
-                      onChange={setDraft}
-                      onSave={saveBudget}
-                      onStartFresh={startFresh}
-                    />
+                    {sankeyLoading ? (
+                      <Skeleton variant="rectangular" height={260} />
+                    ) : (
+                      <BudgetForm
+                        value={draft}
+                        saving={saving}
+                        saveError={saveError}
+                        isEditing={Boolean(editingBudgetId)}
+                        onChange={setDraft}
+                        onSave={saveBudget}
+                        onStartFresh={startFresh}
+                      />
+                    )}
 
                     <Card variant="outlined">
                       <CardHeader
@@ -282,13 +286,22 @@ export default function SankeyPage() {
                       />
                       <Divider />
                       <CardContent sx={SECTION_CONTENT_SX}>
-                        <BudgetList
-                          reloadKey={budgetsReloadKey}
-                          onLoad={loadBudget}
-                          onEdit={editBudget}
-                          onBudgetsLoaded={handleBudgetsLoaded}
-                          onLoadingChange={setSankeyLoading}
-                        />
+                        {sankeyLoading ? (
+                          <Stack spacing={1}>
+                            <Skeleton variant="text" width="70%" />
+                            <Skeleton variant="text" width="60%" />
+                            <Skeleton variant="text" width="80%" />
+                            <Skeleton variant="text" width="50%" />
+                          </Stack>
+                        ) : (
+                          <BudgetList
+                            reloadKey={budgetsReloadKey}
+                            onLoad={loadBudget}
+                            onEdit={editBudget}
+                            onBudgetsLoaded={handleBudgetsLoaded}
+                            onLoadingChange={setSankeyLoading}
+                          />
+                        )}
                       </CardContent>
                     </Card>
                   </Stack>
@@ -301,18 +314,28 @@ export default function SankeyPage() {
                         <Typography variant="caption" color="text.secondary">
                           Monthly Income
                         </Typography>
-                        <Typography variant="h6" fontWeight={700}>
-                          {formatCurrency(insights.monthlyIncome)}
-                        </Typography>
+                        {sankeyLoading ? (
+                          <Skeleton variant="text" width="60%" />
+                        ) : (
+                          <Typography variant="h6" fontWeight={700}>
+                            {formatCurrency(insights.monthlyIncome)}
+                          </Typography>
+                        )}
                       </Paper>
+
                       <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
                         <Typography variant="caption" color="text.secondary">
                           Planned Expenses
                         </Typography>
-                        <Typography variant="h6" fontWeight={700}>
-                          {formatCurrency(insights.totalExpenses)}
-                        </Typography>
+                        {sankeyLoading ? (
+                          <Skeleton variant="text" width="60%" />
+                        ) : (
+                          <Typography variant="h6" fontWeight={700}>
+                            {formatCurrency(insights.totalExpenses)}
+                          </Typography>
+                        )}
                       </Paper>
+
                       <Paper variant="outlined" sx={SUMMARY_CARD_SX}>
                         <Typography variant="caption" color="text.secondary">
                           {insights.overspending > 0
@@ -321,21 +344,25 @@ export default function SankeyPage() {
                               ? "Leftover Savings"
                               : "Balance"}
                         </Typography>
-                        <Typography
-                          variant="h6"
-                          fontWeight={700}
-                          color={
-                            insights.overspending > 0
-                              ? "warning.main"
-                              : "success.main"
-                          }
-                        >
-                          {formatCurrency(
-                            insights.overspending > 0
-                              ? insights.overspending
-                              : insights.leftoverSavings,
-                          )}
-                        </Typography>
+                        {sankeyLoading ? (
+                          <Skeleton variant="text" width="60%" />
+                        ) : (
+                          <Typography
+                            variant="h6"
+                            fontWeight={700}
+                            color={
+                              insights.overspending > 0
+                                ? "warning.main"
+                                : "success.main"
+                            }
+                          >
+                            {formatCurrency(
+                              insights.overspending > 0
+                                ? insights.overspending
+                                : insights.leftoverSavings,
+                            )}
+                          </Typography>
+                        )}
                       </Paper>
                     </Box>
 
@@ -369,55 +396,76 @@ export default function SankeyPage() {
                       />
                       <Divider />
                       <CardContent sx={SECTION_CONTENT_SX}>
-                        <BudgetPieChart
-                          data={insights.pieData}
-                          monthlyIncome={insights.monthlyIncome}
-                          leftoverSavings={insights.leftoverSavings}
-                          overspending={insights.overspending}
-                        />
+                        {sankeyLoading ? (
+                          <Skeleton variant="rectangular" height={220} />
+                        ) : (
+                          <BudgetPieChart
+                            data={insights.pieData}
+                            monthlyIncome={insights.monthlyIncome}
+                            leftoverSavings={insights.leftoverSavings}
+                            overspending={insights.overspending}
+                          />
+                        )}
                       </CardContent>
                     </Card>
 
                     <Paper variant="outlined" sx={{ overflowX: "auto" }}>
                       <Table size="small">
                         <TableBody>
-                          {CATEGORY_ORDER.map((category) => {
-                            const amount = insights.categoryTotals[category];
-                            const share =
-                              insights.monthlyIncome > 0
-                                ? Math.min(
-                                    (amount / insights.monthlyIncome) * 100,
-                                    999,
-                                  )
-                                : 0;
+                          {sankeyLoading
+                            ? [1, 2, 3].map((i) => (
+                                <TableRow key={i} hover>
+                                  <TableCell>
+                                    <Skeleton variant="text" width="40%" />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <Skeleton variant="text" width="60%" />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <Skeleton variant="text" width="40%" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : CATEGORY_ORDER.map((category) => {
+                                const amount =
+                                  insights.categoryTotals[category];
+                                const share =
+                                  insights.monthlyIncome > 0
+                                    ? Math.min(
+                                        (amount / insights.monthlyIncome) * 100,
+                                        999,
+                                      )
+                                    : 0;
 
-                            return (
-                              <TableRow key={category} hover>
-                                <TableCell>
-                                  <Typography
-                                    variant="body2"
-                                    fontWeight={700}
-                                    sx={{ color: CATEGORY_COLORS[category] }}
-                                  >
-                                    {CATEGORY_LABELS[category]}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Typography variant="body2">
-                                    {formatCurrency(amount)}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                  >
-                                    {share.toFixed(0)}% of income
-                                  </Typography>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
+                                return (
+                                  <TableRow key={category} hover>
+                                    <TableCell>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight={700}
+                                        sx={{
+                                          color: CATEGORY_COLORS[category],
+                                        }}
+                                      >
+                                        {CATEGORY_LABELS[category]}
+                                      </Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                      <Typography variant="body2">
+                                        {formatCurrency(amount)}
+                                      </Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        {share.toFixed(0)}% of income
+                                      </Typography>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                         </TableBody>
                       </Table>
                     </Paper>
