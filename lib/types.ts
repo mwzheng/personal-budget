@@ -108,20 +108,68 @@ export interface ReportsResponse {
   aggregates: ReportsAggregates;
 }
 
-// Note 14: The Sankey diagram represents money flowing from a source (income)
+// Note 14: BudgetAllocationEntry preserves the earlier saved-budget shape that
+// stored simple `{ category, amount }` pairs. The new planner still writes it as
+// a compatibility layer while the richer `expenses` array becomes the main source
+// of truth for the UI.
+export interface BudgetAllocationEntry {
+  category: string;
+  amount: number;
+}
+
+// Note 15: BudgetExpense is the row shape edited on the budget page. `group` is
+// optional because most expenses can flow directly from a category, while related
+// items like "Gas" and "Car note" can share a rollup branch such as "Car".
+export interface BudgetExpense {
+  expenseId: string;
+  name: string;
+  amount: number;
+  category: CategoryType;
+  group?: string;
+}
+
+// Note 16: SavedBudget models the persisted response from the budgets API.
+// `monthlyIncome` and `expenses` are optional here so the UI can still load
+// older saved budgets that only contain the legacy `allocations` array.
+export interface SavedBudget {
+  budgetId?: string;
+  name: string;
+  monthlyIncome?: number;
+  expenses?: BudgetExpense[];
+  allocations?: BudgetAllocationEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type SankeyNodeKind =
+  | "income"
+  | "category"
+  | "group"
+  | "expense"
+  | "balance";
+
+// Note 17: The Sankey diagram represents money flowing from a source (income)
 // to target nodes (expense categories). Each node must have a unique `id` string,
 // and each link records the flow amount between two node ids.
 export interface SankeyNode {
   id: string;
+  label?: string;
+  color?: string;
+  kind?: SankeyNodeKind;
+  category?: CategoryType;
 }
 
 export interface SankeyLink {
   source: string;
   target: string;
   value: number;
+  color?: string;
+  startColor?: string;
+  endColor?: string;
+  kind?: string;
 }
 
-// Note 15: SankeyData is the exact shape required by the @nivo/sankey chart
+// Note 18: SankeyData is the exact shape required by the @nivo/sankey chart
 // library. Keeping this interface here rather than in the component file allows
 // the API route to return correctly typed data without importing UI dependencies.
 export interface SankeyData {
@@ -134,7 +182,7 @@ export interface SankeyAllocation {
   percentage: number;
 }
 
-// Note 16: SankeyRequestBody is validated on the server with Zod before use.
+// Note 19: SankeyRequestBody is validated on the server with Zod before use.
 // Defining the interface separately from the Zod schema still helps TypeScript
 // callers on the client side get autocompletion when building the request payload.
 export interface SankeyRequestBody {
@@ -143,7 +191,7 @@ export interface SankeyRequestBody {
   allocations: SankeyAllocation[];
 }
 
-// Note 17: `Record<string, number>` is a TypeScript utility type equivalent to
+// Note 20: `Record<string, number>` is a TypeScript utility type equivalent to
 // { [key: string]: number }. It is used here to hold a flexible dictionary of
 // category names mapped to their suggested dollar amounts.
 export interface SankeyResponse {
