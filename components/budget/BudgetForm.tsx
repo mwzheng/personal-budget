@@ -189,11 +189,11 @@ export function BudgetForm({
         <Table size="small" sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
             <TableRow>
-              <TableCell width="60%">Expense</TableCell>
-              <TableCell width="14%">Amount</TableCell>
-              <TableCell width="12%">Category</TableCell>
-              <TableCell width="10%">Sankey Path</TableCell>
-              <TableCell align="right" width="4%">
+              <TableCell width="45%">Expense</TableCell>
+              <TableCell width="12%">Amount</TableCell>
+              <TableCell width="13%">Category</TableCell>
+              <TableCell width="20%">Sankey Path</TableCell>
+              <TableCell align="right" width="10%">
                 Actions
               </TableCell>
             </TableRow>
@@ -293,26 +293,12 @@ export function BudgetForm({
                       }
                       size="small"
                       fullWidth
+                      inputProps={{
+                        title: parsedSegments.length
+                          ? parsedSegments.join(" > ")
+                          : (expense.group ?? ""),
+                      }}
                     />
-                    {parsedSegments.length > 0 ? (
-                      <Box
-                        sx={{
-                          mt: 0.5,
-                          display: "flex",
-                          gap: 0.5,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {parsedSegments.map((seg, i) => (
-                          <Chip
-                            key={i}
-                            label={seg}
-                            size="small"
-                            sx={{ fontFamily: "monospace" }}
-                          />
-                        ))}
-                      </Box>
-                    ) : null}
                   </TableCell>
                   <TableCell align="right">
                     {/* Note 3: Row controls stay icon-sized and visually matched so
