@@ -94,6 +94,7 @@ export default function SankeyPage() {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const hasAutoLoadedLatestBudget = useRef(false);
   const hasDraftChangesRef = useRef(false);
+  const [sankeyLoading, setSankeyLoading] = useState(true);
 
   const router = useRouter();
 
@@ -286,6 +287,7 @@ export default function SankeyPage() {
                           onLoad={loadBudget}
                           onEdit={editBudget}
                           onBudgetsLoaded={handleBudgetsLoaded}
+                          onLoadingChange={setSankeyLoading}
                         />
                       </CardContent>
                     </Card>
@@ -445,7 +447,11 @@ export default function SankeyPage() {
                   size="small"
                 />
               </Box>
-              <SankeyChart data={insights.sankeyData} />
+              {sankeyLoading ? (
+                <Skeleton variant="rectangular" height={520} />
+              ) : (
+                <SankeyChart data={insights.sankeyData} />
+              )}
             </CardContent>
           </Card>
         </Grid>

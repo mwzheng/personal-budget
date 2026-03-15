@@ -33,6 +33,7 @@ interface Props {
   onLoad?: (budget: SavedBudget) => void;
   onEdit?: (budget: SavedBudget) => void;
   onBudgetsLoaded?: (budgets: SavedBudget[]) => void;
+  onLoadingChange?: (loading: boolean) => void;
   reloadKey?: number;
 }
 
@@ -61,6 +62,7 @@ export function BudgetList({
   const loadBudgets = useCallback(async () => {
     setLoading(true);
     setError(null);
+    onLoadingChange?.(true);
 
     try {
       const response = await apiFetch("/api/budgets");
@@ -89,6 +91,7 @@ export function BudgetList({
       );
     } finally {
       setLoading(false);
+      onLoadingChange?.(false);
     }
   }, [onBudgetsLoaded]);
 

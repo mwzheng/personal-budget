@@ -115,11 +115,22 @@ function getSankeyLayoutMetrics(data: SankeyData) {
   const labelFontSize =
     maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
 
+  // Compute a node thickness that scales with the largest link value so relative differences are visible
+  const maxLinkValue = Math.max(
+    1,
+    ...data.links.map((l) => Number(l.value ?? 0)),
+  );
+  const nodeThickness = Math.min(
+    40,
+    Math.max(12, Math.round(8 + Math.log10(maxLinkValue + 1) * 6)),
+  );
+
   return {
     height,
     nodeSpacing,
     rightMargin,
     labelFontSize,
+    nodeThickness,
   };
 }
 
@@ -159,7 +170,7 @@ export function SankeyChart({ data }: Props) {
         colors={getNodeColor}
         valueFormat={formatCurrency}
         nodeOpacity={0.96}
-        nodeThickness={16}
+        nodeThickness={metrics.nodeThickness}
         nodeInnerPadding={6}
         nodeSpacing={metrics.nodeSpacing}
         nodeBorderWidth={0}
