@@ -47,8 +47,8 @@ interface Props {
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
 const ROW_ACTION_BUTTON_SX = {
-  width: 32,
-  height: 32,
+  width: 28,
+  height: 28,
   borderRadius: 1.25,
   border: "1px solid",
   borderColor: "divider",
@@ -186,13 +186,24 @@ export function BudgetForm({
       </Box>
 
       <Box sx={{ overflowX: { xs: "auto", lg: "visible" } }}>
-        <Table size="small" sx={{ width: "100%", tableLayout: "fixed" }}>
+        <Table
+          size="small"
+          sx={{
+            width: "100%",
+            tableLayout: "fixed",
+            // Reduce internal cell padding to make columns tighter and avoid overflow
+            "& .MuiTableCell-root": {
+              padding: "6px 8px",
+              verticalAlign: "middle",
+            },
+          }}
+        >
           <TableHead>
             <TableRow>
-              <TableCell width="45%">Expense</TableCell>
-              <TableCell width="12%">Amount</TableCell>
-              <TableCell width="13%">Category</TableCell>
-              <TableCell width="20%">Sankey Path</TableCell>
+              <TableCell width="34%">Expense</TableCell>
+              <TableCell width="16%">Amount</TableCell>
+              <TableCell width="14%">Category</TableCell>
+              <TableCell width="26%">Sankey Path</TableCell>
               <TableCell align="right" width="10%">
                 Actions
               </TableCell>
@@ -229,8 +240,9 @@ export function BudgetForm({
                       helperText={
                         rowHasError && !expense.name.trim()
                           ? "Name is required when a row has a value."
-                          : " "
+                          : undefined
                       }
+                      margin="dense"
                       size="small"
                       fullWidth
                     />
@@ -248,6 +260,7 @@ export function BudgetForm({
                         )
                       }
                       error={rowHasError && Number(expense.amount) <= 0}
+                      margin="dense"
                       size="small"
                       fullWidth
                       slotProps={{
@@ -270,6 +283,7 @@ export function BudgetForm({
                           event.target.value,
                         )
                       }
+                      margin="dense"
                       size="small"
                       fullWidth
                     >
@@ -291,6 +305,7 @@ export function BudgetForm({
                           event.target.value,
                         )
                       }
+                      margin="dense"
                       size="small"
                       fullWidth
                       inputProps={{
