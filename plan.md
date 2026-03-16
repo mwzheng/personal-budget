@@ -337,3 +337,4 @@ interface SankeyResponse {
 ## Data retention policy (default)
 
 Default policy: Indefinite (no automatic deletion). Users may request data export or deletion via account settings or support; implement manual or on-request deletion workflows and document steps in the privacy policy.
+\n- Completed reorg of lib into subfolders (2026-03-17)

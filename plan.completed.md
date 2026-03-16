@@ -1107,3 +1107,17 @@ Commit
 Notes
 
 - Expense column adjusted from 34% → 32%; Sankey Path column from 26% → 24%; row action icon sizes reduced for visual balance. Changes were committed and merged to `main` in a single commit that updates both plan files and the UI code.
+
+## [2026-03-17] - Reorganize lib into subfolders
+
+- Moved many lib/\* modules into categorized folders:
+  - lib/auth: auth, auth2, cognitoAuth, cognitoClient, requestUser, users
+  - lib/api: apiFetch, dynamo
+  - lib/demo: demoApi, demoData
+  - lib/schemas: schemas
+  - lib/utils: aggregations, budget-planner, budgets, csvExport, csvParser, format, goals, progress, projections, salary, sankey, sankey-layout, storage
+  - lib/types: types
+
+- Added top-level re-export stubs at lib/\*.ts to preserve existing import paths while files are grouped.
+
+Files changed: lib/\* (moved into subfolders; see git diff for full list)
