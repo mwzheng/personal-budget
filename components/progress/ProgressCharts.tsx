@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import type { RetirementEntry, SalaryEntry } from "@/lib/types";
+import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
 interface ProgressChartRow {
   year: string;

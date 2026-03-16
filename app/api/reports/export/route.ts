@@ -2,10 +2,10 @@
 // filtered transactions on the server. That keeps export authorization aligned
 // with the same Cognito-scoped data rules as the rest of the reports API.
 import { NextRequest } from "next/server";
-import { filterTransactions } from "@/lib/aggregations";
-import { transactionsToCsv } from "@/lib/csvExport";
-import { getUserTransactions } from "@/lib/dynamo";
-import { getRequestUserId } from "@/lib/requestUser";
+import { filterTransactions } from "@/lib/utils/aggregations";
+import { transactionsToCsv } from "@/lib/utils/csvExport";
+import { getUserTransactions } from "@/lib/api/dynamo";
+import { getRequestUserId } from "@/lib/auth/requestUser";
 
 export async function GET(request: NextRequest) {
   try {

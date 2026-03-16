@@ -3,11 +3,11 @@
 // and reports queries stay bound to the authenticated Cognito subject.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/requestUser", () => ({
+vi.mock("@/lib/auth/requestUser", () => ({
   getRequestUserId: vi.fn(),
 }));
 
-vi.mock("@/lib/dynamo", () => ({
+vi.mock("@/lib/api/dynamo", () => ({
   getUserTransactions: vi.fn(),
   putTransaction: vi.fn(),
 }));
@@ -15,9 +15,9 @@ vi.mock("@/lib/dynamo", () => ({
 import { GET as getReports } from "../app/api/reports/route";
 import { GET as exportReports } from "../app/api/reports/export/route";
 import { POST as importReports } from "../app/api/reports/import/route";
-import { getUserTransactions, putTransaction } from "@/lib/dynamo";
-import { getRequestUserId } from "@/lib/requestUser";
-import type { Transaction } from "../lib/types";
+import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
+import { getRequestUserId } from "@/lib/auth/requestUser";
+import type { Transaction } from "../lib/types/types";
 
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
 const mockedGetUserTransactions = vi.mocked(getUserTransactions);

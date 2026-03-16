@@ -13,7 +13,7 @@ import Box from "@mui/material/Box";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
-import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/cognitoClient";
+import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 
 export function AppNav() {
   // Note 2: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").

@@ -10,8 +10,8 @@ import { useTheme } from "@mui/material/styles";
 import { useMemo } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-import { getSankeyLayoutMetrics } from "@/lib/sankey-layout";
-import { SankeyData } from "@/lib/types";
+import { getSankeyLayoutMetrics } from "@/lib/utils/sankey-layout";
+import { SankeyData } from "@/lib/types/types";
 
 interface Props {
   data: SankeyData;

@@ -19,8 +19,8 @@ import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import { apiFetch } from "@/lib/apiFetch";
-import type { SalaryEntry } from "@/lib/types";
+import { apiFetch } from "@/lib/api/apiFetch";
+import type { SalaryEntry } from "@/lib/types/types";
 
 interface SalaryApiResponse {
   ok: boolean;

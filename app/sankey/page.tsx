@@ -3,7 +3,7 @@
 // real time, and saves budgets without leaving the page.
 "use client";
 
-import { apiFetch } from "../../lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -35,7 +35,7 @@ import { useRouter } from "next/navigation";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { BudgetList } from "@/components/budget/BudgetList";
 import { BudgetPieChart } from "@/components/charts/BudgetPieChart";
-import { isAuthenticated } from "@/lib/cognitoClient";
+import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   buildBudgetInsights,
   CATEGORY_COLORS,
@@ -47,8 +47,8 @@ import {
   normalizeBudgetForEditor,
   normalizeBudgetForStorage,
   sortSavedBudgets,
-} from "@/lib/budget-planner";
-import { SavedBudget } from "@/lib/types";
+} from "@/lib/utils/budget-planner";
+import { SavedBudget } from "@/lib/types/types";
 
 const SankeyChart = dynamic(
   () =>

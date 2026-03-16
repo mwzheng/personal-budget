@@ -2,7 +2,7 @@
 // It handles edge cases such as quoted fields containing commas, multi-line cell
 // values, and different line endings (CRLF vs LF) automatically.
 import Papa from "papaparse";
-import { Transaction, CategoryType } from "../types";
+import { Transaction, CategoryType } from "../types/types";
 
 // Note 2: RawCSVRow maps directly to the column headers in the expenses CSV.
 // Defining a typed interface (rather than using `any`) lets TypeScript warn us

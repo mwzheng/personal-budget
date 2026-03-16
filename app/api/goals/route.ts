@@ -2,9 +2,9 @@
 // target amount, a starting balance, and a monthly contribution. The route
 // augments each goal with an `eta` field calculated by `estimateGoalETA`.
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../lib/auth";
-import { getUserGoals, putGoal, deleteGoal } from "../../../lib/dynamo";
-import { estimateGoalETA } from "../../../lib/goals";
+import { getUserIdFromRequest } from "@/lib/auth/auth";
+import { getUserGoals, putGoal, deleteGoal } from "@/lib/api/dynamo";
+import { estimateGoalETA } from "@/lib/utils/goals";
 
 export async function GET(request: Request) {
   try {

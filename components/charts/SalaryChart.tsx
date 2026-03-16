@@ -18,7 +18,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-import type { SalaryEntry } from "@/lib/types";
+import type { SalaryEntry } from "@/lib/types/types";
 
 function formatCurrency(value: number) {
   return `$${Number(value).toLocaleString()}`;

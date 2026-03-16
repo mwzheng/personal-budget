@@ -168,7 +168,7 @@ export function storeCognitoTokens(tokens: TokenResponseShape) {
 export async function startDemoSession() {
   requireBrowser();
   clearStoredAuthStorage();
-  const { resetDemoStore } = await import("../demoData");
+  const { resetDemoStore } = await import("../demo/demoData");
   resetDemoStore();
   setDemoSessionValue(true);
   dispatchAuthChanged();

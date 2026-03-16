@@ -2,14 +2,14 @@
 // API refactors do not accidentally route demo writes through the real network.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
 import {
   clearCognitoTokens,
   hasStoredCognitoTokens,
   isAuthenticated,
   isDemoSessionActive,
   startDemoSession,
-} from "@/lib/cognitoClient";
+} from "@/lib/auth/cognitoClient";
 
 class MemoryStorage {
   private readonly map = new Map<string, string>();

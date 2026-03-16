@@ -12,8 +12,8 @@ import ProgressCharts from "@/components/progress/ProgressCharts";
 import { ProgressYearFilter } from "@/components/progress/ProgressYearFilter";
 import RetirementList from "@/components/ui/RetirementList";
 import SalaryList from "@/components/ui/SalaryList";
-import { apiFetch } from "@/lib/apiFetch";
-import type { RetirementEntry, SalaryEntry } from "@/lib/types";
+import { apiFetch } from "@/lib/api/apiFetch";
+import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
 interface ApiEntriesResponse<T> {
   ok: boolean;

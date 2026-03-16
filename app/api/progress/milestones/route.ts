@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getPayloadFromRequest } from "../../../../lib/auth2";
-import { upsertUserProfile } from "../../../../lib/users";
+import { upsertUserProfile } from "@/lib/auth/users";
 import {
   getUserMilestones,
   putMilestone,
   deleteMilestone,
-} from "../../../../lib/progress";
+} from "@/lib/utils/progress";
 
 // Note 1: Centralize payload -> userId extraction to avoid repeated `any` casts.
 function getUserIdFromPayload(payload: Record<string, unknown>): string {

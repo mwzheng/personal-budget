@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getPayloadFromRequest } from "../../../../lib/auth2";
-import { upsertUserProfile } from "../../../../lib/users";
+import { upsertUserProfile } from "@/lib/auth/users";
 import {
   getUserProgressGoals,
   putProgressGoal,
   getUserRetirement,
-} from "../../../../lib/progress";
+} from "@/lib/utils/progress";
 
 // Note 1: Keep user extraction in one place to avoid repeating unsafe casts.
 function getUserIdFromPayload(payload: Record<string, unknown>): string {

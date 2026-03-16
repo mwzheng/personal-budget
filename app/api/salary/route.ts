@@ -3,8 +3,8 @@
 // can display it in a chart without extra computation.
 import { NextResponse } from "next/server";
 import { getPayloadFromRequest } from "../../../lib/auth2";
-import { upsertUserProfile } from "../../../lib/users";
-import { putSalary, getUserSalary, deleteSalary } from "../../../lib/salary";
+import { upsertUserProfile } from "@/lib/auth/users";
+import { putSalary, getUserSalary, deleteSalary } from "@/lib/utils/salary";
 
 // Note 8: Keep payload-to-user extraction in one helper for stronger typing.
 function getUserIdFromPayload(payload: Record<string, unknown>): string {

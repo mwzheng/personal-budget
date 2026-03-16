@@ -7,14 +7,14 @@
  * alive across page navigations and refreshes until the user signs out.
  */
 
-import type { Goal as SavingsGoal } from "../goals";
+import type { Goal as SavingsGoal } from "../utils/goals";
 import type {
   MilestoneEntry,
   RetirementEntry,
   SalaryEntry,
   SavedBudget,
   Transaction,
-} from "../types";
+} from "../types/types";
 
 export interface DemoProgressGoal {
   goalId: string;

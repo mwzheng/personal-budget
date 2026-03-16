@@ -27,17 +27,21 @@ import { FilterBar } from "@/components/ui/FilterBar";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
-import { apiFetch } from "@/lib/apiFetch";
-import { isAuthenticated } from "@/lib/cognitoClient";
+import { apiFetch } from "@/lib/api/apiFetch";
+import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   filterTransactions,
   aggregateTransactions,
   getAllTags,
   getAvailableReportYears,
   resolveDefaultReportYears,
-} from "@/lib/aggregations";
-import { getLastSelectedReportYears } from "@/lib/storage";
-import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
+} from "@/lib/utils/aggregations";
+import { getLastSelectedReportYears } from "@/lib/utils/storage";
+import {
+  FilterParams,
+  ReportsAggregates,
+  Transaction,
+} from "@/lib/types/types";
 
 // Note 2: All three chart components use `{ ssr: false }` because they depend
 // on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.

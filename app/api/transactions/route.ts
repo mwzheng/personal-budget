@@ -2,8 +2,8 @@
 // becomes an HTTP endpoint. Exporting async functions named `GET`, `POST`, `PUT`,
 // and `DELETE` maps them to the corresponding HTTP methods automatically.
 import { NextResponse } from "next/server";
-import { getUserTransactions, putTransaction } from "../../../lib/dynamo";
-import { getRequestUserId } from "@/lib/requestUser";
+import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
+import { getRequestUserId } from "@/lib/auth/requestUser";
 
 // Note 2: `GET /api/transactions` returns all transactions for the authenticated
 // user. Authentication is performed by `getUserIdFromRequest`, which validates the
@@ -108,7 +108,7 @@ export async function DELETE(request: Request) {
     // when a DELETE is actually performed. This can reduce cold start time in
     // serverless environments where not every invocation deletes data.
     await (
-      await import("../../../lib/dynamo")
+      await import("../../../lib/api/dynamo")
     ).deleteTransaction(userId, id, date);
     return NextResponse.json({ ok: true });
   } catch (err) {

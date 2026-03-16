@@ -4,7 +4,7 @@ import {
   isDemoSessionActive,
   normalizeCognitoDomain,
   storeCognitoTokens,
-} from "../cognitoClient";
+} from "../auth/cognitoClient";
 
 // Note 1: `apiFetch` is a drop-in replacement for the native `fetch` API that
 // routes demo sessions to a browser-only local store and automatically attaches

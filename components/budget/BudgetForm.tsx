@@ -33,8 +33,8 @@ import {
   createBudgetExpense,
   hasBudgetRowContent,
   parseSankeyPathSegments,
-} from "@/lib/budget-planner";
-import { BudgetExpense, CategoryType } from "@/lib/types";
+} from "@/lib/utils/budget-planner";
+import { BudgetExpense, CategoryType } from "@/lib/types/types";
 
 interface Props {
   value: BudgetDraft;

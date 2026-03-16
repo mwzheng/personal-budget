@@ -19,8 +19,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
-import { apiFetch } from "@/lib/apiFetch";
-import type { Transaction } from "@/lib/types";
+import { apiFetch } from "@/lib/api/apiFetch";
+import type { Transaction } from "@/lib/types/types";
 
 // Note 2: The discriminated union uses `stage` as the discriminant property.
 // TypeScript can narrow the type based on `state.stage`, giving compile-time
@@ -74,9 +74,9 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
       // Note 4: The dialog parses locally for preview only. The actual write
       // still happens on the server after the user confirms, which keeps the
       // imported rows tied to the authenticated Cognito account.
-      const parsed = (await import("@/lib/csvParser")).loadTransactionsFromCSV(
-        text,
-      );
+      const parsed = (
+        await import("@/lib/utils/csvParser")
+      ).loadTransactionsFromCSV(text);
 
       setState({
         stage: "preview",

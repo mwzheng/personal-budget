@@ -14,7 +14,7 @@ import {
   Divider,
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
 
 // Note 2: The local `Goal` type mirrors the server response shape. Having a
 // local type decouples GoalList from the shared `lib/types` Goal interface,

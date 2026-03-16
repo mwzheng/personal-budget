@@ -19,7 +19,7 @@ import { format, parseISO } from "date-fns";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-import { TimeseriesPoint } from "@/lib/types";
+import { TimeseriesPoint } from "@/lib/types/types";
 
 // Note 2: `formatMonth` converts the "YYYY-MM" period string into a short
 // label like "Jan 24". Appending "-01" converts the partial date to a full ISO

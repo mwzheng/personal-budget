@@ -21,7 +21,7 @@ import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
-import type { Transaction } from "@/lib/types";
+import type { Transaction } from "@/lib/types/types";
 
 const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
 

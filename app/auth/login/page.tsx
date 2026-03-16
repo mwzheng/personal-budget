@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import SignInButton from "@/components/Auth/SignInButton";
-import { isAuthenticated, startDemoSession } from "@/lib/cognitoClient";
+import { isAuthenticated, startDemoSession } from "@/lib/auth/cognitoClient";
 
 export default function LoginPage() {
   const router = useRouter();

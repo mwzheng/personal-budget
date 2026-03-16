@@ -1,3 +1,96 @@
+# Completed: Remove redundant lib re-export files and dead utils
+
+Date: 2026-03-16
+
+Summary
+
+- Removed the temporary top-level `lib/*.ts` compatibility shims that were left behind after the earlier folder reorganization, so the codebase now imports the real modules from `lib/api`, `lib/auth`, `lib/demo`, `lib/utils`, `lib/types`, and `lib/schemas` directly.
+- Deleted two genuinely unused utility modules (`lib/utils/budgets.ts` and `lib/utils/projections.ts`) plus their unused top-level shims.
+- Re-ran formatting, lint, tests, and the Next.js production build to verify the cleanup did not break module resolution.
+
+Completed items
+
+- Updated imports across `app/`, `components/`, `lib/`, and `test/` to point at the canonical subfolder modules such as `@/lib/api/apiFetch`, `@/lib/auth/cognitoClient`, `@/lib/utils/aggregations`, and `@/lib/types/types`.
+- Rewired internal `lib/` modules to stop depending on the removed top-level shims. For example, `lib/api/dynamo.ts` now imports `../auth/requestUser`, `../types/types`, and `../utils/csvParser`, and `lib/demo/demoApi.ts` now imports the canonical utility, schema, and demo-store modules directly.
+- Removed the now-unused top-level shim files for reports, demo, DynamoDB, formatting, budget-planning, CSV helpers, storage, Sankey helpers, and user/profile helpers.
+- Deleted the dead `lib/utils/budgets.ts` and `lib/utils/projections.ts` modules after confirming nothing in the repo imports their exports anymore.
+- Intentionally kept `lib/auth2.ts` in place because `lib/auth/requestUser.ts` already had a separate local edit in progress, and the cleanup avoided overwriting that work.
+
+Files changed
+
+- `app/api/budgets/[id]/route.ts`
+- `app/api/budgets/route.ts`
+- `app/api/goals/route.ts`
+- `app/api/progress/goal/route.ts`
+- `app/api/progress/milestones/route.ts`
+- `app/api/progress/retirement/route.ts`
+- `app/api/reports/export/route.ts`
+- `app/api/reports/import/route.ts`
+- `app/api/reports/route.ts`
+- `app/api/salary/route.ts`
+- `app/api/transactions/route.ts`
+- `app/auth/callback/page.tsx`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/auth/signout/page.tsx`
+- `app/progress/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `components/AppNav.tsx`
+- `components/Auth/SignInButton.tsx`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/budget/SankeyForm.tsx`
+- `components/charts/BudgetPieChart.tsx`
+- `components/charts/SalaryChart.tsx`
+- `components/charts/SankeyChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/charts/TagBarChart.tsx`
+- `components/forms/GoalForm.tsx`
+- `components/forms/MilestoneForm.tsx`
+- `components/forms/RetirementForm.tsx`
+- `components/forms/SalaryForm.tsx`
+- `components/progress/GoalEditor.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `components/transactions/TransactionForm.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/ui/FilterBar.tsx`
+- `components/ui/GoalList.tsx`
+- `components/ui/RetirementList.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/api/apiFetch.ts`
+- `lib/api/dynamo.ts`
+- `lib/auth/cognitoClient.ts`
+- `lib/demo/demoApi.ts`
+- `lib/demo/demoData.ts`
+- `lib/utils/aggregations.ts`
+- `lib/utils/budget-planner.ts`
+- `lib/utils/csvExport.ts`
+- `lib/utils/csvParser.ts`
+- `lib/utils/sankey-layout.ts`
+- `lib/utils/storage.ts`
+- `test/budget-planner.test.ts`
+- `test/demo-mode.test.ts`
+- `test/dynamo-transactions.test.ts`
+- `test/reports-aggregations.test.ts`
+- `test/reports-user-scope.test.ts`
+- `test/request-user.test.ts`
+- `test/sankey-layout.test.ts`
+- `test/sankey.test.ts`
+- deleted: `lib/aggregations.ts`, `lib/apiFetch.ts`, `lib/auth.ts`, `lib/budget-planner.ts`, `lib/budgets.ts`, `lib/cognitoAuth.ts`, `lib/cognitoClient.ts`, `lib/csvExport.ts`, `lib/csvParser.ts`, `lib/demoApi.ts`, `lib/demoData.ts`, `lib/dynamo.ts`, `lib/format.ts`, `lib/goals.ts`, `lib/progress.ts`, `lib/projections.ts`, `lib/requestUser.ts`, `lib/salary.ts`, `lib/sankey-layout.ts`, `lib/sankey.ts`, `lib/schemas.ts`, `lib/storage.ts`, `lib/types.ts`, `lib/users.ts`, `lib/utils/budgets.ts`, `lib/utils/projections.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `refactor(lib): remove redundant shims and dead utils`
+
+Notes / next steps
+
+- If the auth layer is cleaned up in a follow-up pass, `lib/auth2.ts` can likely be folded into `lib/auth/auth2.ts` and the remaining compatibility shim removed once the separate local `lib/auth/requestUser.ts` edit is resolved.
+
 # Completed: Fix lib import paths after reorg
 
 Date: 2026-03-16

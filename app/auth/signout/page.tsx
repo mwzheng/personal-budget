@@ -8,12 +8,12 @@ import React, { useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
-import { clearDemoStore } from "@/lib/demoData";
+import { clearDemoStore } from "@/lib/demo/demoData";
 import {
   clearCognitoTokens,
   getCognitoLogoutUrl,
   hasStoredCognitoTokens,
-} from "@/lib/cognitoClient";
+} from "@/lib/auth/cognitoClient";
 
 export default function SignOutPage() {
   useEffect(() => {

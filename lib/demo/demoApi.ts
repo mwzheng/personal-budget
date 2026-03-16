@@ -7,10 +7,10 @@
  * touching Cognito-protected DynamoDB routes.
  */
 
-import { filterTransactions } from "../aggregations";
-import { normalizeBudgetForStorage } from "../budget-planner";
-import { loadTransactionsFromCSV } from "../csvParser";
-import { transactionsToCsv } from "../csvExport";
+import { filterTransactions } from "../utils/aggregations";
+import { normalizeBudgetForStorage } from "../utils/budget-planner";
+import { loadTransactionsFromCSV } from "../utils/csvParser";
+import { transactionsToCsv } from "../utils/csvExport";
 import {
   createDemoId,
   getDemoStore,
@@ -18,15 +18,15 @@ import {
   type DemoSavingsGoal,
   type DemoStore,
   updateDemoStore,
-} from "../demoData";
-import { estimateGoalETA } from "../goals";
-import { BudgetSchema } from "../schemas";
+} from "./demoData";
+import { estimateGoalETA } from "../utils/goals";
+import { BudgetSchema } from "../schemas/schemas";
 import type {
   MilestoneEntry,
   RetirementEntry,
   SalaryEntry,
   Transaction,
-} from "../types";
+} from "../types/types";
 
 function jsonResponse(body: unknown, init?: ResponseInit): Response {
   const headers = new Headers(init?.headers);

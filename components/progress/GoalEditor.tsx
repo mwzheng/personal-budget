@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, TextField, Stack, Typography } from "@mui/material";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
 
 interface ProgressGoal {
   goalId?: string;

@@ -25,7 +25,7 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useEffect, useState } from "react";
-import { CategoryType, Transaction } from "@/lib/types";
+import { CategoryType, Transaction } from "@/lib/types/types";
 
 // Note 2: CATEGORY_COLORS maps each CategoryType to a MUI `color` token.
 // MUI `Chip` only accepts a restricted set of named colors. Mapping here keeps
