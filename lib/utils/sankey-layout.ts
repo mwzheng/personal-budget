@@ -1,4 +1,4 @@
-import { SankeyData } from "./types";
+import { SankeyData } from "../types";
 
 export interface SankeyLayoutMetrics {
   height: number;

@@ -4,7 +4,7 @@
 // `window` and `localStorage` do not exist.
 "use client";
 
-import type { Transaction } from "./types";
+import type { Transaction } from "../types";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
 // works well for small datasets. For larger datasets, IndexedDB or a server-side

@@ -11,9 +11,9 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { loadTransactionsFromCSV } from "./csvParser";
-import { isDemoUserId } from "./requestUser";
-import type { Transaction } from "./types";
+import { loadTransactionsFromCSV } from "../csvParser";
+import { isDemoUserId } from "../requestUser";
+import type { Transaction } from "../types";
 
 // Note 2: Reading the table name from an environment variable means the same
 // code can be deployed to dev, staging, and production without changes -- only

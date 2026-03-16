@@ -1,4 +1,4 @@
-import type { Transaction } from "./types";
+import type { Transaction } from "../types";
 
 // Note 1: The header row defines the column order for the exported file. Keeping
 // it in a constant makes it trivial to reorder or add columns in one place without

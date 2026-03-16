@@ -4,7 +4,7 @@ import {
   isDemoSessionActive,
   normalizeCognitoDomain,
   storeCognitoTokens,
-} from "./cognitoClient";
+} from "../cognitoClient";
 
 // Note 1: `apiFetch` is a drop-in replacement for the native `fetch` API that
 // routes demo sessions to a browser-only local store and automatically attaches
@@ -16,7 +16,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
     const url = new URL(requestUrl, window.location.origin);
 
     if (url.pathname.startsWith("/api/")) {
-      const { handleDemoApiRequest } = await import("./demoApi");
+      const { handleDemoApiRequest } = await import("../demo/demoApi");
       return handleDemoApiRequest(input, init);
     }
   }
