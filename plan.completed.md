@@ -1,3 +1,35 @@
+# Completed: Fix lib import paths after reorg
+
+Date: 2026-03-16
+
+Summary
+
+- Fixed a set of relative import paths broken by the lib/ reorganization so modules under lib/\* resolve correctly at build time.
+- Updated demo- and utility imports (e.g., apiFetch dynamic demoApi import, demoData typings, and various utils) and adjusted requestUser to import the top-level auth2 stub so tests can mock it reliably.
+- Re-ran formatting, lint, tests, and Next.js build to verify success.
+
+Completed items
+
+- Updated import paths in multiple modules so they reference the correct locations after reorganizing lib/ into subfolders. Key fixes include updating `lib/api/apiFetch.ts` to import `../cognitoClient` and `../demo/demoApi`, changing `lib/api/dynamo.ts` imports to reference `../csvParser` and `../types`, and aligning demo and utils imports to the top-level stubs where appropriate.
+- Adjusted `lib/auth/requestUser.ts` to import the top-level `auth2` stub so test mocks for `@/lib/auth2` apply correctly.
+- Ensured demo-mode dynamic imports point to `lib/demo/demoApi.ts` and updated several utility imports under `lib/utils/`.
+
+Files changed
+
+- `lib/api/apiFetch.ts`
+- `lib/api/dynamo.ts`
+- `lib/demo/demoApi.ts`
+- `lib/demo/demoData.ts`
+- `lib/utils/aggregations.ts`
+- `lib/utils/csvParser.ts`
+- `lib/utils/storage.ts`
+- `lib/utils/sankey-layout.ts`
+- `lib/auth/requestUser.ts`
+
+Commit reference
+
+- Commit message: `fix(lib): update relative imports after lib reorg` (commit ba86373)
+
 # Completed: Simplify signed-out nav and auth demo messaging
 
 Date: 2026-03-16

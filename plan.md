@@ -2,7 +2,7 @@
 
 ## Status: Completed 2026-03-16
 
-Latest completed work: signed-out users now see a simplified header without in-app page tabs, the demo warning copy on sign-in now just explains that demo changes are not saved, and the register page is Cognito-only again; the full implementation notes are recorded in `plan.completed.md` under the latest 2026-03-16 entry. The earlier 2026-03-15 entries still cover the browser-only demo session, budget planner follow-up passes, and related reports/progress work.
+Latest completed work: signed-out users now see a simplified header without in-app page tabs, the demo warning copy on sign-in now just explains that demo changes are not saved, and the register page is Cognito-only again; the full implementation notes are recorded in `plan.completed.md` under the latest 2026-03-16 entry. Recent post-refactor fixes corrected import paths under `lib/`, restoring passing tests and a successful Next.js build. The earlier 2026-03-15 entries still cover the browser-only demo session, budget planner follow-up passes, and related reports/progress work.
 
 # Development Plan for Porridge Budget
 
