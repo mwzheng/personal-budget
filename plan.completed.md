@@ -1,3 +1,36 @@
+# Completed: Simplify signed-out nav and auth demo messaging
+
+Date: 2026-03-16
+
+Summary
+
+- Hid the in-app Reports / Progress / Budget tabs from the main nav when the user is signed out so logged-out visitors only see the brand plus auth actions.
+- Simplified the demo warning copy on the sign-in page so it just explains that demo changes are not saved.
+- Removed the Demo Register button so account creation stays a Cognito-only flow and demo mode remains a login-only shortcut.
+
+Completed items
+
+- Updated `components/AppNav.tsx` to conditionally hide the in-app page tabs until `isAuthenticated()` reports a real or demo session.
+- Updated `app/auth/login/page.tsx` to trim the demo warning text and remove the DynamoDB-specific wording.
+- Updated `app/auth/register/page.tsx` to remove the demo button and related demo-session messaging while keeping the existing Cognito registration guidance.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and completed history stay synchronized.
+
+Files changed
+
+- `components/AppNav.tsx`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth-ui): simplify signed-out navigation`
+
+Notes / next steps
+
+- If the signed-out marketing surface grows later, consider replacing the empty nav space with a lightweight public CTA instead of restoring protected-page tabs.
+
 # Completed: Browser-only demo sign-in and local demo data
 
 Date: 2026-03-15

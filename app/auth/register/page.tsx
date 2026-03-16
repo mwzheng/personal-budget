@@ -2,51 +2,32 @@
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 import SignInButton from "@/components/Auth/SignInButton";
-import { isAuthenticated, startDemoSession } from "@/lib/cognitoClient";
+import { isAuthenticated } from "@/lib/cognitoClient";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [demoError, setDemoError] = useState<string | null>(null);
   const cognitoConfigured = Boolean(
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN &&
     process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
   );
 
   useEffect(() => {
+    // Note 1: Registration stays Cognito-only so demo mode remains a deliberate
+    // sign-in shortcut on the login page instead of a second pseudo-registration
+    // path that suggests demo data can become a real saved account.
     if (isAuthenticated()) {
       router.replace("/reports");
     }
   }, [router]);
-
-  const demoRegister = async () => {
-    setDemoBusy(true);
-    setDemoError(null);
-
-    try {
-      // Note 1: The register page reuses the same client-only demo session as the
-      // login page so users can explore the product immediately without creating a
-      // Cognito account or writing any sample actions to shared backend storage.
-      await startDemoSession();
-      router.replace("/reports");
-    } catch (error) {
-      setDemoError(
-        error instanceof Error ? error.message : "Failed to start demo mode.",
-      );
-    } finally {
-      setDemoBusy(false);
-    }
-  };
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -71,14 +52,7 @@ export default function RegisterPage() {
               </Alert>
             )}
 
-            <Alert severity="info">
-              Demo Register loads local sample data only. Nothing you change in
-              demo mode is sent to Cognito or DynamoDB.
-            </Alert>
-
-            {demoError ? <Alert severity="error">{demoError}</Alert> : null}
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Stack spacing={2}>
               <SignInButton
                 mode="signup"
                 variant="contained"
@@ -88,15 +62,6 @@ export default function RegisterPage() {
               >
                 Register with Cognito
               </SignInButton>
-              <Button
-                variant="outlined"
-                size="large"
-                fullWidth
-                onClick={demoRegister}
-                disabled={demoBusy}
-              >
-                {demoBusy ? "Starting Demo…" : "Demo Register"}
-              </Button>
             </Stack>
           </Stack>
         </CardContent>

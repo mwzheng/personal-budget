@@ -73,8 +73,7 @@ export default function LoginPage() {
 
             <Alert severity="info">
               Demo Sign In loads seeded sample data in this browser only. Demo
-              edits persist locally until you sign out and never write to
-              DynamoDB.
+              changes are not saved.
             </Alert>
 
             {demoError ? <Alert severity="error">{demoError}</Alert> : null}
