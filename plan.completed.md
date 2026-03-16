@@ -1,3 +1,34 @@
+# Completed: Honor refresh token state when clearing auth
+
+Date: 2026-03-17
+
+Summary
+
+- Treated the stored refresh token as a first-class credential so `isAuthenticated()` and the nav/register states now reflect every cleared sign-out.
+- Extended the demo-mode regression test suite to cover refresh-token detection, clearing via `clearCognitoTokens()`, and the resulting `isAuthenticated()` state change.
+- Ran `pnpm test` to verify the new assertions plus the existing suite all pass.
+
+Completed items
+
+- Updated `lib/auth/cognitoClient.ts` so `hasStoredCognitoTokens()` also inspects the refresh token, `clearCognitoTokens()` removes it, and `setDemoSessionValue(true)` only runs when tokens are present.
+- Extended `test/demo-mode.test.ts` with cases that store a refresh token, then clear auth before a fake refresh resolves to ensure `isAuthenticated()` stays false and no extra tokens are stored.
+- Synced the plan files by updating `plan.md` and adding this entry so the living plan accurately records the work captured here.
+
+Files changed
+
+- `lib/auth/cognitoClient.ts`
+- `test/demo-mode.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth): respect refresh token state`
+
+Notes / next steps
+
+- Watch for any other stored signals (demo flag, local caches) that should reset during sign-out, but this fix now keeps the UI aligned with the cleared auth state.
+
 # Completed: Prevent stale token refresh after sign-out
 
 Date: 2026-03-16

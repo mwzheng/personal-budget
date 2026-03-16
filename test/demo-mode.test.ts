@@ -86,6 +86,33 @@ describe("demo mode", () => {
     );
   });
 
+  it("treats a stored refresh token as evidence of an active session", () => {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
+    expect(hasStoredCognitoTokens()).toBe(true);
+  });
+
+  it("clears all tokens when calling clearCognitoTokens", () => {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, "access");
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh");
+    clearCognitoTokens();
+
+    expect(sessionStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
+    expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    expect(isAuthenticated()).toBe(false);
+  });
+
+  it("removes refresh-only credentials so auth state becomes false", () => {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
+
+    expect(hasStoredCognitoTokens()).toBe(true);
+
+    clearCognitoTokens();
+
+    expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    expect(hasStoredCognitoTokens()).toBe(false);
+    expect(isAuthenticated()).toBe(false);
+  });
+
   it("serves demo transactions without touching the real network", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);

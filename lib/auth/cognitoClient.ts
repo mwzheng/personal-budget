@@ -60,9 +60,9 @@ function setDemoSessionValue(enabled: boolean) {
 function clearStoredAuthStorage() {
   if (!inBrowser()) return;
 
-  window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-  window.sessionStorage.removeItem(ID_TOKEN_KEY);
-  window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  setStorageValue(ACCESS_TOKEN_KEY, null);
+  setStorageValue(ID_TOKEN_KEY, null);
+  setStorageValue(REFRESH_TOKEN_KEY, null);
   clearPendingCognitoAuth();
 }
 
@@ -148,8 +148,8 @@ export function isDemoSessionActive() {
 }
 
 export function hasStoredCognitoTokens() {
-  const { accessToken, idToken } = getStoredCognitoTokens();
-  return Boolean(accessToken || idToken);
+  const { accessToken, idToken, refreshToken } = getStoredCognitoTokens();
+  return Boolean(accessToken || idToken || refreshToken);
 }
 
 export function isAuthenticated() {

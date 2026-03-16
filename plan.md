@@ -1,8 +1,10 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens and records this fix in plan.completed.md. -->
 
 ## Status: Completed 2026-03-16
 
 Latest completed work: sign-out now wins over any in-flight Cognito refresh attempt, so stale token refresh responses cannot silently repopulate browser auth state after logout; the full implementation notes are recorded in `plan.completed.md` under the latest 2026-03-16 entry. Earlier 2026-03-16 work also covers the `lib/` cleanup plus the signed-out nav/auth-page demo CTA simplification, and the earlier 2026-03-15 entries still cover the browser-only demo session, budget planner follow-up passes, and related reports/progress work.
+
+Additional 2026-03-17 note: `hasStoredCognitoTokens()` now treats refresh tokens as a stored credential so the nav/register states stay in sync after signing out; confirm the new tests and implementation live in the top of `plan.completed.md`.
 
 # Development Plan for Porridge Budget
 
