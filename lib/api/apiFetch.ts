@@ -1,15 +1,26 @@
 import {
   clearCognitoTokens,
   getStoredCognitoTokens,
+  isDemoSessionActive,
   normalizeCognitoDomain,
   storeCognitoTokens,
-} from "./cognitoClient";
+} from "../auth/cognitoClient";
 
 // Note 1: `apiFetch` is a drop-in replacement for the native `fetch` API that
-// automatically attaches the user's JWT access token to every outgoing request.
-// It also handles silent token refresh when the server returns a 401/403 response,
-// so the rest of the app never needs to manage token lifecycle directly.
+// routes demo sessions to a browser-only local store and automatically attaches
+// Cognito JWTs for real users. That keeps all pages on one fetch abstraction
+// while preserving the correct persistence layer for each auth mode.
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
+  if (typeof window !== "undefined" && isDemoSessionActive()) {
+    const requestUrl = typeof input === "string" ? input : input.url;
+    const url = new URL(requestUrl, window.location.origin);
+
+    if (url.pathname.startsWith("/api/")) {
+      const { handleDemoApiRequest } = await import("../demo/demoApi");
+      return handleDemoApiRequest(input, init);
+    }
+  }
+
   // Attach Authorization header from sessionStorage if present (access_token or id_token)
   const headers = new Headers((init?.headers as HeadersInit) || {});
 
@@ -62,8 +73,16 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
             if (tokenRes.ok) {
               const data = await tokenRes.json();
+              const latestRefreshToken = getStoredCognitoTokens().refreshToken;
+              // Note 6: A pending request can outlive the user's active session if
+              // they click Sign Out while a 401-triggered refresh is still in
+              // flight. Re-checking the current refresh token prevents that stale
+              // response from resurrecting a session the user explicitly cleared.
+              if (latestRefreshToken !== refreshToken) {
+                return res;
+              }
               // Preserve the existing refresh token unless Cognito rotates it.
-              // Note 6: Cognito usually omits `refresh_token` on refresh grants,
+              // Note 7: Cognito usually omits `refresh_token` on refresh grants,
               // so we merge the current value back in before storing the payload.
               storeCognitoTokens({
                 access_token: data.access_token,
@@ -83,7 +102,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
               }
             } else {
               // Refresh failed - clear tokens to force re-auth
-              // Note 7: Clearing all three tokens forces the user back to the
+              // Note 8: Clearing all three tokens forces the user back to the
               // login page on the next navigation, which is the safest recovery
               // path when the refresh token is expired or revoked.
               clearCognitoTokens();

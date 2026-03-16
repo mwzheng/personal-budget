@@ -14,8 +14,8 @@ import {
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import { apiFetch } from "@/lib/apiFetch";
-import type { RetirementEntry } from "@/lib/types";
+import { apiFetch } from "@/lib/api/apiFetch";
+import type { RetirementEntry } from "@/lib/types/types";
 
 interface RetirementApiResponse {
   ok: boolean;

@@ -2,9 +2,9 @@
 // user's account only. The client may preview the CSV locally, but the server is
 // the only place where imported rows are actually written.
 import { NextRequest, NextResponse } from "next/server";
-import { loadTransactionsFromCSV } from "@/lib/csvParser";
-import { putTransaction } from "@/lib/dynamo";
-import { getRequestUserId } from "@/lib/requestUser";
+import { loadTransactionsFromCSV } from "@/lib/utils/csvParser";
+import { putTransaction } from "@/lib/api/dynamo";
+import { getRequestUserId } from "@/lib/auth/requestUser";
 
 export async function POST(request: NextRequest) {
   try {

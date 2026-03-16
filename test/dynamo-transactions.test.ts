@@ -3,7 +3,7 @@
 // entities into reports and transaction tables in the single-table schema.
 import { describe, expect, it } from "vitest";
 
-import { buildTransactionsQuery } from "../lib/dynamo";
+import { buildTransactionsQuery } from "../lib/api/dynamo";
 
 describe("buildTransactionsQuery", () => {
   it("restricts non-ranged queries to transaction sort keys", () => {

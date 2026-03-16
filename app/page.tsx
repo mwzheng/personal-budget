@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Typography variant="h3" component="h1" gutterBottom align="center">
-        Personal Budget
+        Porridge Budget
       </Typography>
       <Typography variant="h6" color="text.secondary" paragraph align="center">
         Track income, plan budgets, and visualise spending with interactive

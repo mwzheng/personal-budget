@@ -14,7 +14,7 @@ import { useState } from "react";
 import {
   clearPendingCognitoAuth,
   handleCognitoCallback,
-} from "@/lib/cognitoClient";
+} from "@/lib/auth/cognitoClient";
 
 export default function AuthCallbackPage() {
   const router = useRouter();

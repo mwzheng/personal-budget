@@ -1,6 +1,6 @@
-// Note 1: ReportsPage is the main data entry and analytics view. Transaction
-// CRUD/import/export flows all go through authenticated API routes so the page
-// state always reflects the currently signed-in Cognito user.
+// Note 1: ReportsPage is the main data entry and analytics view. Real users read
+// and write through authenticated API routes, while demo sessions transparently
+// use the `apiFetch` demo shim so the rest of the screen can stay unchanged.
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -27,16 +27,21 @@ import { FilterBar } from "@/components/ui/FilterBar";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
+import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   filterTransactions,
   aggregateTransactions,
   getAllTags,
   getAvailableReportYears,
   resolveDefaultReportYears,
-} from "@/lib/aggregations";
-import { getLastSelectedReportYears } from "@/lib/storage";
-import { FilterParams, ReportsAggregates, Transaction } from "@/lib/types";
+} from "@/lib/utils/aggregations";
+import { getLastSelectedReportYears } from "@/lib/utils/storage";
+import {
+  FilterParams,
+  ReportsAggregates,
+  Transaction,
+} from "@/lib/types/types";
 
 // Note 2: All three chart components use `{ ssr: false }` because they depend
 // on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.
@@ -251,18 +256,17 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
-    const hasToken =
-      typeof window !== "undefined" &&
-      (sessionStorage.getItem("access_token") ||
-        sessionStorage.getItem("id_token"));
 
-    if (!disableAuth && !hasToken) {
+    // Note 5: `isAuthenticated()` now covers both real Cognito tokens and the
+    // dedicated demo-session flag, so protected pages accept demo mode without
+    // having to know how that browser-only session is implemented.
+    if (!disableAuth && !isAuthenticated()) {
       router.replace("/auth/login");
       return;
     }
 
     void loadTransactions({ resetFilters: true });
-    // Note 5: The initial load should happen once on mount. `router` is stable
+    // Note 6: The initial load should happen once on mount. `router` is stable
     // enough for this redirect flow, and the inline async call avoids reading
     // transaction data from browser storage before the auth-scoped API responds.
     // eslint-disable-next-line react-hooks/exhaustive-deps

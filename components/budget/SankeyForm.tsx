@@ -13,8 +13,8 @@ import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { SankeyRequestBody, SankeyResponse } from "@/lib/types";
-import { apiFetch } from "@/lib/apiFetch";
+import { SankeyRequestBody, SankeyResponse } from "@/lib/types/types";
+import { apiFetch } from "@/lib/api/apiFetch";
 
 interface Props {
   onResult: (response: SankeyResponse) => void;

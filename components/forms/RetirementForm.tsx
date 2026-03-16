@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
-import { apiFetch } from "@/lib/apiFetch";
-import { sanitizeNumberString } from "@/lib/format";
+import { apiFetch } from "@/lib/api/apiFetch";
+import { sanitizeNumberString } from "@/lib/utils/format";
 
 export default function RetirementForm({
   defaultEntry,

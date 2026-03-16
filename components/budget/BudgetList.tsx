@@ -22,12 +22,12 @@ import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
 
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch } from "@/lib/api/apiFetch";
 import {
   normalizeBudgetForEditor,
   sortSavedBudgets,
-} from "@/lib/budget-planner";
-import { SavedBudget } from "@/lib/types";
+} from "@/lib/utils/budget-planner";
+import { SavedBudget } from "@/lib/types/types";
 
 interface Props {
   onLoad?: (budget: SavedBudget) => void;

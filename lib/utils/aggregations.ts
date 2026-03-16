@@ -7,7 +7,7 @@ import {
   FilterParams,
   ReportsAggregates,
   TimeseriesPoint,
-} from "./types";
+} from "../types/types";
 
 // Note 1a: Historical data can contain legacy plural labels such as "Wants" or
 // "Savings". Normalizing them here keeps summary cards and charts stable even if

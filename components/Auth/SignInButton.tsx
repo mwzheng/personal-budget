@@ -3,7 +3,10 @@ import Button from "@mui/material/Button";
 import type { ButtonProps } from "@mui/material/Button";
 import React, { useState } from "react";
 
-import { CognitoFlowMode, startCognitoHostedAuth } from "@/lib/cognitoClient";
+import {
+  CognitoFlowMode,
+  startCognitoHostedAuth,
+} from "@/lib/auth/cognitoClient";
 
 interface SignInButtonProps extends Omit<ButtonProps, "onClick"> {
   mode?: CognitoFlowMode;

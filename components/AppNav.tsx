@@ -13,7 +13,7 @@ import Box from "@mui/material/Box";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
-import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/cognitoClient";
+import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 
 export function AppNav() {
   // Note 2: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").
@@ -69,34 +69,40 @@ export function AppNav() {
           }}
           component={NextLink}
           href="/"
-          aria-label="Personal Budget home"
+          aria-label="Porridge Budget home"
         >
-          💰 Personal Budget
+          🥣 Porridge Budget
         </Typography>
 
-        {/* Tabs are allowed to grow, pushing auth buttons to the right */}
-        <Box sx={{ flexGrow: 1 }}>
-          <Tabs value={value} textColor="inherit" indicatorColor="primary">
-            <Tab
-              label="Reports"
-              value="reports"
-              component={NextLink}
-              href="/reports"
-            />
-            <Tab
-              label="Progress"
-              value="progress"
-              component={NextLink}
-              href="/progress"
-            />
-            <Tab
-              label="Budget Generator"
-              value="sankey"
-              component={NextLink}
-              href="/sankey"
-            />
-          </Tabs>
-        </Box>
+        {/* Note 5: The in-app pages only make sense for authenticated or demo users,
+            so signed-out visitors see a simpler header with just the brand and auth
+            actions instead of tabs that would immediately redirect them to login. */}
+        {loggedIn ? (
+          <Box sx={{ flexGrow: 1 }}>
+            <Tabs value={value} textColor="inherit" indicatorColor="primary">
+              <Tab
+                label="Reports"
+                value="reports"
+                component={NextLink}
+                href="/reports"
+              />
+              <Tab
+                label="Progress"
+                value="progress"
+                component={NextLink}
+                href="/progress"
+              />
+              <Tab
+                label="Budget Generator"
+                value="sankey"
+                component={NextLink}
+                href="/sankey"
+              />
+            </Tabs>
+          </Box>
+        ) : (
+          <Box sx={{ flexGrow: 1 }} />
+        )}
 
         {/* Auth buttons: show Sign out when logged in, otherwise Sign in and Register */}
         {loggedIn ? (

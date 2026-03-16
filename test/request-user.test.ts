@@ -2,14 +2,24 @@
 // auth refactors cannot silently fall back to shared demo data for signed-in users.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth2", () => ({
-  getPayloadFromRequest: vi.fn(),
+const { getPayloadFromRequestMock } = vi.hoisted(() => ({
+  getPayloadFromRequestMock: vi.fn(),
 }));
 
-import { getPayloadFromRequest } from "@/lib/auth2";
-import { DEMO_USER_ID, getRequestUserId } from "@/lib/requestUser";
+vi.mock("@/lib/auth2", () => ({
+  getPayloadFromRequest: getPayloadFromRequestMock,
+}));
 
-const mockedGetPayloadFromRequest = vi.mocked(getPayloadFromRequest);
+// Note 2: requestUser.ts may resolve auth2 through either the top-level shim or
+// the canonical auth/auth2 module depending on nearby refactors, so the test
+// mocks both paths to stay aligned with whichever import shape the file uses.
+vi.mock("@/lib/auth/auth2", () => ({
+  getPayloadFromRequest: getPayloadFromRequestMock,
+}));
+
+import { DEMO_USER_ID, getRequestUserId } from "@/lib/auth/requestUser";
+
+const mockedGetPayloadFromRequest = vi.mocked(getPayloadFromRequestMock);
 
 describe("request user helpers", () => {
   const originalDisableAuth = process.env.DISABLE_AUTH;

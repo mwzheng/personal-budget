@@ -5,8 +5,8 @@ import { Box, Button, List, ListItem, ListItemText } from "@mui/material";
 import MilestoneForm from "@/components/forms/MilestoneForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import { apiFetch } from "@/lib/apiFetch";
-import type { MilestoneEntry } from "@/lib/types";
+import { apiFetch } from "@/lib/api/apiFetch";
+import type { MilestoneEntry } from "@/lib/types/types";
 
 interface MilestonesApiResponse {
   ok: boolean;

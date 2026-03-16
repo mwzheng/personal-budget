@@ -18,7 +18,7 @@ import {
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-import { BudgetPieSlice } from "@/lib/budget-planner";
+import { BudgetPieSlice } from "@/lib/utils/budget-planner";
 
 interface Props {
   data: BudgetPieSlice[];

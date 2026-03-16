@@ -2,10 +2,10 @@
 // resource. Budgets now store expense rows plus monthly income so the page can
 // render both the pie chart and the grouped Sankey view from one saved payload.
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../lib/auth";
-import { normalizeBudgetForStorage } from "../../../lib/budget-planner";
-import { getUserBudgets, putBudget } from "../../../lib/dynamo";
-import { BudgetSchema } from "../../../lib/schemas";
+import { getUserIdFromRequest } from "@/lib/auth/auth";
+import { normalizeBudgetForStorage } from "@/lib/utils/budget-planner";
+import { getUserBudgets, putBudget } from "@/lib/api/dynamo";
+import { BudgetSchema } from "@/lib/schemas/schemas";
 
 // Note: Budget schema centralised in lib/schemas.ts to keep validation consistent across routes.
 // See lib/schemas.ts for the canonical BudgetSchema.

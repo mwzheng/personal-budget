@@ -1,3 +1,326 @@
+# Completed: Honor refresh token state when clearing auth
+
+Date: 2026-03-17
+
+Summary
+
+- Treated the stored refresh token as a first-class credential so `isAuthenticated()` and the nav/register states now reflect every cleared sign-out.
+- Extended the demo-mode regression test suite to cover refresh-token detection, clearing via `clearCognitoTokens()`, and the resulting `isAuthenticated()` state change.
+- Ran `pnpm test` to verify the new assertions plus the existing suite all pass.
+
+Completed items
+
+- Updated `lib/auth/cognitoClient.ts` so `hasStoredCognitoTokens()` also inspects the refresh token, `clearCognitoTokens()` removes it, and `setDemoSessionValue(true)` only runs when tokens are present.
+- Extended `test/demo-mode.test.ts` with cases that store a refresh token, then clear auth before a fake refresh resolves to ensure `isAuthenticated()` stays false and no extra tokens are stored.
+- Synced the plan files by updating `plan.md` and adding this entry so the living plan accurately records the work captured here.
+
+Files changed
+
+- `lib/auth/cognitoClient.ts`
+- `test/demo-mode.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth): respect refresh token state`
+
+Notes / next steps
+
+- Watch for any other stored signals (demo flag, local caches) that should reset during sign-out, but this fix now keeps the UI aligned with the cleared auth state.
+
+# Completed: Prevent stale token refresh after sign-out
+
+Date: 2026-03-16
+
+Summary
+
+- Fixed a browser-side auth race where an in-flight `apiFetch` refresh could write fresh Cognito tokens back into `sessionStorage` after the user had already clicked Sign Out.
+- Added a regression test that explicitly clears auth state during a refresh attempt and verifies that the stale refresh response is ignored instead of restoring the session.
+- Re-ran formatting, lint, tests, and the Next.js production build to verify the fix.
+
+Completed items
+
+- Updated `lib/api/apiFetch.ts` so the refresh flow re-checks the current browser `refreshToken` before calling `storeCognitoTokens(...)`. If sign-out (or another auth transition) already cleared or replaced the token, the stale refresh response is discarded and the original 401/403 response is returned.
+- Added a regression test in `test/demo-mode.test.ts` that simulates a 401, clears auth storage before the refresh response resolves, and verifies that no new tokens are persisted and no retry request is issued.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and completed history stay synchronized.
+
+Files changed
+
+- `lib/api/apiFetch.ts`
+- `test/demo-mode.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth): prevent stale refresh after sign-out`
+
+Notes / next steps
+
+- If sign-out issues ever recur after this, the next place to inspect is the hosted Cognito logout configuration itself (allowed sign-out URLs and upstream IdP logout behavior), because this app-side fix now prevents the local session from being recreated by stale browser requests.
+
+# Completed: Remove redundant lib re-export files and dead utils
+
+Date: 2026-03-16
+
+Summary
+
+- Removed the temporary top-level `lib/*.ts` compatibility shims that were left behind after the earlier folder reorganization, so the codebase now imports the real modules from `lib/api`, `lib/auth`, `lib/demo`, `lib/utils`, `lib/types`, and `lib/schemas` directly.
+- Deleted two genuinely unused utility modules (`lib/utils/budgets.ts` and `lib/utils/projections.ts`) plus their unused top-level shims.
+- Re-ran formatting, lint, tests, and the Next.js production build to verify the cleanup did not break module resolution.
+
+Completed items
+
+- Updated imports across `app/`, `components/`, `lib/`, and `test/` to point at the canonical subfolder modules such as `@/lib/api/apiFetch`, `@/lib/auth/cognitoClient`, `@/lib/utils/aggregations`, and `@/lib/types/types`.
+- Rewired internal `lib/` modules to stop depending on the removed top-level shims. For example, `lib/api/dynamo.ts` now imports `../auth/requestUser`, `../types/types`, and `../utils/csvParser`, and `lib/demo/demoApi.ts` now imports the canonical utility, schema, and demo-store modules directly.
+- Removed the now-unused top-level shim files for reports, demo, DynamoDB, formatting, budget-planning, CSV helpers, storage, Sankey helpers, and user/profile helpers.
+- Deleted the dead `lib/utils/budgets.ts` and `lib/utils/projections.ts` modules after confirming nothing in the repo imports their exports anymore.
+- Intentionally kept `lib/auth2.ts` in place because `lib/auth/requestUser.ts` already had a separate local edit in progress, and the cleanup avoided overwriting that work.
+
+Files changed
+
+- `app/api/budgets/[id]/route.ts`
+- `app/api/budgets/route.ts`
+- `app/api/goals/route.ts`
+- `app/api/progress/goal/route.ts`
+- `app/api/progress/milestones/route.ts`
+- `app/api/progress/retirement/route.ts`
+- `app/api/reports/export/route.ts`
+- `app/api/reports/import/route.ts`
+- `app/api/reports/route.ts`
+- `app/api/salary/route.ts`
+- `app/api/transactions/route.ts`
+- `app/auth/callback/page.tsx`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/auth/signout/page.tsx`
+- `app/progress/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `components/AppNav.tsx`
+- `components/Auth/SignInButton.tsx`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/budget/SankeyForm.tsx`
+- `components/charts/BudgetPieChart.tsx`
+- `components/charts/SalaryChart.tsx`
+- `components/charts/SankeyChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/charts/TagBarChart.tsx`
+- `components/forms/GoalForm.tsx`
+- `components/forms/MilestoneForm.tsx`
+- `components/forms/RetirementForm.tsx`
+- `components/forms/SalaryForm.tsx`
+- `components/progress/GoalEditor.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `components/transactions/TransactionForm.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/ui/FilterBar.tsx`
+- `components/ui/GoalList.tsx`
+- `components/ui/RetirementList.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/api/apiFetch.ts`
+- `lib/api/dynamo.ts`
+- `lib/auth/cognitoClient.ts`
+- `lib/demo/demoApi.ts`
+- `lib/demo/demoData.ts`
+- `lib/utils/aggregations.ts`
+- `lib/utils/budget-planner.ts`
+- `lib/utils/csvExport.ts`
+- `lib/utils/csvParser.ts`
+- `lib/utils/sankey-layout.ts`
+- `lib/utils/storage.ts`
+- `test/budget-planner.test.ts`
+- `test/demo-mode.test.ts`
+- `test/dynamo-transactions.test.ts`
+- `test/reports-aggregations.test.ts`
+- `test/reports-user-scope.test.ts`
+- `test/request-user.test.ts`
+- `test/sankey-layout.test.ts`
+- `test/sankey.test.ts`
+- deleted: `lib/aggregations.ts`, `lib/apiFetch.ts`, `lib/auth.ts`, `lib/budget-planner.ts`, `lib/budgets.ts`, `lib/cognitoAuth.ts`, `lib/cognitoClient.ts`, `lib/csvExport.ts`, `lib/csvParser.ts`, `lib/demoApi.ts`, `lib/demoData.ts`, `lib/dynamo.ts`, `lib/format.ts`, `lib/goals.ts`, `lib/progress.ts`, `lib/projections.ts`, `lib/requestUser.ts`, `lib/salary.ts`, `lib/sankey-layout.ts`, `lib/sankey.ts`, `lib/schemas.ts`, `lib/storage.ts`, `lib/types.ts`, `lib/users.ts`, `lib/utils/budgets.ts`, `lib/utils/projections.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `refactor(lib): remove redundant shims and dead utils`
+
+Notes / next steps
+
+- If the auth layer is cleaned up in a follow-up pass, `lib/auth2.ts` can likely be folded into `lib/auth/auth2.ts` and the remaining compatibility shim removed once the separate local `lib/auth/requestUser.ts` edit is resolved.
+
+# Completed: Fix lib import paths after reorg
+
+Date: 2026-03-16
+
+Summary
+
+- Fixed a set of relative import paths broken by the lib/ reorganization so modules under lib/\* resolve correctly at build time.
+- Updated demo- and utility imports (e.g., apiFetch dynamic demoApi import, demoData typings, and various utils) and adjusted requestUser to import the top-level auth2 stub so tests can mock it reliably.
+- Re-ran formatting, lint, tests, and Next.js build to verify success.
+
+Completed items
+
+- Updated import paths in multiple modules so they reference the correct locations after reorganizing lib/ into subfolders. Key fixes include updating `lib/api/apiFetch.ts` to import `../cognitoClient` and `../demo/demoApi`, changing `lib/api/dynamo.ts` imports to reference `../csvParser` and `../types`, and aligning demo and utils imports to the top-level stubs where appropriate.
+- Adjusted `lib/auth/requestUser.ts` to import the top-level `auth2` stub so test mocks for `@/lib/auth2` apply correctly.
+- Ensured demo-mode dynamic imports point to `lib/demo/demoApi.ts` and updated several utility imports under `lib/utils/`.
+
+Files changed
+
+- `lib/api/apiFetch.ts`
+- `lib/api/dynamo.ts`
+- `lib/demo/demoApi.ts`
+- `lib/demo/demoData.ts`
+- `lib/utils/aggregations.ts`
+- `lib/utils/csvParser.ts`
+- `lib/utils/storage.ts`
+- `lib/utils/sankey-layout.ts`
+- `lib/auth/requestUser.ts`
+
+Commit reference
+
+- Commit message: `fix(lib): update relative imports after lib reorg` (commit ba86373)
+
+# Completed: Simplify signed-out nav and auth demo messaging
+
+Date: 2026-03-16
+
+Summary
+
+- Hid the in-app Reports / Progress / Budget tabs from the main nav when the user is signed out so logged-out visitors only see the brand plus auth actions.
+- Simplified the demo warning copy on the sign-in page so it just explains that demo changes are not saved.
+- Removed the Demo Register button so account creation stays a Cognito-only flow and demo mode remains a login-only shortcut.
+
+Completed items
+
+- Updated `components/AppNav.tsx` to conditionally hide the in-app page tabs until `isAuthenticated()` reports a real or demo session.
+- Updated `app/auth/login/page.tsx` to trim the demo warning text and remove the DynamoDB-specific wording.
+- Updated `app/auth/register/page.tsx` to remove the demo button and related demo-session messaging while keeping the existing Cognito registration guidance.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and completed history stay synchronized.
+
+Files changed
+
+- `components/AppNav.tsx`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth-ui): simplify signed-out navigation`
+
+Notes / next steps
+
+- If the signed-out marketing surface grows later, consider replacing the empty nav space with a lightweight public CTA instead of restoring protected-page tabs.
+
+# Completed: Browser-only demo sign-in and local demo data
+
+Date: 2026-03-15
+
+Summary
+
+- Replaced the old fake-token demo login with a dedicated browser-only demo session, so clicking `Demo Sign In` now reliably opens the app with seeded sample data instead of bouncing off real auth-protected APIs.
+- Added a client-side API shim that serves reports, progress, goals, milestones, and budget CRUD from local storage, which keeps demo actions persistent across pages and refreshes without touching DynamoDB.
+- Updated sign-out and protected-page auth checks so demo users behave like signed-in users in the UI while still clearing cleanly back to the login screen.
+
+Completed items
+
+- Added `lib/demoData.ts` with seeded transactions, salary history, retirement progress, goals, milestones, and saved budgets for demo sessions.
+- Added `lib/demoApi.ts` so demo sessions can handle transaction CRUD, CSV import/export, progress data, goals, milestones, and budget CRUD entirely in the browser.
+- Updated `lib/cognitoClient.ts` to track a dedicated demo-session flag and updated `lib/apiFetch.ts` to route demo `/api/*` requests through the local demo API instead of the network.
+- Updated `app/auth/login/page.tsx`, `app/auth/register/page.tsx`, and `app/auth/signout/page.tsx` so demo sign-in seeds local data, sign-out clears it, and real Cognito logout still runs only for real sessions.
+- Updated `app/reports/page.tsx` and `app/sankey/page.tsx` to treat demo sessions as authenticated for protected-page access.
+- Added `test/demo-mode.test.ts` and re-verified the repository with `pnpm lint`, `pnpm test --run`, and `pnpm build`.
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to document the new demo-mode behavior.
+
+Files changed
+
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/auth/signout/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `lib/apiFetch.ts`
+- `lib/cognitoClient.ts`
+- `lib/demoApi.ts`
+- `lib/demoData.ts`
+- `test/demo-mode.test.ts`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(demo): keep demo data client-side`
+
+Notes / next steps
+
+- If the app ever needs a shareable hosted demo later, prefer a dedicated seeded backend account or resettable fixture API instead of reintroducing fake JWTs into the main auth flow.
+
+# Completed: Google Analytics integration (env-configured)
+
+Date: 2026-03-15
+
+Summary
+
+- Integrated Google Analytics (gtag.js) into the Next.js app using non-blocking next/script and client route-change reporting.
+- Moved the GA measurement ID to an environment variable (NEXT_PUBLIC_GA_ID) with examples in env.example and guards to avoid injecting scripts when empty.
+
+Completed items
+
+- Injected conditional gtag script and init snippet in `app/layout.tsx`.
+- Added client-side pageview reporting in `app/providers.tsx`.
+- Added `NEXT_PUBLIC_GA_ID` example to `env.example`.
+- Ran format / lint / tests / build and verified success.
+
+Files changed
+
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `env.example`
+
+Commit reference
+
+- Commit message: `chore(analytics): add Google Analytics (env-configured)`
+
+# Completed: Rename app to Porridge Budget (branding)
+
+Date: 2026-03-15
+
+Summary
+
+- Renamed user-facing strings and documentation from "Personal Budget" to "Porridge Budget".
+- Replaced the favicon with a porridge bowl icon and updated relevant docs.
+- Updated package metadata to reflect the new project name.
+
+Completed items
+
+- Updated app header and aria labels in `components/AppNav.tsx`.
+- Updated site metadata in `app/layout.tsx` and the public home title in `app/page.tsx`.
+- Replaced `public/favicon.svg` with a porridge bowl icon.
+- Updated `README.md`, `package.json`, `infra/SAM-DEPLOY.md`, and `infra/template.yaml` to use the new name.
+
+Files changed
+
+- `components/AppNav.tsx`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `public/favicon.svg`
+- `README.md`
+- `package.json`
+- `infra/SAM-DEPLOY.md`
+- `infra/template.yaml`
+- `plan.md`
+
+Commit reference
+
+- Commit message: `chore(branding): rename to Porridge Budget and update docs`
+
 # Completed: Budget Planner path-based Sankey follow-up
 
 Date: 2026-03-15
@@ -971,3 +1294,17 @@ Commit
 Notes
 
 - Expense column adjusted from 34% → 32%; Sankey Path column from 26% → 24%; row action icon sizes reduced for visual balance. Changes were committed and merged to `main` in a single commit that updates both plan files and the UI code.
+
+## [2026-03-17] - Reorganize lib into subfolders
+
+- Moved many lib/\* modules into categorized folders:
+  - lib/auth: auth, auth2, cognitoAuth, cognitoClient, requestUser, users
+  - lib/api: apiFetch, dynamo
+  - lib/demo: demoApi, demoData
+  - lib/schemas: schemas
+  - lib/utils: aggregations, budget-planner, budgets, csvExport, csvParser, format, goals, progress, projections, salary, sankey, sankey-layout, storage
+  - lib/types: types
+
+- Added top-level re-export stubs at lib/\*.ts to preserve existing import paths while files are grouped.
+
+Files changed: lib/\* (moved into subfolders; see git diff for full list)

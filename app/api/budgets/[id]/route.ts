@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getUserIdFromRequest } from "../../../../lib/auth";
-import { normalizeBudgetForStorage } from "../../../../lib/budget-planner";
-import { deleteBudget, putBudget } from "../../../../lib/dynamo";
-import { BudgetSchema } from "../../../../lib/schemas";
+import { getUserIdFromRequest } from "@/lib/auth/auth";
+import { normalizeBudgetForStorage } from "@/lib/utils/budget-planner";
+import { deleteBudget, putBudget } from "@/lib/api/dynamo";
+import { BudgetSchema } from "@/lib/schemas/schemas";
 
 export async function DELETE(
   request: Request,

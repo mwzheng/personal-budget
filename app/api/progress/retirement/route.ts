@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getPayloadFromRequest } from "../../../../lib/auth2";
-import { upsertUserProfile } from "../../../../lib/users";
+import { upsertUserProfile } from "@/lib/auth/users";
 import {
   getUserRetirement,
   putRetirement,
   deleteRetirement,
-} from "../../../../lib/progress";
+} from "@/lib/utils/progress";
 
 // Note 1: Keep subject extraction in one helper for stricter type safety.
 function getUserIdFromPayload(payload: Record<string, unknown>): string {

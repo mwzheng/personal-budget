@@ -21,8 +21,8 @@ import { useEffect, useState } from "react";
 import {
   clearLastSelectedReportYears,
   setLastSelectedReportYears,
-} from "@/lib/storage";
-import { FilterParams } from "@/lib/types";
+} from "@/lib/utils/storage";
+import { FilterParams } from "@/lib/types/types";
 
 interface Props {
   availableTags: string[];

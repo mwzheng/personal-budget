@@ -14,7 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-import { TagDataPoint } from "@/lib/types";
+import { TagDataPoint } from "@/lib/types/types";
 
 // Note 2: BAR_COLORS cycles through a palette of 15 distinct colors. Using
 // `i % BAR_COLORS.length` prevents an out-of-bounds index when there are more

@@ -12,7 +12,7 @@ import {
   SankeyLink,
   SankeyNode,
   SavedBudget,
-} from "./types";
+} from "../types/types";
 
 export const CATEGORY_ORDER: CategoryType[] = ["Need", "Want", "Saving"];
 

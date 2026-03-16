@@ -6,6 +6,7 @@ export const REFRESH_TOKEN_KEY = "refresh_token";
 export const PKCE_VERIFIER_KEY = "pkce_verifier";
 export const OAUTH_STATE_KEY = "oauth_state";
 export const AUTH_CHANGED_EVENT = "personal-budget:auth-changed";
+export const DEMO_SESSION_KEY = "porridge-budget-demo-session";
 
 export type CognitoFlowMode = "login" | "signup";
 
@@ -43,6 +44,26 @@ function setStorageValue(key: string, value?: string | null) {
 function dispatchAuthChanged() {
   if (!inBrowser()) return;
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+}
+
+function setDemoSessionValue(enabled: boolean) {
+  if (!inBrowser()) return;
+
+  if (enabled) {
+    window.sessionStorage.setItem(DEMO_SESSION_KEY, "true");
+    return;
+  }
+
+  window.sessionStorage.removeItem(DEMO_SESSION_KEY);
+}
+
+function clearStoredAuthStorage() {
+  if (!inBrowser()) return;
+
+  setStorageValue(ACCESS_TOKEN_KEY, null);
+  setStorageValue(ID_TOKEN_KEY, null);
+  setStorageValue(REFRESH_TOKEN_KEY, null);
+  clearPendingCognitoAuth();
 }
 
 function base64UrlEncode(bytes: Uint8Array) {
@@ -110,9 +131,29 @@ export function getStoredCognitoTokens(): StoredCognitoTokens {
   }
 }
 
+// Note 1: Demo auth is intentionally tracked with a dedicated session flag rather
+// than fake JWTs. That keeps client-side "signed in" state separate from real
+// Cognito credentials, so browser-only demo sessions never reach the server as
+// invalid Authorization headers.
+export function isDemoSessionActive() {
+  if (!inBrowser()) {
+    return false;
+  }
+
+  try {
+    return window.sessionStorage.getItem(DEMO_SESSION_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function hasStoredCognitoTokens() {
+  const { accessToken, idToken, refreshToken } = getStoredCognitoTokens();
+  return Boolean(accessToken || idToken || refreshToken);
+}
+
 export function isAuthenticated() {
-  const { accessToken, idToken } = getStoredCognitoTokens();
-  return Boolean(accessToken || idToken);
+  return hasStoredCognitoTokens() || isDemoSessionActive();
 }
 
 export function storeCognitoTokens(tokens: TokenResponseShape) {
@@ -120,6 +161,16 @@ export function storeCognitoTokens(tokens: TokenResponseShape) {
   setStorageValue(ACCESS_TOKEN_KEY, tokens.access_token ?? null);
   setStorageValue(ID_TOKEN_KEY, tokens.id_token ?? null);
   setStorageValue(REFRESH_TOKEN_KEY, tokens.refresh_token ?? null);
+  setDemoSessionValue(false);
+  dispatchAuthChanged();
+}
+
+export async function startDemoSession() {
+  requireBrowser();
+  clearStoredAuthStorage();
+  const { resetDemoStore } = await import("../demo/demoData");
+  resetDemoStore();
+  setDemoSessionValue(true);
   dispatchAuthChanged();
 }
 
@@ -131,10 +182,8 @@ export function clearPendingCognitoAuth() {
 
 export function clearCognitoTokens() {
   if (!inBrowser()) return;
-  window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-  window.sessionStorage.removeItem(ID_TOKEN_KEY);
-  window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-  clearPendingCognitoAuth();
+  clearStoredAuthStorage();
+  setDemoSessionValue(false);
   dispatchAuthChanged();
 }
 

@@ -2,9 +2,12 @@
 // data. It filters and paginates in memory so tags, search, and aggregates are
 // computed from the same isolated dataset the user is allowed to see.
 import { NextRequest, NextResponse } from "next/server";
-import { aggregateTransactions, filterTransactions } from "@/lib/aggregations";
-import { getUserTransactions } from "@/lib/dynamo";
-import { getRequestUserId } from "@/lib/requestUser";
+import {
+  aggregateTransactions,
+  filterTransactions,
+} from "@/lib/utils/aggregations";
+import { getUserTransactions } from "@/lib/api/dynamo";
+import { getRequestUserId } from "@/lib/auth/requestUser";
 
 export async function GET(request: NextRequest) {
   try {

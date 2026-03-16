@@ -5,8 +5,8 @@
 
 import React, { useState } from "react";
 import { Box, Button, Stack, TextField } from "@mui/material";
-import { apiFetch } from "@/lib/apiFetch";
-import { sanitizeNumberString } from "@/lib/format";
+import { apiFetch } from "@/lib/api/apiFetch";
+import { sanitizeNumberString } from "@/lib/utils/format";
 
 interface Props {
   onSaved?: () => void | Promise<void>;

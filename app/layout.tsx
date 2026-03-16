@@ -13,10 +13,10 @@ import "./globals.css";
 // reads it at build time and injects the equivalent `<meta>` and `<title>` tags
 // into the `<head>` of every page that does not override them with its own
 // `metadata` export. No explicit `<head>` element is needed in JSX.
-// Note 2.1: The `icons` property uses the same 💰 logo icon as the AppNav for
+// Note 2.1: The `icons` property uses the same 🥣 bowl icon as the AppNav for
 // a consistent visual identity across the app and browser tab.
 export const metadata: Metadata = {
-  title: "Personal Budget",
+  title: "Porridge Budget",
   description: "Track and analyze your personal spending",
   icons: {
     icon: "/favicon.svg",
@@ -81,6 +81,26 @@ export default function RootLayout({
   }
 })();`}
           </Script>
+
+          {/* Note 6: Google Analytics integration.
+               - Loads gtag.js after the page becomes interactive to avoid blocking rendering.
+               - Measurement ID is read from NEXT_PUBLIC_GA_ID (env) so it's not hard-coded.
+               - For SPA client-side navigation, Providers will send page_view events.
+          */}
+          {process.env.NEXT_PUBLIC_GA_ID && (
+            <>
+              <Script
+                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+                strategy="afterInteractive"
+              />
+              <Script id="gtag-init" strategy="afterInteractive">
+                {`window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);} 
+gtag('js', new Date());
+gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_path: window.location.pathname });`}
+              </Script>
+            </>
+          )}
 
           <Providers>
             <AppNav />
