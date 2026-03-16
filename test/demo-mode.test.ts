@@ -4,10 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiFetch } from "@/lib/api/apiFetch";
 import {
+  ACCESS_TOKEN_KEY,
   clearCognitoTokens,
   hasStoredCognitoTokens,
   isAuthenticated,
   isDemoSessionActive,
+  REFRESH_TOKEN_KEY,
   startDemoSession,
 } from "@/lib/auth/cognitoClient";
 
@@ -35,6 +37,8 @@ describe("demo mode", () => {
   let sessionStorage: MemoryStorage;
   let localStorage: MemoryStorage;
   let dispatchEvent: ReturnType<typeof vi.fn>;
+  const originalCognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
+  const originalCognitoClientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
 
   beforeEach(() => {
     sessionStorage = new MemoryStorage();
@@ -51,6 +55,16 @@ describe("demo mode", () => {
 
   afterEach(() => {
     clearCognitoTokens();
+    if (originalCognitoDomain === undefined) {
+      delete process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
+    } else {
+      process.env.NEXT_PUBLIC_COGNITO_DOMAIN = originalCognitoDomain;
+    }
+    if (originalCognitoClientId === undefined) {
+      delete process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
+    } else {
+      process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID = originalCognitoClientId;
+    }
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -126,5 +140,39 @@ describe("demo mode", () => {
       ),
     ).toBe(true);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not restore Cognito tokens after sign-out during a refresh", async () => {
+    process.env.NEXT_PUBLIC_COGNITO_DOMAIN = "https://auth.example.com";
+    process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID = "client-123";
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, "expired-access-token");
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-token-123");
+
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockImplementationOnce(async () => {
+        clearCognitoTokens();
+        return new Response(
+          JSON.stringify({
+            access_token: "fresh-access-token",
+            id_token: "fresh-id-token",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      });
+
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const response = await apiFetch("/api/reports");
+
+    expect(response.status).toBe(401);
+    expect(hasStoredCognitoTokens()).toBe(false);
+    expect(sessionStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
+    expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 });

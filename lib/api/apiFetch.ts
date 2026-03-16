@@ -73,8 +73,16 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
             if (tokenRes.ok) {
               const data = await tokenRes.json();
+              const latestRefreshToken = getStoredCognitoTokens().refreshToken;
+              // Note 6: A pending request can outlive the user's active session if
+              // they click Sign Out while a 401-triggered refresh is still in
+              // flight. Re-checking the current refresh token prevents that stale
+              // response from resurrecting a session the user explicitly cleared.
+              if (latestRefreshToken !== refreshToken) {
+                return res;
+              }
               // Preserve the existing refresh token unless Cognito rotates it.
-              // Note 6: Cognito usually omits `refresh_token` on refresh grants,
+              // Note 7: Cognito usually omits `refresh_token` on refresh grants,
               // so we merge the current value back in before storing the payload.
               storeCognitoTokens({
                 access_token: data.access_token,
@@ -94,7 +102,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
               }
             } else {
               // Refresh failed - clear tokens to force re-auth
-              // Note 7: Clearing all three tokens forces the user back to the
+              // Note 8: Clearing all three tokens forces the user back to the
               // login page on the next navigation, which is the safest recovery
               // path when the refresh token is expired or revoked.
               clearCognitoTokens();

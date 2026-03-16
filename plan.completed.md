@@ -1,3 +1,34 @@
+# Completed: Prevent stale token refresh after sign-out
+
+Date: 2026-03-16
+
+Summary
+
+- Fixed a browser-side auth race where an in-flight `apiFetch` refresh could write fresh Cognito tokens back into `sessionStorage` after the user had already clicked Sign Out.
+- Added a regression test that explicitly clears auth state during a refresh attempt and verifies that the stale refresh response is ignored instead of restoring the session.
+- Re-ran formatting, lint, tests, and the Next.js production build to verify the fix.
+
+Completed items
+
+- Updated `lib/api/apiFetch.ts` so the refresh flow re-checks the current browser `refreshToken` before calling `storeCognitoTokens(...)`. If sign-out (or another auth transition) already cleared or replaced the token, the stale refresh response is discarded and the original 401/403 response is returned.
+- Added a regression test in `test/demo-mode.test.ts` that simulates a 401, clears auth storage before the refresh response resolves, and verifies that no new tokens are persisted and no retry request is issued.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and completed history stay synchronized.
+
+Files changed
+
+- `lib/api/apiFetch.ts`
+- `test/demo-mode.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `fix(auth): prevent stale refresh after sign-out`
+
+Notes / next steps
+
+- If sign-out issues ever recur after this, the next place to inspect is the hosted Cognito logout configuration itself (allowed sign-out URLs and upstream IdP logout behavior), because this app-side fix now prevents the local session from being recreated by stale browser requests.
+
 # Completed: Remove redundant lib re-export files and dead utils
 
 Date: 2026-03-16

@@ -2,7 +2,7 @@
 
 ## Status: Completed 2026-03-16
 
-Latest completed work: the `lib/` cleanup removed most top-level compatibility re-export files, deleted dead utility modules, and rewired the app/tests to import the canonical subfolder modules directly; the full implementation notes are recorded in `plan.completed.md` under the latest 2026-03-16 entry. Earlier 2026-03-16 work also covers the signed-out nav cleanup plus auth-page demo CTA copy simplification, and the earlier 2026-03-15 entries still cover the browser-only demo session, budget planner follow-up passes, and related reports/progress work.
+Latest completed work: sign-out now wins over any in-flight Cognito refresh attempt, so stale token refresh responses cannot silently repopulate browser auth state after logout; the full implementation notes are recorded in `plan.completed.md` under the latest 2026-03-16 entry. Earlier 2026-03-16 work also covers the `lib/` cleanup plus the signed-out nav/auth-page demo CTA simplification, and the earlier 2026-03-15 entries still cover the browser-only demo session, budget planner follow-up passes, and related reports/progress work.
 
 # Development Plan for Porridge Budget
 
