@@ -47,7 +47,7 @@ const INFO_MENU_ITEMS = PUBLIC_INFO_PAGE_TITLE_KEYS.map((pageKey) => {
 const AUTH_TABS = [
   { label: "Reports", value: "reports", href: ROUTE_PATHS.reports },
   { label: "Progress", value: "progress", href: ROUTE_PATHS.progress },
-  { label: "Budget Generator", value: "sankey", href: ROUTE_PATHS.sankey },
+  { label: "Budget", value: "sankey", href: ROUTE_PATHS.sankey },
 ] as const;
 
 function isRouteSelected(pathname: string, href: string) {

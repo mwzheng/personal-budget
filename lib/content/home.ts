@@ -33,8 +33,8 @@ export const HOME_PAGE_CONTENT = {
         "Explore spending over time, by category, and by tag with charts that stay readable as the data changes.",
     },
     {
-      id: "budget-generator",
-      title: "Budget Generator",
+      id: "budget",
+      title: "Budget",
       description:
         "Plan named expenses, preview a pie chart, and inspect grouped Sankey flows before you commit to a budget.",
     },

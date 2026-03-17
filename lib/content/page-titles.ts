@@ -106,7 +106,7 @@ export const PAGE_TITLES = {
   },
   [PAGE_TITLE_KEYS.SANKEY]: {
     route: ROUTE_PATHS.sankey,
-    title: `Budget planner - ${APP_NAME}`,
+    title: `Budget - ${APP_NAME}`,
     description:
       "Plan named expenses and visualize a monthly budget with pie and Sankey charts.",
     requiresAuth: true,
