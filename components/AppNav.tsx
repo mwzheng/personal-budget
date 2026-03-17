@@ -181,7 +181,6 @@ export function AppNav() {
                 }}
               />
             }
-            onMouseEnter={(event) => openInfoMenu(event.currentTarget)}
             onClick={(event) => {
               if (isInfoMenuOpen) {
                 closeInfoMenu();
