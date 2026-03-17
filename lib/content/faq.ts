@@ -12,7 +12,7 @@ export const FAQ_ITEMS = [
     category: "creator",
     question: `Who built ${APP_NAME}?`,
     answer:
-      "I built it. I'm a software engineer with 4+ years of experience, and this app lives alongside my full-time work.",
+      "Porridge Budget was developed and is maintained by a software engineer with over four years of professional experience. It is a personal project maintained alongside full-time work.",
   },
   {
     id: "why-it-exists",

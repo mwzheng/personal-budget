@@ -109,7 +109,7 @@ function CreatorLink({ link }: { link: SocialLink }) {
         }}
       >
         <Icon aria-hidden="true" sx={{ fontSize: 20, mt: 0.25 }} />
-        <Stack spacing={0.25} flexGrow={1}>
+        <Stack spacing={0.25} sx={{ flexGrow: 1, minWidth: 0 }}>
           <Typography component="span" variant="body1" fontWeight={600}>
             {link.label}
           </Typography>
