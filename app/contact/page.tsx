@@ -114,8 +114,8 @@ export default function ContactPage() {
           <ContactForm form={form} />
 
           <Stack spacing={3} sx={{ height: "100%" }}>
-            <Card variant="outlined" sx={{ flex: 1 }}>
-              <CardContent sx={{ p: 3, height: "100%" }}>
+            <Card variant="outlined" sx={{ flex: 1.2 }}>
+              <CardContent sx={{ p: 3, height: "100%", minHeight: 320 }}>
                 <Stack spacing={2}>
                   <Typography variant="h5" fontWeight={700}>
                     {sidebar.methodsTitle}
@@ -171,8 +171,8 @@ export default function ContactPage() {
               </CardContent>
             </Card>
 
-            <Card variant="outlined" sx={{ flex: 1 }}>
-              <CardContent sx={{ p: 3, height: "100%" }}>
+            <Card variant="outlined" sx={{ flex: 0.8 }}>
+              <CardContent sx={{ p: 3, height: "100%", minHeight: 200 }}>
                 <Stack spacing={2} sx={{ height: "100%" }}>
                   <Typography variant="h5" fontWeight={700}>
                     {sidebar.topicsTitle}
@@ -189,7 +189,7 @@ export default function ContactPage() {
                       </Typography>
                     ))}
                   </Stack>
-                  <Box sx={{ mt: "auto" }}>
+                  <Box sx={{ mt: 2 }}>
                     <Typography variant="body2" color="text.secondary">
                       {availabilityNote}
                     </Typography>

@@ -170,7 +170,7 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
           onSubmit={handleSubmit}
           sx={{ height: "100%" }}
         >
-          <Stack spacing={1}>
+          <Stack spacing={1} sx={{ mb: 2 }}>
             <Typography variant="h4" fontWeight={700}>
               {form.title}
             </Typography>
@@ -242,7 +242,7 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
             {submitting ? form.submittingLabel : form.submitLabel}
           </Button>
 
-          <Box sx={{ mt: "auto" }}>
+          <Box sx={{ mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
               {form.privacyNote}
             </Typography>
