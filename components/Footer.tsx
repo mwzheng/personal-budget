@@ -163,18 +163,18 @@ export function Footer() {
         borderTop: "1px solid rgba(255, 255, 255, 0.12)",
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 3 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 } }}>
         <Box
           sx={{
             display: "grid",
-            gap: { xs: 2, lg: 3 },
+            gap: { xs: 2, lg: 2 },
             gridTemplateColumns: {
               xs: "1fr",
-              lg: "minmax(0, 1fr) minmax(0, 1.4fr)",
+              lg: "minmax(0, 1fr) minmax(0, 1.2fr)",
             },
           }}
         >
-          <Stack spacing={0.75}>
+          <Stack spacing={0.5}>
             <Link
               component={NextLink}
               href={homeHref}
@@ -186,15 +186,12 @@ export function Footer() {
                 🥣 {brandName}
               </Typography>
             </Link>
-            <Typography variant="body2" color="text.secondary" fontWeight={600}>
-              {tagline}
-            </Typography>
           </Stack>
 
           <Box
             sx={{
               display: "grid",
-              gap: { xs: 2, sm: 3 },
+              gap: { xs: 1.5, sm: 2 },
               gridTemplateColumns: {
                 xs: "1fr",
                 sm: "repeat(auto-fit, minmax(140px, 1fr))",
@@ -211,7 +208,7 @@ export function Footer() {
         <Divider
           sx={{
             borderColor: "rgba(255, 255, 255, 0.12)",
-            my: { xs: 1.5, md: 2 },
+            my: { xs: 1, md: 1.25 },
           }}
         />
 
