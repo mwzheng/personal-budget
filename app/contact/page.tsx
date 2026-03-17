@@ -133,12 +133,25 @@ export default function ContactPage() {
                         border: "1px solid",
                         borderColor: "divider",
                         borderRadius: 2,
+                        minWidth: 0,
                       }}
                     >
-                      <Typography variant="h6" fontWeight={600}>
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        sx={{ minWidth: 0 }}
+                      >
                         {method.label}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                          minWidth: 0,
+                        }}
+                      >
                         {method.description}
                       </Typography>
                       <Button
@@ -148,7 +161,7 @@ export default function ContactPage() {
                         rel="noreferrer"
                         variant="outlined"
                         endIcon={<LaunchIcon />}
-                        sx={{ alignSelf: "flex-start" }}
+                        sx={{ alignSelf: "flex-start", whiteSpace: "normal" }}
                       >
                         {method.cta}
                       </Button>
