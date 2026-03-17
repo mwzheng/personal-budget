@@ -42,7 +42,8 @@ export const CREATOR_PROFILE = {
   experienceSummary:
     "4+ years of experience, currently working full time, and a huge advocate for saving and budgeting wisely.",
   bio: [
-    "Mickey is a full stack software engineer who likes building practical tools around real workflows.",
+    "I'm a full stack software engineer who likes building practical tools around real workflows.",
+
     `${APP_NAME} is a hobby project that turns a manual Excel and Notion budgeting habit into one focused app.`,
   ],
   links: CREATOR_SOCIAL_LINK_LIST,
