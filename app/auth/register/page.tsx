@@ -29,6 +29,8 @@ export default function RegisterPage() {
     }
   }, [router]);
 
+  // Note 2: Keep registration copy provider-neutral so account setup can move
+  // behind a different hosted provider later without changing this page's UX.
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Card>
@@ -39,16 +41,16 @@ export default function RegisterPage() {
                 Create Account
               </Typography>
               <Typography color="text.secondary">
-                Register through the Cognito Hosted UI, then come back here with
-                a valid session.
+                Complete account setup in the secure account setup window, then
+                return here with an active session.
               </Typography>
             </Box>
 
             {!cognitoConfigured && (
               <Alert severity="warning">
                 Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
-                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable the
-                hosted Cognito registration flow.
+                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable hosted
+                account setup.
               </Alert>
             )}
 
@@ -60,7 +62,7 @@ export default function RegisterPage() {
                 fullWidth
                 disabled={!cognitoConfigured}
               >
-                Register with Cognito
+                Create Account
               </SignInButton>
             </Stack>
           </Stack>

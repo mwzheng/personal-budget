@@ -43,7 +43,7 @@ interface Props {
   transactions: Transaction[];
   activeTags?: string[];
   onEdit?: (transaction: Transaction) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (id: string) => void | Promise<boolean>;
   onTagClick?: (tag: string) => void;
 }
 

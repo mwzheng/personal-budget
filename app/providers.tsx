@@ -8,8 +8,22 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import {
+  APP_NAME,
+  getPageTitleEntryByPathname,
+  normalizeAppPathname,
+} from "@/lib/content/page-titles";
+
+type AnalyticsWindow = Window & {
+  gtag?: (
+    command: "config",
+    targetId: string,
+    config: Record<string, unknown>,
+  ) => void;
+  dataLayer?: unknown[];
+};
 
 // Note 2: `createTheme` builds an MUI theme object at module load time (once).
 // Defining it outside the component prevents the theme object from being
@@ -78,30 +92,68 @@ export function Providers({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, []);
 
-  // Note 9: Send a page_view event to Google Analytics when the client-side
-  // pathname changes in the App Router. Providers is a client component so it
-  // can observe route changes and forward them to gtag when available.
+  // Note 8: Route metadata is resolved once here so browser-tab titles and
+  // analytics payloads share the same source of truth as more public pages land.
   const pathname = usePathname();
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+  const normalizedPathname = normalizeAppPathname(pathname);
+  const pageTitle =
+    getPageTitleEntryByPathname(normalizedPathname)?.title ?? APP_NAME;
+  const hasTrackedInitialPageLoad = useRef(false);
 
   useEffect(() => {
-    if (!pathname || !GA_ID) return;
-    // Safe no-op if gtag isn't loaded yet
+    document.title = pageTitle;
+
+    if (!GA_ID) return;
+
+    // Note 9: The first hard-load page_view comes from `app/layout.tsx`, so this
+    // effect skips its first analytics send and only tracks later SPA navigations.
+    if (!hasTrackedInitialPageLoad.current) {
+      hasTrackedInitialPageLoad.current = true;
+      return;
+    }
+
+    // Note 10: Retrying briefly avoids racing the GA bootstrap script on a very
+    // fast client-side navigation, while the fallback keeps the old dataLayer
+    // no-op behavior if gtag never appears.
+    let attemptsRemaining = 10;
+    let timeoutId: number | undefined;
+
     const sendPageview = () => {
-      if ((window as any).gtag) {
-        (window as any).gtag("config", GA_ID, { page_path: pathname });
-      } else if ((window as any).dataLayer) {
-        (window as any).dataLayer.push({
-          event: "page_view",
-          page_path: pathname,
-        });
+      const analyticsWindow = window as AnalyticsWindow;
+      const payload = {
+        page_path: normalizedPathname,
+        page_title: pageTitle,
+      };
+
+      if (analyticsWindow.gtag) {
+        analyticsWindow.gtag("config", GA_ID, payload);
+        return;
       }
+
+      if (analyticsWindow.dataLayer) {
+        analyticsWindow.dataLayer.push({
+          event: "page_view",
+          ...payload,
+        });
+        return;
+      }
+
+      if (attemptsRemaining === 0) return;
+
+      attemptsRemaining -= 1;
+      timeoutId = window.setTimeout(sendPageview, 100);
     };
+
     sendPageview();
-  }, [pathname, GA_ID]);
+
+    return () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    };
+  }, [GA_ID, normalizedPathname, pageTitle]);
 
   return (
-    // Note 8: `ThemeProvider` makes the `darkTheme` available to all nested
+    // Note 11: `ThemeProvider` makes the `darkTheme` available to all nested
     // MUI components via React Context. `LocalizationProvider` provides the
     // date adapter (date-fns) to MUI date picker components. `CssBaseline`
     // injects a CSS reset and applies the theme's background color to <body>.

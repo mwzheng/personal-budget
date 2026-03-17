@@ -10,3 +10,142 @@ body {
   padding: 0;
   min-height: 100%;
 }
+
+/* Note 1: FullCalendar injects its structural styles automatically, and these
+   overrides retint the shared class names so the month grid feels native inside
+   the app's dark Material UI theme instead of introducing a bright subsystem. */
+.transaction-calendar .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.12);
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.04);
+  --fc-page-bg-color: transparent;
+  --fc-list-event-hover-bg-color: rgba(45, 125, 210, 0.14);
+  --fc-now-indicator-color: #ffb74d;
+  color: #f5f7fa;
+}
+
+.transaction-calendar .fc-theme-standard td,
+.transaction-calendar .fc-theme-standard th,
+.transaction-calendar .fc-theme-standard .fc-scrollgrid {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.transaction-calendar .fc .fc-toolbar {
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.transaction-calendar .fc .fc-toolbar-title {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-weight: 600;
+}
+
+.transaction-calendar .fc .fc-button {
+  background-color: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  color: #f8fafc;
+  text-transform: capitalize;
+}
+
+.transaction-calendar .fc .fc-button:hover,
+.transaction-calendar .fc .fc-button:focus-visible,
+.transaction-calendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+.transaction-calendar .fc .fc-button-primary:not(:disabled):active {
+  background-color: #2d7dd2;
+  border-color: #2d7dd2;
+}
+
+.transaction-calendar .fc .fc-button:focus-visible,
+.transaction-calendar .fc .fc-event:focus-visible {
+  outline: 2px solid #90caf9;
+  outline-offset: 2px;
+}
+
+.transaction-calendar .fc .fc-col-header-cell-cushion,
+.transaction-calendar .fc .fc-daygrid-day-number,
+.transaction-calendar .fc .fc-more-link {
+  color: #e5e7eb;
+  text-decoration: none;
+}
+
+.transaction-calendar .fc .fc-day-other .fc-daygrid-day-number {
+  color: rgba(229, 231, 235, 0.45);
+}
+
+.transaction-calendar .fc .fc-day-today {
+  background-color: rgba(45, 125, 210, 0.12);
+}
+
+.transaction-calendar .fc .fc-event {
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+}
+
+.transaction-calendar .fc .fc-event-main {
+  padding: 0;
+}
+
+/* Note 2: The event body is intentionally two lines: the first line surfaces
+   the amount and category for quick scanning, while the second line preserves
+   the transaction name without making each cell visually noisy. */
+.transaction-calendar__event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.transaction-calendar__event-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.transaction-calendar__event-amount {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.transaction-calendar__event-category,
+.transaction-calendar__event-name {
+  font-size: 0.68rem;
+}
+
+.transaction-calendar__event-category {
+  color: rgba(248, 250, 252, 0.88);
+  font-weight: 600;
+}
+
+.transaction-calendar__event-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transaction-calendar .fc .fc-popover {
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+}
+
+.transaction-calendar .fc .fc-popover-header {
+  background: #111827;
+  color: #f8fafc;
+}
+
+@media (max-width: 720px) {
+  .transaction-calendar .fc .fc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transaction-calendar .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: space-between;
+  }
+}

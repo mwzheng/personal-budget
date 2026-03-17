@@ -16,9 +16,13 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1004.0",
+    "@aws-sdk/client-ses": "^3.1010.0",
     "@aws-sdk/lib-dynamodb": "^3.1004.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
     "@mui/material-nextjs": "^6.5.0",

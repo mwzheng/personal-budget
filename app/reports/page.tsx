@@ -18,12 +18,16 @@ import Fab from "@mui/material/Fab";
 import Grid from "@mui/material/Grid";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FilterBar } from "@/components/ui/FilterBar";
+import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
+import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
@@ -94,6 +98,8 @@ const EMPTY_FILTERS: FilterParams = {
   tags: [],
   search: "",
 };
+
+type TransactionsViewMode = "table" | "calendar";
 
 function buildYearFilters(years: string[]): FilterParams {
   return {
@@ -210,6 +216,12 @@ export default function ReportsPage() {
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
   );
+  // Note 8: The active view is UI-only state. Keeping it beside the filtered
+  // transaction data means the table and calendar stay perfectly in sync without
+  // triggering extra API calls or maintaining parallel copies of the same list.
+  const [transactionsView, setTransactionsView] =
+    useState<TransactionsViewMode>("table");
+  const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const router = useRouter();
 
@@ -313,7 +325,7 @@ export default function ReportsPage() {
 
   async function handleDeleteTransaction(id: string) {
     const transaction = allTransactions.find((item) => item.id === id);
-    if (!transaction) return;
+    if (!transaction) return false;
 
     setErrorMessage(null);
 
@@ -330,7 +342,7 @@ export default function ReportsPage() {
 
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
-        return;
+        return false;
       }
 
       if (!res.ok || !data.ok) {
@@ -338,10 +350,12 @@ export default function ReportsPage() {
       }
 
       await loadTransactions();
+      return true;
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to delete transaction",
       );
+      return false;
     }
   }
 
@@ -576,24 +590,85 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Transactions table */}
-          <Box mb={1} display="flex" alignItems="baseline" gap={1}>
-            <Typography variant="h6" fontWeight={600}>
-              Transactions
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              ({filtered.length} results)
-            </Typography>
+          {/* Transactions results */}
+          <Box
+            mb={1.5}
+            display="flex"
+            alignItems={{ xs: "stretch", sm: "center" }}
+            justifyContent="space-between"
+            flexWrap="wrap"
+            gap={2}
+          >
+            <Box display="flex" alignItems="baseline" gap={1}>
+              <Typography variant="h6" fontWeight={600}>
+                Transactions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                ({filtered.length} results)
+              </Typography>
+            </Box>
+            {/* Note 9: An exclusive toggle keeps the table as the familiar
+                default while letting users switch to the calendar without losing
+                the current filters or the shared edit/delete handlers. */}
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={transactionsView}
+              onChange={(_event, nextView) => {
+                if (nextView !== null) {
+                  setTransactionsView(nextView as TransactionsViewMode);
+                }
+              }}
+              aria-label="Choose the transaction results view"
+              sx={{
+                "& .MuiToggleButtonGroup-grouped": {
+                  px: 1.5,
+                  textTransform: "none",
+                },
+              }}
+            >
+              <ToggleButton
+                value="table"
+                aria-label="Show transactions in the table view"
+              >
+                Table
+              </ToggleButton>
+              <ToggleButton
+                value="calendar"
+                aria-label="Show transactions in the calendar view"
+              >
+                Calendar
+              </ToggleButton>
+            </ToggleButtonGroup>
           </Box>
-          <TransactionsTable
-            transactions={filtered}
-            activeTags={filters.tags}
-            onEdit={handleEditTransaction}
-            onDelete={handleDeleteTransaction}
-            onTagClick={handleQuickTagFilter}
-          />
+          {transactionsView === "table" ? (
+            <TransactionsTable
+              transactions={filtered}
+              activeTags={filters.tags}
+              onEdit={handleEditTransaction}
+              onDelete={handleDeleteTransaction}
+              onTagClick={handleQuickTagFilter}
+            />
+          ) : (
+            <TransactionCalendar
+              transactions={filtered}
+              onTransactionSelect={setDetailTarget}
+            />
+          )}
         </>
       )}
+
+      {/* Calendar transaction details dialog */}
+      <TransactionDetailDialog
+        open={Boolean(detailTarget)}
+        transaction={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onEdit={(transaction) => {
+          setDetailTarget(null);
+          handleEditTransaction(transaction);
+        }}
+        onDelete={handleDeleteTransaction}
+      />
 
       {/* Add/Edit transaction dialog */}
       <TransactionForm

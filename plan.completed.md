@@ -1,3 +1,70 @@
+# Completed: Launch live public pages, calendar view, and contact flow
+
+Date: 2026-03-17
+
+Summary
+
+- Added live About, FAQ, and Contact routes backed by shared content metadata so nav, footer, and page titles stay aligned for signed-out visitors.
+- Added the reports calendar view plus transaction-detail support, and simplified auth copy so the signed-out experience is provider-neutral.
+- Wired the public contact form to the SES-backed `/api/contact` route, aligned contact env var names, polished the footer and Info dropdown, and finished cleanup with formatting plus full validation.
+
+Completed items
+
+- Added `app/about/page.tsx`, `app/faq/page.tsx`, and `app/contact/page.tsx` with shared `lib/content/*` data modules so the public pages render from one source of truth instead of duplicating copy in the routes.
+- Updated `components/AppNav.tsx`, `components/Footer.tsx`, `app/layout.tsx`, `app/providers.tsx`, `lib/content/page-titles.ts`, and `lib/content/footer.ts` so About, FAQ, and Contact are treated as live public pages in shared navigation, footer, and browser-title data.
+- Added `components/contact/ContactForm.tsx`, `app/api/contact/route.ts`, `lib/schemas/schemas.ts`, `lib/types/content.ts`, and `env.example` guidance for `CONTACT_SES_FROM_EMAIL` / `CONTACT_SES_TO_EMAIL`, keeping the SES sender and recipient env names consistent between docs and runtime code.
+- Added the reports calendar workflow with `components/transactions/TransactionCalendar.tsx`, `components/transactions/TransactionDetailDialog.tsx`, `lib/utils/transaction-calendar.ts`, and the `app/reports/page.tsx` / `components/transactions/TransactionsTable.tsx` updates so transactions can be reviewed by day without losing the existing table flow.
+- Updated `app/auth/login/page.tsx`, `app/auth/register/page.tsx`, `app/auth/callback/page.tsx`, and `components/Auth/SignInButton.tsx` to remove provider-specific wording from the signed-out auth experience.
+- Trimmed `components/Footer.tsx` and `components/AppNav.tsx` so the public shell stays compact: the footer now shows only page names plus social links, the Info menu no longer flickers on hover, and dropdown rows now render just the live page labels.
+- Rewrote the public copy in `lib/content/about.ts`, `lib/content/contact.ts`, `lib/content/faq.ts`, `lib/content/footer.ts`, `app/contact/page.tsx`, and `app/api/contact/route.ts` so creator-name mentions stay scoped to the About page while the broader site copy reads in first person where it makes sense.
+- Added regression coverage in `test/calendar-view.test.ts`, `test/contact-api.test.ts`, and `test/content-data.test.ts`, then fixed `app/about/page.tsx` during final cleanup by flattening non-serializable `sx={(theme) => ...}` callbacks so the public pages prerender successfully in production.
+- Synced `plan.md` and `plan.completed.md` after verification so this completed work no longer sits in the active cleanup state.
+
+Files changed
+
+- `app/about/page.tsx`
+- `app/api/contact/route.ts`
+- `app/auth/callback/page.tsx`
+- `app/auth/login/page.tsx`
+- `app/auth/register/page.tsx`
+- `app/contact/page.tsx`
+- `app/faq/page.tsx`
+- `app/globals.css`
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `app/reports/page.tsx`
+- `components/AppNav.tsx`
+- `components/Auth/SignInButton.tsx`
+- `components/contact/ContactForm.tsx`
+- `components/Footer.tsx`
+- `components/transactions/TransactionCalendar.tsx`
+- `components/transactions/TransactionDetailDialog.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `env.example`
+- `lib/content/about.ts`
+- `lib/content/contact.ts`
+- `lib/content/faq.ts`
+- `lib/content/footer.ts`
+- `lib/content/page-titles.ts`
+- `lib/schemas/schemas.ts`
+- `lib/types/content.ts`
+- `lib/utils/transaction-calendar.ts`
+- `package.json`
+- `pnpm-lock.yaml`
+- `test/calendar-view.test.ts`
+- `test/contact-api.test.ts`
+- `test/content-data.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `feat(shell): add public pages, contact form, and reports calendar`
+
+Notes / next steps
+
+- If more signed-out marketing pages land later, extend `lib/content/page-titles.ts` and `lib/content/footer.ts` first so navigation, metadata, and footer coverage stay aligned with the live route set.
+
 # Completed: Honor refresh token state when clearing auth
 
 Date: 2026-03-17

@@ -16,6 +16,34 @@ import {
   handleCognitoCallback,
 } from "@/lib/auth/cognitoClient";
 
+function getProviderNeutralCallbackMessage(callbackError: unknown) {
+  // Note 1: Callback status and error copy stay provider-neutral so the hosted
+  // auth backend can change without leaking provider branding into the UI.
+  if (!(callbackError instanceof Error)) {
+    return "Unable to complete sign-in.";
+  }
+
+  if (callbackError.message.includes("not configured")) {
+    return "Hosted sign-in is not configured. Set NEXT_PUBLIC_COGNITO_DOMAIN and NEXT_PUBLIC_COGNITO_CLIENT_ID.";
+  }
+
+  if (callbackError.message.includes("only run in the browser")) {
+    return "Hosted sign-in can only finish in the browser.";
+  }
+
+  return [
+    ["Cognito authorization code", "authorization code"],
+    ["Cognito callback response", "sign-in callback response"],
+    ["from Cognito", "from the sign-in service"],
+    ["Cognito sign-in flow", "sign-in flow"],
+    ["Cognito", "hosted sign-in"],
+  ].reduce(
+    (message, [searchValue, replaceValue]) =>
+      message.replaceAll(searchValue, replaceValue),
+    callbackError.message,
+  );
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +60,7 @@ export default function AuthCallbackPage() {
       } catch (callbackError) {
         clearPendingCognitoAuth();
         if (!cancelled) {
-          setError(
-            callbackError instanceof Error
-              ? callbackError.message
-              : "Unable to complete the Cognito sign-in flow.",
-          );
+          setError(getProviderNeutralCallbackMessage(callbackError));
         }
       }
     };
@@ -72,7 +96,7 @@ export default function AuthCallbackPage() {
               Finishing Sign-In
             </Typography>
             <Typography color="text.secondary">
-              Exchanging your Cognito authorization code for tokens.
+              Completing your sign-in and preparing your session.
             </Typography>
           </>
         )}
