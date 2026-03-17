@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
+  // Note: Read the Google site verification token from the environment to avoid
+  // hardcoding verification tokens in the repository.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
 };
 
 // Note 2.2: Only the route/title pairs are serialized into the bootstrap
