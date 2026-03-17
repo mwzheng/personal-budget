@@ -24,7 +24,7 @@ function getProviderNeutralCallbackMessage(callbackError: unknown) {
   }
 
   if (callbackError.message.includes("not configured")) {
-    return "Hosted sign-in is not configured. Set NEXT_PUBLIC_COGNITO_DOMAIN and NEXT_PUBLIC_COGNITO_CLIENT_ID.";
+    return "Hosted sign-in is not configured for this deployment. If you need an account, please contact the site owner.";
   }
 
   if (callbackError.message.includes("only run in the browser")) {
