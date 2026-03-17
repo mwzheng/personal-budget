@@ -48,9 +48,8 @@ export default function RegisterPage() {
 
             {!cognitoConfigured && (
               <Alert severity="warning">
-                Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
-                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable hosted
-                account setup.
+                Hosted account setup is not configured for this deployment. If
+                you need to create an account, please contact the site owner.
               </Alert>
             )}
 

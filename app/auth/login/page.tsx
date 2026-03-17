@@ -66,9 +66,8 @@ export default function LoginPage() {
 
             {!cognitoConfigured && (
               <Alert severity="warning">
-                Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
-                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable hosted
-                sign-in.
+                Hosted sign-in is not configured for this deployment. If you
+                need an account, please contact the site owner.
               </Alert>
             )}
 
