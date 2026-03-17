@@ -22,7 +22,7 @@ const HOME_FEATURE_ICONS = {
   transactions: ReceiptLongIcon,
   budgets: SavingsIcon,
   reports: BarChartIcon,
-  "budget-generator": AutoGraphIcon,
+  budget: AutoGraphIcon,
 } as const;
 
 export default function Home() {
