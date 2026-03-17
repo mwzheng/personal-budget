@@ -135,7 +135,7 @@ describe("content data invariants", () => {
       "transactions",
       "budgets",
       "reports",
-      "budget-generator",
+      "budget",
     ]);
     expect(
       HOME_PAGE_CONTENT.features.every(
