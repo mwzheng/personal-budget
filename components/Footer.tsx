@@ -186,6 +186,15 @@ export function Footer() {
                 🥣 {brandName}
               </Typography>
             </Link>
+            {tagline ? (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.25 }}
+              >
+                {tagline}
+              </Typography>
+            ) : null}
           </Stack>
 
           <Box
