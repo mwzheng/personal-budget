@@ -30,4 +30,33 @@ export const BudgetSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
+// Note 2: Contact form strings are trimmed at validation time so the client and
+// API both reject whitespace-only submissions without duplicating cleanup logic.
+export const ContactSubmissionSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Please enter your name.")
+    .max(80, "Name must be 80 characters or fewer.")
+    .refine((value) => !/[\r\n]/.test(value), "Name must stay on one line."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please enter your email address.")
+    .max(254, "Email must be 254 characters or fewer.")
+    .email("Enter a valid email address."),
+  subject: z
+    .string()
+    .trim()
+    .min(1, "Please enter a subject.")
+    .max(120, "Subject must be 120 characters or fewer.")
+    .refine((value) => !/[\r\n]/.test(value), "Subject must stay on one line."),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters.")
+    .max(2000, "Message must be 2000 characters or fewer."),
+});
+
 export type Budget = z.infer<typeof BudgetSchema>;
+export type ContactSubmission = z.infer<typeof ContactSubmissionSchema>;

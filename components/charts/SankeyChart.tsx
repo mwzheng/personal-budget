@@ -120,7 +120,7 @@ export function SankeyChart({ data }: Props) {
               fontSize: metrics.labelFontSize,
               fontWeight: 800,
               paintOrder: "stroke",
-              stroke: theme.palette.background.paper,
+              stroke: theme.palette.common.black,
               strokeWidth: 3,
               strokeLinejoin: "round",
               pointerEvents: "none",

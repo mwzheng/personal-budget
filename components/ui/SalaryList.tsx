@@ -136,7 +136,11 @@ export default function SalaryList({
 
       {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
 
-      <SalaryChart data={entries} selectedYears={selectedYears} />
+      <SalaryChart
+        data={entries}
+        loading={loading}
+        selectedYears={selectedYears}
+      />
 
       <List>
         {entries.map((entry) => (

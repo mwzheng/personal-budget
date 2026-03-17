@@ -48,6 +48,8 @@ export default function LoginPage() {
     }
   };
 
+  // Note 2: Keep login copy provider-neutral so the choice stays focused on
+  // saved-account access versus demo mode, not on Cognito-specific branding.
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Card>
@@ -58,16 +60,14 @@ export default function LoginPage() {
                 Sign In
               </Typography>
               <Typography color="text.secondary">
-                Continue with your existing Cognito account to access your saved
-                budget data.
+                Continue with your saved account to access your budget data.
               </Typography>
             </Box>
 
             {!cognitoConfigured && (
               <Alert severity="warning">
-                Set `NEXT_PUBLIC_COGNITO_DOMAIN` and
-                `NEXT_PUBLIC_COGNITO_CLIENT_ID` in `.env.local` to enable the
-                hosted Cognito sign-in flow.
+                Hosted sign-in is not configured for this deployment. If you
+                need an account, please contact the site owner.
               </Alert>
             )}
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 fullWidth
                 disabled={!cognitoConfigured}
               >
-                Sign In with Cognito
+                Sign In
               </SignInButton>
               <Button
                 variant="outlined"

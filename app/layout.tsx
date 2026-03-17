@@ -4,8 +4,11 @@
 // server and sent as HTML to the browser before JavaScript hydrates the page.
 import type { Metadata } from "next";
 import Script from "next/script";
+import Box from "@mui/material/Box";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { AppNav } from "@/components/AppNav";
+import { Footer } from "@/components/Footer";
+import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -21,7 +24,18 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
+  // Note: Read the Google site verification token from the environment to avoid
+  // hardcoding verification tokens in the repository.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
 };
+
+// Note 2.2: Only the route/title pairs are serialized into the bootstrap
+// script so the initial tab title stays in sync without duplicating page copy.
+const INITIAL_PAGE_TITLES = Object.fromEntries(
+  Object.values(PAGE_TITLES).map(({ route, title }) => [route, title] as const),
+);
 
 export default function RootLayout({
   children,
@@ -82,10 +96,23 @@ export default function RootLayout({
 })();`}
           </Script>
 
+          {/* Note 5.1: This small bootstrap keeps the first browser-tab title in
+              sync with the shared route metadata before hydration and analytics
+              initialization happen. */}
+          <Script id="page-title-bootstrap" strategy="beforeInteractive">
+            {`(function setInitialPageTitle(){
+  var pageTitles = ${JSON.stringify(INITIAL_PAGE_TITLES)};
+  var fallbackTitle = ${JSON.stringify(APP_NAME)};
+  var pathname = window.location.pathname.replace(/\\/+$/, '') || '/';
+  document.title = pageTitles[pathname] || fallbackTitle;
+})();`}
+          </Script>
+
           {/* Note 6: Google Analytics integration.
                - Loads gtag.js after the page becomes interactive to avoid blocking rendering.
                - Measurement ID is read from NEXT_PUBLIC_GA_ID (env) so it's not hard-coded.
-               - For SPA client-side navigation, Providers will send page_view events.
+               - The initial page_view reads `document.title` after the bootstrap
+                 script above, while Providers handles later SPA navigations.
           */}
           {process.env.NEXT_PUBLIC_GA_ID && (
             <>
@@ -97,14 +124,28 @@ export default function RootLayout({
                 {`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);} 
 gtag('js', new Date());
-gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_path: window.location.pathname });`}
+gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_path: window.location.pathname, page_title: document.title });`}
               </Script>
             </>
           )}
 
           <Providers>
-            <AppNav />
-            {children}
+            {/* Note 7: The app shell uses a column flex layout so the footer can
+                sit after the page content on every route while still staying at
+                the bottom of short signed-out pages. */}
+            <Box
+              sx={{
+                minHeight: "100dvh",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <AppNav />
+              <Box component="div" sx={{ flexGrow: 1 }}>
+                {children}
+              </Box>
+              <Footer />
+            </Box>
           </Providers>
         </AppRouterCacheProvider>
       </body>
