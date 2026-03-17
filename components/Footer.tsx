@@ -215,7 +215,7 @@ export function Footer() {
           }}
         />
 
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" align="center">
           © {currentYear} {brandName}
         </Typography>
       </Container>

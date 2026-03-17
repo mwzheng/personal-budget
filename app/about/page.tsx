@@ -20,7 +20,11 @@ import { alpha } from "@mui/material/styles";
 
 import { ABOUT_PAGE_CONTENT } from "@/lib/content/about";
 import { PAGE_TITLE_KEYS, getPageTitleEntry } from "@/lib/content/page-titles";
-import type { ContentSection, SocialLink } from "@/lib/types/content";
+import type {
+  ContentNotice,
+  ContentSection,
+  SocialLink,
+} from "@/lib/types/content";
 
 const ABOUT_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.ABOUT);
 
@@ -47,6 +51,38 @@ const ABOUT_HERO_BACKGROUND = `linear-gradient(140deg, ${alpha(
 const ABOUT_FACT_BACKGROUND = alpha(ABOUT_BACKGROUND, 0.4);
 const ABOUT_PRINCIPLE_BORDER = alpha(ABOUT_PRIMARY, 0.32);
 const ABOUT_PRINCIPLE_BACKGROUND = alpha(ABOUT_PRIMARY, 0.08);
+const ABOUT_NOTICE_BACKGROUND = alpha(ABOUT_PRIMARY, 0.06);
+
+function NoticeCard({ notice }: { notice: ContentNotice }) {
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2.5,
+        height: "100%",
+        borderColor: ABOUT_PRINCIPLE_BORDER,
+        bgcolor: ABOUT_NOTICE_BACKGROUND,
+      }}
+    >
+      <Stack spacing={0.75}>
+        <Typography
+          variant="overline"
+          color="primary.light"
+          sx={{ letterSpacing: 1.1 }}
+        >
+          {notice.title}
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ lineHeight: 1.7 }}
+        >
+          {notice.body}
+        </Typography>
+      </Stack>
+    </Paper>
+  );
+}
 
 function CreatorLink({ link }: { link: SocialLink }) {
   const Icon = SOCIAL_ICON_BY_PLATFORM[link.platform];
@@ -154,8 +190,16 @@ function StorySection({ section }: { section: ContentSection }) {
  * that all substantive copy comes from `ABOUT_PAGE_CONTENT` instead of this file.
  */
 export default function AboutPage() {
-  const { creator, facts, hero, principles, sections, summary } =
-    ABOUT_PAGE_CONTENT;
+  const {
+    creator,
+    facts,
+    hero,
+    notices,
+    principles,
+    sectionTitles,
+    sections,
+    summary,
+  } = ABOUT_PAGE_CONTENT;
 
   return (
     <Box component="main" sx={{ py: { xs: 6, md: 8 } }}>
@@ -195,6 +239,20 @@ export default function AboutPage() {
                   {hero.summary}
                 </Typography>
               </Stack>
+              <Box
+                sx={{
+                  display: "grid",
+                  gap: 2,
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    md: "repeat(2, minmax(0, 1fr))",
+                  },
+                }}
+              >
+                {notices.map((notice) => (
+                  <NoticeCard key={notice.title} notice={notice} />
+                ))}
+              </Box>
               <Box
                 sx={{
                   display: "grid",
@@ -251,8 +309,11 @@ export default function AboutPage() {
               sx={{ p: { xs: 3, md: 4 }, height: "100%" }}
             >
               <Stack spacing={2.5}>
-                <Box>
+                <Box sx={{ display: "grid", gap: 0.75 }}>
                   <Typography id="about-creator-heading" variant="h4">
+                    {sectionTitles.creator}
+                  </Typography>
+                  <Typography variant="h5" fontWeight={700}>
                     {creator.name}
                   </Typography>
                   <Typography variant="subtitle1" color="primary.light">
@@ -297,7 +358,7 @@ export default function AboutPage() {
             >
               <Stack spacing={2.5}>
                 <Typography id="about-philosophy-heading" variant="h4">
-                  App philosophy
+                  {sectionTitles.philosophy}
                 </Typography>
                 <Stack spacing={1.5}>
                   {summary.map((paragraph) => (
@@ -344,7 +405,7 @@ export default function AboutPage() {
             aria-labelledby="about-story-heading"
           >
             <Typography id="about-story-heading" variant="h4">
-              More about the product
+              {sectionTitles.story}
             </Typography>
             <Box
               sx={{

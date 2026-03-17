@@ -1,4 +1,4 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, and the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have also been moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. -->
 
 ## Status: Completed 2026-03-17
 
@@ -10,7 +10,10 @@ provider-neutral; and the public contact form now relays through the SES-backed
 reduced the footer footprint, simplified the Info dropdown behavior, and kept
 creator-name mentions scoped to the About page. Final cleanup and verification,
 including the About page prerender fix plus `pnpm lint`, `pnpm test --run`, and
-`pnpm build`, are recorded in the newest `plan.completed.md` entry.
+`pnpm build`, are recorded in `plan.completed.md`; the newest entry now also
+covers the refreshed About/Contact/Home copy, centered footer copyright,
+larger reports calendar text, and shared chart-loading placeholders across the
+Reports, Progress, and Salary chart surfaces.
 
 # Development Plan for Porridge Budget
 

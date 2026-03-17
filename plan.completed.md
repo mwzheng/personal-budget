@@ -1,3 +1,52 @@
+# Completed: Polish public pages and chart loading
+
+Date: 2026-03-17
+
+Summary
+
+- Refined the public About, Contact, and Home copy so the newest site messaging stays data-driven, clearer about the app's free-to-use scope, and more explicit about avoiding sensitive information.
+- Increased public-page polish with stronger Home layout fill, equal-height Contact cards, title-case section headers, and a centered footer copyright row.
+- Improved chart feedback and readability by enlarging the Reports calendar text, centering the Spending Over Time legend, and showing loading skeletons while Reports, Progress, and Salary chart data is still settling.
+
+Completed items
+
+- Extended `lib/types/content.ts` so About, Contact, and Home content now carry reusable section-title, notice, sidebar, and feature-card fields instead of pushing this copy into the page components.
+- Updated `lib/content/about.ts`, `lib/content/contact.ts`, and the new `lib/content/home.ts` so the About page now mentions full-stack work, budgeting advocacy, and Notion free-tier limitations without repeating the `4+ years` line, while Contact/Home copy stays centralized and title cased.
+- Updated `app/about/page.tsx`, `app/contact/page.tsx`, `components/contact/ContactForm.tsx`, `app/page.tsx`, and `components/Footer.tsx` so the public pages consume the shared content, render the free-use / sensitive-info notices, better fill the homepage, align the contact columns, and center the footer copyright row.
+- Added a shared `components/charts/ChartLoadingState.tsx` placeholder, then used it from `app/reports/page.tsx`, `components/progress/ProgressCharts.tsx`, `components/charts/SalaryChart.tsx`, and `components/ui/SalaryList.tsx` so fetch-time chart loading no longer falls through to empty or stale chart states.
+- Updated `components/charts/SpendingBarChart.tsx` plus the `.transaction-calendar` rules in `app/globals.css` so the Spending Over Time legend is centered and the Reports calendar day/event typography is easier to read.
+- Expanded `test/content-data.test.ts` for the public copy changes, then reran formatting and the full `pnpm lint`, `pnpm test --run`, and `pnpm build` validation pass before syncing the plan files.
+
+Files changed
+
+- `app/about/page.tsx`
+- `app/contact/page.tsx`
+- `app/globals.css`
+- `app/page.tsx`
+- `app/reports/page.tsx`
+- `components/charts/ChartLoadingState.tsx`
+- `components/charts/SalaryChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/contact/ContactForm.tsx`
+- `components/Footer.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/content/about.ts`
+- `lib/content/contact.ts`
+- `lib/content/home.ts`
+- `lib/types/content.ts`
+- `test/content-data.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Commit message: `feat(ux): polish public pages and chart loading`
+
+Notes / next steps
+
+- If additional public copy sections or chart cards are added later, prefer extending the shared content or loading-state helpers first so the shell stays consistent without hardcoding new strings or skeleton layouts.
+
 # Completed: Launch live public pages, calendar view, and contact flow
 
 Date: 2026-03-17

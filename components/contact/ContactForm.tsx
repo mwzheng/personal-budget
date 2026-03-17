@@ -6,6 +6,7 @@
  */
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -160,13 +161,14 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
   }
 
   return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+    <Card variant="outlined" sx={{ height: "100%" }}>
+      <CardContent sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
         <Stack
           component="form"
           noValidate
           spacing={2.5}
           onSubmit={handleSubmit}
+          sx={{ height: "100%" }}
         >
           <Stack spacing={1}>
             <Typography variant="h4" fontWeight={700}>
@@ -240,9 +242,11 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
             {submitting ? form.submittingLabel : form.submitLabel}
           </Button>
 
-          <Typography variant="body2" color="text.secondary">
-            {form.privacyNote}
-          </Typography>
+          <Box sx={{ mt: "auto" }}>
+            <Typography variant="body2" color="text.secondary">
+              {form.privacyNote}
+            </Typography>
+          </Box>
         </Stack>
       </CardContent>
     </Card>

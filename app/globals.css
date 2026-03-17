@@ -35,7 +35,7 @@ body {
 }
 
 .transaction-calendar .fc .fc-toolbar-title {
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
   font-weight: 600;
 }
 
@@ -44,6 +44,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: none;
   color: #f8fafc;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-transform: capitalize;
 }
 
@@ -68,6 +70,23 @@ body {
   text-decoration: none;
 }
 
+.transaction-calendar .fc .fc-col-header-cell-cushion {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 0.35rem;
+}
+
+.transaction-calendar .fc .fc-daygrid-day-number {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.45rem 0.45rem 0 0;
+}
+
+.transaction-calendar .fc .fc-more-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .transaction-calendar .fc .fc-day-other .fc-daygrid-day-number {
   color: rgba(229, 231, 235, 0.45);
 }
@@ -81,7 +100,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  padding: 0.15rem 0.35rem;
+  padding: 0.25rem 0.45rem;
 }
 
 .transaction-calendar .fc .fc-event-main {
@@ -107,13 +126,13 @@ body {
 }
 
 .transaction-calendar__event-amount {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
 .transaction-calendar__event-category,
 .transaction-calendar__event-name {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
 }
 
 .transaction-calendar__event-category {

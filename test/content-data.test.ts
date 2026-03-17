@@ -2,9 +2,11 @@
 // can evolve without silently dropping routes, footer links, or required form text.
 import { describe, expect, it } from "vitest";
 
+import { ABOUT_PAGE_CONTENT, CREATOR_SOCIAL_LINKS } from "@/lib/content/about";
 import { CONTACT_PAGE_CONTENT } from "@/lib/content/contact";
 import { FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
 import { FAQ_ITEMS } from "@/lib/content/faq";
+import { HOME_PAGE_CONTENT } from "@/lib/content/home";
 import {
   LIVE_SIGNED_OUT_PAGE_TITLE_KEYS,
   PAGE_TITLE_KEYS,
@@ -97,5 +99,50 @@ describe("content data invariants", () => {
 
     expect(form.fields.name.autoComplete).toBe("name");
     expect(form.fields.email.autoComplete).toBe("email");
+  });
+
+  it("keeps About, Contact, and Home content aligned with the latest public copy rules", () => {
+    expect(ABOUT_PAGE_CONTENT.hero.title).toBe("Why Porridge Budget Exists");
+    expect(ABOUT_PAGE_CONTENT.notices).toHaveLength(2);
+    expect(ABOUT_PAGE_CONTENT.sectionTitles).toEqual({
+      creator: "About The Creator",
+      philosophy: "App Philosophy",
+      story: "More About The Product",
+    });
+    expect(
+      ABOUT_PAGE_CONTENT.sections.map((section) => section.heading),
+    ).toEqual(["Origin Story", "Mindful Manual Entry", "Product Direction"]);
+    expect(CREATOR_SOCIAL_LINKS.github.description?.toLowerCase()).toContain(
+      "profile",
+    );
+    expect(
+      CREATOR_SOCIAL_LINKS.github.description?.toLowerCase(),
+    ).not.toContain("follow the code");
+
+    expect(CONTACT_PAGE_CONTENT.sidebar).toEqual({
+      methodsTitle: "Other Ways To Connect",
+      methodsDescription:
+        "If a public thread or professional introduction makes more sense, these channels stay available too.",
+      topicsTitle: "Good Reasons To Reach Out",
+    });
+    expect(CONTACT_PAGE_CONTENT.notices).toHaveLength(2);
+    expect(
+      CONTACT_PAGE_CONTENT.methods[0]?.description.toLowerCase(),
+    ).toContain("github profile");
+
+    expect(HOME_PAGE_CONTENT.hero.title).toBe("Porridge Budget");
+    expect(HOME_PAGE_CONTENT.features.map((feature) => feature.id)).toEqual([
+      "transactions",
+      "budgets",
+      "reports",
+      "budget-generator",
+    ]);
+    expect(
+      HOME_PAGE_CONTENT.features.every(
+        (feature) =>
+          feature.title.trim().length > 0 &&
+          feature.description.trim().length > 0,
+      ),
+    ).toBe(true);
   });
 });

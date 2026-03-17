@@ -19,7 +19,7 @@ export const CREATOR_SOCIAL_LINKS = {
     href: "https://github.com/mwzheng",
     handle: "mwzheng",
     external: true,
-    description: "Follow the code and public build history.",
+    description: "Visit my GitHub profile.",
   },
   linkedin: {
     platform: "linkedin",
@@ -38,11 +38,11 @@ export const CREATOR_SOCIAL_LINK_LIST = [
 
 export const CREATOR_PROFILE = {
   name: "Mickey",
-  role: "Software Engineer",
+  role: "Full Stack Software Engineer",
   experienceSummary:
-    "4+ years of experience and currently working full time as a software engineer.",
+    "4+ years of experience, currently working full time, and a huge advocate for saving and budgeting wisely.",
   bio: [
-    "Mickey is a software engineer with 4+ years of experience and currently works full time as a software engineer.",
+    "Mickey is a full stack software engineer who likes building practical tools around real workflows.",
     `${APP_NAME} is a hobby project that turns a manual Excel and Notion budgeting habit into one focused app.`,
   ],
   links: CREATOR_SOCIAL_LINK_LIST,
@@ -59,13 +59,28 @@ export const APP_PHILOSOPHY_PRINCIPLES = [
 export const ABOUT_PAGE_CONTENT = {
   hero: {
     eyebrow: "About",
-    title: `Why ${APP_NAME} exists`,
+    title: `Why ${APP_NAME} Exists`,
     summary: `I built ${APP_NAME} to bring my manual Excel and Notion budgeting workflow into one focused app.`,
   },
   creator: CREATOR_PROFILE,
   summary: [
     `I started ${APP_NAME} as a side project to reduce the friction of managing money across an Excel sheet and a Notion setup.`,
     "I was not trying to build the loudest finance dashboard. I wanted one place that still feels deliberate, understandable, and worth opening regularly.",
+  ],
+  sectionTitles: {
+    creator: "About The Creator",
+    philosophy: "App Philosophy",
+    story: "More About The Product",
+  },
+  notices: [
+    {
+      title: "Free To Use",
+      body: `${APP_NAME} is free to use while I keep improving it as a personal project.`,
+    },
+    {
+      title: "Keep It Safe",
+      body: "Please avoid storing passwords, account numbers, bank credentials, or other sensitive information in the app.",
+    },
   ],
   facts: [
     {
@@ -89,15 +104,15 @@ export const ABOUT_PAGE_CONTENT = {
   sections: [
     {
       id: "origin-story",
-      heading: "Origin story",
+      heading: "Origin Story",
       paragraphs: [
         "Before this app existed, I was already tracking money manually in Excel and Notion.",
-        "That setup worked, but it split the same habit across multiple tools. I built Porridge Budget to keep that workflow in one place without pretending the manual parts were a mistake.",
+        "That setup worked, but it split the same habit across multiple tools. I also did not like the limitations of Notion's free tier, which made the workflow feel even more fragmented. I built Porridge Budget to keep that workflow in one place without pretending the manual parts were a mistake.",
       ],
     },
     {
       id: "manual-entry",
-      heading: "Mindful manual entry",
+      heading: "Mindful Manual Entry",
       paragraphs: [
         "Many budgeting tools optimize for bank aggregation first. I take a different stance: manual entry is useful because it creates a short pause and keeps spending decisions visible.",
         "That is why the product language centers on mindful entry, review, and reflection instead of passive syncing.",
@@ -109,7 +124,7 @@ export const ABOUT_PAGE_CONTENT = {
     },
     {
       id: "product-direction",
-      heading: "Product direction",
+      heading: "Product Direction",
       paragraphs: [
         "I want the app to feel like a personal tool, not a financial firehose. Reports, goals, and progress views should support deliberate planning rather than endless configuration.",
         "If a future feature makes the workflow faster, it still needs to preserve the sense of ownership that came from my original Excel and Notion habit.",

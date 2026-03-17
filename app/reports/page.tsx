@@ -25,6 +25,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
 import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
@@ -58,7 +59,7 @@ const SpendingPieChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <Skeleton variant="rectangular" height={280} />,
+    loading: () => <ChartLoadingState height={280} legendItems={3} />,
   },
 );
 const SpendingBarChart = dynamic(
@@ -68,14 +69,14 @@ const SpendingBarChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <Skeleton variant="rectangular" height={300} />,
+    loading: () => <ChartLoadingState height={300} legendItems={3} />,
   },
 );
 const TagBarChart = dynamic(
   () => import("@/components/charts/TagBarChart").then((m) => m.TagBarChart),
   {
     ssr: false,
-    loading: () => <Skeleton variant="rectangular" height={400} />,
+    loading: () => <ChartLoadingState height={400} showLegend={false} />,
   },
 );
 
@@ -551,7 +552,11 @@ export default function ReportsPage() {
                 />
                 <Divider />
                 <CardContent>
-                  <SpendingPieChart data={agg.totalByCategoryType} />
+                  {loading ? (
+                    <ChartLoadingState height={280} legendItems={3} />
+                  ) : (
+                    <SpendingPieChart data={agg.totalByCategoryType} />
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -566,7 +571,11 @@ export default function ReportsPage() {
                 />
                 <Divider />
                 <CardContent>
-                  <SpendingBarChart data={agg.timeseries} />
+                  {loading ? (
+                    <ChartLoadingState height={300} legendItems={3} />
+                  ) : (
+                    <SpendingBarChart data={agg.timeseries} />
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -582,11 +591,15 @@ export default function ReportsPage() {
             />
             <Divider />
             <CardContent>
-              <TagBarChart
-                data={agg.tagDiagramData}
-                activeTags={filters.tags}
-                onTagClick={handleQuickTagFilter}
-              />
+              {loading ? (
+                <ChartLoadingState height={400} showLegend={false} />
+              ) : (
+                <TagBarChart
+                  data={agg.tagDiagramData}
+                  activeTags={filters.tags}
+                  onTagClick={handleQuickTagFilter}
+                />
+              )}
             </CardContent>
           </Card>
 

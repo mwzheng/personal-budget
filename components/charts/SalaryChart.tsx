@@ -17,6 +17,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import type { SalaryEntry } from "@/lib/types/types";
 
@@ -26,9 +27,11 @@ function formatCurrency(value: number) {
 
 export default function SalaryChart({
   data,
+  loading = false,
   selectedYears = [],
 }: {
   data: SalaryEntry[];
+  loading?: boolean;
   selectedYears?: string[];
 }) {
   // Note 2: The year filter is chart-only. The list can keep showing the full
@@ -77,6 +80,14 @@ export default function SalaryChart({
       />
     ) : null;
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ mb: 2 }}>
+        <ChartLoadingState height={320} legendItems={2} />
+      </Box>
+    );
+  }
 
   if (chartData.length === 0) {
     return (

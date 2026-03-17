@@ -159,11 +159,7 @@ export function SpendingBarChart({ data }: Props) {
       {/* Note 7: Moving the legend under the chart keeps the bar area visually
           contiguous. That makes month-to-month comparisons easier before the eye
           moves down to decode the category colors. */}
-      <ChartLegend
-        payload={legendPayload}
-        gap={3}
-        justifyContent="flex-start"
-      />
+      <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
     </Box>
   );
 }

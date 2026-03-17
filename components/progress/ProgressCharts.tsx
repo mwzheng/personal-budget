@@ -5,7 +5,6 @@
 
 import React, { useMemo } from "react";
 import { Box, Typography } from "@mui/material";
-import Skeleton from "@mui/material/Skeleton";
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
@@ -114,7 +114,7 @@ export default function ProgressCharts({
 
       <Box sx={{ width: "100%", height: 320 }}>
         {loading ? (
-          <Skeleton variant="rectangular" width="100%" height="100%" />
+          <ChartLoadingState height={320} showLegend={false} />
         ) : error ? (
           <Box
             sx={{

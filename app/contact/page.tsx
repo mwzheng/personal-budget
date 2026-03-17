@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -16,6 +17,7 @@ import Typography from "@mui/material/Typography";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { CONTACT_PAGE_CONTENT } from "@/lib/content/contact";
 import { PAGE_TITLE_KEYS, PAGE_TITLES } from "@/lib/content/page-titles";
+import type { ContentNotice } from "@/lib/types/content";
 
 const contactPageTitle = PAGE_TITLES[PAGE_TITLE_KEYS.CONTACT];
 
@@ -24,9 +26,41 @@ export const metadata: Metadata = {
   description: contactPageTitle.description,
 };
 
+function ContactNoticeCard({ notice }: { notice: ContentNotice }) {
+  return (
+    <Card variant="outlined" sx={{ height: "100%" }}>
+      <CardContent sx={{ p: 3, height: "100%" }}>
+        <Stack spacing={1}>
+          <Chip
+            label={notice.title}
+            color="primary"
+            variant="outlined"
+            sx={{ alignSelf: "flex-start", fontWeight: 600 }}
+          />
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ lineHeight: 1.7 }}
+          >
+            {notice.body}
+          </Typography>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ContactPage() {
-  const { availabilityNote, form, hero, methods, summary, topics } =
-    CONTACT_PAGE_CONTENT;
+  const {
+    availabilityNote,
+    form,
+    hero,
+    methods,
+    notices,
+    sidebar,
+    summary,
+    topics,
+  } = CONTACT_PAGE_CONTENT;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
@@ -50,6 +84,20 @@ export default function ContactPage() {
               {paragraph}
             </Typography>
           ))}
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "repeat(2, minmax(0, 1fr))",
+              },
+            }}
+          >
+            {notices.map((notice) => (
+              <ContactNoticeCard key={notice.title} notice={notice} />
+            ))}
+          </Box>
         </Stack>
 
         <Box
@@ -60,21 +108,20 @@ export default function ContactPage() {
               xs: "1fr",
               lg: "minmax(0, 1.2fr) minmax(320px, 0.8fr)",
             },
-            alignItems: "start",
+            alignItems: "stretch",
           }}
         >
           <ContactForm form={form} />
 
-          <Stack spacing={3}>
-            <Card variant="outlined">
-              <CardContent sx={{ p: 3 }}>
+          <Stack spacing={3} sx={{ height: "100%" }}>
+            <Card variant="outlined" sx={{ flex: 1 }}>
+              <CardContent sx={{ p: 3, height: "100%" }}>
                 <Stack spacing={2}>
                   <Typography variant="h5" fontWeight={700}>
-                    Other ways to connect
+                    {sidebar.methodsTitle}
                   </Typography>
                   <Typography color="text.secondary">
-                    If a public thread or professional introduction makes more
-                    sense, these channels stay available too.
+                    {sidebar.methodsDescription}
                   </Typography>
 
                   {methods.map((method) => (
@@ -111,11 +158,11 @@ export default function ContactPage() {
               </CardContent>
             </Card>
 
-            <Card variant="outlined">
-              <CardContent sx={{ p: 3 }}>
-                <Stack spacing={2}>
+            <Card variant="outlined" sx={{ flex: 1 }}>
+              <CardContent sx={{ p: 3, height: "100%" }}>
+                <Stack spacing={2} sx={{ height: "100%" }}>
                   <Typography variant="h5" fontWeight={700}>
-                    Good reasons to reach out
+                    {sidebar.topicsTitle}
                   </Typography>
                   <Stack component="ul" spacing={1.25} sx={{ m: 0, pl: 2.5 }}>
                     {topics.map((topic) => (
@@ -129,9 +176,11 @@ export default function ContactPage() {
                       </Typography>
                     ))}
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {availabilityNote}
-                  </Typography>
+                  <Box sx={{ mt: "auto" }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {availabilityNote}
+                    </Typography>
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>

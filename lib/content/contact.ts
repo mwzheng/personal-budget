@@ -15,7 +15,7 @@ export const CONTACT_METHODS = [
     external: true,
     cta: "Visit GitHub",
     description:
-      "Best for code context, implementation details, and following the project in public.",
+      "Best for browsing my GitHub profile and broader developer presence.",
   },
   {
     label: CREATOR_SOCIAL_LINKS.linkedin.label,
@@ -33,16 +33,16 @@ export const CONTACT_METHODS = [
 export const CONTACT_PAGE_CONTENT = {
   hero: {
     eyebrow: "Contact",
-    title: `Get in touch about ${APP_NAME}`,
+    title: `Get In Touch About ${APP_NAME}`,
     summary:
       "Use the contact form below for a direct reply, or reach out through GitHub and LinkedIn when a public or professional channel fits better.",
   },
   summary: [
-    `${APP_NAME} is a hobby project I maintain alongside my full-time software engineering work.`,
+    `${APP_NAME} is free to use and something I maintain alongside my full-time software engineering work.`,
     "Questions, thoughtful feedback, bug reports, and small product ideas are all welcome.",
   ],
   form: {
-    title: "Send a message",
+    title: "Send A Message",
     description:
       "Use the form for direct questions about the product, workflow feedback, or a quick hello. Messages are delivered by email so I can reply without publishing a personal inbox on the page.",
     submitLabel: "Send message",
@@ -76,6 +76,22 @@ export const CONTACT_PAGE_CONTENT = {
       },
     },
   },
+  sidebar: {
+    methodsTitle: "Other Ways To Connect",
+    methodsDescription:
+      "If a public thread or professional introduction makes more sense, these channels stay available too.",
+    topicsTitle: "Good Reasons To Reach Out",
+  },
+  notices: [
+    {
+      title: "Free To Use",
+      body: `${APP_NAME} is free to use, so support and replies happen around my full-time schedule.`,
+    },
+    {
+      title: "Keep It Safe",
+      body: "Please avoid sending passwords, account numbers, bank credentials, or other sensitive information through this form.",
+    },
+  ],
   methods: CONTACT_METHODS,
   topics: [
     "Feedback on the manual budgeting workflow",

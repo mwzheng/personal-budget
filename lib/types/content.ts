@@ -34,6 +34,11 @@ export interface ContentHero {
   summary: string;
 }
 
+export interface ContentNotice {
+  title: string;
+  body: string;
+}
+
 export interface FactItem {
   label: string;
   value: string;
@@ -58,6 +63,12 @@ export interface AboutPageContent {
   hero: ContentHero;
   creator: CreatorProfile;
   summary: readonly string[];
+  sectionTitles: {
+    creator: string;
+    philosophy: string;
+    story: string;
+  };
+  notices: readonly ContentNotice[];
   facts: readonly FactItem[];
   principles: readonly string[];
   sections: readonly ContentSection[];
@@ -108,9 +119,26 @@ export interface ContactPageContent {
   hero: ContentHero;
   summary: readonly string[];
   form: ContactFormContent;
+  sidebar: {
+    methodsTitle: string;
+    methodsDescription: string;
+    topicsTitle: string;
+  };
+  notices: readonly ContentNotice[];
   methods: readonly ContactMethod[];
   topics: readonly string[];
   availabilityNote: string;
+}
+
+export interface HomeFeatureCardContent {
+  id: "transactions" | "budgets" | "reports" | "budget-generator";
+  title: string;
+  description: string;
+}
+
+export interface HomePageContent {
+  hero: ContentHero;
+  features: readonly HomeFeatureCardContent[];
 }
 
 export interface FooterLinkGroup<Href extends string = string> {
