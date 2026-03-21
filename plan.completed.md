@@ -1424,3 +1424,81 @@ Notes
 - Added top-level re-export stubs at lib/\*.ts to preserve existing import paths while files are grouped.
 
 Files changed: lib/\* (moved into subfolders; see git diff for full list)
+
+---
+
+# Completed: Visual refresh, consistent popups, and GA page title fix
+
+Date: 2026-03-17
+
+## Summary
+
+Moderate visual refresh of the application with three focus areas: fixing Google Analytics page tracking, standardizing popup/dialog/alert components, and modernizing the UI while preserving the dark theme.
+
+## Completed Items
+
+### Google Analytics Fix
+
+- Changed root layout metadata.title from static string to Next.js title template (`{ template: "%s - Porridge Budget", default: "Porridge Budget" }`)
+- Added metadata exports to 10 pages missing them (goals, salary, reports, sankey, progress, auth/login, auth/register, auth/callback, auth/signout)
+- Updated 3 existing metadata exports (about, contact, faq) to use short titles to avoid double-suffix
+- Created layout.tsx files for 7 client-component page routes (metadata can't be exported from client components)
+
+### Popup/Dialog/Alert Consistency
+
+- Created reusable `ConfirmDialog` component replacing one-off delete confirmation dialogs
+- Created `StatusAlert` component wrapping MUI Alert with consistent styling (dismissible, mb:2, aria-live)
+- Migrated 10 components: TransactionsTable, BudgetList, RetirementList, SalaryList, GoalList, BudgetForm, SankeyForm, ContactForm, TransactionDetailDialog, ImportCsvDialog
+
+### Visual Refresh
+
+- Added 13 MUI component theme overrides (Paper, Button, Dialog, DialogTitle, DialogActions, Alert, TextField, Chip, Tab, Tabs, TableCell, Divider, AppBar)
+- Set shape.borderRadius: 12 for consistent rounded corners
+- Added global CSS polish: smooth transitions, custom scrollbar styling, focus-visible outlines, selection color
+- Polished landing page hero with radial gradient glow and card hover lift effects
+- Refined AppNav border, brand hover state, and dropdown menu styling
+- Improved Footer link hover states and border treatment
+- Standardized card padding across Reports, Progress, Goals, Salary pages
+- Converted Goals and Salary pages from raw `<main>` to `<Container>` for consistent layout
+
+## Files Changed
+
+New files:
+
+- `components/ui/ConfirmDialog.tsx`
+- `components/ui/StatusAlert.tsx`
+- `app/auth/callback/layout.tsx`
+- `app/auth/login/layout.tsx`
+- `app/auth/register/layout.tsx`
+- `app/auth/signout/layout.tsx`
+- `app/progress/layout.tsx`
+- `app/reports/layout.tsx`
+- `app/sankey/layout.tsx`
+
+Modified files:
+
+- `app/layout.tsx`, `app/providers.tsx`, `app/globals.css`
+- `app/page.tsx`, `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`
+- `app/goals/page.tsx`, `app/salary/page.tsx`, `app/reports/page.tsx`, `app/progress/page.tsx`
+- `components/AppNav.tsx`, `components/Footer.tsx`
+- `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/budget/SankeyForm.tsx`
+- `components/contact/ContactForm.tsx`
+- `components/transactions/ImportCsvDialog.tsx`, `components/transactions/TransactionDetailDialog.tsx`, `components/transactions/TransactionsTable.tsx`
+- `components/ui/GoalList.tsx`, `components/ui/RetirementList.tsx`, `components/ui/SalaryList.tsx`
+
+## Commit
+
+`style: visual refresh, consistent popups, and GA page title fix` (c3a916e)
+
+## Verification
+
+- Lint: ✔ No warnings or errors
+- Tests: ✔ 47/47 passed
+- Build: ✔ 28 pages generated successfully
+- Prettier: ✔ All files formatted
+
+## Notes
+
+- All styling uses MUI sx prop and theme overrides; no new CSS frameworks introduced
+- Client component pages use layout.tsx wrappers for metadata since Next.js App Router doesn't allow metadata exports from client components
+- The existing Providers.tsx client-side title sync (useEffect) continues to work correctly with the template approach
