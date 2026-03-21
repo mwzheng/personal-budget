@@ -19,6 +19,7 @@ import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { SalaryEntry } from "@/lib/types/types";
@@ -46,6 +47,10 @@ export default function SalaryList({
   const [editing, setEditing] = useState<SalaryEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    entryId: string;
+    year: number;
+  } | null>(null);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -80,13 +85,15 @@ export default function SalaryList({
     await Promise.resolve(onEntriesChanged?.());
   };
 
-  const handleDelete = async (entryId?: string, year?: number) => {
-    if (!entryId || !year) return;
-    if (!confirm("Delete this salary entry?")) return;
+  // Note 4: Delete is a two-step flow: the button sets the candidate, and
+  // confirmDelete performs the actual API call only after the user confirms via
+  // the ConfirmDialog. Year is required in the query string alongside entryId
+  // because the DynamoDB sort key encodes both: "salary#<year>#<entryId>".
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return;
+    const { entryId, year } = deleteCandidate;
+    setDeleteCandidate(null);
     try {
-      // Note 4: Year is required in the query string alongside entryId because
-      // the DynamoDB sort key encodes both: "salary#<year>#<entryId>". Without
-      // the year the server cannot reconstruct the sort key to delete the item.
       const res = await apiFetch(
         "/api/salary?entryId=" +
           encodeURIComponent(entryId) +
@@ -163,7 +170,12 @@ export default function SalaryList({
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => handleDelete(entry.entryId, entry.year)}
+                    onClick={() =>
+                      setDeleteCandidate({
+                        entryId: entry.entryId!,
+                        year: entry.year,
+                      })
+                    }
                   >
                     Delete
                   </Button>
@@ -181,8 +193,19 @@ export default function SalaryList({
       </List>
 
       {entries.length === 0 && !loading ? (
-        <Typography>No salary history yet.</Typography>
+        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+          No salary history yet.
+        </Typography>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(deleteCandidate)}
+        title="Delete Salary Entry"
+        message="Are you sure you want to delete this salary entry? This action cannot be undone."
+        confirmLabel="Delete"
+        onClose={() => setDeleteCandidate(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

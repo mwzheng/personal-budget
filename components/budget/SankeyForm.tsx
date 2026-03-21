@@ -12,6 +12,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import { useState } from "react";
 import { SankeyRequestBody, SankeyResponse } from "@/lib/types/types";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -23,19 +24,28 @@ interface Props {
 interface SliderRow {
   key: "Need" | "Want" | "Saving";
   label: string;
-  color: string;
 }
 
 // Note 2: `ROWS` is a config-driven array that drives slider rendering.
 // Using a data array instead of three separate JSX blocks reduces repetition
-// and makes it easy to add or rename categories later.
+// and makes it easy to add or rename categories later. Colors are resolved at
+// render time via the MUI theme so they adapt to light/dark mode.
 const ROWS: SliderRow[] = [
-  { key: "Need", label: "Needs", color: "#ef5350" },
-  { key: "Want", label: "Wants", color: "#42a5f5" },
-  { key: "Saving", label: "Savings", color: "#66bb6a" },
+  { key: "Need", label: "Needs" },
+  { key: "Want", label: "Wants" },
+  { key: "Saving", label: "Savings" },
 ];
 
 export function SankeyForm({ onResult }: Props) {
+  const theme = useTheme();
+  // Note 3: Map each budget category to a semantic palette token so colors
+  // follow the active theme (light/dark) instead of being hardcoded hex values.
+  const rowColors: Record<string, string> = {
+    Need: theme.palette.error.main,
+    Want: theme.palette.info.main,
+    Saving: theme.palette.success.main,
+  };
+
   const [monthlyIncome, setMonthlyIncome] = useState<number>(5000);
   const [incomeLabel, setIncomeLabel] = useState("Income");
   const [pct, setPct] = useState<Record<string, number>>({
@@ -47,7 +57,7 @@ export function SankeyForm({ onResult }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const total = Object.values(pct).reduce((s, v) => s + v, 0);
-  // Note 3: Floating-point arithmetic means slider values may not sum to
+  // Note 4: Floating-point arithmetic means slider values may not sum to
   // exactly 100 (e.g. 33.33 + 33.33 + 33.34 = 100.0000...something). Using
   // `Math.abs(total - 100) < 0.01` accepts any total within 1 cent of 100,
   // avoiding false "invalid" errors from rounding.
@@ -114,10 +124,14 @@ export function SankeyForm({ onResult }: Props) {
         Category Allocations (must total 100%)
       </Typography>
 
-      {ROWS.map(({ key, label, color }) => (
+      {ROWS.map(({ key, label }) => (
         <Box key={key}>
           <Box display="flex" justifyContent="space-between" mb={0.5}>
-            <Typography variant="body2" fontWeight={600} sx={{ color }}>
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              sx={{ color: rowColors[key] }}
+            >
               {label}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -136,7 +150,7 @@ export function SankeyForm({ onResult }: Props) {
             min={0}
             max={100}
             step={1}
-            sx={{ color }}
+            sx={{ color: rowColors[key] }}
           />
         </Box>
       ))}

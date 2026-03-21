@@ -13,8 +13,8 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import ListItemText from "@mui/material/ListItemText";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
 
@@ -146,7 +146,11 @@ export function BudgetList({
         ) : null}
 
         {!loading && budgets.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ py: 2, textAlign: "center" }}
+          >
             Save a budget to reuse the same expense plan later.
           </Typography>
         ) : null}
@@ -158,33 +162,59 @@ export function BudgetList({
           ).length;
 
           return (
-            <ListItem key={budget.budgetId ?? budget.name} disableGutters>
-              <ListItemButton onClick={() => onLoad?.(budget)}>
+            <ListItem
+              key={budget.budgetId ?? budget.name}
+              disableGutters
+              disablePadding
+            >
+              <ListItemButton onClick={() => onLoad?.(budget)} sx={{ pr: 1 }}>
                 <ListItemText
                   primary={budget.name}
                   secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
                 />
-              </ListItemButton>
-              <ListItemSecondaryAction>
-                <Button size="small" onClick={() => onLoad?.(budget)}>
-                  Load
-                </Button>
-                <Button size="small" onClick={() => onEdit?.(budget)}>
-                  Edit
-                </Button>
-                <IconButton
-                  edge="end"
-                  onClick={() =>
-                    setDeleteCandidate({
-                      id: budget.budgetId ?? "",
-                      name: budget.name,
-                    })
-                  }
-                  aria-label={`delete-${budget.budgetId}`}
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  sx={{ ml: 1, flexShrink: 0 }}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onLoad?.(budget);
+                    }}
+                  >
+                    Load
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit?.(budget);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteCandidate({
+                        id: budget.budgetId ?? "",
+                        name: budget.name,
+                      });
+                    }}
+                    aria-label={`delete-${budget.budgetId}`}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </ListItemButton>
             </ListItem>
           );
         })}

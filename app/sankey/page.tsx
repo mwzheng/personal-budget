@@ -215,7 +215,7 @@ export default function SankeyPage() {
   const hasExpenses = insights.validExpenses.length > 0;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" fontWeight={700} mb={1}>
         Budget Planner
       </Typography>

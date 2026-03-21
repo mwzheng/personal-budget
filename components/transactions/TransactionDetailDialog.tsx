@@ -208,7 +208,7 @@ export function TransactionDetailDialog({
               Delete transaction
             </Button>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={() => {
                 if (transaction) {
                   onEdit(transaction);

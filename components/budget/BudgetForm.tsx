@@ -399,7 +399,7 @@ export function BudgetForm({
               startIcon={<AddIcon />}
               onClick={addExpenseRow}
               size="small"
-              variant="contained"
+              variant="outlined"
               sx={FORM_ACTION_BUTTON_SX}
             >
               Add Expense
@@ -407,7 +407,6 @@ export function BudgetForm({
             <Button
               onClick={onStartFresh}
               size="small"
-              variant="contained"
               color="inherit"
               sx={FORM_ACTION_BUTTON_SX}
             >

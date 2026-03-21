@@ -444,7 +444,7 @@ export default function ReportsPage() {
   const isEmpty = !loading && allTransactions.length === 0;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box
         display="flex"
         alignItems="center"

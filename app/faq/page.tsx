@@ -53,7 +53,7 @@ export default function FaqPage() {
   const categories = Array.from(new Set(items.map((item) => item.category)));
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 6, md: 8 } }}>
+    <Container component="main" maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
       <Stack spacing={{ xs: 4, md: 5 }}>
         <Paper
           component="section"

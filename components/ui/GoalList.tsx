@@ -14,6 +14,7 @@ import {
   Divider,
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 
@@ -37,6 +38,7 @@ export default function GoalList() {
   const [editing, setEditing] = useState<Goal | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
 
   const fetchGoals = async () => {
     setLoading(true);
@@ -69,12 +71,13 @@ export default function GoalList() {
     fetchGoals();
   };
 
-  const handleDelete = async (goalId?: string) => {
-    if (!goalId) return;
-    // Note 5: The native `confirm()` dialog is a simple way to require user
-    // confirmation before a destructive action. For a more polished UX, this
-    // could be replaced with a MUI Dialog (as in TransactionsTable).
-    if (!confirm("Delete this goal?")) return;
+  // Note 5: Delete is a two-step flow: the button sets the candidate goalId,
+  // and confirmDelete performs the actual API call only after the user confirms
+  // via the ConfirmDialog. Replaces the native confirm() for visual consistency.
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return;
+    const goalId = deleteCandidate;
+    setDeleteCandidate(null);
     try {
       const res = await apiFetch(
         "/api/goals?goalId=" + encodeURIComponent(goalId),
@@ -141,7 +144,7 @@ export default function GoalList() {
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => handleDelete(g.goalId)}
+                    onClick={() => setDeleteCandidate(g.goalId ?? null)}
                   >
                     Delete
                   </Button>
@@ -166,7 +169,20 @@ export default function GoalList() {
         ))}
       </List>
 
-      {goals.length === 0 && !loading && <Typography>No goals yet.</Typography>}
+      {goals.length === 0 && !loading && (
+        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+          No goals yet.
+        </Typography>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleteCandidate)}
+        title="Delete Goal"
+        message="Are you sure you want to delete this goal? This action cannot be undone."
+        confirmLabel="Delete"
+        onClose={() => setDeleteCandidate(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }
