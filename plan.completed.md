@@ -1,3 +1,58 @@
+# Completed: Widen layouts, standardize action buttons, and improve SEO/accessibility
+
+Date: 2026-03-21
+
+Summary
+
+- Widened the main public and authenticated pages to `maxWidth="xl"` so the core budgeting screens make better use of desktop space.
+- Standardized edit/delete affordances as shared icon-only buttons with hover tooltips, and polished the saved-budget interaction flow on the budget page.
+- Strengthened public-page SEO and accessibility with richer metadata, canonical URLs, Open Graph/Twitter tags, JSON-LD, and clearer page landmarks.
+
+Completed items
+
+- Updated `app/page.tsx`, `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`, `app/reports/page.tsx`, `app/sankey/page.tsx`, `app/goals/page.tsx`, `app/progress/page.tsx`, and `app/salary/page.tsx` to use wider `xl` containers, with `main` landmarks and clearer page heading/description structure where needed.
+- Strengthened root metadata in `app/layout.tsx` and refreshed `app/robots.ts` / `app/sitemap.ts` so the live public pages expose stronger SEO defaults without indexing authenticated routes.
+- Added JSON-LD structured data to the Home and FAQ pages so search crawlers can consume the same content model the UI renders.
+- Added shared `components/ui/action-icon-button.tsx` and updated `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/ui/GoalList.tsx`, `components/ui/SalaryList.tsx`, `components/ui/RetirementList.tsx`, `components/progress/MilestonesList.tsx`, and `components/transactions/TransactionsTable.tsx` so edit/delete actions use one visual pattern with matching tooltips and aria-labels.
+- Restyled the Budget page's `Start Fresh` button to match adjacent outlined actions and removed the redundant Saved Budgets `Load` button in favor of a row-level hover hint.
+- Cleaned touched comments so the new metadata, landmarks, and shared action-button behavior are explained only where the intent is non-obvious.
+- Re-ran `pnpm lint`, `pnpm test --run`, and `pnpm build` successfully after the implementation pass.
+
+Files changed
+
+- `app/about/page.tsx`
+- `app/contact/page.tsx`
+- `app/faq/page.tsx`
+- `app/goals/page.tsx`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `app/reports/page.tsx`
+- `app/robots.ts`
+- `app/salary/page.tsx`
+- `app/sankey/page.tsx`
+- `app/sitemap.ts`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/ui/GoalList.tsx`
+- `components/ui/RetirementList.tsx`
+- `components/ui/SalaryList.tsx`
+- `components/ui/action-icon-button.tsx`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- If more CRUD-style list screens are added later, prefer reusing `ActionIconButton` first so tooltip copy, aria-labels, and button styling stay aligned by default.
+- If additional public marketing pages land later, extend the shared metadata patterns from `app/layout.tsx` plus the route-level JSON-LD approach instead of hand-rolling per-page SEO tags.
+
 # Completed: Polish public pages and chart loading
 
 Date: 2026-03-17
