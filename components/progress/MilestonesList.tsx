@@ -131,12 +131,18 @@ export default function MilestonesList() {
 
       <List>
         {items.length === 0 && !loading ? (
-          <Typography
-            color="text.secondary"
-            sx={{ py: 2, textAlign: "center" }}
-          >
-            No milestones yet.
-          </Typography>
+          <ListItem>
+            <ListItemText
+              primary={
+                <Typography
+                  color="text.secondary"
+                  sx={{ py: 2, textAlign: "center" }}
+                >
+                  No milestones yet.
+                </Typography>
+              }
+            />
+          </ListItem>
         ) : null}
         {items.map((item) => (
           <ListItem
