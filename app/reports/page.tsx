@@ -551,7 +551,7 @@ export default function ReportsPage() {
                   }}
                 />
                 <Divider />
-                <CardContent>
+                <CardContent sx={{ p: 3 }}>
                   {loading ? (
                     <ChartLoadingState height={280} legendItems={3} />
                   ) : (
@@ -570,7 +570,7 @@ export default function ReportsPage() {
                   }}
                 />
                 <Divider />
-                <CardContent>
+                <CardContent sx={{ p: 3 }}>
                   {loading ? (
                     <ChartLoadingState height={300} legendItems={3} />
                   ) : (
@@ -590,7 +590,7 @@ export default function ReportsPage() {
               subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
-            <CardContent>
+            <CardContent sx={{ p: 3 }}>
               {loading ? (
                 <ChartLoadingState height={400} showLegend={false} />
               ) : (

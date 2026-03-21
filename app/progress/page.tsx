@@ -103,11 +103,11 @@ export default function Page() {
       </Typography>
 
       <Stack spacing={3}>
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <GoalEditor />
         </Paper>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <ProgressYearFilter
             availableYears={availableYears}
             selectedYears={selectedYears}
@@ -115,7 +115,7 @@ export default function Page() {
           />
         </Paper>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <ProgressCharts
             salaryEntries={salaryEntries}
             retirementEntries={retirementEntries}
@@ -136,18 +136,18 @@ export default function Page() {
           }}
         >
           <Box>
-            <Paper sx={{ p: 2, height: "100%" }} elevation={1}>
+            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
               <RetirementList onEntriesChanged={refreshChartData} />
             </Paper>
           </Box>
           <Box>
-            <Paper sx={{ p: 2, height: "100%" }} elevation={1}>
+            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
               <MilestonesList />
             </Paper>
           </Box>
         </Box>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <SalaryList
             selectedYears={selectedYears}
             onEntriesChanged={refreshChartData}

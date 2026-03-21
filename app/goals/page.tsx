@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
+import Container from "@mui/material/Container";
 import GoalList from "@/components/ui/GoalList";
+
+export const metadata: Metadata = {
+  title: "Goals",
+  description:
+    "Track savings targets and review the milestones that matter over time.",
+};
 export default function Page() {
   return (
-    <main style={{ padding: 24 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       <GoalList />
-    </main>
+    </Container>
   );
 }

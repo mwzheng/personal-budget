@@ -42,7 +42,8 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
           fontWeight: 600,
           gap: 0.5,
           width: "fit-content",
-          "&:hover": { color: "primary.light" },
+          transition: "color 0.2s ease",
+          "&:hover": { color: "primary.main" },
         }}
       >
         {link.label}
@@ -60,7 +61,8 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
       sx={{
         fontWeight: 600,
         width: "fit-content",
-        "&:hover": { color: "primary.light" },
+        transition: "color 0.2s ease",
+        "&:hover": { color: "primary.main" },
       }}
     >
       {link.label}
@@ -132,7 +134,8 @@ function FooterSocialGroup({
                   alignItems: "center",
                   display: "inline-flex",
                   gap: 0.75,
-                  "&:hover": { color: "primary.light" },
+                  transition: "color 0.2s ease",
+                  "&:hover": { color: "primary.main" },
                 }}
               >
                 <Icon sx={{ fontSize: 18 }} aria-hidden="true" />
@@ -160,7 +163,7 @@ export function Footer() {
       sx={{
         mt: "auto",
         bgcolor: "background.paper",
-        borderTop: "1px solid rgba(255, 255, 255, 0.12)",
+        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
       }}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 } }}>
@@ -216,12 +219,17 @@ export function Footer() {
 
         <Divider
           sx={{
-            borderColor: "rgba(255, 255, 255, 0.12)",
-            my: { xs: 1, md: 1.25 },
+            borderColor: "rgba(255, 255, 255, 0.06)",
+            my: { xs: 1.5, md: 2 },
           }}
         />
 
-        <Typography variant="body2" color="text.secondary" align="center">
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          align="center"
+          sx={{ pt: 1 }}
+        >
           © {currentYear} {brandName}
         </Typography>
       </Container>

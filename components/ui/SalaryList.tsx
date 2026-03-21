@@ -19,6 +19,7 @@ import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { SalaryEntry } from "@/lib/types/types";
 
@@ -134,7 +135,9 @@ export default function SalaryList({
         </ProgressEntryDialog>
       ) : null}
 
-      {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
+      {error ? (
+        <StatusAlert message={error} onClose={() => setError(null)} />
+      ) : null}
 
       <SalaryChart
         data={entries}

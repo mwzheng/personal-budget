@@ -32,7 +32,15 @@ export default function Home() {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 9, md: 12 } }}>
-      <Box sx={{ maxWidth: 860, mx: "auto" }}>
+      <Box
+        sx={{
+          maxWidth: 860,
+          mx: "auto",
+          background:
+            "radial-gradient(ellipse at 50% 0%, rgba(45, 125, 210, 0.12) 0%, transparent 70%)",
+          pb: { xs: 5, md: 6 },
+        }}
+      >
         <Typography
           variant="overline"
           color="primary.main"
@@ -46,7 +54,13 @@ export default function Home() {
           component="h1"
           gutterBottom
           align="center"
-          sx={{ fontSize: { xs: "2.75rem", md: "4rem" }, fontWeight: 700 }}
+          sx={{
+            fontSize: { xs: "2.75rem", md: "4.25rem" },
+            fontWeight: 700,
+            background: "linear-gradient(135deg, #ffffff 30%, #2D7DD2 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
         >
           {hero.title}
         </Typography>
@@ -61,7 +75,7 @@ export default function Home() {
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ pt: { xs: 2, md: 3 } }}>
         {features.map((feature) => {
           const Icon = HOME_FEATURE_ICONS[feature.id];
 
@@ -73,6 +87,12 @@ export default function Home() {
                   p: { xs: 4, md: 4.5 },
                   minHeight: { xs: 240, md: 280 },
                   height: "100%",
+                  transition:
+                    "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                  },
                 }}
               >
                 <Box

@@ -5,7 +5,7 @@
  * this component owns the interactive validation and submission lifecycle.
  */
 
-import Alert from "@mui/material/Alert";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -178,9 +178,11 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
           </Stack>
 
           {status ? (
-            <Alert severity={status.severity} aria-live="polite">
-              {status.message}
-            </Alert>
+            <StatusAlert
+              message={status.message}
+              severity={status.severity}
+              onClose={() => setStatus(null)}
+            />
           ) : null}
 
           <TextField

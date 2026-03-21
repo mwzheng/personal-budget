@@ -4,7 +4,7 @@
 // This prevents impossible states (e.g. "parsing AND error at the same time").
 "use client";
 
-import Alert from "@mui/material/Alert";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -167,19 +167,15 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           </Box>
         )}
 
-        {isError && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {state.message}
-          </Alert>
-        )}
+        {isError && <StatusAlert message={state.message} sx={{ mt: 1 }} />}
 
         {isPreview && (
           <Box>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <strong>{state.all.length}</strong> transaction
-              {state.all.length !== 1 ? "s" : ""} ready to import. Click{" "}
-              <strong>Confirm Import</strong> to save them to your account.
-            </Alert>
+            <StatusAlert
+              message={`${state.all.length} transaction${state.all.length !== 1 ? "s" : ""} ready to import. Click "Confirm Import" to save them to your account.`}
+              severity="info"
+              sx={{ mb: 2 }}
+            />
 
             {state.sample.length > 0 && (
               <>

@@ -14,6 +14,7 @@ import {
   Divider,
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 
 // Note 2: The local `Goal` type mirrors the server response shape. Having a
@@ -120,7 +121,7 @@ export default function GoalList() {
         </Box>
       )}
 
-      {error && <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box>}
+      {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       <List>
         {goals.map((g) => (

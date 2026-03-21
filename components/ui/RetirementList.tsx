@@ -14,6 +14,7 @@ import {
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { RetirementEntry } from "@/lib/types/types";
 
@@ -115,7 +116,9 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         </ProgressEntryDialog>
       ) : null}
 
-      {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
+      {error ? (
+        <StatusAlert message={error} onClose={() => setError(null)} />
+      ) : null}
 
       <List>
         {entries.map((entry) => (

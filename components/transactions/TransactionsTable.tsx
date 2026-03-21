@@ -6,12 +6,7 @@
 
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -254,36 +249,19 @@ export function TransactionsTable({
       {/* Note 8: The delete dialog is rendered outside the table in the same
           React Fragment so it is not nested inside a <table> element (which
           would be invalid HTML). `Boolean(deleteTarget)` drives the `open` prop. */}
-      <Dialog
+      <ConfirmDialog
         open={Boolean(deleteTarget)}
+        title="Delete Transaction?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? This cannot be undone.`}
+        confirmLabel="Delete"
         onClose={() => setDeleteTarget(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Delete Transaction?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo; (
-            {deleteTarget?.date}, ${deleteTarget?.amount.toFixed(2)})? This
-            cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => {
-              if (deleteTarget && onDelete) {
-                onDelete(deleteTarget.id);
-              }
-              setDeleteTarget(null);
-            }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={() => {
+          if (deleteTarget && onDelete) {
+            onDelete(deleteTarget.id);
+          }
+          setDeleteTarget(null);
+        }}
+      />
     </>
   );
 }

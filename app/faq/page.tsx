@@ -37,7 +37,7 @@ const FAQ_HERO_SHADOW = `0 24px 48px ${alpha("#000000", 0.24)}`;
 const FAQ_ACCORDION_BACKGROUND = alpha(FAQ_PAPER, 0.94);
 
 export const metadata: Metadata = {
-  title: FAQ_PAGE_ENTRY.title,
+  title: "FAQ",
   description: FAQ_PAGE_ENTRY.description,
 };
 

@@ -22,7 +22,7 @@ import type { ContentNotice } from "@/lib/types/content";
 const contactPageTitle = PAGE_TITLES[PAGE_TITLE_KEYS.CONTACT];
 
 export const metadata: Metadata = {
-  title: contactPageTitle.title,
+  title: "Contact",
   description: contactPageTitle.description,
 };
 

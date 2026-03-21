@@ -6,13 +6,9 @@
 "use client";
 
 import DeleteIcon from "@mui/icons-material/Delete";
-import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -139,9 +135,7 @@ export function BudgetList({
   return (
     <div>
       {error ? (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
       <List dense disablePadding>
@@ -196,25 +190,14 @@ export function BudgetList({
         })}
       </List>
 
-      <Dialog
+      <ConfirmDialog
         open={Boolean(deleteCandidate)}
+        title="Delete Budget"
+        message={`Are you sure you want to delete "${deleteCandidate?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
         onClose={() => setDeleteCandidate(null)}
-        aria-labelledby="delete-budget-dialog-title"
-      >
-        <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete &quot;{deleteCandidate?.name}&quot;?
-            This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteCandidate(null)}>Cancel</Button>
-          <Button color="error" onClick={confirmDelete} autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

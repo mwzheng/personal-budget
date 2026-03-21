@@ -29,7 +29,7 @@ import type {
 const ABOUT_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.ABOUT);
 
 export const metadata: Metadata = {
-  title: ABOUT_PAGE_ENTRY.title,
+  title: "About",
   description: ABOUT_PAGE_ENTRY.description,
 };
 

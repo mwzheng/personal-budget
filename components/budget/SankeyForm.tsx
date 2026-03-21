@@ -4,7 +4,7 @@
 // the submit button are disabled when allocations do not sum to exactly 100%.
 "use client";
 
-import Alert from "@mui/material/Alert";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -151,11 +151,7 @@ export function SankeyForm({ onResult }: Props) {
         </Typography>
       </Box>
 
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       <Button
         variant="contained"

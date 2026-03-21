@@ -19,7 +19,7 @@ import "./globals.css";
 // Note 2.1: The `icons` property uses the same 🥣 bowl icon as the AppNav for
 // a consistent visual identity across the app and browser tab.
 export const metadata: Metadata = {
-  title: "Porridge Budget",
+  title: { template: "%s - Porridge Budget", default: "Porridge Budget" },
   description: "Track and analyze your personal spending",
   icons: {
     icon: "/favicon.svg",

@@ -11,7 +11,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
-import Alert from "@mui/material/Alert";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -373,7 +373,7 @@ export function BudgetForm({
         </Table>
       </Box>
 
-      {saveError ? <Alert severity="error">{saveError}</Alert> : null}
+      {saveError ? <StatusAlert message={saveError} /> : null}
 
       <Stack spacing={1.25}>
         <Typography
