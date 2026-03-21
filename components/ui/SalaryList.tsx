@@ -5,6 +5,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
@@ -19,6 +21,7 @@ import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -157,19 +160,21 @@ export default function SalaryList({
           <React.Fragment key={entry.entryId}>
             <ListItem
               secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
+                <Stack direction="row" spacing={0.75}>
+                  <ActionIconButton
+                    tooltip="Edit"
+                    ariaLabel={`Edit salary entry for ${entry.year}`}
                     onClick={() => {
                       setEditing(entry);
                       setDialogOpen(true);
                     }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
+                    <EditOutlinedIcon fontSize="small" />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    tooltip="Delete"
+                    ariaLabel={`Delete salary entry for ${entry.year}`}
+                    tone="danger"
                     onClick={() =>
                       setDeleteCandidate({
                         entryId: entry.entryId!,
@@ -177,8 +182,8 @@ export default function SalaryList({
                       })
                     }
                   >
-                    Delete
-                  </Button>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </ActionIconButton>
                 </Stack>
               }
             >

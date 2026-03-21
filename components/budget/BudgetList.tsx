@@ -5,16 +5,18 @@
  */
 "use client";
 
-import DeleteIcon from "@mui/icons-material/Delete";
-import Button from "@mui/material/Button";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
-import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
 
@@ -167,54 +169,60 @@ export function BudgetList({
               disableGutters
               disablePadding
             >
-              <ListItemButton onClick={() => onLoad?.(budget)} sx={{ pr: 1 }}>
-                <ListItemText
-                  primary={budget.name}
-                  secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
-                />
-                <Stack
-                  direction="row"
-                  spacing={0.5}
-                  alignItems="center"
-                  sx={{ ml: 1, flexShrink: 0 }}
-                  onClick={(e) => e.stopPropagation()}
+              {/* Note 3: The row itself is now the load affordance, so the hover
+                  hint replaces a duplicate "Load" button without hiding how to
+                  reopen a saved budget. */}
+              <Tooltip
+                title="Click this row to load the budget"
+                placement="top"
+                arrow
+                disableHoverListener={!onLoad}
+              >
+                <ListItemButton
+                  onClick={() => onLoad?.(budget)}
+                  aria-label={`Load budget ${budget.name}`}
+                  sx={{ pr: 1, gap: 1 }}
                 >
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onLoad?.(budget);
-                    }}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <ListItemText
+                      primary={budget.name}
+                      secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
+                    />
+                  </Box>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    alignItems="center"
+                    sx={{ ml: 1, flexShrink: 0 }}
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    Load
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit?.(budget);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteCandidate({
-                        id: budget.budgetId ?? "",
-                        name: budget.name,
-                      });
-                    }}
-                    aria-label={`delete-${budget.budgetId}`}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </ListItemButton>
+                    {onEdit ? (
+                      <ActionIconButton
+                        tooltip="Edit"
+                        ariaLabel={`Edit budget ${budget.name}`}
+                        onClick={() => {
+                          onEdit?.(budget);
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </ActionIconButton>
+                    ) : null}
+                    <ActionIconButton
+                      tooltip="Delete"
+                      ariaLabel={`Delete budget ${budget.name}`}
+                      tone="danger"
+                      onClick={() => {
+                        setDeleteCandidate({
+                          id: budget.budgetId ?? "",
+                          name: budget.name,
+                        });
+                      }}
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </ActionIconButton>
+                  </Stack>
+                </ListItemButton>
+              </Tooltip>
             </ListItem>
           );
         })}

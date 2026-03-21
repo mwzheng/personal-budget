@@ -3,6 +3,8 @@
 // in one place and lets GoalForm remain a pure controlled form.
 "use client";
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
@@ -16,6 +18,7 @@ import {
 import GoalForm from "@/components/forms/GoalForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { apiFetch } from "@/lib/api/apiFetch";
 
 // Note 2: The local `Goal` type mirrors the server response shape. Having a
@@ -131,23 +134,25 @@ export default function GoalList() {
           <React.Fragment key={g.goalId}>
             <ListItem
               secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
+                <Stack direction="row" spacing={0.75}>
+                  <ActionIconButton
+                    tooltip="Edit"
+                    ariaLabel={`Edit goal ${g.name}`}
                     onClick={() => {
                       setEditing(g);
                       setShowForm(true);
                     }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
+                    <EditOutlinedIcon fontSize="small" />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    tooltip="Delete"
+                    ariaLabel={`Delete goal ${g.name}`}
+                    tone="danger"
                     onClick={() => setDeleteCandidate(g.goalId ?? null)}
                   >
-                    Delete
-                  </Button>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </ActionIconButton>
                 </Stack>
               }
             >

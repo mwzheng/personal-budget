@@ -11,10 +11,11 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -47,17 +48,18 @@ interface Props {
 }
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
-const ROW_ACTION_BUTTON_SX = {
-  width: 28,
-  height: 28,
-  borderRadius: 1.25,
-  border: "1px solid",
-  borderColor: "divider",
-  backgroundColor: "background.paper",
-};
 const FORM_ACTION_BUTTON_SX = {
   minWidth: 132,
   height: 36,
+};
+const SECONDARY_FORM_ACTION_BUTTON_SX = {
+  ...FORM_ACTION_BUTTON_SX,
+  borderColor: "divider",
+  color: "text.primary",
+  "&:hover": {
+    borderColor: "text.disabled",
+    backgroundColor: "action.hover",
+  },
 };
 
 export function BudgetForm({
@@ -192,7 +194,8 @@ export function BudgetForm({
           sx={{
             width: "100%",
             tableLayout: "fixed",
-            // Reduce internal cell padding to make columns tighter and avoid overflow
+            // Note 2: Tightening cell padding keeps the fixed-layout table readable
+            // on smaller screens without forcing the editor into horizontal overflow.
             "& .MuiTableCell-root": {
               padding: "6px 8px",
               verticalAlign: "middle",
@@ -337,33 +340,30 @@ export function BudgetForm({
                       alignItems="center"
                       spacing={0.75}
                     >
-                      <IconButton
+                      <ActionIconButton
                         onClick={() => moveExpenseRow(expense.expenseId, -1)}
-                        size="small"
-                        aria-label={`move-expense-up-${index}`}
+                        tooltip="Move up"
+                        ariaLabel={`Move expense ${index + 1} up`}
                         disabled={index === 0}
-                        sx={ROW_ACTION_BUTTON_SX}
                       >
                         <KeyboardArrowUpRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
+                      </ActionIconButton>
+                      <ActionIconButton
                         onClick={() => moveExpenseRow(expense.expenseId, 1)}
-                        size="small"
-                        aria-label={`move-expense-down-${index}`}
+                        tooltip="Move down"
+                        ariaLabel={`Move expense ${index + 1} down`}
                         disabled={index === value.expenses.length - 1}
-                        sx={ROW_ACTION_BUTTON_SX}
                       >
                         <KeyboardArrowDownRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
+                      </ActionIconButton>
+                      <ActionIconButton
                         onClick={() => removeExpenseRow(expense.expenseId)}
-                        size="small"
-                        aria-label={`delete-expense-${index}`}
-                        sx={ROW_ACTION_BUTTON_SX}
-                        color="error"
+                        tooltip="Delete"
+                        ariaLabel={`Delete expense ${index + 1}`}
+                        tone="danger"
                       >
                         <DeleteOutlineRoundedIcon fontSize="small" />
-                      </IconButton>
+                      </ActionIconButton>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -384,7 +384,7 @@ export function BudgetForm({
           {hasInvalidRows ? " - fix incomplete rows before saving" : ""}
         </Typography>
 
-        {/* Note 2: The form actions intentionally share one row on larger
+        {/* Note 4: The form actions intentionally share one row on larger
             screens so "Add Expense", "Start Fresh", and the save action read as
             one workflow instead of three disconnected controls. */}
         <Stack
@@ -405,10 +405,12 @@ export function BudgetForm({
               Add Expense
             </Button>
             <Button
+              startIcon={<RestartAltIcon />}
               onClick={onStartFresh}
               size="small"
+              variant="outlined"
               color="inherit"
-              sx={FORM_ACTION_BUTTON_SX}
+              sx={SECONDARY_FORM_ACTION_BUTTON_SX}
             >
               Start Fresh
             </Button>

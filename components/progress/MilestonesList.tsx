@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {
   Box,
   Button,
@@ -12,6 +13,7 @@ import {
 import MilestoneForm from "@/components/forms/MilestoneForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -140,9 +142,10 @@ export default function MilestonesList() {
           <ListItem
             key={item.milestoneId}
             secondaryAction={
-              <Button
-                size="small"
-                color="error"
+              <ActionIconButton
+                tooltip="Delete"
+                ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
+                tone="danger"
                 onClick={() =>
                   setDeleteCandidate({
                     milestoneId: item.milestoneId,
@@ -150,8 +153,8 @@ export default function MilestonesList() {
                   })
                 }
               >
-                Delete
-              </Button>
+                <DeleteOutlineRoundedIcon fontSize="small" />
+              </ActionIconButton>
             }
           >
             <ListItemText

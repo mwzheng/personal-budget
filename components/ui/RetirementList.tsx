@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
@@ -14,6 +16,7 @@ import {
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -30,8 +33,8 @@ interface Props {
 }
 
 export default function RetirementList({ onEntriesChanged }: Props) {
-  // Note 1: RetirementList still owns its CRUD list state locally, but it now
-  // also notifies the parent page after mutations so sibling charts can refetch.
+  // Note 1: RetirementList still owns its CRUD list state locally, but it also
+  // notifies the parent page after mutations so sibling charts can refetch.
   const [entries, setEntries] = useState<RetirementEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<RetirementEntry | null>(null);
@@ -134,19 +137,21 @@ export default function RetirementList({ onEntriesChanged }: Props) {
           <React.Fragment key={entry.entryId}>
             <ListItem
               secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
+                <Stack direction="row" spacing={0.75}>
+                  <ActionIconButton
+                    tooltip="Edit"
+                    ariaLabel={`Edit retirement entry for ${entry.year}`}
                     onClick={() => {
                       setEditing(entry);
                       setDialogOpen(true);
                     }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
+                    <EditOutlinedIcon fontSize="small" />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    tooltip="Delete"
+                    ariaLabel={`Delete retirement entry for ${entry.year}`}
+                    tone="danger"
                     onClick={() =>
                       setDeleteCandidate({
                         entryId: entry.entryId!,
@@ -154,8 +159,8 @@ export default function RetirementList({ onEntriesChanged }: Props) {
                       })
                     }
                   >
-                    Delete
-                  </Button>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </ActionIconButton>
                 </Stack>
               }
             >
