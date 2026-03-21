@@ -19,7 +19,12 @@ import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 
 import { ABOUT_PAGE_CONTENT } from "@/lib/content/about";
-import { PAGE_TITLE_KEYS, getPageTitleEntry } from "@/lib/content/page-titles";
+import {
+  APP_NAME,
+  PAGE_TITLE_KEYS,
+  ROUTE_PATHS,
+  getPageTitleEntry,
+} from "@/lib/content/page-titles";
 import type {
   ContentNotice,
   ContentSection,
@@ -27,10 +32,27 @@ import type {
 } from "@/lib/types/content";
 
 const ABOUT_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.ABOUT);
+const ABOUT_PAGE_DESCRIPTION =
+  "Learn why Porridge Budget was built, the manual-first budgeting philosophy behind it, and who maintains the project.";
 
 export const metadata: Metadata = {
   title: "About",
-  description: ABOUT_PAGE_ENTRY.description,
+  description: ABOUT_PAGE_DESCRIPTION,
+  alternates: {
+    canonical: ROUTE_PATHS.about,
+  },
+  openGraph: {
+    type: "article",
+    title: ABOUT_PAGE_ENTRY.title,
+    description: ABOUT_PAGE_DESCRIPTION,
+    url: ROUTE_PATHS.about,
+    siteName: APP_NAME,
+  },
+  twitter: {
+    card: "summary",
+    title: ABOUT_PAGE_ENTRY.title,
+    description: ABOUT_PAGE_DESCRIPTION,
+  },
 };
 
 const SOCIAL_ICON_BY_PLATFORM = {
@@ -203,10 +225,11 @@ export default function AboutPage() {
 
   return (
     <Box component="main" sx={{ py: { xs: 6, md: 8 } }}>
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Stack spacing={4}>
           <Paper
             component="section"
+            aria-labelledby="about-hero-title"
             elevation={0}
             sx={{
               p: { xs: 3, md: 4 },
@@ -225,6 +248,7 @@ export default function AboutPage() {
               ) : null}
               <Stack spacing={1.5}>
                 <Typography
+                  id="about-hero-title"
                   component="h1"
                   variant="h2"
                   sx={{ fontSize: { xs: "2.25rem", md: "3rem" } }}

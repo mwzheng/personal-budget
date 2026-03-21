@@ -16,14 +16,36 @@ import Typography from "@mui/material/Typography";
 
 import { ContactForm } from "@/components/contact/ContactForm";
 import { CONTACT_PAGE_CONTENT } from "@/lib/content/contact";
-import { PAGE_TITLE_KEYS, PAGE_TITLES } from "@/lib/content/page-titles";
+import {
+  APP_NAME,
+  PAGE_TITLE_KEYS,
+  PAGE_TITLES,
+  ROUTE_PATHS,
+} from "@/lib/content/page-titles";
 import type { ContentNotice } from "@/lib/types/content";
 
 const contactPageTitle = PAGE_TITLES[PAGE_TITLE_KEYS.CONTACT];
+const CONTACT_PAGE_DESCRIPTION =
+  "Contact the creator of Porridge Budget with product feedback, bug reports, collaboration ideas, or thoughtful questions about the manual-first workflow.";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: contactPageTitle.description,
+  description: CONTACT_PAGE_DESCRIPTION,
+  alternates: {
+    canonical: ROUTE_PATHS.contact,
+  },
+  openGraph: {
+    type: "website",
+    title: contactPageTitle.title,
+    description: CONTACT_PAGE_DESCRIPTION,
+    url: ROUTE_PATHS.contact,
+    siteName: APP_NAME,
+  },
+  twitter: {
+    card: "summary",
+    title: contactPageTitle.title,
+    description: CONTACT_PAGE_DESCRIPTION,
+  },
 };
 
 function ContactNoticeCard({ notice }: { notice: ContentNotice }) {
@@ -63,9 +85,9 @@ export default function ContactPage() {
   } = CONTACT_PAGE_CONTENT;
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+    <Container component="main" maxWidth="xl" sx={{ py: { xs: 6, md: 8 } }}>
       <Stack spacing={{ xs: 4, md: 6 }}>
-        <Stack spacing={2} sx={{ maxWidth: 760 }}>
+        <Stack component="section" spacing={2} sx={{ maxWidth: 760 }}>
           <Typography
             variant="overline"
             color="primary.main"
@@ -101,6 +123,8 @@ export default function ContactPage() {
         </Stack>
 
         <Box
+          component="section"
+          aria-label="Contact options"
           sx={{
             display: "grid",
             gap: { xs: 3, lg: 4 },
@@ -117,56 +141,67 @@ export default function ContactPage() {
             <Card variant="outlined" sx={{ flex: 1.2 }}>
               <CardContent sx={{ p: 3, height: "100%", minHeight: 320 }}>
                 <Stack spacing={2}>
-                  <Typography variant="h5" fontWeight={700}>
+                  <Typography component="h2" variant="h5" fontWeight={700}>
                     {sidebar.methodsTitle}
                   </Typography>
                   <Typography color="text.secondary">
                     {sidebar.methodsDescription}
                   </Typography>
 
-                  {methods.map((method) => (
-                    <Stack
-                      key={method.href}
-                      spacing={1.25}
-                      sx={{
-                        p: 2,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: 2,
-                        minWidth: 0,
-                      }}
-                    >
-                      <Typography
-                        variant="h6"
-                        fontWeight={600}
-                        sx={{ minWidth: 0 }}
-                      >
-                        {method.label}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          overflowWrap: "anywhere",
-                          wordBreak: "break-word",
-                          minWidth: 0,
-                        }}
-                      >
-                        {method.description}
-                      </Typography>
-                      <Button
-                        component="a"
-                        href={method.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        variant="outlined"
-                        endIcon={<LaunchIcon />}
-                        sx={{ alignSelf: "flex-start", whiteSpace: "normal" }}
-                      >
-                        {method.cta}
-                      </Button>
-                    </Stack>
-                  ))}
+                  <Stack
+                    component="ul"
+                    spacing={1.5}
+                    sx={{ m: 0, p: 0, listStyle: "none" }}
+                  >
+                    {methods.map((method) => (
+                      <Box component="li" key={method.href}>
+                        <Stack
+                          spacing={1.25}
+                          sx={{
+                            p: 2,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                            minWidth: 0,
+                          }}
+                        >
+                          <Typography
+                            component="h3"
+                            variant="h6"
+                            fontWeight={600}
+                            sx={{ minWidth: 0 }}
+                          >
+                            {method.label}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              overflowWrap: "anywhere",
+                              wordBreak: "break-word",
+                              minWidth: 0,
+                            }}
+                          >
+                            {method.description}
+                          </Typography>
+                          <Button
+                            component="a"
+                            href={method.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            variant="outlined"
+                            endIcon={<LaunchIcon />}
+                            sx={{
+                              alignSelf: "flex-start",
+                              whiteSpace: "normal",
+                            }}
+                          >
+                            {method.cta}
+                          </Button>
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
                 </Stack>
               </CardContent>
             </Card>
@@ -174,7 +209,7 @@ export default function ContactPage() {
             <Card variant="outlined" sx={{ flex: 0.8 }}>
               <CardContent sx={{ p: 3, height: "100%", minHeight: 200 }}>
                 <Stack spacing={2} sx={{ height: "100%" }}>
-                  <Typography variant="h5" fontWeight={700}>
+                  <Typography component="h2" variant="h5" fontWeight={700}>
                     {sidebar.topicsTitle}
                   </Typography>
                   <Stack component="ul" spacing={1.25} sx={{ m: 0, pl: 2.5 }}>

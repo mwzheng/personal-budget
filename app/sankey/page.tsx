@@ -85,6 +85,10 @@ const SECTION_CONTENT_SX = {
   px: { xs: 2.5, sm: 3 },
   py: { xs: 2.5, sm: 3 },
 };
+const PAGE_TITLE_ID = "budget-page-title";
+const PAGE_DESCRIPTION_ID = "budget-page-description";
+const INSTRUCTIONS_TITLE_ID = "sankey-instructions-title";
+const INSTRUCTIONS_DESCRIPTION_ID = "sankey-instructions-description";
 
 export default function SankeyPage() {
   const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
@@ -215,11 +219,28 @@ export default function SankeyPage() {
   const hasExpenses = insights.validExpenses.length > 0;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" fontWeight={700} mb={1}>
+    <Container
+      component="main"
+      maxWidth="xl"
+      aria-labelledby={PAGE_TITLE_ID}
+      aria-describedby={PAGE_DESCRIPTION_ID}
+      sx={{ py: 4 }}
+    >
+      <Typography
+        id={PAGE_TITLE_ID}
+        component="h1"
+        variant="h4"
+        fontWeight={700}
+        mb={1}
+      >
         Budget Planner
       </Typography>
-      <Typography variant="body2" color="text.secondary" mb={4}>
+      <Typography
+        id={PAGE_DESCRIPTION_ID}
+        variant="body2"
+        color="text.secondary"
+        mb={4}
+      >
         Plan monthly expenses, see each line item in the pie chart, and follow
         the grouped Sankey flow below.
       </Typography>
@@ -407,7 +428,10 @@ export default function SankeyPage() {
                     </Card>
 
                     <Paper variant="outlined" sx={{ overflowX: "auto" }}>
-                      <Table size="small">
+                      <Table
+                        size="small"
+                        aria-label="Budget category totals and share of monthly income"
+                      >
                         <TableBody>
                           {sankeyLoading
                             ? [1, 2, 3].map((i) => (
@@ -507,11 +531,19 @@ export default function SankeyPage() {
         onClose={() => setInstructionsOpen(false)}
         maxWidth="sm"
         fullWidth
+        aria-labelledby={INSTRUCTIONS_TITLE_ID}
+        aria-describedby={INSTRUCTIONS_DESCRIPTION_ID}
       >
-        <DialogTitle>Sankey Path Instructions</DialogTitle>
+        <DialogTitle id={INSTRUCTIONS_TITLE_ID}>
+          Sankey Path Instructions
+        </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              id={INSTRUCTIONS_DESCRIPTION_ID}
+              variant="body2"
+              color="text.secondary"
+            >
               The Sankey diagram flows from <strong>Net Income</strong> into
               optional user-defined path layers and then into the final expense
               leaf. Use the <strong>Sankey Path</strong> field to specify one or
