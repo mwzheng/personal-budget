@@ -1502,3 +1502,78 @@ Modified files:
 - All styling uses MUI sx prop and theme overrides; no new CSS frameworks introduced
 - Client component pages use layout.tsx wrappers for metadata since Next.js App Router doesn't allow metadata exports from client components
 - The existing Providers.tsx client-side title sync (useEffect) continues to work correctly with the template approach
+
+---
+
+# Completed: UI consistency pass, button/dialog standardization, and SEO setup
+
+Date: 2026-03-21
+
+## Summary
+
+Second consistency pass addressing specific UI issues: delete dialogs, button styling, page widths, hardcoded colors, and SEO indexing.
+
+## Completed Items
+
+### Delete Dialog Consistency
+
+- Replaced native `confirm()` with ConfirmDialog in RetirementList, SalaryList, GoalList, MilestonesList
+- Fixed MilestonesList error display from raw `<Box>` to StatusAlert
+
+### BudgetList Polish
+
+- Added `color="error"` and `size="small"` to delete IconButton
+- Restructured row layout so hover highlight covers full row (replaced ListItemSecondaryAction with inline Stack)
+- Styled load/edit buttons with `variant="outlined"`
+
+### Page Width Consistency
+
+- Standardized Goals, Salary, FAQ from `maxWidth="md"` to `lg`
+- Standardized Reports, Sankey from `maxWidth="xl"` to `lg`
+- All content pages now use consistent `lg` (1200px) width
+
+### Button Style Audit
+
+- BudgetForm: "Add Expense" → `variant="outlined"`, "Start Fresh" → text button
+- TransactionDetailDialog: "Edit transaction" → `variant="outlined"`
+- MilestonesList: "Add Milestone" → added `size="small"`
+
+### Hardcoded Colors → Theme Tokens
+
+- SankeyForm: slider colors now use `theme.palette.{error,info,success}.main`
+- ChartTooltipCard: tooltip border/bg/text now use `divider`/`background.paper`/`text.primary`
+- ProgressCharts: Recharts line strokes now use `theme.palette.primary.main`/`success.main`
+
+### Empty State Consistency
+
+- All list empty states now use `color="text.secondary"`, `py: 2`, `textAlign: "center"`
+
+### SEO Setup
+
+- Created `app/sitemap.ts` serving `/sitemap.xml` with 6 public pages
+- Created `app/robots.ts` serving `/robots.txt` with allow/disallow rules
+- Added `NEXT_PUBLIC_SITE_URL` to `env.example`
+
+## Files Changed
+
+New files: `app/sitemap.ts`, `app/robots.ts`
+
+Modified files:
+
+- `app/faq/page.tsx`, `app/goals/page.tsx`, `app/reports/page.tsx`, `app/salary/page.tsx`, `app/sankey/page.tsx`
+- `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/budget/SankeyForm.tsx`
+- `components/charts/ChartTooltipCard.tsx`, `components/progress/MilestonesList.tsx`, `components/progress/ProgressCharts.tsx`
+- `components/transactions/TransactionDetailDialog.tsx`
+- `components/ui/GoalList.tsx`, `components/ui/RetirementList.tsx`, `components/ui/SalaryList.tsx`
+- `env.example`
+
+## Commit
+
+`style: UI consistency pass, button/dialog standardization, and SEO setup` (62f6430)
+
+## Verification
+
+- Lint: ✔ No warnings or errors
+- Tests: ✔ 47/47 passed
+- Build: ✔ 30 routes (including /robots.txt and /sitemap.xml)
+- Prettier: ✔ All files formatted
