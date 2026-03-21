@@ -21,6 +21,9 @@ interface ApiEntriesResponse<T> {
   error?: string;
 }
 
+const PAGE_TITLE_ID = "progress-page-title";
+const PAGE_DESCRIPTION_ID = "progress-page-description";
+
 export default function Page() {
   // Note 1: The page owns the shared chart dataset so salary/retirement edits can
   // refresh the year filter and the progress chart immediately, without waiting
@@ -97,17 +100,37 @@ export default function Page() {
   }, [availableYears]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+    <Container
+      component="main"
+      maxWidth="xl"
+      aria-labelledby={PAGE_TITLE_ID}
+      aria-describedby={PAGE_DESCRIPTION_ID}
+      sx={{ py: 4 }}
+    >
+      <Typography
+        id={PAGE_TITLE_ID}
+        component="h1"
+        variant="h4"
+        fontWeight={700}
+        gutterBottom
+      >
         Progress Tracker
       </Typography>
+      <Typography
+        id={PAGE_DESCRIPTION_ID}
+        variant="body2"
+        color="text.secondary"
+      >
+        Review salary history, retirement contributions, and milestones from one
+        long-term progress workspace.
+      </Typography>
 
-      <Stack spacing={3}>
-        <Paper sx={{ p: 2 }} elevation={1}>
+      <Stack spacing={3} sx={{ mt: 3 }}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <GoalEditor />
         </Paper>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <ProgressYearFilter
             availableYears={availableYears}
             selectedYears={selectedYears}
@@ -115,7 +138,7 @@ export default function Page() {
           />
         </Paper>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <ProgressCharts
             salaryEntries={salaryEntries}
             retirementEntries={retirementEntries}
@@ -136,18 +159,18 @@ export default function Page() {
           }}
         >
           <Box>
-            <Paper sx={{ p: 2, height: "100%" }} elevation={1}>
+            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
               <RetirementList onEntriesChanged={refreshChartData} />
             </Paper>
           </Box>
           <Box>
-            <Paper sx={{ p: 2, height: "100%" }} elevation={1}>
+            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
               <MilestonesList />
             </Paper>
           </Box>
         </Box>
 
-        <Paper sx={{ p: 2 }} elevation={1}>
+        <Paper sx={{ p: 3 }} elevation={1}>
           <SalaryList
             selectedYears={selectedYears}
             onEntriesChanged={refreshChartData}

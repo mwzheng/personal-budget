@@ -1,10 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Button, List, ListItem, ListItemText } from "@mui/material";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import {
+  Box,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+} from "@mui/material";
 import MilestoneForm from "@/components/forms/MilestoneForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { MilestoneEntry } from "@/lib/types/types";
 
@@ -21,6 +32,10 @@ export default function MilestonesList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    milestoneId: string;
+    year: number | null | undefined;
+  } | null>(null);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -48,12 +63,13 @@ export default function MilestonesList() {
     await fetchItems();
   };
 
-  const handleDelete = async (
-    milestoneId: string,
-    year: number | null | undefined,
-  ) => {
-    if (!confirm("Delete this milestone?")) return;
-
+  // Note 2: Delete is a two-step flow: the button sets the candidate, and
+  // confirmDelete performs the actual API call only after the user confirms via
+  // the ConfirmDialog. This replaces the native confirm() for visual consistency.
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return;
+    const { milestoneId, year } = deleteCandidate;
+    setDeleteCandidate(null);
     try {
       const params = new URLSearchParams({ milestoneId });
       if (year !== null && year !== undefined) {
@@ -86,7 +102,11 @@ export default function MilestonesList() {
         title="Milestones"
         sx={{ mb: 2 }}
         action={
-          <Button variant="contained" onClick={() => setDialogOpen(true)}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setDialogOpen(true)}
+          >
             Add Milestone
           </Button>
         }
@@ -105,25 +125,42 @@ export default function MilestonesList() {
         </ProgressEntryDialog>
       ) : null}
 
-      {error ? <Box sx={{ color: "error.main", mb: 1 }}>{error}</Box> : null}
+      {error ? (
+        <StatusAlert message={error} onClose={() => setError(null)} />
+      ) : null}
 
       <List>
         {items.length === 0 && !loading ? (
           <ListItem>
-            <ListItemText primary="No milestones yet" />
+            <ListItemText
+              primary={
+                <Typography
+                  color="text.secondary"
+                  sx={{ py: 2, textAlign: "center" }}
+                >
+                  No milestones yet.
+                </Typography>
+              }
+            />
           </ListItem>
         ) : null}
         {items.map((item) => (
           <ListItem
             key={item.milestoneId}
             secondaryAction={
-              <Button
-                size="small"
-                color="error"
-                onClick={() => handleDelete(item.milestoneId, item.year)}
+              <ActionIconButton
+                tooltip="Delete"
+                ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
+                tone="danger"
+                onClick={() =>
+                  setDeleteCandidate({
+                    milestoneId: item.milestoneId,
+                    year: item.year,
+                  })
+                }
               >
-                Delete
-              </Button>
+                <DeleteOutlineRoundedIcon fontSize="small" />
+              </ActionIconButton>
             }
           >
             <ListItemText
@@ -133,6 +170,15 @@ export default function MilestonesList() {
           </ListItem>
         ))}
       </List>
+
+      <ConfirmDialog
+        open={Boolean(deleteCandidate)}
+        title="Delete Milestone"
+        message="Are you sure you want to delete this milestone? This action cannot be undone."
+        confirmLabel="Delete"
+        onClose={() => setDeleteCandidate(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

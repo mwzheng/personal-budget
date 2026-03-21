@@ -12,6 +12,15 @@ import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
 
+// Note 1.5: Metadata URLs need a stable origin so canonical, Open Graph, and
+// sitemap URLs resolve consistently in production and local previews.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+).replace(/\/+$/, "");
+
+const ROOT_METADATA_DESCRIPTION =
+  "Manual-first budgeting app for tracking spending, planning budgets, and reviewing financial progress without hiding the details behind automation.";
+
 // Note 2: The `metadata` export is a special Next.js convention. The framework
 // reads it at build time and injects the equivalent `<meta>` and `<title>` tags
 // into the `<head>` of every page that does not override them with its own
@@ -19,8 +28,22 @@ import "./globals.css";
 // Note 2.1: The `icons` property uses the same 🥣 bowl icon as the AppNav for
 // a consistent visual identity across the app and browser tab.
 export const metadata: Metadata = {
-  title: "Porridge Budget",
-  description: "Track and analyze your personal spending",
+  title: { template: "%s - Porridge Budget", default: "Porridge Budget" },
+  metadataBase: new URL(SITE_URL),
+  description: ROOT_METADATA_DESCRIPTION,
+  applicationName: APP_NAME,
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: APP_NAME,
+    description: ROOT_METADATA_DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary",
+    title: APP_NAME,
+    description: ROOT_METADATA_DESCRIPTION,
+  },
   icons: {
     icon: "/favicon.svg",
   },

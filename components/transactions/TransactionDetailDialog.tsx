@@ -10,7 +10,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { useEffect, useState, type ReactNode } from "react";
 
 import type { CategoryType, Transaction } from "@/lib/types/types";
@@ -165,10 +165,10 @@ export function TransactionDetailDialog({
             </Stack>
 
             {confirmDelete && (
-              <Alert severity="warning">
-                Delete this transaction permanently? This action cannot be
-                undone.
-              </Alert>
+              <StatusAlert
+                message="Delete this transaction permanently? This action cannot be undone."
+                severity="warning"
+              />
             )}
           </Stack>
         ) : null}
@@ -208,7 +208,7 @@ export function TransactionDetailDialog({
               Delete transaction
             </Button>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={() => {
                 if (transaction) {
                   onEdit(transaction);

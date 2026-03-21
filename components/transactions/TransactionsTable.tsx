@@ -6,14 +6,10 @@
 
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -22,7 +18,7 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useEffect, useState } from "react";
 import { CategoryType, Transaction } from "@/lib/types/types";
@@ -211,25 +207,31 @@ export function TransactionsTable({
                   </TableCell>
                   {showActions && (
                     <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                      {onEdit && (
-                        <IconButton
-                          size="small"
-                          aria-label={`Edit ${t.name}`}
-                          onClick={() => onEdit(t)}
-                        >
-                          <EditOutlinedIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      {onDelete && (
-                        <IconButton
-                          size="small"
-                          aria-label={`Delete ${t.name}`}
-                          color="error"
-                          onClick={() => setDeleteTarget(t)}
-                        >
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      )}
+                      <Stack
+                        direction="row"
+                        justifyContent="center"
+                        spacing={0.75}
+                      >
+                        {onEdit ? (
+                          <ActionIconButton
+                            tooltip="Edit"
+                            ariaLabel={`Edit transaction ${t.name}`}
+                            onClick={() => onEdit(t)}
+                          >
+                            <EditOutlinedIcon fontSize="small" />
+                          </ActionIconButton>
+                        ) : null}
+                        {onDelete ? (
+                          <ActionIconButton
+                            tooltip="Delete"
+                            ariaLabel={`Delete transaction ${t.name}`}
+                            tone="danger"
+                            onClick={() => setDeleteTarget(t)}
+                          >
+                            <DeleteOutlineRoundedIcon fontSize="small" />
+                          </ActionIconButton>
+                        ) : null}
+                      </Stack>
                     </TableCell>
                   )}
                 </TableRow>
@@ -254,36 +256,19 @@ export function TransactionsTable({
       {/* Note 8: The delete dialog is rendered outside the table in the same
           React Fragment so it is not nested inside a <table> element (which
           would be invalid HTML). `Boolean(deleteTarget)` drives the `open` prop. */}
-      <Dialog
+      <ConfirmDialog
         open={Boolean(deleteTarget)}
+        title="Delete Transaction?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? This cannot be undone.`}
+        confirmLabel="Delete"
         onClose={() => setDeleteTarget(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Delete Transaction?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo; (
-            {deleteTarget?.date}, ${deleteTarget?.amount.toFixed(2)})? This
-            cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => {
-              if (deleteTarget && onDelete) {
-                onDelete(deleteTarget.id);
-              }
-              setDeleteTarget(null);
-            }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={() => {
+          if (deleteTarget && onDelete) {
+            onDelete(deleteTarget.id);
+          }
+          setDeleteTarget(null);
+        }}
+      />
     </>
   );
 }

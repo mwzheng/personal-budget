@@ -101,6 +101,8 @@ const EMPTY_FILTERS: FilterParams = {
 };
 
 type TransactionsViewMode = "table" | "calendar";
+const PAGE_TITLE_ID = "reports-page-title";
+const PAGE_DESCRIPTION_ID = "reports-page-description";
 
 function buildYearFilters(years: string[]): FilterParams {
   return {
@@ -113,7 +115,7 @@ function buildQuickTagFilters(
   currentFilters: FilterParams,
   tag: string,
 ): FilterParams {
-  // Note 4a: Quick-tag clicks act as a focused drill-down. Keeping the current
+  // Note 4: Quick-tag clicks act as a focused drill-down. Keeping the current
   // date/search filters intact while swapping to a single selected tag makes the
   // shortcut predictable and easy to toggle off by clicking the same tag again.
   const nextTags =
@@ -131,7 +133,7 @@ interface StatCardProps {
   loading: boolean;
 }
 
-// Note 4: `StatCard` and `EmptyState` are defined as module-level functions
+// Note 5: `StatCard` and `EmptyState` are defined as module-level functions
 // rather than in a separate file because they are small, single-use sub-components
 // with no state of their own. Co-locating them with their only consumer avoids
 // unnecessary file fragmentation.
@@ -217,7 +219,7 @@ export default function ReportsPage() {
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
   );
-  // Note 8: The active view is UI-only state. Keeping it beside the filtered
+  // Note 6: The active view is UI-only state. Keeping it beside the filtered
   // transaction data means the table and calendar stay perfectly in sync without
   // triggering extra API calls or maintaining parallel copies of the same list.
   const [transactionsView, setTransactionsView] =
@@ -270,7 +272,7 @@ export default function ReportsPage() {
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
-    // Note 5: `isAuthenticated()` now covers both real Cognito tokens and the
+    // Note 7: `isAuthenticated()` now covers both real Cognito tokens and the
     // dedicated demo-session flag, so protected pages accept demo mode without
     // having to know how that browser-only session is implemented.
     if (!disableAuth && !isAuthenticated()) {
@@ -279,7 +281,7 @@ export default function ReportsPage() {
     }
 
     void loadTransactions({ resetFilters: true });
-    // Note 6: The initial load should happen once on mount. `router` is stable
+    // Note 8: The initial load should happen once on mount. `router` is stable
     // enough for this redirect flow, and the inline async call avoids reading
     // transaction data from browser storage before the auth-scoped API responds.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -413,7 +415,7 @@ export default function ReportsPage() {
     setFilters((currentFilters) => buildQuickTagFilters(currentFilters, tag));
   }
 
-  // Note 6: `useMemo` caches the result of these expensive operations and only
+  // Note 9: `useMemo` caches the result of these expensive operations and only
   // recomputes when their dependencies change. Without memoization, `getAllTags`,
   // `filterTransactions`, and `aggregateTransactions` would run on every render
   // (e.g., when a dialog opens), wasting CPU on unchanged data.
@@ -444,7 +446,13 @@ export default function ReportsPage() {
   const isEmpty = !loading && allTransactions.length === 0;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container
+      component="main"
+      maxWidth="xl"
+      aria-labelledby={PAGE_TITLE_ID}
+      aria-describedby={PAGE_DESCRIPTION_ID}
+      sx={{ py: 4 }}
+    >
       <Box
         display="flex"
         alignItems="center"
@@ -453,9 +461,25 @@ export default function ReportsPage() {
         flexWrap="wrap"
         gap={2}
       >
-        <Typography variant="h4" fontWeight={700}>
-          Spending Reports
-        </Typography>
+        <Box>
+          <Typography
+            id={PAGE_TITLE_ID}
+            component="h1"
+            variant="h4"
+            fontWeight={700}
+          >
+            Spending Reports
+          </Typography>
+          <Typography
+            id={PAGE_DESCRIPTION_ID}
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 0.5 }}
+          >
+            Filter transactions, compare charts, and manage CSV imports from one
+            reporting dashboard.
+          </Typography>
+        </Box>
         {!isEmpty && (
           <Stack direction="row" gap={1}>
             <Button
@@ -507,7 +531,6 @@ export default function ReportsPage() {
             />
           )}
 
-          {/* Summary stats */}
           <Grid container spacing={2} mb={3}>
             {(
               [
@@ -539,7 +562,6 @@ export default function ReportsPage() {
             ))}
           </Grid>
 
-          {/* Charts row 1: Pie + Stacked Bar */}
           <Grid container spacing={3} mb={3}>
             <Grid item xs={12} md={5}>
               <Card sx={{ height: "100%" }}>
@@ -551,7 +573,7 @@ export default function ReportsPage() {
                   }}
                 />
                 <Divider />
-                <CardContent>
+                <CardContent sx={{ p: 3 }}>
                   {loading ? (
                     <ChartLoadingState height={280} legendItems={3} />
                   ) : (
@@ -570,7 +592,7 @@ export default function ReportsPage() {
                   }}
                 />
                 <Divider />
-                <CardContent>
+                <CardContent sx={{ p: 3 }}>
                   {loading ? (
                     <ChartLoadingState height={300} legendItems={3} />
                   ) : (
@@ -581,7 +603,6 @@ export default function ReportsPage() {
             </Grid>
           </Grid>
 
-          {/* Charts row 2: Top Tags */}
           <Card sx={{ mb: 3 }}>
             <CardHeader
               title="Top Spending Tags"
@@ -590,7 +611,7 @@ export default function ReportsPage() {
               subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
-            <CardContent>
+            <CardContent sx={{ p: 3 }}>
               {loading ? (
                 <ChartLoadingState height={400} showLegend={false} />
               ) : (
@@ -603,7 +624,6 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Transactions results */}
           <Box
             mb={1.5}
             display="flex"
@@ -620,7 +640,7 @@ export default function ReportsPage() {
                 ({filtered.length} results)
               </Typography>
             </Box>
-            {/* Note 9: An exclusive toggle keeps the table as the familiar
+            {/* Note 10: An exclusive toggle keeps the table as the familiar
                 default while letting users switch to the calendar without losing
                 the current filters or the shared edit/delete handlers. */}
             <ToggleButtonGroup
@@ -671,7 +691,6 @@ export default function ReportsPage() {
         </>
       )}
 
-      {/* Calendar transaction details dialog */}
       <TransactionDetailDialog
         open={Boolean(detailTarget)}
         transaction={detailTarget}
@@ -683,7 +702,6 @@ export default function ReportsPage() {
         onDelete={handleDeleteTransaction}
       />
 
-      {/* Add/Edit transaction dialog */}
       <TransactionForm
         open={formOpen}
         transaction={editTarget}
@@ -691,7 +709,6 @@ export default function ReportsPage() {
         onClose={handleFormClose}
       />
 
-      {/* Import CSV dialog */}
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
@@ -700,10 +717,10 @@ export default function ReportsPage() {
         }}
       />
 
-      {/* Note 7: The Floating Action Button (FAB) is a Material Design pattern
-          for the primary action on a page. Positioning it `fixed` at the bottom
-          right corner keeps it always accessible regardless of scroll position.
-          It is hidden on the empty state so the EmptyState CTA is the focal point. */}
+      {/* Note 11: The Floating Action Button (FAB) is a Material Design pattern
+           for the primary action on a page. Positioning it `fixed` at the bottom
+           right corner keeps it always accessible regardless of scroll position.
+           It is hidden on the empty state so the EmptyState CTA is the focal point. */}
       {!isEmpty && (
         <Fab
           color="primary"

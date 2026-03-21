@@ -123,7 +123,10 @@ export function AppNav() {
     <AppBar
       position="static"
       elevation={0}
-      sx={{ borderBottom: "1px solid #333", bgcolor: "#1a1a1a" }}
+      sx={{
+        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+        bgcolor: "#1a1a1a",
+      }}
     >
       <Toolbar>
         <Typography
@@ -133,7 +136,11 @@ export function AppNav() {
             fontWeight: 700,
             textDecoration: "none",
             color: "inherit",
-            "&:hover, &:focus": { cursor: "pointer", textDecoration: "none" },
+            "&:hover, &:focus": {
+              cursor: "pointer",
+              textDecoration: "none",
+              color: "primary.main",
+            },
           }}
           component={NextLink}
           href={ROUTE_PATHS.home}
@@ -254,10 +261,9 @@ export function AppNav() {
           slotProps={{
             paper: {
               sx: {
-                mt: 0.5,
+                mt: 1,
                 minWidth: 160,
-                border: "1px solid",
-                borderColor: "rgba(255, 255, 255, 0.12)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
                 bgcolor: "background.paper",
                 backgroundImage: "none",
               },

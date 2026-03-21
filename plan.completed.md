@@ -1,3 +1,58 @@
+# Completed: Widen layouts, standardize action buttons, and improve SEO/accessibility
+
+Date: 2026-03-21
+
+Summary
+
+- Widened the main public and authenticated pages to `maxWidth="xl"` so the core budgeting screens make better use of desktop space.
+- Standardized edit/delete affordances as shared icon-only buttons with hover tooltips, and polished the saved-budget interaction flow on the budget page.
+- Strengthened public-page SEO and accessibility with richer metadata, canonical URLs, Open Graph/Twitter tags, JSON-LD, and clearer page landmarks.
+
+Completed items
+
+- Updated `app/page.tsx`, `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`, `app/reports/page.tsx`, `app/sankey/page.tsx`, `app/goals/page.tsx`, `app/progress/page.tsx`, and `app/salary/page.tsx` to use wider `xl` containers, with `main` landmarks and clearer page heading/description structure where needed.
+- Strengthened root metadata in `app/layout.tsx` and refreshed `app/robots.ts` / `app/sitemap.ts` so the live public pages expose stronger SEO defaults without indexing authenticated routes.
+- Added JSON-LD structured data to the Home and FAQ pages so search crawlers can consume the same content model the UI renders.
+- Added shared `components/ui/action-icon-button.tsx` and updated `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/ui/GoalList.tsx`, `components/ui/SalaryList.tsx`, `components/ui/RetirementList.tsx`, `components/progress/MilestonesList.tsx`, and `components/transactions/TransactionsTable.tsx` so edit/delete actions use one visual pattern with matching tooltips and aria-labels.
+- Restyled the Budget page's `Start Fresh` button to match adjacent outlined actions and removed the redundant Saved Budgets `Load` button in favor of a row-level hover hint.
+- Cleaned touched comments so the new metadata, landmarks, and shared action-button behavior are explained only where the intent is non-obvious.
+- Re-ran `pnpm lint`, `pnpm test --run`, and `pnpm build` successfully after the implementation pass.
+
+Files changed
+
+- `app/about/page.tsx`
+- `app/contact/page.tsx`
+- `app/faq/page.tsx`
+- `app/goals/page.tsx`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `app/reports/page.tsx`
+- `app/robots.ts`
+- `app/salary/page.tsx`
+- `app/sankey/page.tsx`
+- `app/sitemap.ts`
+- `components/budget/BudgetForm.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/ui/GoalList.tsx`
+- `components/ui/RetirementList.tsx`
+- `components/ui/SalaryList.tsx`
+- `components/ui/action-icon-button.tsx`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- If more CRUD-style list screens are added later, prefer reusing `ActionIconButton` first so tooltip copy, aria-labels, and button styling stay aligned by default.
+- If additional public marketing pages land later, extend the shared metadata patterns from `app/layout.tsx` plus the route-level JSON-LD approach instead of hand-rolling per-page SEO tags.
+
 # Completed: Polish public pages and chart loading
 
 Date: 2026-03-17
@@ -1424,3 +1479,156 @@ Notes
 - Added top-level re-export stubs at lib/\*.ts to preserve existing import paths while files are grouped.
 
 Files changed: lib/\* (moved into subfolders; see git diff for full list)
+
+---
+
+# Completed: Visual refresh, consistent popups, and GA page title fix
+
+Date: 2026-03-17
+
+## Summary
+
+Moderate visual refresh of the application with three focus areas: fixing Google Analytics page tracking, standardizing popup/dialog/alert components, and modernizing the UI while preserving the dark theme.
+
+## Completed Items
+
+### Google Analytics Fix
+
+- Changed root layout metadata.title from static string to Next.js title template (`{ template: "%s - Porridge Budget", default: "Porridge Budget" }`)
+- Added metadata exports to 10 pages missing them (goals, salary, reports, sankey, progress, auth/login, auth/register, auth/callback, auth/signout)
+- Updated 3 existing metadata exports (about, contact, faq) to use short titles to avoid double-suffix
+- Created layout.tsx files for 7 client-component page routes (metadata can't be exported from client components)
+
+### Popup/Dialog/Alert Consistency
+
+- Created reusable `ConfirmDialog` component replacing one-off delete confirmation dialogs
+- Created `StatusAlert` component wrapping MUI Alert with consistent styling (dismissible, mb:2, aria-live)
+- Migrated 10 components: TransactionsTable, BudgetList, RetirementList, SalaryList, GoalList, BudgetForm, SankeyForm, ContactForm, TransactionDetailDialog, ImportCsvDialog
+
+### Visual Refresh
+
+- Added 13 MUI component theme overrides (Paper, Button, Dialog, DialogTitle, DialogActions, Alert, TextField, Chip, Tab, Tabs, TableCell, Divider, AppBar)
+- Set shape.borderRadius: 12 for consistent rounded corners
+- Added global CSS polish: smooth transitions, custom scrollbar styling, focus-visible outlines, selection color
+- Polished landing page hero with radial gradient glow and card hover lift effects
+- Refined AppNav border, brand hover state, and dropdown menu styling
+- Improved Footer link hover states and border treatment
+- Standardized card padding across Reports, Progress, Goals, Salary pages
+- Converted Goals and Salary pages from raw `<main>` to `<Container>` for consistent layout
+
+## Files Changed
+
+New files:
+
+- `components/ui/ConfirmDialog.tsx`
+- `components/ui/StatusAlert.tsx`
+- `app/auth/callback/layout.tsx`
+- `app/auth/login/layout.tsx`
+- `app/auth/register/layout.tsx`
+- `app/auth/signout/layout.tsx`
+- `app/progress/layout.tsx`
+- `app/reports/layout.tsx`
+- `app/sankey/layout.tsx`
+
+Modified files:
+
+- `app/layout.tsx`, `app/providers.tsx`, `app/globals.css`
+- `app/page.tsx`, `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`
+- `app/goals/page.tsx`, `app/salary/page.tsx`, `app/reports/page.tsx`, `app/progress/page.tsx`
+- `components/AppNav.tsx`, `components/Footer.tsx`
+- `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/budget/SankeyForm.tsx`
+- `components/contact/ContactForm.tsx`
+- `components/transactions/ImportCsvDialog.tsx`, `components/transactions/TransactionDetailDialog.tsx`, `components/transactions/TransactionsTable.tsx`
+- `components/ui/GoalList.tsx`, `components/ui/RetirementList.tsx`, `components/ui/SalaryList.tsx`
+
+## Commit
+
+`style: visual refresh, consistent popups, and GA page title fix` (c3a916e)
+
+## Verification
+
+- Lint: ✔ No warnings or errors
+- Tests: ✔ 47/47 passed
+- Build: ✔ 28 pages generated successfully
+- Prettier: ✔ All files formatted
+
+## Notes
+
+- All styling uses MUI sx prop and theme overrides; no new CSS frameworks introduced
+- Client component pages use layout.tsx wrappers for metadata since Next.js App Router doesn't allow metadata exports from client components
+- The existing Providers.tsx client-side title sync (useEffect) continues to work correctly with the template approach
+
+---
+
+# Completed: UI consistency pass, button/dialog standardization, and SEO setup
+
+Date: 2026-03-21
+
+## Summary
+
+Second consistency pass addressing specific UI issues: delete dialogs, button styling, page widths, hardcoded colors, and SEO indexing.
+
+## Completed Items
+
+### Delete Dialog Consistency
+
+- Replaced native `confirm()` with ConfirmDialog in RetirementList, SalaryList, GoalList, MilestonesList
+- Fixed MilestonesList error display from raw `<Box>` to StatusAlert
+
+### BudgetList Polish
+
+- Added `color="error"` and `size="small"` to delete IconButton
+- Restructured row layout so hover highlight covers full row (replaced ListItemSecondaryAction with inline Stack)
+- Styled load/edit buttons with `variant="outlined"`
+
+### Page Width Consistency
+
+- Standardized Goals, Salary, FAQ from `maxWidth="md"` to `lg`
+- Standardized Reports, Sankey from `maxWidth="xl"` to `lg`
+- All content pages now use consistent `lg` (1200px) width
+
+### Button Style Audit
+
+- BudgetForm: "Add Expense" → `variant="outlined"`, "Start Fresh" → text button
+- TransactionDetailDialog: "Edit transaction" → `variant="outlined"`
+- MilestonesList: "Add Milestone" → added `size="small"`
+
+### Hardcoded Colors → Theme Tokens
+
+- SankeyForm: slider colors now use `theme.palette.{error,info,success}.main`
+- ChartTooltipCard: tooltip border/bg/text now use `divider`/`background.paper`/`text.primary`
+- ProgressCharts: Recharts line strokes now use `theme.palette.primary.main`/`success.main`
+
+### Empty State Consistency
+
+- All list empty states now use `color="text.secondary"`, `py: 2`, `textAlign: "center"`
+
+### SEO Setup
+
+- Created `app/sitemap.ts` serving `/sitemap.xml` with 6 public pages
+- Created `app/robots.ts` serving `/robots.txt` with allow/disallow rules
+- Added `NEXT_PUBLIC_SITE_URL` to `env.example`
+
+## Files Changed
+
+New files: `app/sitemap.ts`, `app/robots.ts`
+
+Modified files:
+
+- `app/faq/page.tsx`, `app/goals/page.tsx`, `app/reports/page.tsx`, `app/salary/page.tsx`, `app/sankey/page.tsx`
+- `components/budget/BudgetForm.tsx`, `components/budget/BudgetList.tsx`, `components/budget/SankeyForm.tsx`
+- `components/charts/ChartTooltipCard.tsx`, `components/progress/MilestonesList.tsx`, `components/progress/ProgressCharts.tsx`
+- `components/transactions/TransactionDetailDialog.tsx`
+- `components/ui/GoalList.tsx`, `components/ui/RetirementList.tsx`, `components/ui/SalaryList.tsx`
+- `env.example`
+
+## Commit
+
+`style: UI consistency pass, button/dialog standardization, and SEO setup` (62f6430)
+
+## Verification
+
+- Lint: ✔ No warnings or errors
+- Tests: ✔ 47/47 passed
+- Build: ✔ 30 routes (including /robots.txt and /sitemap.xml)
+- Prettier: ✔ All files formatted

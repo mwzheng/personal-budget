@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
@@ -14,6 +16,9 @@ import {
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { RetirementEntry } from "@/lib/types/types";
 
@@ -28,13 +33,17 @@ interface Props {
 }
 
 export default function RetirementList({ onEntriesChanged }: Props) {
-  // Note 1: RetirementList still owns its CRUD list state locally, but it now
-  // also notifies the parent page after mutations so sibling charts can refetch.
+  // Note 1: RetirementList still owns its CRUD list state locally, but it also
+  // notifies the parent page after mutations so sibling charts can refetch.
   const [entries, setEntries] = useState<RetirementEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<RetirementEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    entryId: string;
+    year: number;
+  } | null>(null);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -66,9 +75,13 @@ export default function RetirementList({ onEntriesChanged }: Props) {
     await Promise.resolve(onEntriesChanged?.());
   };
 
-  const handleDelete = async (entryId?: string, year?: number) => {
-    if (!entryId || !year) return;
-    if (!confirm("Delete this retirement entry?")) return;
+  // Note 2: Delete is a two-step flow: the button sets the candidate, and
+  // confirmDelete performs the actual API call only after the user confirms via
+  // the ConfirmDialog. This replaces the native confirm() for visual consistency.
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return;
+    const { entryId, year } = deleteCandidate;
+    setDeleteCandidate(null);
     try {
       const res = await apiFetch(
         `/api/progress/retirement?entryId=${encodeURIComponent(entryId)}&year=${encodeURIComponent(String(year))}`,
@@ -115,30 +128,39 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         </ProgressEntryDialog>
       ) : null}
 
-      {error ? <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box> : null}
+      {error ? (
+        <StatusAlert message={error} onClose={() => setError(null)} />
+      ) : null}
 
       <List>
         {entries.map((entry) => (
           <React.Fragment key={entry.entryId}>
             <ListItem
               secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
+                <Stack direction="row" spacing={0.75}>
+                  <ActionIconButton
+                    tooltip="Edit"
+                    ariaLabel={`Edit retirement entry for ${entry.year}`}
                     onClick={() => {
                       setEditing(entry);
                       setDialogOpen(true);
                     }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    onClick={() => handleDelete(entry.entryId, entry.year)}
+                    <EditOutlinedIcon fontSize="small" />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    tooltip="Delete"
+                    ariaLabel={`Delete retirement entry for ${entry.year}`}
+                    tone="danger"
+                    onClick={() =>
+                      setDeleteCandidate({
+                        entryId: entry.entryId!,
+                        year: entry.year,
+                      })
+                    }
                   >
-                    Delete
-                  </Button>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </ActionIconButton>
                 </Stack>
               }
             >
@@ -153,8 +175,19 @@ export default function RetirementList({ onEntriesChanged }: Props) {
       </List>
 
       {entries.length === 0 && !loading ? (
-        <Typography>No retirement entries yet.</Typography>
+        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+          No retirement entries yet.
+        </Typography>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(deleteCandidate)}
+        title="Delete Retirement Entry"
+        message="Are you sure you want to delete this retirement entry? This action cannot be undone."
+        confirmLabel="Delete"
+        onClose={() => setDeleteCandidate(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

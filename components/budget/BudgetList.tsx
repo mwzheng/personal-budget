@@ -5,20 +5,18 @@
  */
 "use client";
 
-import DeleteIcon from "@mui/icons-material/Delete";
-import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
-import IconButton from "@mui/material/IconButton";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusAlert } from "@/components/ui/StatusAlert";
+import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import ListItemText from "@mui/material/ListItemText";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
 
@@ -139,9 +137,7 @@ export function BudgetList({
   return (
     <div>
       {error ? (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
       <List dense disablePadding>
@@ -152,7 +148,11 @@ export function BudgetList({
         ) : null}
 
         {!loading && budgets.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ py: 2, textAlign: "center" }}
+          >
             Save a budget to reuse the same expense plan later.
           </Typography>
         ) : null}
@@ -164,57 +164,78 @@ export function BudgetList({
           ).length;
 
           return (
-            <ListItem key={budget.budgetId ?? budget.name} disableGutters>
-              <ListItemButton onClick={() => onLoad?.(budget)}>
-                <ListItemText
-                  primary={budget.name}
-                  secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
-                />
-              </ListItemButton>
-              <ListItemSecondaryAction>
-                <Button size="small" onClick={() => onLoad?.(budget)}>
-                  Load
-                </Button>
-                <Button size="small" onClick={() => onEdit?.(budget)}>
-                  Edit
-                </Button>
-                <IconButton
-                  edge="end"
-                  onClick={() =>
-                    setDeleteCandidate({
-                      id: budget.budgetId ?? "",
-                      name: budget.name,
-                    })
-                  }
-                  aria-label={`delete-${budget.budgetId}`}
+            <ListItem
+              key={budget.budgetId ?? budget.name}
+              disableGutters
+              disablePadding
+            >
+              {/* Note 3: The row itself is now the load affordance, so the hover
+                  hint replaces a duplicate "Load" button without hiding how to
+                  reopen a saved budget. */}
+              <Tooltip
+                title="Click this row to load the budget"
+                placement="top"
+                arrow
+                disableHoverListener={!onLoad}
+              >
+                <ListItemButton
+                  onClick={() => onLoad?.(budget)}
+                  aria-label={`Load budget ${budget.name}`}
+                  sx={{ pr: 1, gap: 1 }}
                 >
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <ListItemText
+                      primary={budget.name}
+                      secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
+                    />
+                  </Box>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    alignItems="center"
+                    sx={{ ml: 1, flexShrink: 0 }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {onEdit ? (
+                      <ActionIconButton
+                        tooltip="Edit"
+                        ariaLabel={`Edit budget ${budget.name}`}
+                        onClick={() => {
+                          onEdit?.(budget);
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </ActionIconButton>
+                    ) : null}
+                    <ActionIconButton
+                      tooltip="Delete"
+                      ariaLabel={`Delete budget ${budget.name}`}
+                      tone="danger"
+                      onClick={() => {
+                        setDeleteCandidate({
+                          id: budget.budgetId ?? "",
+                          name: budget.name,
+                        });
+                      }}
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </ActionIconButton>
+                  </Stack>
+                </ListItemButton>
+              </Tooltip>
             </ListItem>
           );
         })}
       </List>
 
-      <Dialog
+      <ConfirmDialog
         open={Boolean(deleteCandidate)}
+        title="Delete Budget"
+        message={`Are you sure you want to delete "${deleteCandidate?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
         onClose={() => setDeleteCandidate(null)}
-        aria-labelledby="delete-budget-dialog-title"
-      >
-        <DialogTitle id="delete-budget-dialog-title">Delete Budget</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete &quot;{deleteCandidate?.name}&quot;?
-            This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteCandidate(null)}>Cancel</Button>
-          <Button color="error" onClick={confirmDelete} autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

@@ -29,9 +29,10 @@ export function ChartTooltipCard({ title, rows }: Props) {
     <Box
       sx={{
         minWidth: 140,
-        border: "1px solid #444",
+        border: 1,
+        borderColor: "divider",
         borderRadius: 1,
-        backgroundColor: "#242424",
+        backgroundColor: "background.paper",
         px: 1.5,
         py: 1,
       }}
@@ -39,7 +40,12 @@ export function ChartTooltipCard({ title, rows }: Props) {
       {title ? (
         <Typography
           variant="caption"
-          sx={{ display: "block", mb: 0.75, color: "#fff", fontWeight: 700 }}
+          sx={{
+            display: "block",
+            mb: 0.75,
+            color: "text.primary",
+            fontWeight: 700,
+          }}
         >
           {title}
         </Typography>
@@ -65,13 +71,13 @@ export function ChartTooltipCard({ title, rows }: Props) {
                   }}
                 />
               ) : null}
-              <Typography variant="caption" sx={{ color: "#fff" }}>
+              <Typography variant="caption" sx={{ color: "text.primary" }}>
                 {row.label}
               </Typography>
             </Stack>
             <Typography
               variant="caption"
-              sx={{ color: "#fff", fontWeight: 700 }}
+              sx={{ color: "text.primary", fontWeight: 700 }}
             >
               {row.value}
             </Typography>

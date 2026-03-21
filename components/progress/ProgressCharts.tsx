@@ -4,7 +4,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import {
   ResponsiveContainer,
   LineChart,
@@ -41,6 +41,7 @@ export default function ProgressCharts({
   loading = false,
   error = null,
 }: Props) {
+  const theme = useTheme();
   const data = useMemo(() => {
     const selectedYearSet = new Set(selectedYears);
 
@@ -157,7 +158,7 @@ export default function ProgressCharts({
                 type="monotone"
                 dataKey="retirement"
                 name="Retirement End"
-                stroke="#8884d8"
+                stroke={theme.palette.primary.main}
                 strokeWidth={2}
                 dot
               />
@@ -165,7 +166,7 @@ export default function ProgressCharts({
                 type="monotone"
                 dataKey="salary"
                 name="Salary"
-                stroke="#82ca9d"
+                stroke={theme.palette.success.main}
                 strokeWidth={2}
                 dot
               />

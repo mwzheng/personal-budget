@@ -45,6 +45,9 @@ const darkTheme = createTheme({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
   },
+  shape: {
+    borderRadius: 12,
+  },
   components: {
     MuiCard: {
       // Note 4: MUI Cards in dark mode add a gradient `backgroundImage` by
@@ -52,6 +55,141 @@ const darkTheme = createTheme({
       // keeps the flat dark look consistent with the rest of the design.
       styleOverrides: {
         root: { backgroundImage: "none" },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          borderRadius: 12,
+          // Note 5: Subtle border gives cards visual separation without heavy shadows
+          border: "1px solid rgba(255, 255, 255, 0.06)",
+          transition:
+            "box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: "none" as const,
+          fontWeight: 500,
+          transition: "all 0.2s ease-in-out",
+        },
+        contained: {
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+          "&:hover": {
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
+          },
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 16,
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6)",
+          backgroundImage: "none",
+        },
+      },
+    },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          fontSize: "1.125rem",
+        },
+      },
+    },
+    MuiDialogActions: {
+      styleOverrides: {
+        root: {
+          padding: "16px 24px",
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          border: "1px solid",
+          // Note 6: MUI automatically sets borderColor based on severity via the theme
+        },
+        standardError: {
+          borderColor: "rgba(239, 83, 80, 0.3)",
+        },
+        standardSuccess: {
+          borderColor: "rgba(102, 187, 106, 0.3)",
+        },
+        standardInfo: {
+          borderColor: "rgba(41, 182, 246, 0.3)",
+        },
+        standardWarning: {
+          borderColor: "rgba(255, 167, 38, 0.3)",
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 8,
+            transition:
+              "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+            "&.Mui-focused": {
+              boxShadow: "0 0 0 2px rgba(45, 125, 210, 0.2)",
+            },
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: "none" as const,
+          fontWeight: 500,
+          minWidth: "auto",
+        },
+      },
+    },
+    MuiTabs: {
+      styleOverrides: {
+        indicator: {
+          height: 3,
+          borderRadius: "3px 3px 0 0",
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderColor: "rgba(255, 255, 255, 0.06)",
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: "rgba(255, 255, 255, 0.06)",
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+        },
       },
     },
   },

@@ -3,6 +3,8 @@
 // in one place and lets GoalForm remain a pure controlled form.
 "use client";
 import React, { useEffect, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
@@ -14,6 +16,9 @@ import {
   Divider,
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusAlert } from "@/components/ui/StatusAlert";
+import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { apiFetch } from "@/lib/api/apiFetch";
 
 // Note 2: The local `Goal` type mirrors the server response shape. Having a
@@ -36,6 +41,7 @@ export default function GoalList() {
   const [editing, setEditing] = useState<Goal | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
 
   const fetchGoals = async () => {
     setLoading(true);
@@ -68,12 +74,13 @@ export default function GoalList() {
     fetchGoals();
   };
 
-  const handleDelete = async (goalId?: string) => {
-    if (!goalId) return;
-    // Note 5: The native `confirm()` dialog is a simple way to require user
-    // confirmation before a destructive action. For a more polished UX, this
-    // could be replaced with a MUI Dialog (as in TransactionsTable).
-    if (!confirm("Delete this goal?")) return;
+  // Note 5: Delete is a two-step flow: the button sets the candidate goalId,
+  // and confirmDelete performs the actual API call only after the user confirms
+  // via the ConfirmDialog. Replaces the native confirm() for visual consistency.
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return;
+    const goalId = deleteCandidate;
+    setDeleteCandidate(null);
     try {
       const res = await apiFetch(
         "/api/goals?goalId=" + encodeURIComponent(goalId),
@@ -120,30 +127,32 @@ export default function GoalList() {
         </Box>
       )}
 
-      {error && <Box sx={{ color: "error.main", mb: 2 }}>{error}</Box>}
+      {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       <List>
         {goals.map((g) => (
           <React.Fragment key={g.goalId}>
             <ListItem
               secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
+                <Stack direction="row" spacing={0.75}>
+                  <ActionIconButton
+                    tooltip="Edit"
+                    ariaLabel={`Edit goal ${g.name}`}
                     onClick={() => {
                       setEditing(g);
                       setShowForm(true);
                     }}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    onClick={() => handleDelete(g.goalId)}
+                    <EditOutlinedIcon fontSize="small" />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    tooltip="Delete"
+                    ariaLabel={`Delete goal ${g.name}`}
+                    tone="danger"
+                    onClick={() => setDeleteCandidate(g.goalId ?? null)}
                   >
-                    Delete
-                  </Button>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </ActionIconButton>
                 </Stack>
               }
             >
@@ -165,7 +174,20 @@ export default function GoalList() {
         ))}
       </List>
 
-      {goals.length === 0 && !loading && <Typography>No goals yet.</Typography>}
+      {goals.length === 0 && !loading && (
+        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+          No goals yet.
+        </Typography>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleteCandidate)}
+        title="Delete Goal"
+        message="Are you sure you want to delete this goal? This action cannot be undone."
+        confirmLabel="Delete"
+        onClose={() => setDeleteCandidate(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

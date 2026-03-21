@@ -13,8 +13,13 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 ## New / Available Pages (local)
 
+- `/` — Public landing page with the app overview plus structured data for search engines.
+- `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
 - `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, and a transactions table backed by authenticated per-user APIs.
 - `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
+- `/goals` — Savings goal tracking with target progress, edit/delete actions, and reusable goal forms.
+- `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace.
+- `/salary` — Dedicated salary history entry and comparison screen.
 
 ## APIs (local)
 
@@ -74,6 +79,8 @@ until sign-out instead of writing to DynamoDB.
 
 - Reports, CSV import/export, and transaction CRUD are now bound to the authenticated Cognito user. Shared sample CSV data is only exposed in explicit demo mode (`DISABLE_AUTH=true`).
 - A refactor and cleanup pass was completed on 2026-03-12: lint warnings were eliminated, progress/salary API handlers now use stricter payload-to-user extraction, and progress chart yearly merge logic was optimized from repeated lookups to map-based O(n) merging.
+- The primary public and authenticated pages now use wider `xl` containers, and edit/delete affordances are standardized as icon-only buttons with tooltips for a more consistent desktop workflow.
+- Public pages now ship stronger SEO defaults through shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
 - Run `pnpm build` to verify TypeScript and lint checks.
 
