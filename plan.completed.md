@@ -4,21 +4,23 @@ Date: 2026-03-23
 
 Summary
 
-- Restricted Google Analytics startup to the canonical site host so localhost
-  and preview URLs stop triggering invalid-domain cookie warnings.
+- Updated Google Analytics to choose a safe cookie scope per host so the app can
+  still track production, localhost, and preview traffic without triggering
+  invalid-domain cookie warnings.
 - Switched SPA route tracking to emit `page_view` events after the initial
   layout bootstrap instead of re-running `gtag('config', ...)` on every client
   navigation.
-- Added a regression test plus README guidance so the host policy is explicit in
-  both code and developer setup docs.
+- Added a regression test plus README guidance so the host-aware GA behavior is
+  explicit in both code and developer setup docs.
 
 Completed items
 
 - Added `lib/analytics/google-analytics.ts` to centralize the GA measurement ID,
-  canonical hostname parsing, and runtime enable/disable policy.
-- Updated `app/layout.tsx` so the inline analytics bootstrap only loads the
-  remote Google tag script when the current browser hostname matches the
-  canonical site domain (or subdomain) derived from `NEXT_PUBLIC_SITE_URL`.
+  canonical hostname parsing, and host-aware cookie-domain policy.
+- Updated `app/layout.tsx` so the inline analytics bootstrap chooses the cookie
+  scope per host before loading the remote Google tag script: canonical-site
+  visits share the canonical domain, while localhost and preview hosts use a
+  host-local cookie.
 - Updated `app/providers.tsx` so later App Router navigations send `page_view`
   events with the already-approved runtime config instead of re-running the full
   stream configuration.
@@ -45,10 +47,9 @@ Commit reference
 
 Notes / next steps
 
-- If you ever want analytics on a staging domain, either point
-  `NEXT_PUBLIC_SITE_URL` at that staging host for the deployment or relax the
-  host policy intentionally; the current behavior favors clean production data by
-  default.
+- If you later want to keep preview/local analytics out of the production GA4
+  property, add a separate measurement ID for non-production deployments instead
+  of falling back to GA's default cookie-domain detection.
 
 # Completed: Widen layouts, standardize action buttons, and improve SEO/accessibility
 
