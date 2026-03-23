@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  buildGoogleAnalyticsPageViewPayload,
   buildGoogleAnalyticsRuntimeConfig,
   getGoogleAnalyticsBootstrapConfig,
 } from "@/lib/analytics/google-analytics";
@@ -55,6 +56,20 @@ describe("google analytics host policy", () => {
       enabled: true,
       measurementId: "G-TEST123",
       cookieDomain: "porridgebudget.com",
+    });
+  });
+
+  it("builds explicit GA4 page_view payloads with the expected field names", () => {
+    expect(
+      buildGoogleAnalyticsPageViewPayload(
+        "/reports",
+        "Reports - Porridge Budget",
+        "https://porridgebudget.com/reports",
+      ),
+    ).toEqual({
+      page_path: "/reports",
+      page_title: "Reports - Porridge Budget",
+      page_location: "https://porridgebudget.com/reports",
     });
   });
 

@@ -8,10 +8,12 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
+  buildGoogleAnalyticsPageViewPayload,
   buildGoogleAnalyticsRuntimeConfig,
+  type GoogleAnalyticsPageViewPayload,
   type GoogleAnalyticsRuntimeConfig,
 } from "@/lib/analytics/google-analytics";
 import {
@@ -31,6 +33,9 @@ type Gtag = {
 
 type AnalyticsWindow = Window & {
   __PB_ANALYTICS__?: GoogleAnalyticsRuntimeConfig;
+  __PB_ANALYTICS_READY__?: boolean;
+  __PB_LAST_TRACKED_PAGE_PATH__?: string;
+  __PB_PENDING_PAGE_VIEW__?: GoogleAnalyticsPageViewPayload | null;
   gtag?: Gtag;
   dataLayer?: unknown[];
 };
@@ -246,7 +251,6 @@ export function Providers({ children }: { children: ReactNode }) {
   const normalizedPathname = normalizeAppPathname(pathname);
   const pageTitle =
     getPageTitleEntryByPathname(normalizedPathname)?.title ?? APP_NAME;
-  const hasTrackedInitialPageLoad = useRef(false);
 
   useEffect(() => {
     document.title = pageTitle;
@@ -258,43 +262,33 @@ export function Providers({ children }: { children: ReactNode }) {
 
     if (!runtimeConfig.enabled || !runtimeConfig.measurementId) return;
 
-    // Note 9: The first hard-load page_view comes from `app/layout.tsx`, so this
-    // effect skips its first analytics send and only tracks later SPA navigations
-    // after the layout bootstrap has already decided the current host is valid.
-    if (!hasTrackedInitialPageLoad.current) {
-      hasTrackedInitialPageLoad.current = true;
+    const pageViewPayload = buildGoogleAnalyticsPageViewPayload(
+      normalizedPathname,
+      pageTitle,
+      window.location.href,
+    );
+
+    // Note 9: The layout bootstrap sends the first page_view explicitly and
+    // records the path it just reported. Re-checking that path here avoids
+    // duplicate hits when App Router hydration finishes on the same route.
+    if (
+      analyticsWindow.__PB_LAST_TRACKED_PAGE_PATH__ ===
+      pageViewPayload.page_path
+    ) {
       return;
     }
 
-    // Note 10: Retrying briefly covers the rare case where a route change lands
-    // before the afterInteractive bootstrap has attached `window.gtag`.
-    let attemptsRemaining = 10;
-    let timeoutId: number | undefined;
+    // Note 10: Auth redirects can finish before the afterInteractive GA bootstrap
+    // has completed its first `gtag("config")` call. Queueing the most recent
+    // page_view lets the bootstrap flush it after GA is fully ready so the first
+    // authenticated destination (usually `/reports`) is not lost.
+    if (!analyticsWindow.__PB_ANALYTICS_READY__ || !analyticsWindow.gtag) {
+      analyticsWindow.__PB_PENDING_PAGE_VIEW__ = pageViewPayload;
+      return;
+    }
 
-    const sendPageview = () => {
-      const payload = {
-        send_to: runtimeConfig.measurementId,
-        page_path: normalizedPathname,
-        page_title: pageTitle,
-        page_location: window.location.href,
-      };
-
-      if (analyticsWindow.gtag) {
-        analyticsWindow.gtag("event", "page_view", payload);
-        return;
-      }
-
-      if (attemptsRemaining === 0) return;
-
-      attemptsRemaining -= 1;
-      timeoutId = window.setTimeout(sendPageview, 100);
-    };
-
-    sendPageview();
-
-    return () => {
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-    };
+    analyticsWindow.gtag("event", "page_view", pageViewPayload);
+    analyticsWindow.__PB_LAST_TRACKED_PAGE_PATH__ = pageViewPayload.page_path;
   }, [normalizedPathname, pageTitle]);
 
   return (

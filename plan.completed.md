@@ -1,3 +1,56 @@
+# Completed: Fix Google Analytics page titles for App Router navigations
+
+Date: 2026-03-23
+
+Summary
+
+- Made GA4 pageview delivery explicit so the first client-side navigation after
+  login can wait for the GA bootstrap instead of disappearing before
+  `gtag('config')` is ready.
+- Disabled GA's automatic first pageview and now send both the initial load and
+  later App Router pageviews manually with the same route-aware page titles.
+- Added a regression test and README note so the page-title behavior is clear to
+  future maintainers.
+
+Completed items
+
+- Added `buildGoogleAnalyticsPageViewPayload()` to
+  `lib/analytics/google-analytics.ts` so both the inline bootstrap and the
+  client route tracker use the same GA4 `page_view` parameter names.
+- Updated `app/layout.tsx` so the GA bootstrap calls `gtag('config', ...)` with
+  `send_page_view: false`, records when GA is ready, and flushes any queued
+  App Router pageview after config completes.
+- Updated `app/providers.tsx` so route changes queue exactly one pending
+  pageview until the bootstrap is ready and then dedupe against the last tracked
+  path once GA has already reported it.
+- Added a regression test in `test/google-analytics.test.ts` for the shared
+  pageview payload builder and refreshed the README analytics guidance.
+- Updated `plan.md` and `plan.completed.md` together so the active plan reflects
+  that the analytics page-title follow-up is complete.
+- Planned validation commands for this change are `pnpm dlx prettier --write`,
+  `pnpm exec vitest run test/google-analytics.test.ts`, `pnpm lint`,
+  `pnpm test --run`, and `pnpm build`.
+
+Files changed
+
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `lib/analytics/google-analytics.ts`
+- `README.md`
+- `test/google-analytics.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Intended commit message: `fix(analytics): preserve GA page titles across App Router navigations`
+
+Notes / next steps
+
+- After deploy, verify GA Realtime while signing in and landing on `/reports` so
+  the first authenticated route appears with its own page title instead of only
+  the callback or default shell title.
+
 # Completed: Harden Google Analytics host policy
 
 Date: 2026-03-23

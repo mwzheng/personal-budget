@@ -17,6 +17,12 @@ export type GoogleAnalyticsRuntimeConfig = Readonly<{
   cookieDomain: string | null;
 }>;
 
+export type GoogleAnalyticsPageViewPayload = Readonly<{
+  page_path: string;
+  page_title: string;
+  page_location: string;
+}>;
+
 function normalizeHostname(hostname?: string | null): string | null {
   const normalized = hostname?.trim().toLowerCase().replace(/\.+$/, "");
   return normalized ? normalized : null;
@@ -55,6 +61,23 @@ export function getGoogleAnalyticsBootstrapConfig(): GoogleAnalyticsBootstrapCon
   return {
     measurementId: process.env.NEXT_PUBLIC_GA_ID?.trim() || null,
     siteHostname: getConfiguredSiteHostname(),
+  };
+}
+
+/**
+ * Note 2.1: GA4 expects page view parameters with snake_case keys. Building that
+ * payload in one helper keeps the inline bootstrap script and the Client
+ * Component route tracker aligned when they both report the same navigation.
+ */
+export function buildGoogleAnalyticsPageViewPayload(
+  pagePath: string,
+  pageTitle: string,
+  pageLocation: string,
+): GoogleAnalyticsPageViewPayload {
+  return {
+    page_path: pagePath,
+    page_title: pageTitle,
+    page_location: pageLocation,
   };
 }
 

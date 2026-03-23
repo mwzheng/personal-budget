@@ -56,8 +56,12 @@ NEXT_PUBLIC_SITE_URL=https://porridgebudget.com
 Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
 
 Google Analytics is optional, but when `NEXT_PUBLIC_GA_ID` is configured the
-app now only starts GA on the canonical host derived from
-`NEXT_PUBLIC_SITE_URL`. That keeps localhost and preview deployments from
+app only starts GA on the canonical host derived from `NEXT_PUBLIC_SITE_URL`.
+The layout bootstrap sends the first `page_view` manually and App Router
+navigations queue their own `page_view` until GA is ready, which keeps
+authenticated destinations like `/reports`, `/progress`, and `/sankey`
+reporting their individual page titles instead of collapsing into the default
+app title. That host policy still keeps localhost and preview deployments from
 throwing invalid-domain cookie warnings or polluting the production property.
 
 If you just want to explore the UI, the login and register screens also provide a

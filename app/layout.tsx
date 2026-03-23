@@ -134,9 +134,9 @@ export default function RootLayout({
           </Script>
 
           {/* Note 6: Google Analytics now opts into a host policy before loading
-               gtag.js. That keeps localhost and preview hosts from trying to set
-               production cookies while still allowing the canonical site domain
-               (from NEXT_PUBLIC_SITE_URL) to share one first-party identifier. */}
+               gtag.js. The bootstrap also disables GA's automatic first pageview
+               and sends explicit page_view events itself so App Router navigations
+               can queue behind the same runtime config instead of racing it. */}
           {GOOGLE_ANALYTICS_BOOTSTRAP.measurementId && (
             <Script id="google-analytics-init" strategy="afterInteractive">
               {`(function initializeGoogleAnalytics(){
@@ -166,12 +166,17 @@ export default function RootLayout({
   };
   window.__PB_ANALYTICS__ = runtimeConfig;
   if (!runtimeConfig.enabled || !runtimeConfig.measurementId) return;
+  window.__PB_ANALYTICS_READY__ = false;
   window.dataLayer = window.dataLayer || [];
   window.gtag =
     window.gtag ||
     function () {
       window.dataLayer.push(arguments);
     };
+  function trackPageView(pageViewPayload) {
+    window.gtag("event", "page_view", pageViewPayload);
+    window.__PB_LAST_TRACKED_PAGE_PATH__ = pageViewPayload.page_path;
+  }
   var analyticsScript = document.querySelector("script[data-porridge-ga='true']");
   if (!analyticsScript) {
     analyticsScript = document.createElement("script");
@@ -181,13 +186,26 @@ export default function RootLayout({
     analyticsScript.dataset.porridgeGa = "true";
     document.head.appendChild(analyticsScript);
   }
-  window.gtag("js", new Date());
-  window.gtag("config", runtimeConfig.measurementId, {
-    page_path: window.location.pathname,
+  var initialPathname = window.location.pathname.replace(/\\/+$/, "") || "/";
+  var initialPageView = {
+    page_path: initialPathname,
     page_title: document.title,
     page_location: window.location.href,
+  };
+  window.gtag("js", new Date());
+  window.gtag("config", runtimeConfig.measurementId, {
     cookie_domain: runtimeConfig.cookieDomain,
+    send_page_view: false,
   });
+  window.__PB_ANALYTICS_READY__ = true;
+  var pendingPageView = window.__PB_PENDING_PAGE_VIEW__;
+  window.__PB_PENDING_PAGE_VIEW__ = null;
+  if (!pendingPageView || pendingPageView.page_path === initialPageView.page_path) {
+    trackPageView(pendingPageView || initialPageView);
+    return;
+  }
+  trackPageView(initialPageView);
+  trackPageView(pendingPageView);
 })();`}
             </Script>
           )}
