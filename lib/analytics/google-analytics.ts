@@ -18,6 +18,12 @@ export type GoogleAnalyticsRuntimeConfig = Readonly<{
   cookieDomain: string | null;
 }>;
 
+export type GoogleAnalyticsPageViewPayload = Readonly<{
+  page_path: string;
+  page_title: string;
+  page_location: string;
+}>;
+
 function normalizeHostname(hostname?: string | null): string | null {
   const normalized = hostname?.trim().toLowerCase().replace(/\.+$/, "");
   return normalized ? normalized : null;
@@ -69,8 +75,25 @@ export function getGoogleAnalyticsBootstrapConfig(): GoogleAnalyticsBootstrapCon
 }
 
 /**
- * Note 3: The runtime config now keeps analytics active on production, preview,
- * and localhost hosts, but it picks a cookie scope that each environment can
+ * Note 2.1: GA4 expects page view parameters with snake_case keys. Building that
+ * payload in one helper keeps the inline bootstrap script and the Client
+ * Component route tracker aligned when they both report the same navigation.
+ */
+export function buildGoogleAnalyticsPageViewPayload(
+  pagePath: string,
+  pageTitle: string,
+  pageLocation: string,
+): GoogleAnalyticsPageViewPayload {
+  return {
+    page_path: pagePath,
+    page_title: pageTitle,
+    page_location: pageLocation,
+  };
+}
+
+/**
+ * Note 3: The runtime config keeps analytics active on production, preview, and
+ * localhost hosts, but it picks a cookie scope that each environment can
  * actually accept. That prevents invalid-domain warnings without disabling GA.
  */
 export function buildGoogleAnalyticsRuntimeConfig(

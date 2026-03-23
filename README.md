@@ -59,7 +59,11 @@ Google Analytics is optional, but when `NEXT_PUBLIC_GA_ID` is configured the
 app now chooses a safe cookie scope for the current host. Visits on the
 canonical site from `NEXT_PUBLIC_SITE_URL` share one first-party GA cookie,
 while localhost and preview hosts fall back to host-local cookies so realtime
-testing still works without invalid-domain cookie warnings.
+testing still works without invalid-domain cookie warnings. The layout
+bootstrap also sends the first `page_view` manually and App Router navigations
+queue their own `page_view` until GA is ready, which keeps authenticated
+destinations like `/reports`, `/progress`, and `/sankey` reporting their
+individual page titles instead of collapsing into the default app title.
 
 If you just want to explore the UI, the login and register screens also provide a
 `Demo Sign In` / `Demo Register` flow. That mode seeds browser-local demo data for
