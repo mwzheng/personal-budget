@@ -133,10 +133,11 @@ export default function RootLayout({
 })();`}
           </Script>
 
-          {/* Note 6: Google Analytics now opts into a host policy before loading
-               gtag.js. That keeps localhost and preview hosts from trying to set
-               production cookies while still allowing the canonical site domain
-               (from NEXT_PUBLIC_SITE_URL) to share one first-party identifier. */}
+          {/* Note 6: Google Analytics now chooses a safe cookie scope for the
+               current host before loading gtag.js. The canonical domain from
+               `NEXT_PUBLIC_SITE_URL` still shares one first-party cookie, while
+               localhost, IPs, and preview URLs fall back to host-local cookies
+               so realtime testing keeps working without invalid-domain errors. */}
           {GOOGLE_ANALYTICS_BOOTSTRAP.measurementId && (
             <Script id="google-analytics-init" strategy="afterInteractive">
               {`(function initializeGoogleAnalytics(){
@@ -148,20 +149,26 @@ export default function RootLayout({
     hostname === "127.0.0.1" ||
     hostname === "::1" ||
     hostname === "[::1]";
-  var isAllowedHost =
-    !siteHostname ||
-    hostname === siteHostname ||
-    hostname.endsWith("." + siteHostname);
+  var usesHostOnlyCookie =
+    isLocalhost ||
+    hostname.indexOf(".") === -1 ||
+    /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(hostname) ||
+    hostname.indexOf(":") !== -1;
+  var sharesCanonicalCookie =
+    Boolean(siteHostname) &&
+    (hostname === siteHostname || hostname.endsWith("." + siteHostname));
   var runtimeConfig = {
-    enabled: Boolean(config.measurementId) && !isLocalhost && isAllowedHost,
+    enabled: Boolean(config.measurementId) && Boolean(hostname),
     measurementId:
-      Boolean(config.measurementId) && !isLocalhost && isAllowedHost
-        ? config.measurementId
-        : null,
+      Boolean(config.measurementId) && Boolean(hostname) ? config.measurementId : null,
     cookieDomain:
-      Boolean(config.measurementId) && !isLocalhost && isAllowedHost
-        ? siteHostname || "auto"
-        : null,
+      !config.measurementId || !hostname
+        ? null
+        : usesHostOnlyCookie
+          ? "none"
+          : sharesCanonicalCookie
+            ? siteHostname
+            : hostname,
   };
   window.__PB_ANALYTICS__ = runtimeConfig;
   if (!runtimeConfig.enabled || !runtimeConfig.measurementId) return;

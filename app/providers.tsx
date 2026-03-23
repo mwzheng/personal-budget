@@ -260,7 +260,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
     // Note 9: The first hard-load page_view comes from `app/layout.tsx`, so this
     // effect skips its first analytics send and only tracks later SPA navigations
-    // after the layout bootstrap has already decided the current host is valid.
+    // after the layout bootstrap has already selected the current host's cookie scope.
     if (!hasTrackedInitialPageLoad.current) {
       hasTrackedInitialPageLoad.current = true;
       return;
