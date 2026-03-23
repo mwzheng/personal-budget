@@ -1,3 +1,55 @@
+# Completed: Harden Google Analytics host policy
+
+Date: 2026-03-23
+
+Summary
+
+- Restricted Google Analytics startup to the canonical site host so localhost
+  and preview URLs stop triggering invalid-domain cookie warnings.
+- Switched SPA route tracking to emit `page_view` events after the initial
+  layout bootstrap instead of re-running `gtag('config', ...)` on every client
+  navigation.
+- Added a regression test plus README guidance so the host policy is explicit in
+  both code and developer setup docs.
+
+Completed items
+
+- Added `lib/analytics/google-analytics.ts` to centralize the GA measurement ID,
+  canonical hostname parsing, and runtime enable/disable policy.
+- Updated `app/layout.tsx` so the inline analytics bootstrap only loads the
+  remote Google tag script when the current browser hostname matches the
+  canonical site domain (or subdomain) derived from `NEXT_PUBLIC_SITE_URL`.
+- Updated `app/providers.tsx` so later App Router navigations send `page_view`
+  events with the already-approved runtime config instead of re-running the full
+  stream configuration.
+- Added `test/google-analytics.test.ts` to lock down the expected behavior for
+  canonical hosts, localhost, and preview domains.
+- Documented `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_SITE_URL`, and the new host-aware
+  GA behavior in `README.md`.
+- Re-ran Prettier on the changed files, then verified the full
+  `pnpm lint`, `pnpm test --run`, and `pnpm build` pass successfully.
+
+Files changed
+
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `lib/analytics/google-analytics.ts`
+- `README.md`
+- `test/google-analytics.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- If you ever want analytics on a staging domain, either point
+  `NEXT_PUBLIC_SITE_URL` at that staging host for the deployment or relax the
+  host policy intentionally; the current behavior favors clean production data by
+  default.
+
 # Completed: Widen layouts, standardize action buttons, and improve SEO/accessibility
 
 Date: 2026-03-21
