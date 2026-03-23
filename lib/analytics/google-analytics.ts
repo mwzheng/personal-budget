@@ -4,6 +4,7 @@
  * canonical host, cookie scope, and measurement ID aligned across both paths.
  */
 const DEFAULT_SITE_URL = "https://porridgebudget.com";
+const IPV4_HOSTNAME_PATTERN = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 export type GoogleAnalyticsBootstrapConfig = Readonly<{
@@ -52,6 +53,15 @@ function getDisabledRuntimeConfig(): GoogleAnalyticsRuntimeConfig {
   };
 }
 
+function usesHostOnlyCookies(hostname: string): boolean {
+  return (
+    LOCALHOST_HOSTNAMES.has(hostname) ||
+    !hostname.includes(".") ||
+    IPV4_HOSTNAME_PATTERN.test(hostname) ||
+    hostname.includes(":")
+  );
+}
+
 /**
  * Note 2: The root layout serializes this bootstrap payload into an inline
  * script so the browser can decide whether analytics should start on the
@@ -82,9 +92,9 @@ export function buildGoogleAnalyticsPageViewPayload(
 }
 
 /**
- * Note 3: Returning a disabled config is safer than tracking on localhost or a
- * preview host because those environments can reject GA cookies or pollute the
- * production property with non-customer traffic.
+ * Note 3: The runtime config keeps analytics active on production, preview, and
+ * localhost hosts, but it picks a cookie scope that each environment can
+ * actually accept. That prevents invalid-domain warnings without disabling GA.
  */
 export function buildGoogleAnalyticsRuntimeConfig(
   hostname: string,
@@ -92,25 +102,33 @@ export function buildGoogleAnalyticsRuntimeConfig(
 ): GoogleAnalyticsRuntimeConfig {
   const normalizedHostname = normalizeHostname(hostname);
 
-  if (
-    !bootstrapConfig.measurementId ||
-    !normalizedHostname ||
-    LOCALHOST_HOSTNAMES.has(normalizedHostname)
-  ) {
+  if (!bootstrapConfig.measurementId || !normalizedHostname) {
     return getDisabledRuntimeConfig();
+  }
+
+  if (usesHostOnlyCookies(normalizedHostname)) {
+    return {
+      enabled: true,
+      measurementId: bootstrapConfig.measurementId,
+      cookieDomain: "none",
+    };
   }
 
   if (
     bootstrapConfig.siteHostname &&
-    normalizedHostname !== bootstrapConfig.siteHostname &&
-    !normalizedHostname.endsWith(`.${bootstrapConfig.siteHostname}`)
+    (normalizedHostname === bootstrapConfig.siteHostname ||
+      normalizedHostname.endsWith(`.${bootstrapConfig.siteHostname}`))
   ) {
-    return getDisabledRuntimeConfig();
+    return {
+      enabled: true,
+      measurementId: bootstrapConfig.measurementId,
+      cookieDomain: bootstrapConfig.siteHostname,
+    };
   }
 
   return {
     enabled: true,
     measurementId: bootstrapConfig.measurementId,
-    cookieDomain: bootstrapConfig.siteHostname ?? "auto",
+    cookieDomain: normalizedHostname,
   };
 }

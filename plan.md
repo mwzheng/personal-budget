@@ -3,13 +3,16 @@
 ## Status: Completed 2026-03-23
 
 Latest completed work: Google Analytics now respects the canonical host derived
-from `NEXT_PUBLIC_SITE_URL`, so localhost and preview deployments no longer try
-to set production-scoped GA cookies. A follow-up pageview queue now holds the
-first App Router navigation until GA finishes its `gtag('config')` bootstrap, so
-authenticated destinations like `/reports` keep their own page titles in GA
-instead of falling back to the default app title. The behavior is covered by a
-unit test, and the validation pass (`pnpm lint`, `pnpm test --run`, and
-`pnpm build`) is recorded in `plan.completed.md`.
+Latest completed work: Google Analytics now chooses a safe cookie scope per
+host instead of relying on GA's automatic domain detection. The canonical site
+from `NEXT_PUBLIC_SITE_URL` still shares one cookie across production
+subdomains, while localhost and preview URLs use host-local cookies so
+realtime tracking keeps working without invalid-domain warnings. A follow-up
+pageview queue now holds the first App Router navigation until GA finishes its
+`gtag('config')` bootstrap, so authenticated destinations like `/reports` keep
+their own page titles in GA instead of falling back to the default app title.
+The behavior is covered by a unit test, and the validation pass (`pnpm lint`,
+`pnpm test --run`, and `pnpm build`) is recorded in `plan.completed.md`.
 
 # Development Plan for Porridge Budget
 
