@@ -149,9 +149,10 @@ export default function RootLayout({
     hostname === "::1" ||
     hostname === "[::1]";
   var isAllowedHost =
-    !siteHostname ||
-    hostname === siteHostname ||
-    hostname.endsWith("." + siteHostname);
+    typeof siteHostname === "string" &&
+    siteHostname.length > 0 &&
+    (hostname === siteHostname ||
+      hostname.endsWith("." + siteHostname));
   var runtimeConfig = {
     enabled: Boolean(config.measurementId) && !isLocalhost && isAllowedHost,
     measurementId:
