@@ -49,9 +49,16 @@ COGNITO_CLIENT_ID=<cognito_app_client_id>
 COGNITO_USER_POOL_ID=<cognito_user_pool_id>
 DYNAMODB_TABLE=<transactions_table_name>
 AWS_REGION=us-east-1
+NEXT_PUBLIC_GA_ID=<ga4_measurement_id>
+NEXT_PUBLIC_SITE_URL=https://porridgebudget.com
 ```
 
 Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
+
+Google Analytics is optional, but when `NEXT_PUBLIC_GA_ID` is configured the
+app now only starts GA on the canonical host derived from
+`NEXT_PUBLIC_SITE_URL`. That keeps localhost and preview deployments from
+throwing invalid-domain cookie warnings or polluting the production property.
 
 If you just want to explore the UI, the login and register screens also provide a
 `Demo Sign In` / `Demo Register` flow. That mode seeds browser-local demo data for

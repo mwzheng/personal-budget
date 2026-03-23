@@ -1,15 +1,14 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. Updated 2026-03-21: page-width expansion, standardized action icon buttons/tooltips, budget row-load polish, and the SEO/accessibility cleanup pass moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. Updated 2026-03-21: page-width expansion, standardized action icon buttons/tooltips, budget row-load polish, and the SEO/accessibility cleanup pass moved to plan.completed.md. Updated 2026-03-23: the Google Analytics host-policy hardening pass moved to plan.completed.md. -->
 
-## Status: Completed 2026-03-21
+## Status: Completed 2026-03-23
 
-Latest completed work: the main public and authenticated pages now use wider
-`xl` layouts; edit/delete affordances are standardized as shared icon buttons
-with hover tooltips; the budget planner now uses a cleaner "click row to load"
-saved-budget flow plus a restyled Start Fresh action; and the public routes now
-ship stronger SEO/accessibility defaults including canonical metadata, Open
-Graph/Twitter tags, and JSON-LD on the Home and FAQ pages. Final cleanup and
-verification, including `pnpm lint`, `pnpm test --run`, and `pnpm build`, are
-recorded in `plan.completed.md`.
+Latest completed work: Google Analytics now respects the canonical host derived
+from `NEXT_PUBLIC_SITE_URL`, so localhost and preview deployments no longer try
+to set production-scoped GA cookies. The layout bootstrap only loads gtag.js on
+allowed hosts, SPA navigations emit `page_view` events instead of re-running the
+full stream config, the behavior is covered by a new unit test, and the
+validation pass (`pnpm lint`, `pnpm test --run`, and `pnpm build`) is recorded
+in `plan.completed.md`.
 
 # Development Plan for Porridge Budget
 

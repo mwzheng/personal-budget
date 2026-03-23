@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import Box from "@mui/material/Box";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+import { getGoogleAnalyticsBootstrapConfig } from "@/lib/analytics/google-analytics";
 import { AppNav } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
@@ -59,6 +60,7 @@ export const metadata: Metadata = {
 const INITIAL_PAGE_TITLES = Object.fromEntries(
   Object.values(PAGE_TITLES).map(({ route, title }) => [route, title] as const),
 );
+const GOOGLE_ANALYTICS_BOOTSTRAP = getGoogleAnalyticsBootstrapConfig();
 
 export default function RootLayout({
   children,
@@ -131,25 +133,63 @@ export default function RootLayout({
 })();`}
           </Script>
 
-          {/* Note 6: Google Analytics integration.
-               - Loads gtag.js after the page becomes interactive to avoid blocking rendering.
-               - Measurement ID is read from NEXT_PUBLIC_GA_ID (env) so it's not hard-coded.
-               - The initial page_view reads `document.title` after the bootstrap
-                 script above, while Providers handles later SPA navigations.
-          */}
-          {process.env.NEXT_PUBLIC_GA_ID && (
-            <>
-              <Script
-                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-                strategy="afterInteractive"
-              />
-              <Script id="gtag-init" strategy="afterInteractive">
-                {`window.dataLayer = window.dataLayer || [];
-function gtag(){window.dataLayer.push(arguments);} 
-gtag('js', new Date());
-gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_path: window.location.pathname, page_title: document.title });`}
-              </Script>
-            </>
+          {/* Note 6: Google Analytics now opts into a host policy before loading
+               gtag.js. That keeps localhost and preview hosts from trying to set
+               production cookies while still allowing the canonical site domain
+               (from NEXT_PUBLIC_SITE_URL) to share one first-party identifier. */}
+          {GOOGLE_ANALYTICS_BOOTSTRAP.measurementId && (
+            <Script id="google-analytics-init" strategy="afterInteractive">
+              {`(function initializeGoogleAnalytics(){
+  var config = ${JSON.stringify(GOOGLE_ANALYTICS_BOOTSTRAP)};
+  var hostname = window.location.hostname.toLowerCase().replace(/\\.+$/, "");
+  var siteHostname = config.siteHostname;
+  var isLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]";
+  var isAllowedHost =
+    typeof siteHostname === "string" &&
+    siteHostname.length > 0 &&
+    (hostname === siteHostname ||
+      hostname.endsWith("." + siteHostname));
+  var runtimeConfig = {
+    enabled: Boolean(config.measurementId) && !isLocalhost && isAllowedHost,
+    measurementId:
+      Boolean(config.measurementId) && !isLocalhost && isAllowedHost
+        ? config.measurementId
+        : null,
+    cookieDomain:
+      Boolean(config.measurementId) && !isLocalhost && isAllowedHost
+        ? siteHostname || "auto"
+        : null,
+  };
+  window.__PB_ANALYTICS__ = runtimeConfig;
+  if (!runtimeConfig.enabled || !runtimeConfig.measurementId) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag =
+    window.gtag ||
+    function () {
+      window.dataLayer.push(arguments);
+    };
+  var analyticsScript = document.querySelector("script[data-porridge-ga='true']");
+  if (!analyticsScript) {
+    analyticsScript = document.createElement("script");
+    analyticsScript.async = true;
+    analyticsScript.src =
+      "https://www.googletagmanager.com/gtag/js?id=" + runtimeConfig.measurementId;
+    analyticsScript.dataset.porridgeGa = "true";
+    document.head.appendChild(analyticsScript);
+  }
+  window.gtag("js", new Date());
+  window.gtag("config", runtimeConfig.measurementId, {
+    page_path: window.location.pathname,
+    page_title: document.title,
+    page_location: window.location.href,
+    cookie_domain: runtimeConfig.cookieDomain,
+  });
+})();`}
+            </Script>
           )}
 
           <Providers>

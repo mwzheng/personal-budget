@@ -11,17 +11,27 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { ReactNode, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
+  buildGoogleAnalyticsRuntimeConfig,
+  type GoogleAnalyticsRuntimeConfig,
+} from "@/lib/analytics/google-analytics";
+import {
   APP_NAME,
   getPageTitleEntryByPathname,
   normalizeAppPathname,
 } from "@/lib/content/page-titles";
 
-type AnalyticsWindow = Window & {
-  gtag?: (
-    command: "config",
-    targetId: string,
+type Gtag = {
+  (command: "config", targetId: string, config: Record<string, unknown>): void;
+  (
+    command: "event",
+    eventName: "page_view",
     config: Record<string, unknown>,
-  ) => void;
+  ): void;
+};
+
+type AnalyticsWindow = Window & {
+  __PB_ANALYTICS__?: GoogleAnalyticsRuntimeConfig;
+  gtag?: Gtag;
   dataLayer?: unknown[];
 };
 
@@ -233,7 +243,6 @@ export function Providers({ children }: { children: ReactNode }) {
   // Note 8: Route metadata is resolved once here so browser-tab titles and
   // analytics payloads share the same source of truth as more public pages land.
   const pathname = usePathname();
-  const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
   const normalizedPathname = normalizeAppPathname(pathname);
   const pageTitle =
     getPageTitleEntryByPathname(normalizedPathname)?.title ?? APP_NAME;
@@ -242,38 +251,36 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.title = pageTitle;
 
-    if (!GA_ID) return;
+    const analyticsWindow = window as AnalyticsWindow;
+    const runtimeConfig =
+      analyticsWindow.__PB_ANALYTICS__ ??
+      buildGoogleAnalyticsRuntimeConfig(window.location.hostname);
+
+    if (!runtimeConfig.enabled || !runtimeConfig.measurementId) return;
 
     // Note 9: The first hard-load page_view comes from `app/layout.tsx`, so this
-    // effect skips its first analytics send and only tracks later SPA navigations.
+    // effect skips its first analytics send and only tracks later SPA navigations
+    // after the layout bootstrap has already decided the current host is valid.
     if (!hasTrackedInitialPageLoad.current) {
       hasTrackedInitialPageLoad.current = true;
       return;
     }
 
-    // Note 10: Retrying briefly avoids racing the GA bootstrap script on a very
-    // fast client-side navigation, while the fallback keeps the old dataLayer
-    // no-op behavior if gtag never appears.
+    // Note 10: Retrying briefly covers the rare case where a route change lands
+    // before the afterInteractive bootstrap has attached `window.gtag`.
     let attemptsRemaining = 10;
     let timeoutId: number | undefined;
 
     const sendPageview = () => {
-      const analyticsWindow = window as AnalyticsWindow;
       const payload = {
+        send_to: runtimeConfig.measurementId,
         page_path: normalizedPathname,
         page_title: pageTitle,
+        page_location: window.location.href,
       };
 
       if (analyticsWindow.gtag) {
-        analyticsWindow.gtag("config", GA_ID, payload);
-        return;
-      }
-
-      if (analyticsWindow.dataLayer) {
-        analyticsWindow.dataLayer.push({
-          event: "page_view",
-          ...payload,
-        });
+        analyticsWindow.gtag("event", "page_view", payload);
         return;
       }
 
@@ -288,7 +295,7 @@ export function Providers({ children }: { children: ReactNode }) {
     return () => {
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);
     };
-  }, [GA_ID, normalizedPathname, pageTitle]);
+  }, [normalizedPathname, pageTitle]);
 
   return (
     // Note 11: `ThemeProvider` makes the `darkTheme` available to all nested
