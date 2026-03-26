@@ -7,9 +7,11 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - **Frontend:** Next.js (React) with TypeScript
 - **UI:** Material-UI (MUI)
 - **Charts:** Recharts (time-series/pie) and @nivo (sankey/treemap)
-- **State management:** Redux Toolkit (planned)
-- **Backend:** AWS Lambda functions (DynamoDB for persistence)
+- **Backend:** Next.js App Router route handlers backed by AWS services
+- **Persistence:** DynamoDB single-table design with typed helpers
 - **Authentication:** AWS Cognito
+- **Email:** AWS SES for the contact form
+- **Validation & testing:** Zod + Vitest
 
 ## New / Available Pages (local)
 
@@ -32,10 +34,14 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `DELETE /api/transactions` — (Authenticated) Deletes a transaction for the current user when `id` and `date` are supplied.
 - `GET /api/budgets` — (Authenticated) List saved budgets for the current user, including monthly income and expense rows when available.
 - `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload) with monthly income, expense rows, and legacy allocation compatibility.
-- `GET /api/budgets/:id` — (Authenticated) Fetch a budget by id.
+- `GET /api/budgets/:id`, `PUT /api/budgets/:id`, `DELETE /api/budgets/:id` — (Authenticated) Fetch, update, or delete a saved budget by id.
 - `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`.
-- `GET /api/goals`, `POST /api/goals`, `PUT /api/goals/:id`, `DELETE /api/goals/:id` — Goals CRUD with estimates/ETA in responses.
-- `GET /api/salary`, `POST /api/salary`, `PUT /api/salary/:id`, `DELETE /api/salary/:id` — Salary history CRUD for per-year entries.
+- `GET /api/goals`, `POST /api/goals`, `PUT /api/goals`, `DELETE /api/goals` — Goals CRUD with ETA enrichment and body/query fallback for delete identifiers.
+- `GET /api/salary`, `POST /api/salary`, `PUT /api/salary`, `DELETE /api/salary` — Salary history CRUD with server-computed YoY values on reads.
+- `GET /api/progress/goal`, `POST /api/progress/goal`, `PUT /api/progress/goal` — Long-term progress goal CRUD with derived progress fields.
+- `GET /api/progress/retirement`, `POST /api/progress/retirement`, `PUT /api/progress/retirement`, `DELETE /api/progress/retirement` — Retirement-history CRUD with derived change metrics.
+- `GET /api/progress/milestones`, `POST /api/progress/milestones`, `DELETE /api/progress/milestones` — Milestone CRUD for long-term savings checkpoints.
+- `POST /api/contact` — Sends public contact-form submissions through SES.
 
 ### Auth / Environment
 
@@ -87,14 +93,21 @@ until sign-out instead of writing to DynamoDB.
      - `GET http://localhost:3000/api/reports?pageSize=5`
      - `POST http://localhost:3000/api/sankey` (see `app/api/sankey/route.ts` for the allocation payload shape)
 
+## Quality checks
+
+- `pnpm lint` — Next.js/ESLint checks
+- `pnpm test --run` — Vitest suite
+- `pnpm build` — production build verification
+
 ## Notes & next steps
 
 - Reports, CSV import/export, and transaction CRUD are now bound to the authenticated Cognito user. Shared sample CSV data is only exposed in explicit demo mode (`DISABLE_AUTH=true`).
-- A refactor and cleanup pass was completed on 2026-03-12: lint warnings were eliminated, progress/salary API handlers now use stricter payload-to-user extraction, and progress chart yearly merge logic was optimized from repeated lookups to map-based O(n) merging.
-- The primary public and authenticated pages now use wider `xl` containers, and edit/delete affordances are standardized as icon-only buttons with tooltips for a more consistent desktop workflow.
+- A comprehensive cleanup pass was completed on 2026-03-26: repeated utility logic was centralized, `budget-planner.ts` and demo-mode API logic were split into focused modules, auth helpers were consolidated, and the UI typography/color/font usage was standardized.
+- Direct route coverage now exists for budgets collection routes, goals, salary, progress routes, shared utility modules, DynamoDB helper behavior, and CSV import/export edge cases.
+- The primary public and authenticated pages now use wider `xl` containers, edit/delete affordances are standardized as icon-only buttons with tooltips, and the app loads `Inter` via `next/font` for more consistent typography.
 - Public pages now ship stronger SEO defaults through shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
-- Run `pnpm build` to verify TypeScript and lint checks.
+- The main follow-up still worth adding is direct test coverage for `app/api/budgets/[id]/route.ts` (PUT/DELETE) plus a documented DynamoDB integration-test strategy.
 
 ## Contributing
 

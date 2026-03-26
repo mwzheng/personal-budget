@@ -14,40 +14,14 @@ import {
   YAxis,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { TAG_CHART_PALETTE } from "@/lib/utils/categoryColors";
+import { formatCurrency } from "@/lib/utils/format";
 import { TagDataPoint } from "@/lib/types/types";
-
-// Note 2: BAR_COLORS cycles through a palette of 15 distinct colors. Using
-// `i % BAR_COLORS.length` prevents an out-of-bounds index when there are more
-// tags than colors. This is a modulo wrap-around -- e.g. tag 16 gets color 1.
-const BAR_COLORS = [
-  "#42a5f5",
-  "#66bb6a",
-  "#ef5350",
-  "#ffa726",
-  "#ab47bc",
-  "#26c6da",
-  "#d4e157",
-  "#ff7043",
-  "#8d6e63",
-  "#78909c",
-  "#26a69a",
-  "#5c6bc0",
-  "#ef9a9a",
-  "#ffe082",
-  "#a5d6a7",
-];
 
 interface Props {
   data: TagDataPoint[];
   activeTags?: string[];
   onTagClick?: (tag: string) => void;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
 }
 
 export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
@@ -128,7 +102,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
             return (
               <Cell
                 key={`cell-${entry.name}-${i}`}
-                fill={BAR_COLORS[i % BAR_COLORS.length]}
+                fill={TAG_CHART_PALETTE[i % TAG_CHART_PALETTE.length]}
                 fillOpacity={hasVisibleActiveTags && !isActive ? 0.45 : 1}
                 stroke={isActive ? "#fff" : "none"}
                 strokeWidth={isActive ? 2 : 0}

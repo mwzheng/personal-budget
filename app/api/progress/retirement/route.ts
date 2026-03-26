@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ ok: true, entries: withCalc });
   } catch (err) {
+    console.error("[/api/progress/retirement GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     const created = await putRetirement(userId, body);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/retirement POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -86,7 +87,7 @@ export async function PUT(request: Request) {
     const updated = await putRetirement(userId, body);
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/retirement PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -127,7 +128,7 @@ export async function DELETE(request: Request) {
     await deleteRetirement(userId, entryId, Number(year));
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/retirement DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

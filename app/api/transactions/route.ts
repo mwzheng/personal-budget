@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
+import { generateId } from "@/lib/utils/generateId";
 
 // Note 2: `GET /api/transactions` returns all transactions for the authenticated
 // user. Authentication is performed by `getUserIdFromRequest`, which validates the
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     // Note 3: Returning a 401 status code tells the client the request failed due
     // to authentication (not a server error). The error string is included in the
     // body for debugging purposes -- in production you may want to sanitize this.
+    console.error("[/api/transactions GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -26,23 +28,19 @@ export async function GET(request: Request) {
 }
 
 // Note 4: `POST /api/transactions` creates a new transaction. If no `id` is
-// provided in the request body, one is generated server-side using `crypto.randomUUID`.
-// This allows clients to omit the id and let the server assign it.
+// provided in the request body, one is generated server-side using the shared
+// `generateId` utility.
 export async function POST(request: Request) {
   try {
     const userId = await getRequestUserId(request);
     const body = await request.json();
     const tx = body || {};
-    if (!tx.id)
-      tx.id =
-        typeof crypto !== "undefined" && (crypto as any).randomUUID
-          ? (crypto as any).randomUUID()
-          : Date.now().toString();
+    if (!tx.id) tx.id = generateId();
     await putTransaction(userId, tx);
     return NextResponse.json({ ok: true, created: tx });
   } catch (err) {
     if (err instanceof Response) return err;
-    console.error(err);
+    console.error("[/api/transactions POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -69,7 +67,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ ok: true, updated: tx });
   } catch (err) {
     if (err instanceof Response) return err;
-    console.error(err);
+    console.error("[/api/transactions PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -113,7 +111,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof Response) return err;
-    console.error(err);
+    console.error("[/api/transactions DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

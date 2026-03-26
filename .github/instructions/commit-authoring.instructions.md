@@ -36,3 +36,30 @@ Notes
 
 - Amending the commit will change the commit SHA for the amended commit. Avoid amending commits that have already been pushed to shared branches without coordinating with others.
 - If Husky hooks are not installed (hooks missing), run `pnpm install` to trigger the repository `prepare` script which runs `husky install`.
+
+## Commit message quality
+
+Every commit message must be meaningful and accurately describe the change it contains.
+
+- **Use conventional commit format**: `<type>(<scope>): <short summary>`
+  - Common types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`
+  - Scope is optional but recommended when targeting a specific area (e.g., `feat(transactions): ...`)
+  - Summary is imperative, present tense, lowercase, no trailing period
+- **Make multiple commits when necessary**: If a session produces logically distinct changes, split them into separate commits rather than bundling everything into one. Each commit should represent a single coherent unit of work.
+- **Avoid vague messages**: Messages like `fix stuff`, `updates`, or `wip` are not acceptable.
+- **Always include the Co-authored-by trailer** when commits are created by or with Copilot assistance:
+  ```
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+  ```
+
+Examples of good commit messages:
+
+```
+feat(transactions): default date to today and category to Need
+
+fix(auth): handle expired token on silent refresh
+
+refactor(api): extract shared error handler into lib/api/errors.ts
+
+docs(instructions): add commit message quality rules
+```

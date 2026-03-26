@@ -14,7 +14,7 @@ export async function DELETE(
     await deleteBudget(userId, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/budgets/:id DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -58,7 +58,7 @@ export async function PUT(
     );
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/budgets/:id PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

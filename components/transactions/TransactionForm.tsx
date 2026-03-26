@@ -22,8 +22,12 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import type { Transaction } from "@/lib/types/types";
+import { generateId } from "@/lib/utils/generateId";
 
 const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
+// Note 2b: Payment method is now a fixed set of options so users pick from a
+// dropdown rather than free-typing. "Credit Card" is listed first as the default.
+const PAYMENT_METHOD_OPTIONS = ["Credit Card", "Cash", "Bank"] as const;
 
 // Note 2: `FormValues` separates the form's internal representation from the
 // `Transaction` type. For example, `amount` is a `string` in the form (so the
@@ -47,16 +51,22 @@ interface FormErrors {
   category?: string;
 }
 
-const DEFAULT_VALUES: FormValues = {
-  date: null,
-  name: "",
-  amount: "",
-  category: "Want",
-  paymentMethod: "",
-  tagsInput: "",
-  tags: [],
-  notes: "",
-};
+// Note 3b: `getDefaultValues` is a factory function (not a plain constant) so
+// that `date` always reflects the *current* day when the modal opens, rather
+// than being frozen to the module-load timestamp. Category defaults to "Need"
+// and payment method defaults to "Credit Card" per UX requirements.
+function getDefaultValues(): FormValues {
+  return {
+    date: new Date(),
+    name: "",
+    amount: "",
+    category: "Need",
+    paymentMethod: "Credit Card",
+    tagsInput: "",
+    tags: [],
+    notes: "",
+  };
+}
 
 // Note 3: `transactionToFormValues` is an adapter function that converts a
 // `Transaction` (server/storage shape) into the local `FormValues` shape.
@@ -95,7 +105,7 @@ interface Props {
 }
 
 export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
-  const [values, setValues] = useState<FormValues>(DEFAULT_VALUES);
+  const [values, setValues] = useState<FormValues>(getDefaultValues);
   const [errors, setErrors] = useState<FormErrors>({});
   // Note 4: `submitted` tracks whether the user has attempted to submit once.
   // Before the first submit, errors are not shown (avoids overwhelming the user
@@ -106,7 +116,7 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
   useEffect(() => {
     if (open) {
       setValues(
-        transaction ? transactionToFormValues(transaction) : DEFAULT_VALUES,
+        transaction ? transactionToFormValues(transaction) : getDefaultValues(),
       );
       setErrors({});
       setSubmitted(false);
@@ -153,16 +163,16 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
     if (Object.keys(errs).length > 0) return;
 
     const saved: Transaction = {
-      // Note 6: `crypto.randomUUID()` generates a UUIDv4 for new transactions.
+      // Note 6: `generateId()` produces a UUIDv4 for new transactions.
       // For edits, the original `id` is preserved so the record can be found
       // in localStorage or DynamoDB for update/delete operations.
-      id: transaction?.id ?? crypto.randomUUID(),
+      id: transaction?.id ?? generateId(),
       name: values.name.trim(),
       amount: parseFloat(values.amount),
       category: values.category as Transaction["category"],
       date: format(values.date!, "yyyy-MM-dd"),
       notes: values.notes.trim(),
-      paymentMethod: values.paymentMethod.trim(),
+      paymentMethod: values.paymentMethod,
       tags: values.tags,
     };
     onSave(saved);
@@ -233,13 +243,20 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
             )}
           </FormControl>
 
-          <TextField
-            label="Payment Method"
-            fullWidth
-            value={values.paymentMethod}
-            onChange={(e) => set("paymentMethod", e.target.value)}
-            placeholder="e.g. Credit Card, Bank, Cash"
-          />
+          <FormControl fullWidth>
+            <InputLabel>Payment Method</InputLabel>
+            <Select
+              label="Payment Method"
+              value={values.paymentMethod}
+              onChange={(e) => set("paymentMethod", e.target.value)}
+            >
+              {PAYMENT_METHOD_OPTIONS.map((m) => (
+                <MenuItem key={m} value={m}>
+                  {m}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <div>
             <TextField

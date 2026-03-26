@@ -1,23 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
-  List,
-  ListItem,
-  ListItemText,
+  Card,
+  CardContent,
+  Chip,
   Typography,
   Stack,
-  Divider,
 } from "@mui/material";
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { RetirementEntry } from "@/lib/types/types";
@@ -32,6 +33,10 @@ interface Props {
   onEntriesChanged?: () => void | Promise<void>;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default function RetirementList({ onEntriesChanged }: Props) {
   // Note 1: RetirementList still owns its CRUD list state locally, but it also
   // notifies the parent page after mutations so sibling charts can refetch.
@@ -40,10 +45,28 @@ export default function RetirementList({ onEntriesChanged }: Props) {
   const [editing, setEditing] = useState<RetirementEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<{
-    entryId: string;
-    year: number;
-  } | null>(null);
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<{ entryId: string; year: number }>({
+    onConfirm: async ({ entryId, year }) => {
+      try {
+        const res = await apiFetch(
+          `/api/progress/retirement?entryId=${encodeURIComponent(entryId)}&year=${encodeURIComponent(String(year))}`,
+          { method: "DELETE" },
+        );
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Delete failed");
+        await fetchEntries();
+        await Promise.resolve(onEntriesChanged?.());
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
+      }
+    },
+  });
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -53,8 +76,8 @@ export default function RetirementList({ onEntriesChanged }: Props) {
       const data = (await res.json()) as RetirementApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
       setEntries(data.entries ?? []);
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -76,25 +99,8 @@ export default function RetirementList({ onEntriesChanged }: Props) {
   };
 
   // Note 2: Delete is a two-step flow: the button sets the candidate, and
-  // confirmDelete performs the actual API call only after the user confirms via
-  // the ConfirmDialog. This replaces the native confirm() for visual consistency.
-  const confirmDelete = async () => {
-    if (!deleteCandidate) return;
-    const { entryId, year } = deleteCandidate;
-    setDeleteCandidate(null);
-    try {
-      const res = await apiFetch(
-        `/api/progress/retirement?entryId=${encodeURIComponent(entryId)}&year=${encodeURIComponent(String(year))}`,
-        { method: "DELETE" },
-      );
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Delete failed");
-      await fetchEntries();
-      await Promise.resolve(onEntriesChanged?.());
-    } catch (err: any) {
-      setError(err.message || String(err));
-    }
-  };
+  // the hook's confirmDelete performs the actual API call only after the user
+  // confirms via the ConfirmDialog.
 
   return (
     <Box>
@@ -132,52 +138,112 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      <List>
-        {entries.map((entry) => (
-          <React.Fragment key={entry.entryId}>
-            <ListItem
-              secondaryAction={
-                <Stack direction="row" spacing={0.75}>
-                  <ActionIconButton
-                    tooltip="Edit"
-                    ariaLabel={`Edit retirement entry for ${entry.year}`}
-                    onClick={() => {
-                      setEditing(entry);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <EditOutlinedIcon fontSize="small" />
-                  </ActionIconButton>
-                  <ActionIconButton
-                    tooltip="Delete"
-                    ariaLabel={`Delete retirement entry for ${entry.year}`}
-                    tone="danger"
-                    onClick={() =>
-                      setDeleteCandidate({
-                        entryId: entry.entryId!,
-                        year: entry.year,
-                      })
-                    }
-                  >
-                    <DeleteOutlineRoundedIcon fontSize="small" />
-                  </ActionIconButton>
+      {/* Note 3: Responsive card grid — single column on mobile (xs),
+          two columns on sm+. Each card surfaces year, start/end amounts,
+          and the computed change with a colour-coded Chip for quick scanning. */}
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(2, minmax(0, 1fr))",
+          },
+        }}
+      >
+        {entries.map((entry) => {
+          const change = Number(
+            entry.change ?? entry.endAmount - entry.startAmount,
+          );
+          const pct = entry.pct;
+
+          // Note 4: Chip colour is derived from the sign of the change so the
+          // user gets an instant positive/negative visual signal.
+          const chipColor: "success" | "error" | "default" =
+            change > 0 ? "success" : change < 0 ? "error" : "default";
+
+          return (
+            <Card key={entry.entryId}>
+              <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                {/* ── Top row: year heading + action buttons ── */}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{ mb: 1.5 }}
+                >
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {entry.year}
+                  </Typography>
+                  <Stack direction="row" spacing={0.75}>
+                    <ActionIconButton
+                      tooltip="Edit"
+                      ariaLabel={`Edit retirement entry for ${entry.year}`}
+                      onClick={() => {
+                        setEditing(entry);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </ActionIconButton>
+                    <ActionIconButton
+                      tooltip="Delete"
+                      ariaLabel={`Delete retirement entry for ${entry.year}`}
+                      tone="danger"
+                      onClick={() =>
+                        requestDelete({
+                          entryId: entry.entryId,
+                          year: entry.year,
+                        })
+                      }
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </ActionIconButton>
+                  </Stack>
                 </Stack>
-              }
-            >
-              <ListItemText
-                primary={`${entry.year} — start: $${Number(entry.startAmount).toLocaleString()} end: $${Number(entry.endAmount).toLocaleString()}`}
-                secondary={`Change: $${Number(entry.change ?? entry.endAmount - entry.startAmount).toLocaleString()} ${entry.pct !== null && entry.pct !== undefined ? `(${entry.pct}%)` : ""}`}
-              />
-            </ListItem>
-            <Divider component="li" />
-          </React.Fragment>
-        ))}
-      </List>
+
+                {/* ── Middle row: start / end amounts side-by-side ── */}
+                <Stack direction="row" spacing={3} sx={{ mb: 1.5 }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Start
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      ${Number(entry.startAmount).toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      End
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      ${Number(entry.endAmount).toLocaleString()}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {/* ── Bottom row: change amount + percentage chip ── */}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Change: ${change.toLocaleString()}
+                  </Typography>
+                  {pct !== null && pct !== undefined ? (
+                    <Chip
+                      label={`${pct}%`}
+                      size="small"
+                      variant="outlined"
+                      color={chipColor}
+                    />
+                  ) : null}
+                </Stack>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </Box>
 
       {entries.length === 0 && !loading ? (
-        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-          No retirement entries yet.
-        </Typography>
+        <EmptyState message="No retirement entries yet." />
       ) : null}
 
       <ConfirmDialog
@@ -185,7 +251,8 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         title="Delete Retirement Entry"
         message="Are you sure you want to delete this retirement entry? This action cannot be undone."
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </Box>

@@ -4,6 +4,7 @@
 // `window` and `localStorage` do not exist.
 "use client";
 
+import { generateId } from "./generateId";
 import type { Transaction } from "../types/types";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
@@ -86,10 +87,9 @@ export function appendTransactions(incoming: Transaction[]): {
       // same transaction within the incoming batch from being added twice (intra-
       // batch deduplication in addition to the cross-batch check above).
       existingKeys.add(key);
-      // Note 10: `crypto.randomUUID()` generates a Version 4 UUID, which is
-      // cryptographically random and practically guaranteed to be unique. This
-      // replaces any placeholder id that may have been assigned by the CSV parser.
-      toAdd.push({ ...t, id: crypto.randomUUID() });
+      // Note 10: ID generation is handled by the shared `generateId` utility,
+      // replacing any placeholder id that may have been assigned by the CSV parser.
+      toAdd.push({ ...t, id: generateId() });
     }
   }
 

@@ -4,16 +4,17 @@
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
-import { apiFetch } from "@/lib/api/apiFetch";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
+import type { SalaryEntry } from "@/lib/types/types";
 
 export default function SalaryForm({
   defaultEntry,
   onSaved,
   onCancel,
 }: {
-  defaultEntry?: any;
-  onSaved?: (e: any) => void;
+  defaultEntry?: SalaryEntry;
+  onSaved?: (entry: SalaryEntry) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   // Note 2: `new Date().getFullYear()` is called once at component initialization,
@@ -24,36 +25,28 @@ export default function SalaryForm({
   );
   const [amount, setAmount] = useState(String(defaultEntry?.amount ?? "0"));
   const [note, setNote] = useState(defaultEntry?.note ?? "");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    submit: apiSubmit,
+    isSubmitting: loading,
+    error,
+  } = useFormSubmit<SalaryEntry>({
+    baseUrl: "/api/salary",
+    onSuccess: onSaved,
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const body: any = {
-        year: Number(sanitizeNumberString(year)),
-        amount: Number(sanitizeNumberString(amount)),
-        note: note?.trim(),
-      };
-      // Note 3: `entryId` is only included in the payload when editing.
-      // The API route needs it to construct the DynamoDB sort key
-      // ("salary#<year>#<entryId>") for the UpdateItem call.
-      if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
-      const res = await apiFetch("/api/salary", {
-        method: defaultEntry?.entryId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Save failed");
-      onSaved?.(data.created || data.updated);
-    } catch (err: any) {
-      setError(err.message || String(err));
-    } finally {
-      setLoading(false);
-    }
+    // Note 3: `entryId` is only included in the payload when editing.
+    // The API route needs it to construct the DynamoDB sort key
+    // ("salary#<year>#<entryId>") for the UpdateItem call.
+    const body: Record<string, unknown> = {
+      year: Number(sanitizeNumberString(year)),
+      amount: Number(sanitizeNumberString(amount)),
+      note: note?.trim(),
+    };
+    if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
+    await apiSubmit(body, Boolean(defaultEntry?.entryId));
   };
 
   return (

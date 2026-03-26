@@ -154,6 +154,19 @@ describe("buildBudgetInsights", () => {
       ]),
     );
   });
+
+  // Note 2: A budget with zero income and zero expenses must not crash or
+  // produce negative savings — it should surface 0 leftover and 0 overspending.
+  it("handles zero income and zero expenses without crashing", () => {
+    const result = buildBudgetInsights({
+      monthlyIncome: 0,
+      expenses: [],
+    });
+
+    expect(result.leftoverSavings).toBe(0);
+    expect(result.overspending).toBe(0);
+    expect(result.totalExpenses).toBe(0);
+  });
 });
 
 describe("normalizeBudgetForEditor", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
@@ -9,7 +9,6 @@ import Typography from "@mui/material/Typography";
 import GoalEditor from "@/components/progress/GoalEditor";
 import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
-import { ProgressYearFilter } from "@/components/progress/ProgressYearFilter";
 import RetirementList from "@/components/ui/RetirementList";
 import SalaryList from "@/components/ui/SalaryList";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -32,7 +31,6 @@ export default function Page() {
   const [retirementEntries, setRetirementEntries] = useState<RetirementEntry[]>(
     [],
   );
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [chartLoading, setChartLoading] = useState(true);
   const [chartError, setChartError] = useState<string | null>(null);
 
@@ -77,28 +75,6 @@ export default function Page() {
     void refreshChartData();
   }, [refreshChartData]);
 
-  const availableYears = useMemo(() => {
-    const years = new Set<string>();
-
-    for (const entry of salaryEntries) {
-      years.add(String(entry.year));
-    }
-
-    for (const entry of retirementEntries) {
-      years.add(String(entry.year));
-    }
-
-    return Array.from(years).sort(
-      (left, right) => Number(left) - Number(right),
-    );
-  }, [retirementEntries, salaryEntries]);
-
-  useEffect(() => {
-    setSelectedYears((currentYears) =>
-      currentYears.filter((year) => availableYears.includes(year)),
-    );
-  }, [availableYears]);
-
   return (
     <Container
       component="main"
@@ -110,7 +86,7 @@ export default function Page() {
       <Typography
         id={PAGE_TITLE_ID}
         component="h1"
-        variant="h4"
+        variant="h5"
         fontWeight={700}
         gutterBottom
       >
@@ -131,18 +107,9 @@ export default function Page() {
         </Paper>
 
         <Paper sx={{ p: 3 }} elevation={1}>
-          <ProgressYearFilter
-            availableYears={availableYears}
-            selectedYears={selectedYears}
-            onChange={setSelectedYears}
-          />
-        </Paper>
-
-        <Paper sx={{ p: 3 }} elevation={1}>
           <ProgressCharts
             salaryEntries={salaryEntries}
             retirementEntries={retirementEntries}
-            selectedYears={selectedYears}
             loading={chartLoading}
             error={chartError}
           />
@@ -171,10 +138,7 @@ export default function Page() {
         </Box>
 
         <Paper sx={{ p: 3 }} elevation={1}>
-          <SalaryList
-            selectedYears={selectedYears}
-            onEntriesChanged={refreshChartData}
-          />
+          <SalaryList onEntriesChanged={refreshChartData} />
         </Paper>
       </Stack>
     </Container>

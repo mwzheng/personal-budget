@@ -21,16 +21,9 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useEffect, useState } from "react";
-import { CategoryType, Transaction } from "@/lib/types/types";
-
-// Note 2: CATEGORY_COLORS maps each CategoryType to a MUI `color` token.
-// MUI `Chip` only accepts a restricted set of named colors. Mapping here keeps
-// the visual encoding consistent with other charts ("error"=red for Needs, etc.).
-const CATEGORY_COLORS: Record<CategoryType, "error" | "info" | "success"> = {
-  Need: "error",
-  Want: "info",
-  Saving: "success",
-};
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
+import { Transaction } from "@/lib/types/types";
+import { CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
 
 type SortField = "date" | "name" | "amount" | "category";
 type SortDir = "asc" | "desc";
@@ -54,10 +47,22 @@ export function TransactionsTable({
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  // Note 3: `deleteTarget` stores the transaction to be deleted so the
-  // confirmation dialog can show its name and amount. Using state (vs a ref)
-  // triggers a render that opens the Dialog when set to a non-null value.
-  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+  // Note 3: The delete confirmation hook manages the two-step delete flow:
+  // clicking Delete sets the candidate, and the ConfirmDialog calls confirmDelete
+  // only after the user explicitly confirms.
+  const {
+    candidate: deleteTarget,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<Transaction>({
+    onConfirm: async (item) => {
+      if (onDelete) {
+        await onDelete(item.id);
+      }
+    },
+  });
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -158,7 +163,7 @@ export function TransactionsTable({
                     <Chip
                       label={t.category}
                       size="small"
-                      color={CATEGORY_COLORS[t.category]}
+                      color={CATEGORY_CHIP_COLORS[t.category]}
                     />
                   </TableCell>
                   <TableCell>{t.paymentMethod}</TableCell>
@@ -226,7 +231,7 @@ export function TransactionsTable({
                             tooltip="Delete"
                             ariaLabel={`Delete transaction ${t.name}`}
                             tone="danger"
-                            onClick={() => setDeleteTarget(t)}
+                            onClick={() => requestDelete(t)}
                           >
                             <DeleteOutlineRoundedIcon fontSize="small" />
                           </ActionIconButton>
@@ -261,13 +266,9 @@ export function TransactionsTable({
         title="Delete Transaction?"
         message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? This cannot be undone.`}
         confirmLabel="Delete"
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          if (deleteTarget && onDelete) {
-            onDelete(deleteTarget.id);
-          }
-          setDeleteTarget(null);
-        }}
+        loading={isDeleting}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
       />
     </>
   );

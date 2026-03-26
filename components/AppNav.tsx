@@ -125,7 +125,7 @@ export function AppNav() {
       elevation={0}
       sx={{
         borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-        bgcolor: "#1a1a1a",
+        bgcolor: "background.default",
       }}
     >
       <Toolbar>

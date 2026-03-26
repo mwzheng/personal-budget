@@ -465,7 +465,7 @@ export default function ReportsPage() {
           <Typography
             id={PAGE_TITLE_ID}
             component="h1"
-            variant="h4"
+            variant="h5"
             fontWeight={700}
           >
             Spending Reports
@@ -537,7 +537,7 @@ export default function ReportsPage() {
                 {
                   label: "Total Spending",
                   value: fmt(agg.spendingAmount),
-                  color: "#ddd",
+                  color: "text.primary",
                 },
                 {
                   label: "Needs",

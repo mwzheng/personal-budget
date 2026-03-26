@@ -16,50 +16,42 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { SalaryEntry } from "@/lib/types/types";
 
-function formatCurrency(value: number) {
-  return `$${Number(value).toLocaleString()}`;
-}
+type SalaryTooltipProps = TooltipProps<number, string>;
+type SalaryTooltipEntry = NonNullable<SalaryTooltipProps["payload"]>[number];
 
 export default function SalaryChart({
   data,
   loading = false,
-  selectedYears = [],
 }: {
   data: SalaryEntry[];
   loading?: boolean;
-  selectedYears?: string[];
 }) {
-  // Note 2: The year filter is chart-only. The list can keep showing the full
-  // salary history while the graph focuses on the subset the user selected.
+  // Note 2: Chart always shows the full salary history (year filter was removed).
   const chartData = React.useMemo(() => {
-    const selectedYearSet = new Set(selectedYears);
-    const filtered =
-      selectedYearSet.size === 0
-        ? data
-        : data.filter((entry) => selectedYearSet.has(String(entry.year)));
-
-    return [...filtered]
+    return [...data]
       .sort((left, right) => left.year - right.year)
       .map((entry) => ({
         name: String(entry.year),
         amount: entry.amount,
         yoy: entry.yoy ?? 0,
       }));
-  }, [data, selectedYears]);
+  }, [data]);
 
-  const tooltipContent = ({ active, label, payload }: any) => {
+  const tooltipContent = ({ active, label, payload }: SalaryTooltipProps) => {
     if (!active || !payload?.length) return null;
     const rows = payload
       .filter(
-        (entry: any) =>
-          entry && entry.value !== null && entry.value !== undefined,
+        (entry): entry is SalaryTooltipEntry =>
+          Boolean(entry) && entry.value !== null && entry.value !== undefined,
       )
-      .map((entry: any) => {
+      .map((entry) => {
         const labelText =
           entry.dataKey === "amount"
             ? "Salary"
@@ -69,13 +61,15 @@ export default function SalaryChart({
         const value =
           entry.dataKey === "yoy"
             ? `${Number(entry.value ?? 0).toFixed(1)}%`
-            : formatCurrency(Number(entry.value ?? 0));
+            : formatCurrencyWhole(Number(entry.value ?? 0));
         return { label: labelText, value, color: entry.color };
       });
 
     return rows.length > 0 ? (
       <ChartTooltipCard
-        title={typeof label === "string" ? label : undefined}
+        title={
+          label !== undefined && label !== null ? String(label) : undefined
+        }
         rows={rows}
       />
     ) : null;
@@ -104,20 +98,18 @@ export default function SalaryChart({
         }}
       >
         <Typography color="text.secondary">
-          {selectedYears.length > 0
-            ? "No salary data for the selected years."
-            : "Add salary history to see the chart."}
+          Add salary history to see the chart.
         </Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", height: 320, mb: 2 }}>
+    <Box sx={{ width: "100%", height: 320, mb: 2, mx: "auto" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={chartData}
-          margin={{ top: 10, right: 60, left: 10, bottom: 5 }}
+          margin={{ top: 10, right: 40, left: 40, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" tick={{ fill: "#aaa" }} />

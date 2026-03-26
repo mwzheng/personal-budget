@@ -6,14 +6,14 @@ const { getPayloadFromRequestMock } = vi.hoisted(() => ({
   getPayloadFromRequestMock: vi.fn(),
 }));
 
-vi.mock("@/lib/auth2", () => ({
+// Note 2: requestUser.ts imports `getPayloadFromRequest` from the consolidated
+// `@/lib/auth/auth` module. The top-level `@/lib/auth2` re-export is also
+// mocked so any transitive resolution still hits the same fake.
+vi.mock("@/lib/auth/auth", () => ({
   getPayloadFromRequest: getPayloadFromRequestMock,
 }));
 
-// Note 2: requestUser.ts may resolve auth2 through either the top-level shim or
-// the canonical auth/auth2 module depending on nearby refactors, so the test
-// mocks both paths to stay aligned with whichever import shape the file uses.
-vi.mock("@/lib/auth/auth2", () => ({
+vi.mock("@/lib/auth2", () => ({
   getPayloadFromRequest: getPayloadFromRequestMock,
 }));
 
@@ -61,7 +61,7 @@ describe("request user helpers", () => {
 
   it("surfaces JWT failures as a 401 response", async () => {
     mockedGetPayloadFromRequest.mockRejectedValue(
-      new Error("No Authorization header"),
+      new Error("Missing or invalid Authorization header"),
     );
 
     let thrown: unknown;
@@ -78,7 +78,7 @@ describe("request user helpers", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "unauthorized",
-        message: "No Authorization header",
+        message: "Missing or invalid Authorization header",
       },
     });
   });

@@ -152,4 +152,22 @@ describe("contact api route", () => {
       },
     });
   });
+
+  // Note 2: When SES rejects the message the route must return 502 (Bad Gateway)
+  // rather than leaking a 500 with internal AWS error details.
+  it("returns 502 when SES fails to deliver the message", async () => {
+    sendMock.mockRejectedValue(new Error("SES connection error"));
+
+    const response = await POST(
+      buildContactRequest({
+        name: "Taylor",
+        email: "taylor@example.com",
+        subject: "Feature idea",
+        message: "I have a thoughtful suggestion for the public roadmap.",
+      }),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({ ok: false });
+  });
 });

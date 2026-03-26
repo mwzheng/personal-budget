@@ -132,6 +132,46 @@ describe("reports routes user scoping", () => {
     expect(csv).not.toContain('"Dining"');
   });
 
+  // Note 2: The GET /api/reports route re-throws Response objects thrown by
+  // getRequestUserId so a 401 from auth flows through to the caller unchanged.
+  it("returns 401 when the reports request is not authenticated", async () => {
+    mockedGetRequestUserId.mockRejectedValue(
+      new Response(
+        JSON.stringify({
+          error: { code: "unauthorized", message: "Missing token" },
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    const response = await getReports(
+      new Request("http://localhost/api/reports") as any,
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "unauthorized" },
+    });
+  });
+
+  it("returns an empty result set when the user has no transactions", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-empty");
+    mockedGetUserTransactions.mockResolvedValue([]);
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?page=1&pageSize=10&includeAggregates=true",
+      ) as any,
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 0,
+      transactions: [],
+      aggregates: expect.objectContaining({ totalAmount: 0 }),
+    });
+  });
+
   it("imports CSV rows into the authenticated user's account", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-c");
     mockedPutTransaction.mockResolvedValue({} as never);

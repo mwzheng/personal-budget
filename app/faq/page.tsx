@@ -175,7 +175,7 @@ export default function FaqPage() {
               }}
             >
               <Box sx={{ maxWidth: 640 }}>
-                <Typography id="faq-list-heading" component="h2" variant="h4">
+                <Typography id="faq-list-heading" component="h2" variant="h5">
                   Frequently asked questions
                 </Typography>
                 <Typography

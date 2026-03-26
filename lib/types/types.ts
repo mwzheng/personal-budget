@@ -24,6 +24,11 @@ export interface Transaction {
   // `Array<string>`. Tags are stored as an array, allowing a single transaction
   // to belong to multiple categories like "groceries" and "household".
   tags: string[];
+  // Note 5b: createdAt/updatedAt are DynamoDB metadata fields stored with every
+  // item. They are optional on the TypeScript type because older records may not
+  // carry them, and the client-side form state does not need to track them.
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Note 6: SalaryEntry represents one stored salary record. `yoy` is optional
@@ -35,10 +40,13 @@ export interface SalaryEntry {
   amount: number;
   note?: string;
   yoy?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Note 7: RetirementEntry keeps the raw yearly balances plus optional derived
 // fields (`change`, `pct`) that the retirement API enriches for list rendering.
+// `createdAt`/`updatedAt` are optional for parity with the persisted Dynamo rows.
 export interface RetirementEntry {
   entryId: string;
   year: number;
@@ -46,6 +54,8 @@ export interface RetirementEntry {
   endAmount: number;
   change?: number;
   pct?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Note 8: MilestoneEntry supports either a calendar-year milestone, an age
@@ -56,6 +66,32 @@ export interface MilestoneEntry {
   amount: number;
   year: number | null;
   age: number | null;
+  note?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Note 8b: Goals are reused across the API routes, forms, and list components.
+// Keeping the optional progress fields together here avoids the previous pattern
+// where each file re-declared a slightly different "goal-like" shape.
+export interface GoalEta {
+  // Note 8c: API responses are serialized as JSON, and JSON would coerce
+  // `Infinity` to `null`. Modeling "unreachable" as `null` keeps the transport
+  // format honest and lets clients distinguish a real month count from "no ETA".
+  months: number | null;
+  projectedDate: string | null;
+}
+
+export interface Goal {
+  goalId?: string;
+  name: string;
+  targetAmount: number;
+  currentSaved?: number;
+  monthlyContribution?: number;
+  expectedAnnualReturn?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  eta?: GoalEta | null;
 }
 
 // Note 9: FilterParams is used by the aggregations layer and the reports API to

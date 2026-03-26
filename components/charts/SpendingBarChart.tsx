@@ -19,6 +19,8 @@ import { format, parseISO } from "date-fns";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import { formatCurrency } from "@/lib/utils/format";
 import { TimeseriesPoint } from "@/lib/types/types";
 
 // Note 2: `formatMonth` converts the "YYYY-MM" period string into a short
@@ -38,13 +40,6 @@ function formatMonth(period: string): string {
 function formatDollar(value: number): string {
   if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
   return `$${value.toFixed(0)}`;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
 }
 
 interface Props {
@@ -70,9 +65,9 @@ export function SpendingBarChart({ data }: Props) {
     label: formatMonth(entry.period),
   }));
   const legendPayload = [
-    { value: "Need", color: "#ef5350" },
-    { value: "Want", color: "#42a5f5" },
-    { value: "Saving", color: "#66bb6a" },
+    { value: "Need", color: CATEGORY_HEX_COLORS.Need },
+    { value: "Want", color: CATEGORY_HEX_COLORS.Want },
+    { value: "Saving", color: CATEGORY_HEX_COLORS.Saving },
   ] as const;
 
   return (
@@ -128,21 +123,21 @@ export function SpendingBarChart({ data }: Props) {
             <Bar
               dataKey="Saving"
               stackId="a"
-              fill="#66bb6a"
+              fill={CATEGORY_HEX_COLORS.Saving}
               name="Saving"
               activeBar={false}
             />
             <Bar
               dataKey="Need"
               stackId="a"
-              fill="#ef5350"
+              fill={CATEGORY_HEX_COLORS.Need}
               name="Need"
               activeBar={false}
             />
             <Bar
               dataKey="Want"
               stackId="a"
-              fill="#42a5f5"
+              fill={CATEGORY_HEX_COLORS.Want}
               name="Want"
               activeBar={false}
             >

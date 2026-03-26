@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -29,47 +30,32 @@ interface ProgressChartRow {
 interface Props {
   salaryEntries: SalaryEntry[];
   retirementEntries: RetirementEntry[];
-  selectedYears?: string[];
   loading?: boolean;
   error?: string | null;
 }
 
+type ProgressTooltipProps = TooltipProps<number, string>;
+type ProgressTooltipEntry = NonNullable<
+  ProgressTooltipProps["payload"]
+>[number];
+
 export default function ProgressCharts({
   salaryEntries,
   retirementEntries,
-  selectedYears = [],
   loading = false,
   error = null,
 }: Props) {
   const theme = useTheme();
   const data = useMemo(() => {
-    const selectedYearSet = new Set(selectedYears);
-
-    // Note 2: Filtering before the merge keeps the X-axis stable for both lines.
-    // That means a selected year disappears from both salary and retirement at the
-    // same time instead of leaving partial rows behind.
-    const filteredRetirementEntries =
-      selectedYearSet.size === 0
-        ? retirementEntries
-        : retirementEntries.filter((entry) =>
-            selectedYearSet.has(String(entry.year)),
-          );
-    const filteredSalaryEntries =
-      selectedYearSet.size === 0
-        ? salaryEntries
-        : salaryEntries.filter((entry) =>
-            selectedYearSet.has(String(entry.year)),
-          );
-
-    // Note 3: Build maps by year first so the merge stays linear instead of
+    // Note 2: Build maps by year first so the merge stays linear instead of
     // repeatedly searching the arrays for matching years.
     const retirementByYear = new Map<number, number>();
-    for (const entry of filteredRetirementEntries) {
+    for (const entry of retirementEntries) {
       retirementByYear.set(entry.year, entry.endAmount);
     }
 
     const salaryByYear = new Map<number, number>();
-    for (const entry of filteredSalaryEntries) {
+    for (const entry of salaryEntries) {
       salaryByYear.set(entry.year, entry.amount);
     }
 
@@ -84,26 +70,28 @@ export default function ProgressCharts({
         salary: salaryByYear.get(year) ?? null,
       }),
     );
-  }, [retirementEntries, salaryEntries, selectedYears]);
+  }, [retirementEntries, salaryEntries]);
 
-  const tooltipContent = ({ active, label, payload }: any) => {
+  const tooltipContent = ({ active, label, payload }: ProgressTooltipProps) => {
     if (!active || !payload?.length) return null;
     const rows = payload
       .filter(
-        (entry: any) =>
-          entry && entry.value !== null && entry.value !== undefined,
+        (entry): entry is ProgressTooltipEntry =>
+          Boolean(entry) && entry.value !== null && entry.value !== undefined,
       )
-      .map((entry: any) => {
+      .map((entry) => {
         const labelText = entry.name ?? entry.dataKey;
         const value =
           typeof entry.value === "number"
             ? `$${Number(entry.value).toLocaleString()}`
-            : entry.value;
+            : String(entry.value ?? "");
         return { label: String(labelText), value, color: entry.color };
       });
     return rows.length > 0 ? (
       <ChartTooltipCard
-        title={typeof label === "string" ? label : undefined}
+        title={
+          label !== undefined && label !== null ? String(label) : undefined
+        }
         rows={rows}
       />
     ) : null;
@@ -141,9 +129,7 @@ export default function ProgressCharts({
             }}
           >
             <Typography color="text.secondary">
-              {selectedYears.length > 0
-                ? "No progress data for the selected years."
-                : "Add salary or retirement history to see progress over time."}
+              Add salary or retirement history to see progress over time.
             </Typography>
           </Box>
         ) : (

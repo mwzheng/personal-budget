@@ -98,4 +98,43 @@ describe("google analytics host policy", () => {
       cookieDomain: "personal-budget-git-main.vercel.app",
     });
   });
+
+  // Note 2: When no measurement ID is configured the runtime config must be
+  // fully disabled regardless of the current hostname so no GA network call is
+  // ever made from a misconfigured deployment.
+  it("returns a fully disabled config when NEXT_PUBLIC_GA_ID is not set", () => {
+    delete process.env.NEXT_PUBLIC_GA_ID;
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+
+    expect(buildGoogleAnalyticsRuntimeConfig("porridgebudget.com")).toEqual({
+      enabled: false,
+      measurementId: null,
+      cookieDomain: null,
+    });
+  });
+
+  // Note 3: IPv4 addresses and bare hostnames without dots must use the
+  // host-only cookie scope ("none") because browsers reject a cookie domain
+  // that is an IP address or contains no dot separator.
+  it("uses a host-only cookie scope for IPv4 address hosts", () => {
+    process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+
+    expect(buildGoogleAnalyticsRuntimeConfig("192.168.1.100")).toEqual({
+      enabled: true,
+      measurementId: "G-TEST123",
+      cookieDomain: "none",
+    });
+  });
+
+  it("uses a host-only cookie scope for bare hostnames without a dot", () => {
+    process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+
+    expect(buildGoogleAnalyticsRuntimeConfig("devbox")).toEqual({
+      enabled: true,
+      measurementId: "G-TEST123",
+      cookieDomain: "none",
+    });
+  });
 });

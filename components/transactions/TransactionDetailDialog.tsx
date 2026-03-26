@@ -13,18 +13,12 @@ import Typography from "@mui/material/Typography";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { useEffect, useState, type ReactNode } from "react";
 
-import type { CategoryType, Transaction } from "@/lib/types/types";
+import type { Transaction } from "@/lib/types/types";
 import {
   formatTransactionAmount,
   formatTransactionLongDate,
 } from "@/lib/utils/transaction-calendar";
-
-const CATEGORY_CHIP_COLORS: Record<CategoryType, "error" | "info" | "success"> =
-  {
-    Need: "error",
-    Want: "info",
-    Saving: "success",
-  };
+import { CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
 
 interface DetailRowProps {
   label: string;

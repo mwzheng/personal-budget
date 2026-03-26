@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     await upsertUserProfile(payload);
     const userId = getUserIdFromPayload(payload);
     const entries = await getUserSalary(userId);
+
     // Note 2: Sorting by year ascending ensures the YoY calculation below can
     // always compare entry[i] against entry[i-1] safely without re-sorting.
     const sorted = [...entries].sort((a, b) => a.year - b.year);
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ ok: true, entries: withYoY });
   } catch (err) {
+    console.error("[/api/salary GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
     const created = await putSalary(userId, body);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/salary POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -96,7 +98,7 @@ export async function PUT(request: Request) {
     const updated = await putSalary(userId, body);
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/salary PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -143,7 +145,7 @@ export async function DELETE(request: Request) {
     await deleteSalary(userId, entryId, Number(year));
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/salary DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

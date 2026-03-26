@@ -3,6 +3,7 @@
 // in one place and lets GoalForm remain a pure controlled form.
 "use client";
 import React, { useEffect, useState } from "react";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
@@ -17,23 +18,15 @@ import {
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { apiFetch } from "@/lib/api/apiFetch";
+import type { Goal } from "@/lib/types/types";
 
-// Note 2: The local `Goal` type mirrors the server response shape. Having a
-// local type decouples GoalList from the shared `lib/types` Goal interface,
-// allowing the server to add computed fields (like `eta`) that the shared type
-// may not include.
-type Goal = {
-  goalId?: string;
-  name: string;
-  targetAmount: number;
-  currentSaved?: number;
-  monthlyContribution?: number;
-  expectedAnnualReturn?: number;
-  eta?: { months: number; projectedDate: string | null } | null;
-};
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 export default function GoalList() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -41,7 +34,27 @@ export default function GoalList() {
   const [editing, setEditing] = useState<Goal | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<string>({
+    onConfirm: async (goalId) => {
+      try {
+        const res = await apiFetch(
+          "/api/goals?goalId=" + encodeURIComponent(goalId),
+          { method: "DELETE" },
+        );
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Delete failed");
+        fetchGoals();
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
+      }
+    },
+  });
 
   const fetchGoals = async () => {
     setLoading(true);
@@ -51,8 +64,8 @@ export default function GoalList() {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Failed to load goals");
       setGoals(data.goals ?? []);
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -75,24 +88,8 @@ export default function GoalList() {
   };
 
   // Note 5: Delete is a two-step flow: the button sets the candidate goalId,
-  // and confirmDelete performs the actual API call only after the user confirms
-  // via the ConfirmDialog. Replaces the native confirm() for visual consistency.
-  const confirmDelete = async () => {
-    if (!deleteCandidate) return;
-    const goalId = deleteCandidate;
-    setDeleteCandidate(null);
-    try {
-      const res = await apiFetch(
-        "/api/goals?goalId=" + encodeURIComponent(goalId),
-        { method: "DELETE" },
-      );
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Delete failed");
-      fetchGoals();
-    } catch (err: any) {
-      setError(err.message || String(err));
-    }
-  };
+  // and the hook's confirmDelete performs the actual API call only after the
+  // user confirms via the ConfirmDialog.
 
   return (
     <Box>
@@ -102,7 +99,7 @@ export default function GoalList() {
         alignItems="center"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h4">Goals</Typography>
+        <Typography variant="h5">Goals</Typography>
         <Button
           variant="contained"
           onClick={() => {
@@ -130,8 +127,8 @@ export default function GoalList() {
       {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       <List>
-        {goals.map((g) => (
-          <React.Fragment key={g.goalId}>
+        {goals.map((g, index) => (
+          <React.Fragment key={g.goalId ?? `goal-${index}`}>
             <ListItem
               secondaryAction={
                 <Stack direction="row" spacing={0.75}>
@@ -149,7 +146,7 @@ export default function GoalList() {
                     tooltip="Delete"
                     ariaLabel={`Delete goal ${g.name}`}
                     tone="danger"
-                    onClick={() => setDeleteCandidate(g.goalId ?? null)}
+                    onClick={() => requestDelete(g.goalId ?? "")}
                   >
                     <DeleteOutlineRoundedIcon fontSize="small" />
                   </ActionIconButton>
@@ -159,12 +156,12 @@ export default function GoalList() {
               <ListItemText
                 primary={`${g.name} — $${Number(g.currentSaved ?? 0).toLocaleString()} / $${Number(g.targetAmount).toLocaleString()}`}
                 secondary={
-                  // Note 6: `eta.months === Infinity` occurs when the monthly
-                  // contribution is zero (or the goal can never be reached). The
-                  // UI shows "—" instead of "Infinity months" to avoid confusing
-                  // the user. This mirrors the same guard in `lib/goals.ts`.
+                  // Note 6: Unreachable goals come back as `eta.months = null`
+                  // because JSON transport cannot preserve `Infinity`. The UI
+                  // still renders the same em dash fallback so users do not see
+                  // a misleading or implementation-specific value.
                   g.eta
-                    ? `ETA: ${g.eta.months === Infinity ? "—" : g.eta.months + " months"}${g.eta.projectedDate ? " (" + new Date(g.eta.projectedDate).toLocaleDateString() + ")" : ""}`
+                    ? `ETA: ${g.eta.months == null ? "—" : g.eta.months + " months"}${g.eta.projectedDate ? " (" + new Date(g.eta.projectedDate).toLocaleDateString() + ")" : ""}`
                     : ""
                 }
               />
@@ -174,18 +171,15 @@ export default function GoalList() {
         ))}
       </List>
 
-      {goals.length === 0 && !loading && (
-        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-          No goals yet.
-        </Typography>
-      )}
+      {goals.length === 0 && !loading && <EmptyState message="No goals yet." />}
 
       <ConfirmDialog
         open={Boolean(deleteCandidate)}
         title="Delete Goal"
         message="Are you sure you want to delete this goal? This action cannot be undone."
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </Box>
