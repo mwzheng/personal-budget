@@ -1,7 +1,7 @@
 // Note 1: This module centralizes how API routes resolve the "current user".
 // Keeping the rules in one file avoids subtle drift where some routes require a
 // Cognito token while others silently fall back to demo behavior.
-import { getPayloadFromRequest as getPayloadFromJwt } from "./auth2";
+import { getPayloadFromRequest as getPayloadFromJwt } from "./auth";
 
 export const DEMO_USER_ID = "local-demo";
 

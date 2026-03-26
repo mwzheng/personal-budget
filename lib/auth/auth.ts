@@ -1,9 +1,23 @@
-// Note 1: `lib/auth.ts` remains the compatibility layer for routes that only
-// need the authenticated user's `sub`. It now shares the same verification
-// strategy as `lib/auth2.ts` so access tokens and ID tokens resolve the same
-// user identity instead of diverging by route family.
+/**
+ * Note 1: Consolidated Cognito JWT verification module.
+ *
+ * This is the single source of truth for server-side token verification.
+ * It accepts both access tokens and ID tokens by first attempting strict
+ * audience validation and then falling back to issuer-only verification
+ * when the `aud` claim is absent or mismatched (common with Cognito access
+ * tokens). Three helpers are exported:
+ *
+ * - `verifyCognitoToken`  — low-level: verifies a raw JWT string.
+ * - `getUserIdFromRequest` — extracts the `sub` claim from an HTTP request.
+ * - `getPayloadFromRequest` — returns the full verified payload from a request.
+ *
+ * Previously this logic was duplicated across `auth.ts` and `auth2.ts`.
+ * The two files were merged because they shared identical verification logic;
+ * the only difference was `getPayloadFromRequest` living exclusively in auth2.
+ */
 import { JWTPayload } from "jose";
 import { verifyCognitoJwt } from "./cognitoAuth";
+import { parseBearerToken } from "./parseAuthHeader";
 
 // Note 2: Environment variables are read at module initialization time (when the
 // file is first imported). Prefer reading them once rather than inside every
@@ -67,15 +81,30 @@ export async function verifyCognitoToken(token: string): Promise<JWTPayload> {
 export async function getUserIdFromRequest(req: Request): Promise<string> {
   const auth =
     req.headers.get("authorization") || req.headers.get("Authorization") || "";
-  if (!auth) throw new Error("No Authorization header");
-  // Note 4: The regex `^Bearer (.+)$` captures everything after "Bearer " into
-  // group 1. The `i` flag makes the match case-insensitive so both "Bearer" and
-  // "bearer" are accepted, following the RFC 6750 spec.
-  const match = auth.match(/^Bearer (.+)$/i);
-  if (!match) throw new Error("Invalid Authorization header");
-  const token = match[1];
+  // Note 4: Bearer parsing is handled by the shared `parseBearerToken` helper
+  // in `lib/auth/parseAuthHeader.ts`, which follows the RFC 6750 spec.
+  const token = parseBearerToken(auth);
+  if (!token) throw new Error("Missing or invalid Authorization header");
   const payload = await verifyCognitoToken(token);
   const sub = (payload && (payload as any).sub) || "";
   if (!sub) throw new Error("Token missing subject (sub) claim");
   return String(sub);
+}
+
+/**
+ * Note 5: Returns the full verified JWT payload from the request's
+ * Authorization header. Useful when callers need claims beyond `sub`
+ * (e.g., email, name, custom attributes) for user profile upserts or
+ * audit logging. For routes that only need the user ID, prefer
+ * `getUserIdFromRequest` to keep the call-site intent explicit.
+ */
+export async function getPayloadFromRequest(
+  req: Request,
+): Promise<Record<string, unknown>> {
+  const auth =
+    req.headers.get("authorization") || req.headers.get("Authorization") || "";
+  const token = parseBearerToken(auth);
+  if (!token) throw new Error("Missing or invalid Authorization header");
+  const payload = await verifyCognitoToken(token);
+  return payload as Record<string, unknown>;
 }
