@@ -22,6 +22,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import type { Transaction } from "@/lib/types/types";
+import { generateId } from "@/lib/utils/generateId";
 
 const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
 // Note 2b: Payment method is now a fixed set of options so users pick from a
@@ -162,10 +163,10 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
     if (Object.keys(errs).length > 0) return;
 
     const saved: Transaction = {
-      // Note 6: `crypto.randomUUID()` generates a UUIDv4 for new transactions.
+      // Note 6: `generateId()` produces a UUIDv4 for new transactions.
       // For edits, the original `id` is preserved so the record can be found
       // in localStorage or DynamoDB for update/delete operations.
-      id: transaction?.id ?? crypto.randomUUID(),
+      id: transaction?.id ?? generateId(),
       name: values.name.trim(),
       amount: parseFloat(values.amount),
       category: values.category as Transaction["category"],

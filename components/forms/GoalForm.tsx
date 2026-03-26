@@ -7,15 +7,7 @@ import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
-
-type Goal = {
-  goalId?: string;
-  name: string;
-  targetAmount: number;
-  currentSaved?: number;
-  monthlyContribution?: number;
-  expectedAnnualReturn?: number;
-};
+import type { Goal } from "@/lib/types/types";
 
 export default function GoalForm({
   defaultGoal,
@@ -23,7 +15,7 @@ export default function GoalForm({
   onCancel,
 }: {
   defaultGoal?: Goal;
-  onSaved?: (g: any) => void;
+  onSaved?: (goal: Goal) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   // Note 2: Numeric fields are stored as strings in component state so they
@@ -50,7 +42,7 @@ export default function GoalForm({
     submit: apiSubmit,
     isSubmitting: loading,
     error,
-  } = useFormSubmit({ baseUrl: "/api/goals", onSuccess: onSaved });
+  } = useFormSubmit<Goal>({ baseUrl: "/api/goals", onSuccess: onSaved });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

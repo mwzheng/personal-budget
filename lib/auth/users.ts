@@ -1,51 +1,68 @@
 // Note: Simple user profile upsert/get helpers. Uses a dedicated users table
 // when available (DYNAMODB_USERS_TABLE or USERS_TABLE) and falls back to the
 // main DYNAMODB_TABLE if necessary.
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  GetCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { getDocClient } from "../api/dynamoClient";
 
 const USERS_TABLE =
   process.env.DYNAMODB_USERS_TABLE ||
   process.env.USERS_TABLE ||
   process.env.DYNAMODB_TABLE ||
   "";
-let docClient: DynamoDBDocumentClient | null = null;
 
-function getDocClient(): DynamoDBDocumentClient | null {
-  if (docClient) return docClient;
-  if (!USERS_TABLE) return null;
-  const client = new DynamoDBClient({});
-  docClient = DynamoDBDocumentClient.from(client);
-  return docClient;
+interface UserProfileRecord {
+  pk: string;
+  sk: string;
+  userId: string;
+  email: string | null;
+  name: string | null;
+  given_name: string | null;
+  family_name: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 
-export async function upsertUserProfile(payload: Record<string, any>) {
-  const client = getDocClient();
+function readStringClaim(
+  payload: Record<string, unknown>,
+  key: string,
+): string | undefined {
+  const value = payload[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+export async function upsertUserProfile(
+  payload: Record<string, unknown>,
+): Promise<UserProfileRecord | null> {
+  const client = getDocClient(USERS_TABLE);
   if (!client) return null;
-  const sub = payload.sub || payload["cognito:username"] || payload.username;
+  const sub =
+    readStringClaim(payload, "sub") ??
+    readStringClaim(payload, "cognito:username") ??
+    readStringClaim(payload, "username");
   if (!sub) return null;
   const now = new Date().toISOString();
-  const item = {
+  const item: UserProfileRecord = {
     pk: `user#${sub}`,
     sk: `profile#${sub}`,
     userId: sub,
-    email: payload.email || null,
-    name: payload.name || payload.given_name || null,
-    given_name: payload.given_name || null,
-    family_name: payload.family_name || null,
+    email: readStringClaim(payload, "email") ?? null,
+    name:
+      readStringClaim(payload, "name") ??
+      readStringClaim(payload, "given_name") ??
+      null,
+    given_name: readStringClaim(payload, "given_name") ?? null,
+    family_name: readStringClaim(payload, "family_name") ?? null,
     updatedAt: now,
-    createdAt: payload.createdAt || now,
-  } as const;
+    createdAt: readStringClaim(payload, "createdAt") ?? now,
+  };
   await client.send(new PutCommand({ TableName: USERS_TABLE, Item: item }));
   return item;
 }
 
-export async function getUserProfile(userId: string) {
-  const client = getDocClient();
+export async function getUserProfile(
+  userId: string,
+): Promise<UserProfileRecord | null> {
+  const client = getDocClient(USERS_TABLE);
   if (!client) return null;
   const res = await client.send(
     new GetCommand({
@@ -53,5 +70,5 @@ export async function getUserProfile(userId: string) {
       Key: { pk: `user#${userId}`, sk: `profile#${userId}` },
     }),
   );
-  return (res as any).Item || null;
+  return (res.Item as UserProfileRecord | undefined) ?? null;
 }

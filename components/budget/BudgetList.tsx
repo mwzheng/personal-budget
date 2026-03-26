@@ -9,6 +9,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
@@ -20,11 +21,13 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
 
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { apiFetch } from "@/lib/api/apiFetch";
 import {
   normalizeBudgetForEditor,
   sortSavedBudgets,
 } from "@/lib/utils/budget-planner";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 import { SavedBudget } from "@/lib/types/types";
 
 interface Props {
@@ -33,14 +36,6 @@ interface Props {
   onBudgetsLoaded?: (budgets: SavedBudget[]) => void;
   onLoadingChange?: (loading: boolean) => void;
   reloadKey?: number;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
 }
 
 export function BudgetList({
@@ -53,10 +48,43 @@ export function BudgetList({
   const [budgets, setBudgets] = useState<SavedBudget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<{ id: string; name: string }>({
+    onConfirm: async (item) => {
+      try {
+        const response = await apiFetch(`/api/budgets/${item.id}`, {
+          method: "DELETE",
+        });
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : null;
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error?.message ?? data?.error ?? "Delete failed",
+          );
+        }
+
+        setBudgets((current) => {
+          const nextBudgets = current.filter(
+            (budget) => budget.budgetId !== item.id,
+          );
+          onBudgetsLoaded?.(nextBudgets);
+          return nextBudgets;
+        });
+      } catch (caughtError) {
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Failed to delete budget.",
+        );
+      }
+    },
+  });
 
   const loadBudgets = useCallback(async () => {
     setLoading(true);
@@ -100,40 +128,6 @@ export function BudgetList({
     // without forcing this component to know why the list changed.
   }, [loadBudgets, reloadKey]);
 
-  async function confirmDelete() {
-    if (!deleteCandidate) {
-      return;
-    }
-
-    try {
-      const response = await apiFetch(`/api/budgets/${deleteCandidate.id}`, {
-        method: "DELETE",
-      });
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : null;
-
-      if (!response.ok) {
-        throw new Error(data?.error?.message ?? data?.error ?? "Delete failed");
-      }
-
-      setBudgets((current) => {
-        const nextBudgets = current.filter(
-          (budget) => budget.budgetId !== deleteCandidate.id,
-        );
-        onBudgetsLoaded?.(nextBudgets);
-        return nextBudgets;
-      });
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Failed to delete budget.",
-      );
-    } finally {
-      setDeleteCandidate(null);
-    }
-  }
-
   return (
     <div>
       {error ? (
@@ -148,13 +142,10 @@ export function BudgetList({
         ) : null}
 
         {!loading && budgets.length === 0 ? (
-          <Typography
+          <EmptyState
+            message="Save a budget to reuse the same expense plan later."
             variant="body2"
-            color="text.secondary"
-            sx={{ py: 2, textAlign: "center" }}
-          >
-            Save a budget to reuse the same expense plan later.
-          </Typography>
+          />
         ) : null}
 
         {budgets.map((budget) => {
@@ -186,7 +177,7 @@ export function BudgetList({
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <ListItemText
                       primary={budget.name}
-                      secondary={`${formatCurrency(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
+                      secondary={`${formatCurrencyWhole(normalized.monthlyIncome)} income - ${expenseCount} expense${expenseCount === 1 ? "" : "s"}`}
                     />
                   </Box>
                   <Stack
@@ -211,12 +202,12 @@ export function BudgetList({
                       tooltip="Delete"
                       ariaLabel={`Delete budget ${budget.name}`}
                       tone="danger"
-                      onClick={() => {
-                        setDeleteCandidate({
+                      onClick={() =>
+                        requestDelete({
                           id: budget.budgetId ?? "",
                           name: budget.name,
-                        });
-                      }}
+                        })
+                      }
                     >
                       <DeleteOutlineRoundedIcon fontSize="small" />
                     </ActionIconButton>
@@ -233,7 +224,8 @@ export function BudgetList({
         title="Delete Budget"
         message={`Are you sure you want to delete "${deleteCandidate?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </div>

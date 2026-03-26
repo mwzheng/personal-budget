@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {
   Box,
@@ -15,6 +16,7 @@ import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { MilestoneEntry } from "@/lib/types/types";
@@ -32,10 +34,41 @@ export default function MilestonesList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteCandidate, setDeleteCandidate] = useState<{
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<{
     milestoneId: string;
     year: number | null | undefined;
-  } | null>(null);
+  }>({
+    onConfirm: async ({ milestoneId, year }) => {
+      try {
+        const params = new URLSearchParams({ milestoneId });
+        if (year !== null && year !== undefined) {
+          params.set("year", String(year));
+        }
+
+        const response = await apiFetch(
+          `/api/progress/milestones?${params.toString()}`,
+          { method: "DELETE" },
+        );
+        const data = (await response.json()) as MilestonesApiResponse;
+        if (!data.ok) {
+          throw new Error(data.error || "Delete failed");
+        }
+        await fetchItems();
+      } catch (deleteError) {
+        setError(
+          deleteError instanceof Error
+            ? deleteError.message
+            : String(deleteError),
+        );
+      }
+    },
+  });
 
   const fetchItems = async () => {
     setLoading(true);
@@ -64,37 +97,8 @@ export default function MilestonesList() {
   };
 
   // Note 2: Delete is a two-step flow: the button sets the candidate, and
-  // confirmDelete performs the actual API call only after the user confirms via
-  // the ConfirmDialog. This replaces the native confirm() for visual consistency.
-  const confirmDelete = async () => {
-    if (!deleteCandidate) return;
-    const { milestoneId, year } = deleteCandidate;
-    setDeleteCandidate(null);
-    try {
-      const params = new URLSearchParams({ milestoneId });
-      if (year !== null && year !== undefined) {
-        params.set("year", String(year));
-      }
-
-      const response = await apiFetch(
-        `/api/progress/milestones?${params.toString()}`,
-        {
-          method: "DELETE",
-        },
-      );
-      const data = (await response.json()) as MilestonesApiResponse;
-      if (!data.ok) {
-        throw new Error(data.error || "Delete failed");
-      }
-      await fetchItems();
-    } catch (deleteError) {
-      setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : String(deleteError),
-      );
-    }
-  };
+  // the hook's confirmDelete performs the actual API call only after the user
+  // confirms via the ConfirmDialog.
 
   return (
     <Box>
@@ -130,9 +134,7 @@ export default function MilestonesList() {
       ) : null}
 
       {items.length === 0 && !loading ? (
-        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-          No milestones yet.
-        </Typography>
+        <EmptyState message="No milestones yet." />
       ) : null}
 
       <Box
@@ -161,7 +163,7 @@ export default function MilestonesList() {
                   ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
                   tone="danger"
                   onClick={() =>
-                    setDeleteCandidate({
+                    requestDelete({
                       milestoneId: item.milestoneId,
                       year: item.year,
                     })
@@ -193,7 +195,8 @@ export default function MilestonesList() {
         title="Delete Milestone"
         message="Are you sure you want to delete this milestone? This action cannot be undone."
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </Box>

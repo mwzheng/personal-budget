@@ -13,6 +13,8 @@ import {
   CartesianGrid,
 } from "recharts";
 
+type ProjectionTooltipValue = number | string | Array<number | string>;
+
 export default function ProjectionChart({
   data,
 }: {
@@ -41,7 +43,10 @@ export default function ProjectionChart({
           <XAxis dataKey="name" minTickGap={20} />
           <YAxis />
           <Tooltip
-            formatter={(value: any) => `$${Number(value).toLocaleString()}`}
+            formatter={(value: ProjectionTooltipValue) => {
+              const normalizedValue = Array.isArray(value) ? value[0] : value;
+              return `$${Number(normalizedValue).toLocaleString()}`;
+            }}
             contentStyle={{ background: "#242424", border: "1px solid #444" }}
             labelStyle={{ color: "#fff" }}
             itemStyle={{ color: "#fff" }}

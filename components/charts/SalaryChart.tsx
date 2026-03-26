@@ -16,14 +16,15 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { SalaryEntry } from "@/lib/types/types";
 
-function formatCurrency(value: number) {
-  return `$${Number(value).toLocaleString()}`;
-}
+type SalaryTooltipProps = TooltipProps<number, string>;
+type SalaryTooltipEntry = NonNullable<SalaryTooltipProps["payload"]>[number];
 
 export default function SalaryChart({
   data,
@@ -43,14 +44,14 @@ export default function SalaryChart({
       }));
   }, [data]);
 
-  const tooltipContent = ({ active, label, payload }: any) => {
+  const tooltipContent = ({ active, label, payload }: SalaryTooltipProps) => {
     if (!active || !payload?.length) return null;
     const rows = payload
       .filter(
-        (entry: any) =>
-          entry && entry.value !== null && entry.value !== undefined,
+        (entry): entry is SalaryTooltipEntry =>
+          Boolean(entry) && entry.value !== null && entry.value !== undefined,
       )
-      .map((entry: any) => {
+      .map((entry) => {
         const labelText =
           entry.dataKey === "amount"
             ? "Salary"
@@ -60,13 +61,15 @@ export default function SalaryChart({
         const value =
           entry.dataKey === "yoy"
             ? `${Number(entry.value ?? 0).toFixed(1)}%`
-            : formatCurrency(Number(entry.value ?? 0));
+            : formatCurrencyWhole(Number(entry.value ?? 0));
         return { label: labelText, value, color: entry.color };
       });
 
     return rows.length > 0 ? (
       <ChartTooltipCard
-        title={typeof label === "string" ? label : undefined}
+        title={
+          label !== undefined && label !== null ? String(label) : undefined
+        }
         rows={rows}
       />
     ) : null;

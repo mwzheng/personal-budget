@@ -11,18 +11,11 @@ import { useMemo } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { getSankeyLayoutMetrics } from "@/lib/utils/sankey-layout";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 import { SankeyData } from "@/lib/types/types";
 
 interface Props {
   data: SankeyData;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
 }
 
 function getNodeColor(node: { id: string | number; color?: string }): string {
@@ -63,7 +56,7 @@ export function SankeyChart({ data }: Props) {
         sort="input"
         label="label"
         colors={getNodeColor}
-        valueFormat={formatCurrency}
+        valueFormat={formatCurrencyWhole}
         nodeOpacity={0.96}
         nodeThickness={metrics.nodeThickness}
         nodeInnerPadding={metrics.nodeInnerPadding}
@@ -82,7 +75,7 @@ export function SankeyChart({ data }: Props) {
             rows={[
               {
                 label: "Amount",
-                value: formatCurrency(Number(node.value ?? 0)),
+                value: formatCurrencyWhole(Number(node.value ?? 0)),
                 color: getNodeColor(node),
               },
               ...(node.kind === "path"
@@ -102,7 +95,7 @@ export function SankeyChart({ data }: Props) {
             rows={[
               {
                 label: "Flow",
-                value: formatCurrency(Number(link.value ?? 0)),
+                value: formatCurrencyWhole(Number(link.value ?? 0)),
                 color: link.color,
               },
             ]}

@@ -22,20 +22,11 @@ import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { apiFetch } from "@/lib/api/apiFetch";
+import type { Goal } from "@/lib/types/types";
 
-// Note 2: The local `Goal` type mirrors the server response shape. Having a
-// local type decouples GoalList from the shared `lib/types` Goal interface,
-// allowing the server to add computed fields (like `eta`) that the shared type
-// may not include.
-type Goal = {
-  goalId?: string;
-  name: string;
-  targetAmount: number;
-  currentSaved?: number;
-  monthlyContribution?: number;
-  expectedAnnualReturn?: number;
-  eta?: { months: number; projectedDate: string | null } | null;
-};
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 export default function GoalList() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -59,8 +50,8 @@ export default function GoalList() {
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || "Delete failed");
         fetchGoals();
-      } catch (err: any) {
-        setError(err.message || String(err));
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
       }
     },
   });
@@ -73,8 +64,8 @@ export default function GoalList() {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Failed to load goals");
       setGoals(data.goals ?? []);
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -136,8 +127,8 @@ export default function GoalList() {
       {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       <List>
-        {goals.map((g) => (
-          <React.Fragment key={g.goalId}>
+        {goals.map((g, index) => (
+          <React.Fragment key={g.goalId ?? `goal-${index}`}>
             <ListItem
               secondaryAction={
                 <Stack direction="row" spacing={0.75}>
@@ -165,12 +156,12 @@ export default function GoalList() {
               <ListItemText
                 primary={`${g.name} — $${Number(g.currentSaved ?? 0).toLocaleString()} / $${Number(g.targetAmount).toLocaleString()}`}
                 secondary={
-                  // Note 6: `eta.months === Infinity` occurs when the monthly
-                  // contribution is zero (or the goal can never be reached). The
-                  // UI shows "—" instead of "Infinity months" to avoid confusing
-                  // the user. This mirrors the same guard in `lib/goals.ts`.
+                  // Note 6: Unreachable goals come back as `eta.months = null`
+                  // because JSON transport cannot preserve `Infinity`. The UI
+                  // still renders the same em dash fallback so users do not see
+                  // a misleading or implementation-specific value.
                   g.eta
-                    ? `ETA: ${g.eta.months === Infinity ? "—" : g.eta.months + " months"}${g.eta.projectedDate ? " (" + new Date(g.eta.projectedDate).toLocaleDateString() + ")" : ""}`
+                    ? `ETA: ${g.eta.months == null ? "—" : g.eta.months + " months"}${g.eta.projectedDate ? " (" + new Date(g.eta.projectedDate).toLocaleDateString() + ")" : ""}`
                     : ""
                 }
               />

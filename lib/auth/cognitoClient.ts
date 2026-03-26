@@ -1,5 +1,7 @@
 "use client";
 
+import { randomString } from "../utils/generateId";
+
 export const ACCESS_TOKEN_KEY = "access_token";
 export const ID_TOKEN_KEY = "id_token";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -78,14 +80,8 @@ async function pkceChallengeFromVerifier(verifier: string) {
   return base64UrlEncode(new Uint8Array(digest));
 }
 
-function randomString(length: number = 64) {
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((value) => (value % 36).toString(36))
-    .join("")
-    .slice(0, length);
-}
+// Note 2: `randomString` was extracted to `lib/utils/generateId.ts` so
+// the PKCE / OAuth state generation logic is shared across the codebase.
 
 export function normalizeCognitoDomain(domain?: string | null) {
   const trimmed = (domain || "").trim().replace(/\/+$/, "");

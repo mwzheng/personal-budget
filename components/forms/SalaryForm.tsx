@@ -6,14 +6,15 @@ import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
+import type { SalaryEntry } from "@/lib/types/types";
 
 export default function SalaryForm({
   defaultEntry,
   onSaved,
   onCancel,
 }: {
-  defaultEntry?: any;
-  onSaved?: (e: any) => void;
+  defaultEntry?: SalaryEntry;
+  onSaved?: (entry: SalaryEntry) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   // Note 2: `new Date().getFullYear()` is called once at component initialization,
@@ -29,7 +30,10 @@ export default function SalaryForm({
     submit: apiSubmit,
     isSubmitting: loading,
     error,
-  } = useFormSubmit({ baseUrl: "/api/salary", onSuccess: onSaved });
+  } = useFormSubmit<SalaryEntry>({
+    baseUrl: "/api/salary",
+    onSuccess: onSaved,
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

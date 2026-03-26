@@ -86,7 +86,7 @@ export async function getUserIdFromRequest(req: Request): Promise<string> {
   const token = parseBearerToken(auth);
   if (!token) throw new Error("Missing or invalid Authorization header");
   const payload = await verifyCognitoToken(token);
-  const sub = (payload && (payload as any).sub) || "";
+  const sub = payload.sub ?? "";
   if (!sub) throw new Error("Token missing subject (sub) claim");
   return String(sub);
 }
@@ -98,13 +98,10 @@ export async function getUserIdFromRequest(req: Request): Promise<string> {
  * audit logging. For routes that only need the user ID, prefer
  * `getUserIdFromRequest` to keep the call-site intent explicit.
  */
-export async function getPayloadFromRequest(
-  req: Request,
-): Promise<Record<string, unknown>> {
+export async function getPayloadFromRequest(req: Request): Promise<JWTPayload> {
   const auth =
     req.headers.get("authorization") || req.headers.get("Authorization") || "";
   const token = parseBearerToken(auth);
   if (!token) throw new Error("Missing or invalid Authorization header");
-  const payload = await verifyCognitoToken(token);
-  return payload as Record<string, unknown>;
+  return verifyCognitoToken(token);
 }

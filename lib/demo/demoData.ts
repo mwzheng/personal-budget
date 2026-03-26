@@ -7,8 +7,9 @@
  * alive across page navigations and refreshes until the user signs out.
  */
 
-import type { Goal as SavingsGoal } from "../utils/goals";
+import { generateId } from "../utils/generateId";
 import type {
+  Goal as SavingsGoal,
   MilestoneEntry,
   RetirementEntry,
   SalaryEntry,
@@ -324,15 +325,10 @@ export function createSeededDemoStore(): DemoStore {
   };
 }
 
+// Note 2: `createDemoId` delegates to the shared `generateId` utility so
+// the UUID-with-fallback logic is defined in exactly one place.
 export function createDemoId(prefix: string): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return generateId(prefix);
 }
 
 export function getDemoStore(): DemoStore {

@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -32,6 +33,11 @@ interface Props {
   loading?: boolean;
   error?: string | null;
 }
+
+type ProgressTooltipProps = TooltipProps<number, string>;
+type ProgressTooltipEntry = NonNullable<
+  ProgressTooltipProps["payload"]
+>[number];
 
 export default function ProgressCharts({
   salaryEntries,
@@ -66,24 +72,26 @@ export default function ProgressCharts({
     );
   }, [retirementEntries, salaryEntries]);
 
-  const tooltipContent = ({ active, label, payload }: any) => {
+  const tooltipContent = ({ active, label, payload }: ProgressTooltipProps) => {
     if (!active || !payload?.length) return null;
     const rows = payload
       .filter(
-        (entry: any) =>
-          entry && entry.value !== null && entry.value !== undefined,
+        (entry): entry is ProgressTooltipEntry =>
+          Boolean(entry) && entry.value !== null && entry.value !== undefined,
       )
-      .map((entry: any) => {
+      .map((entry) => {
         const labelText = entry.name ?? entry.dataKey;
         const value =
           typeof entry.value === "number"
             ? `$${Number(entry.value).toLocaleString()}`
-            : entry.value;
+            : String(entry.value ?? "");
         return { label: String(labelText), value, color: entry.color };
       });
     return rows.length > 0 ? (
       <ChartTooltipCard
-        title={typeof label === "string" ? label : undefined}
+        title={
+          label !== undefined && label !== null ? String(label) : undefined
+        }
         rows={rows}
       />
     ) : null;

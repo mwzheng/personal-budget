@@ -1,15 +1,4 @@
-// Note 1: The `?` suffix on a type property marks it as optional. When reading an
-// optional field, TypeScript forces you to handle the `undefined` case, which
-// prevents common runtime errors like accessing `.currentSaved` on a bare goal
-// object that was created without it.
-export type Goal = {
-  goalId?: string;
-  name: string;
-  targetAmount: number;
-  currentSaved?: number;
-  monthlyContribution?: number;
-  expectedAnnualReturn?: number; // decimal, e.g., 0.05 for 5%
-};
+import type { Goal, GoalEta } from "../types/types";
 
 /**
  * Note 2: Calculates how many months it will take to reach `target` given an
@@ -62,17 +51,18 @@ export function monthsToTarget(
 
 /**
  * Note 8: Wraps `monthsToTarget` to return a human-friendly ETA object that
- * includes a projected ISO date string. `isFinite` guards against the Infinity
- * case so callers do not have to handle it separately.
+ * includes a projected ISO date string. We convert unreachable goals to
+ * `{ months: null, projectedDate: null }` because JSON cannot faithfully
+ * serialize `Infinity` across the API boundary.
  */
-export function estimateGoalETA(goal: Goal) {
+export function estimateGoalETA(goal: Goal): GoalEta {
   const months = monthsToTarget(
     goal.currentSaved ?? 0,
     goal.monthlyContribution ?? 0,
     goal.expectedAnnualReturn ?? 0,
     goal.targetAmount,
   );
-  if (!isFinite(months)) return { months: Infinity, projectedDate: null };
+  if (!isFinite(months)) return { months: null, projectedDate: null };
   const projected = new Date();
   // Note 9: `setMonth` correctly handles year overflow -- e.g. month 13 rolls
   // over to January of the next year. JavaScript's Date arithmetic handles this.

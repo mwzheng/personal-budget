@@ -5,6 +5,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
@@ -22,6 +23,7 @@ import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { SalaryEntry } from "@/lib/types/types";
@@ -36,6 +38,10 @@ interface Props {
   onEntriesChanged?: () => void | Promise<void>;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default function SalaryList({ onEntriesChanged }: Props) {
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,10 +51,31 @@ export default function SalaryList({ onEntriesChanged }: Props) {
   const [editing, setEditing] = useState<SalaryEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<{
-    entryId: string;
-    year: number;
-  } | null>(null);
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<{ entryId: string; year: number }>({
+    onConfirm: async ({ entryId, year }) => {
+      try {
+        const res = await apiFetch(
+          "/api/salary?entryId=" +
+            encodeURIComponent(entryId) +
+            "&year=" +
+            encodeURIComponent(String(year)),
+          { method: "DELETE" },
+        );
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Delete failed");
+        await fetchEntries();
+        await Promise.resolve(onEntriesChanged?.());
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
+      }
+    },
+  });
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -58,8 +85,8 @@ export default function SalaryList({ onEntriesChanged }: Props) {
       const data = (await res.json()) as SalaryApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
       setEntries(data.entries ?? []);
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -84,29 +111,8 @@ export default function SalaryList({ onEntriesChanged }: Props) {
   };
 
   // Note 4: Delete is a two-step flow: the button sets the candidate, and
-  // confirmDelete performs the actual API call only after the user confirms via
-  // the ConfirmDialog. Year is required in the query string alongside entryId
-  // because the DynamoDB sort key encodes both: "salary#<year>#<entryId>".
-  const confirmDelete = async () => {
-    if (!deleteCandidate) return;
-    const { entryId, year } = deleteCandidate;
-    setDeleteCandidate(null);
-    try {
-      const res = await apiFetch(
-        "/api/salary?entryId=" +
-          encodeURIComponent(entryId) +
-          "&year=" +
-          encodeURIComponent(String(year)),
-        { method: "DELETE" },
-      );
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Delete failed");
-      await fetchEntries();
-      await Promise.resolve(onEntriesChanged?.());
-    } catch (err: any) {
-      setError(err.message || String(err));
-    }
-  };
+  // the hook's confirmDelete performs the actual API call only after the user
+  // confirms via the ConfirmDialog.
 
   return (
     <Box>
@@ -198,8 +204,8 @@ export default function SalaryList({ onEntriesChanged }: Props) {
                       ariaLabel={`Delete salary entry for ${entry.year}`}
                       tone="danger"
                       onClick={() =>
-                        setDeleteCandidate({
-                          entryId: entry.entryId!,
+                        requestDelete({
+                          entryId: entry.entryId,
                           year: entry.year,
                         })
                       }
@@ -230,9 +236,7 @@ export default function SalaryList({ onEntriesChanged }: Props) {
       </Box>
 
       {entries.length === 0 && !loading ? (
-        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-          No salary history yet.
-        </Typography>
+        <EmptyState message="No salary history yet." />
       ) : null}
 
       <ConfirmDialog
@@ -240,7 +244,8 @@ export default function SalaryList({ onEntriesChanged }: Props) {
         title="Delete Salary Entry"
         message="Are you sure you want to delete this salary entry? This action cannot be undone."
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </Box>

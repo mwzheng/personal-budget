@@ -6,14 +6,15 @@ import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
 import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
+import type { RetirementEntry } from "@/lib/types/types";
 
 export default function RetirementForm({
   defaultEntry,
   onSaved,
   onCancel,
 }: {
-  defaultEntry?: any;
-  onSaved?: (e: any) => void;
+  defaultEntry?: RetirementEntry;
+  onSaved?: (entry: RetirementEntry) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   const [year, setYear] = useState(
@@ -30,7 +31,7 @@ export default function RetirementForm({
     submit: apiSubmit,
     isSubmitting: loading,
     error,
-  } = useFormSubmit({
+  } = useFormSubmit<RetirementEntry>({
     baseUrl: "/api/progress/retirement",
     onSuccess: onSaved,
   });

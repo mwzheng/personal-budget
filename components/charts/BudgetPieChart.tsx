@@ -18,6 +18,7 @@ import {
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 import { BudgetPieSlice } from "@/lib/utils/budget-planner";
 
 interface Props {
@@ -25,14 +26,6 @@ interface Props {
   monthlyIncome: number;
   leftoverSavings: number;
   overspending: number;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
 }
 
 export function BudgetPieChart({
@@ -64,9 +57,9 @@ export function BudgetPieChart({
   }));
   const statusLabel =
     overspending > 0
-      ? `Over Budget ${formatCurrency(overspending)}`
+      ? `Over Budget ${formatCurrencyWhole(overspending)}`
       : leftoverSavings > 0
-        ? `Leftover ${formatCurrency(leftoverSavings)}`
+        ? `Leftover ${formatCurrencyWhole(leftoverSavings)}`
         : "Fully Allocated";
   const statusColor =
     overspending > 0
@@ -125,7 +118,7 @@ export function BudgetPieChart({
                         fontSize="20"
                         fontWeight="700"
                       >
-                        {formatCurrency(monthlyIncome)}
+                        {formatCurrencyWhole(monthlyIncome)}
                       </text>
                       <text
                         x={cx}
@@ -157,7 +150,7 @@ export function BudgetPieChart({
                     rows={[
                       {
                         label: "Amount",
-                        value: formatCurrency(Number(entry.value ?? 0)),
+                        value: formatCurrencyWhole(Number(entry.value ?? 0)),
                         color: source?.color,
                       },
                       {

@@ -8,22 +8,11 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
-
-const COLORS: Record<string, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
-};
+import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import { formatCurrency } from "@/lib/utils/format";
 
 interface Props {
   data: { Need: number; Want: number; Saving: number };
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
 }
 
 export function SpendingPieChart({ data }: Props) {
@@ -37,7 +26,7 @@ export function SpendingPieChart({ data }: Props) {
   ].filter((entry) => entry.value > 0);
   const legendPayload = chartData.map((entry) => ({
     value: entry.name,
-    color: COLORS[entry.name],
+    color: CATEGORY_HEX_COLORS[entry.name as keyof typeof CATEGORY_HEX_COLORS],
   }));
 
   if (chartData.length === 0) {
@@ -77,7 +66,14 @@ export function SpendingPieChart({ data }: Props) {
               labelLine={false}
             >
               {chartData.map((entry) => (
-                <Cell key={entry.name} fill={COLORS[entry.name]} />
+                <Cell
+                  key={entry.name}
+                  fill={
+                    CATEGORY_HEX_COLORS[
+                      entry.name as keyof typeof CATEGORY_HEX_COLORS
+                    ]
+                  }
+                />
               ))}
             </Pie>
             <Tooltip

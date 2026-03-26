@@ -2,41 +2,29 @@
 // is the low-level HTTP client, while `DynamoDBDocumentClient` is a higher-level
 // wrapper that automatically marshals JavaScript types (strings, numbers, arrays)
 // to and from DynamoDB's native AttributeValue format.
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
-  DynamoDBDocumentClient,
   QueryCommand,
   PutCommand,
   DeleteCommand,
+  NativeAttributeValue,
+  QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
+import { getDocClient } from "./dynamoClient";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { loadTransactionsFromCSV } from "../utils/csvParser";
 import { isDemoUserId } from "../auth/requestUser";
-import type { Transaction } from "../types/types";
+import { generateId } from "../utils/generateId";
+import type { Goal, Transaction } from "../types/types";
+import { SK_PREFIX } from "./tableKeys";
 
 // Note 2: Reading the table name from an environment variable means the same
 // code can be deployed to dev, staging, and production without changes -- only
 // the environment variable value differs per environment.
 const TABLE_NAME = process.env.DYNAMODB_TABLE || "";
 
-// Note 3: The module-level `docClient` variable is the singleton instance of the
-// DynamoDB document client. Reusing a single client across all requests is more
-// efficient than creating a new HTTP connection pool on every invocation (which
-// is especially costly in Lambda cold starts).
-let docClient: DynamoDBDocumentClient | null = null;
-
-// Note 4: This lazy initialization function returns `null` when the table name
-// environment variable is not set. Callers use the null return as a signal to
-// fall back to local CSV data. This design lets the app run locally without any
-// AWS credentials configured.
-function getDocClient(): DynamoDBDocumentClient | null {
-  if (docClient) return docClient;
-  if (!TABLE_NAME) return null;
-  const client = new DynamoDBClient({});
-  docClient = DynamoDBDocumentClient.from(client);
-  return docClient;
-}
+// Note 3: Client initialization is handled by the shared `dynamoClient` module.
+// See `lib/api/dynamoClient.ts` for caching and lazy-init details.
 
 // Note 5: The DynamoDB table uses a single-table design with a composite primary
 // key: `pk` (partition key) and `sk` (sort key). All data for a user shares the
@@ -61,8 +49,8 @@ export function buildTransactionsQuery(
       ExpressionAttributeNames: exprNames,
       ExpressionAttributeValues: {
         ":pk": pk,
-        ":skStart": `date#${start}#`,
-        ":skEnd": `date#${end}#\uffff`,
+        ":skStart": `${SK_PREFIX.TRANSACTION}${start}#`,
+        ":skEnd": `${SK_PREFIX.TRANSACTION}${end}#\uffff`,
       },
     } as const;
   }
@@ -71,14 +59,14 @@ export function buildTransactionsQuery(
     TableName: TABLE_NAME,
     KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
     ExpressionAttributeNames: exprNames,
-    ExpressionAttributeValues: { ":pk": pk, ":prefix": "date#" },
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.TRANSACTION },
   } as const;
 }
 
 export async function getUserTransactions(
   userId: string,
 ): Promise<Transaction[]> {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) {
     // Note 5: The sample CSV is only safe for the explicit demo user. Returning it
     // for authenticated Cognito users would leak the same shared dataset across
@@ -133,27 +121,27 @@ export async function getUserTransactionsPaged(
   userId: string,
   opts?: {
     limit?: number;
-    lastKey?: Record<string, any>;
+    lastKey?: Record<string, NativeAttributeValue>;
     startDate?: string;
     endDate?: string;
   },
 ) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   // Note 10: The shared query builder keeps the "transactions only" constraint in
   // one place, so both full and paginated readers stay aligned when the schema grows.
   const query = buildTransactionsQuery(userId, opts);
-  const params: any = {
+  // Note 11: `ScanIndexForward: false` returns items in descending sort key
+  // order (newest dates first). This is typically what users expect when
+  // browsing recent transactions.
+  const params: QueryCommandInput = {
     ...query,
-    // Note 11: `ScanIndexForward: false` returns items in descending sort key
-    // order (newest dates first). This is typically what users expect when
-    // browsing recent transactions.
     ScanIndexForward: false,
   };
   if (opts?.limit) params.Limit = opts.limit;
   if (opts?.lastKey) params.ExclusiveStartKey = opts.lastKey;
   const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as Record<string, any>[];
+  const items = res.Items ?? [];
   const txs = items.map(
     (item) =>
       ({
@@ -164,7 +152,9 @@ export async function getUserTransactionsPaged(
         date: String(item.date ?? ""),
         notes: String(item.notes ?? ""),
         paymentMethod: String(item.paymentMethod ?? ""),
-        tags: Array.isArray(item.tags) ? (item.tags as any[]).map(String) : [],
+        tags: Array.isArray(item.tags)
+          ? (item.tags as NativeAttributeValue[]).map(String)
+          : [],
       }) as Transaction,
   );
   return { transactions: txs, lastKey: res.LastEvaluatedKey };
@@ -174,7 +164,7 @@ export async function getUserTransactionsPaged(
 // The while loop handles the case where a year has more than 1,000 transactions,
 // which exceeds DynamoDB's single-query limit, by following the pagination cursor.
 export async function getUserMonthlyAggregates(userId: string, year?: number) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) return [];
   const y = year || new Date().getFullYear();
   const start = `${y}-01-01`;
@@ -186,7 +176,7 @@ export async function getUserMonthlyAggregates(userId: string, year?: number) {
   });
   // If more than 1000 results, paginate (simple loop)
   let all = res.transactions.slice();
-  let last = res.lastKey as any;
+  let last = res.lastKey;
   while (last) {
     const next = await getUserTransactionsPaged(userId, {
       startDate: start,
@@ -213,7 +203,7 @@ export async function getUserMonthlyAggregates(userId: string, year?: number) {
 // the entire item if the primary key already exists, or creates a new item if it
 // does not. This means the same function handles both create and update operations.
 export async function putTransaction(userId: string, tx: Transaction) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
 
   const now = new Date().toISOString();
@@ -222,7 +212,7 @@ export async function putTransaction(userId: string, tx: Transaction) {
     // Note 15: Encoding the date in the sort key ("date#YYYY-MM-DD#<id>") allows
     // date-range queries without a secondary index. The id at the end ensures
     // uniqueness when multiple transactions share the same date.
-    sk: `date#${tx.date}#${tx.id}`,
+    sk: `${SK_PREFIX.TRANSACTION}${tx.date}#${tx.id}`,
     id: tx.id,
     name: tx.name,
     amount: tx.amount,
@@ -231,7 +221,7 @@ export async function putTransaction(userId: string, tx: Transaction) {
     notes: tx.notes || "",
     paymentMethod: tx.paymentMethod || "",
     tags: tx.tags || [],
-    createdAt: (tx as any).createdAt || now,
+    createdAt: tx.createdAt || now,
     updatedAt: now,
   } as const;
 
@@ -244,12 +234,12 @@ export async function deleteTransaction(
   txId: string,
   date: string,
 ) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   // Note 16: DynamoDB `DeleteCommand` requires the full primary key (pk + sk).
   // Both partition key and sort key must be provided -- the sort key cannot be
   // omitted even though we only want to delete by transaction id.
-  const sk = `date#${date}#${txId}`;
+  const sk = `${SK_PREFIX.TRANSACTION}${date}#${txId}`;
   await client.send(
     new DeleteCommand({
       TableName: TABLE_NAME,
@@ -259,33 +249,15 @@ export async function deleteTransaction(
   return { ok: true };
 }
 
-export async function putGoal(
-  userId: string,
-  goal: {
-    goalId?: string;
-    name: string;
-    targetAmount: number;
-    currentSaved?: number;
-    monthlyContribution?: number;
-    expectedAnnualReturn?: number;
-    createdAt?: string;
-    updatedAt?: string;
-  },
-) {
-  const client = getDocClient();
+export async function putGoal(userId: string, goal: Goal) {
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
-  // Note 17: `crypto.randomUUID()` is available in Node.js 14.17+ and all modern
-  // browsers. The `Date.now().toString()` fallback handles older environments where
-  // the Web Crypto API may not be available, though it is less collision-resistant.
-  const id =
-    goal.goalId ||
-    (typeof crypto !== "undefined" && (crypto as any).randomUUID
-      ? (crypto as any).randomUUID()
-      : Date.now().toString());
+  // Note 17: ID generation is delegated to the shared `generateId` utility.
+  const id = goal.goalId || generateId();
   const item = {
     pk: `user#${userId}`,
-    sk: `goal#${id}`,
+    sk: `${SK_PREFIX.GOAL}${id}`,
     goalId: id,
     name: goal.name,
     targetAmount: goal.targetAmount,
@@ -300,8 +272,8 @@ export async function putGoal(
   return item;
 }
 
-export async function getUserGoals(userId: string) {
-  const client = getDocClient();
+export async function getUserGoals(userId: string): Promise<Goal[]> {
+  const client = getDocClient(TABLE_NAME);
   if (!client) return [];
   const pk = `user#${userId}`;
   // Note 18: `begins_with` is a DynamoDB key condition function that efficiently
@@ -312,11 +284,11 @@ export async function getUserGoals(userId: string) {
     TableName: TABLE_NAME,
     KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
     ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
-    ExpressionAttributeValues: { ":pk": pk, ":prefix": "goal#" },
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.GOAL },
   } as const;
 
   const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as any[];
+  const items = res.Items ?? [];
   return items.map((item) => ({
     goalId: String(item.goalId || ""),
     name: String(item.name || ""),
@@ -330,9 +302,9 @@ export async function getUserGoals(userId: string) {
 }
 
 export async function deleteGoal(userId: string, goalId: string) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
-  const sk = `goal#${goalId}`;
+  const sk = `${SK_PREFIX.GOAL}${goalId}`;
   await client.send(
     new DeleteCommand({
       TableName: TABLE_NAME,
@@ -360,17 +332,13 @@ export async function putBudget(
     updatedAt?: string;
   },
 ) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
-  const id =
-    budget.budgetId ||
-    (typeof crypto !== "undefined" && (crypto as any).randomUUID
-      ? (crypto as any).randomUUID()
-      : Date.now().toString());
+  const id = budget.budgetId || generateId();
   const item = {
     pk: `user#${userId}`,
-    sk: `budget#${id}`,
+    sk: `${SK_PREFIX.BUDGET}${id}`,
     budgetId: id,
     name: budget.name,
     monthlyIncome: budget.monthlyIncome,
@@ -385,18 +353,18 @@ export async function putBudget(
 }
 
 export async function getUserBudgets(userId: string) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) return [];
   const pk = `user#${userId}`;
   const params = {
     TableName: TABLE_NAME,
     KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
     ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
-    ExpressionAttributeValues: { ":pk": pk, ":prefix": "budget#" },
+    ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.BUDGET },
   } as const;
 
   const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as any[];
+  const items = res.Items ?? [];
   return items.map((item) => ({
     budgetId: String(item.budgetId || ""),
     name: String(item.name || ""),
@@ -410,9 +378,9 @@ export async function getUserBudgets(userId: string) {
 }
 
 export async function deleteBudget(userId: string, budgetId: string) {
-  const client = getDocClient();
+  const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
-  const sk = `budget#${budgetId}`;
+  const sk = `${SK_PREFIX.BUDGET}${budgetId}`;
   await client.send(
     new DeleteCommand({
       TableName: TABLE_NAME,
