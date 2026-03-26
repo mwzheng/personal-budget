@@ -1,3 +1,58 @@
+# Completed: Transaction modal defaults, commit-authoring rules, and progress page visual overhaul
+
+Date: 2026-03-25
+
+Summary
+
+- Updated transaction modal defaults: date defaults to today, category to Need,
+  payment method converted from free-text to a dropdown (Credit Card, Cash, Bank)
+  defaulting to Credit Card.
+- Added commit message quality rules to commit-authoring instruction file.
+- Removed year filter from progress page (ProgressYearFilter integration gone).
+- Redesigned GoalEditor with LinearProgress bar, popup edit dialog, and empty state.
+- Upgraded RetirementList, MilestonesList, and SalaryList from plain MUI Lists to
+  responsive card grids with color-coded Chips for change/YoY percentages.
+- Centered salary chart by balancing Recharts margins.
+
+Completed items
+
+- TransactionForm: `getDefaultValues()` factory for fresh defaults on each open,
+  `PAYMENT_METHOD_OPTIONS` constant, Select dropdown for payment method.
+- commit-authoring.instructions.md: "Commit message quality" section with
+  conventional commit format, multiple-commit guidance, ban on vague messages.
+- app/progress/page.tsx: Removed ProgressYearFilter, selectedYears state, availableYears memo.
+- ProgressCharts.tsx: Removed selectedYears prop and year-based filtering.
+- SalaryChart.tsx: Removed selectedYears filtering, balanced margins (left:40, right:40), mx:auto.
+- SalaryList.tsx: Removed selectedYears prop, converted list to card grid with YoY Chips.
+- GoalEditor.tsx: LinearProgress bar, ActionIconButton edit trigger, ProgressEntryDialog
+  for target editing, friendly empty state.
+- RetirementList.tsx: Card grid with year heading, start/end amounts, change Chip.
+- MilestonesList.tsx: Card grid with amount heading, conditional year/age labels.
+
+Files changed
+
+- components/transactions/TransactionForm.tsx
+- .github/instructions/commit-authoring.instructions.md
+- app/progress/page.tsx
+- components/progress/ProgressCharts.tsx
+- components/charts/SalaryChart.tsx
+- components/ui/SalaryList.tsx
+- components/progress/GoalEditor.tsx
+- components/ui/RetirementList.tsx
+- components/progress/MilestonesList.tsx
+
+Commits
+
+- 18b2cf1 — docs(instructions): add commit message quality rules
+- 61449d4 — feat(transactions): default date to today, category to Need, payment to dropdown
+- 1b499d8 — refactor(progress): remove year filter and center salary chart
+- 5424bf9 — feat(progress): redesign GoalEditor with progress bar and popup edit
+- 301fe09 — feat(progress): upgrade retirement, milestones, and salary lists to card layouts
+
+Validation: `pnpm lint` ✔, `pnpm test --run` (53 tests) ✔, `pnpm build` ✔
+
+---
+
 # Completed: Fix Google Analytics page titles for App Router navigations
 
 Date: 2026-03-23
