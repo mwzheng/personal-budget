@@ -86,7 +86,7 @@ export default function Page() {
       <Typography
         id={PAGE_TITLE_ID}
         component="h1"
-        variant="h4"
+        variant="h5"
         fontWeight={700}
         gutterBottom
       >

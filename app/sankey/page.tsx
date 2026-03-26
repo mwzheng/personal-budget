@@ -4,6 +4,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api/apiFetch";
+import { formatCurrencyWhole } from "@/lib/utils/format";
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -60,14 +61,6 @@ const SankeyChart = dynamic(
     loading: () => <Skeleton variant="rectangular" height={520} />,
   },
 );
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
-}
 
 const SUMMARY_CARD_SX = {
   flex: 1,
@@ -229,7 +222,7 @@ export default function SankeyPage() {
       <Typography
         id={PAGE_TITLE_ID}
         component="h1"
-        variant="h4"
+        variant="h5"
         fontWeight={700}
         mb={1}
       >
@@ -336,7 +329,7 @@ export default function SankeyPage() {
                           <Skeleton variant="text" width="60%" />
                         ) : (
                           <Typography variant="h6" fontWeight={700}>
-                            {formatCurrency(insights.monthlyIncome)}
+                            {formatCurrencyWhole(insights.monthlyIncome)}
                           </Typography>
                         )}
                       </Paper>
@@ -349,7 +342,7 @@ export default function SankeyPage() {
                           <Skeleton variant="text" width="60%" />
                         ) : (
                           <Typography variant="h6" fontWeight={700}>
-                            {formatCurrency(insights.totalExpenses)}
+                            {formatCurrencyWhole(insights.totalExpenses)}
                           </Typography>
                         )}
                       </Paper>
@@ -374,7 +367,7 @@ export default function SankeyPage() {
                                 : "success.main"
                             }
                           >
-                            {formatCurrency(
+                            {formatCurrencyWhole(
                               insights.overspending > 0
                                 ? insights.overspending
                                 : insights.leftoverSavings,
@@ -387,7 +380,7 @@ export default function SankeyPage() {
                     {hasExpenses && insights.overspending > 0 ? (
                       <Alert severity="warning">
                         You&apos;re overspending by{" "}
-                        {formatCurrency(insights.overspending)}. Lower your
+                        {formatCurrencyWhole(insights.overspending)}. Lower your
                         planned expenses or raise monthly income to get back on
                         budget.
                       </Alert>
@@ -396,7 +389,7 @@ export default function SankeyPage() {
                     {hasExpenses && insights.overspending === 0 ? (
                       <Alert severity="success">
                         {insights.leftoverSavings > 0
-                          ? `${formatCurrency(insights.leftoverSavings)} is automatically added to Leftover Savings.`
+                          ? `${formatCurrencyWhole(insights.leftoverSavings)} is automatically added to Leftover Savings.`
                           : "Your planned expenses exactly match monthly income."}
                       </Alert>
                     ) : null}
@@ -473,7 +466,7 @@ export default function SankeyPage() {
                                     </TableCell>
                                     <TableCell align="right">
                                       <Typography variant="body2">
-                                        {formatCurrency(amount)}
+                                        {formatCurrencyWhole(amount)}
                                       </Typography>
                                     </TableCell>
                                     <TableCell align="right">

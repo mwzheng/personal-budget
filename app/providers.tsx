@@ -58,7 +58,11 @@ const darkTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    // Note 3.1: `var(--font-inter)` resolves to the Next.js self-hosted Inter
+    // font injected by the root layout. The remaining stack is a safe fallback
+    // chain for the rare case the variable is absent (e.g., in Storybook).
+    fontFamily:
+      'var(--font-inter), "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
   },
   shape: {
     borderRadius: 12,

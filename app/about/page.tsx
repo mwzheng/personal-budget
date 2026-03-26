@@ -334,7 +334,7 @@ export default function AboutPage() {
             >
               <Stack spacing={2.5}>
                 <Box sx={{ display: "grid", gap: 0.75 }}>
-                  <Typography id="about-creator-heading" variant="h4">
+                  <Typography id="about-creator-heading" variant="h5">
                     {sectionTitles.creator}
                   </Typography>
                   <Typography variant="h5" fontWeight={700}>
@@ -381,7 +381,7 @@ export default function AboutPage() {
               sx={{ p: { xs: 3, md: 4 }, height: "100%" }}
             >
               <Stack spacing={2.5}>
-                <Typography id="about-philosophy-heading" variant="h4">
+                <Typography id="about-philosophy-heading" variant="h5">
                   {sectionTitles.philosophy}
                 </Typography>
                 <Stack spacing={1.5}>
@@ -428,7 +428,7 @@ export default function AboutPage() {
             spacing={2.5}
             aria-labelledby="about-story-heading"
           >
-            <Typography id="about-story-heading" variant="h4">
+            <Typography id="about-story-heading" variant="h5">
               {sectionTitles.story}
             </Typography>
             <Box

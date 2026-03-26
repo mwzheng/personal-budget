@@ -3,6 +3,7 @@
 // in one place and lets GoalForm remain a pure controlled form.
 "use client";
 import React, { useEffect, useState } from "react";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
@@ -17,6 +18,7 @@ import {
 } from "@mui/material";
 import GoalForm from "@/components/forms/GoalForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { ActionIconButton } from "@/components/ui/action-icon-button";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -41,7 +43,27 @@ export default function GoalList() {
   const [editing, setEditing] = useState<Goal | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const {
+    candidate: deleteCandidate,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    isDeleting,
+  } = useDeleteConfirmation<string>({
+    onConfirm: async (goalId) => {
+      try {
+        const res = await apiFetch(
+          "/api/goals?goalId=" + encodeURIComponent(goalId),
+          { method: "DELETE" },
+        );
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Delete failed");
+        fetchGoals();
+      } catch (err: any) {
+        setError(err.message || String(err));
+      }
+    },
+  });
 
   const fetchGoals = async () => {
     setLoading(true);
@@ -75,24 +97,8 @@ export default function GoalList() {
   };
 
   // Note 5: Delete is a two-step flow: the button sets the candidate goalId,
-  // and confirmDelete performs the actual API call only after the user confirms
-  // via the ConfirmDialog. Replaces the native confirm() for visual consistency.
-  const confirmDelete = async () => {
-    if (!deleteCandidate) return;
-    const goalId = deleteCandidate;
-    setDeleteCandidate(null);
-    try {
-      const res = await apiFetch(
-        "/api/goals?goalId=" + encodeURIComponent(goalId),
-        { method: "DELETE" },
-      );
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Delete failed");
-      fetchGoals();
-    } catch (err: any) {
-      setError(err.message || String(err));
-    }
-  };
+  // and the hook's confirmDelete performs the actual API call only after the
+  // user confirms via the ConfirmDialog.
 
   return (
     <Box>
@@ -102,7 +108,7 @@ export default function GoalList() {
         alignItems="center"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h4">Goals</Typography>
+        <Typography variant="h5">Goals</Typography>
         <Button
           variant="contained"
           onClick={() => {
@@ -149,7 +155,7 @@ export default function GoalList() {
                     tooltip="Delete"
                     ariaLabel={`Delete goal ${g.name}`}
                     tone="danger"
-                    onClick={() => setDeleteCandidate(g.goalId ?? null)}
+                    onClick={() => requestDelete(g.goalId ?? "")}
                   >
                     <DeleteOutlineRoundedIcon fontSize="small" />
                   </ActionIconButton>
@@ -174,18 +180,15 @@ export default function GoalList() {
         ))}
       </List>
 
-      {goals.length === 0 && !loading && (
-        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-          No goals yet.
-        </Typography>
-      )}
+      {goals.length === 0 && !loading && <EmptyState message="No goals yet." />}
 
       <ConfirmDialog
         open={Boolean(deleteCandidate)}
         title="Delete Goal"
         message="Are you sure you want to delete this goal? This action cannot be undone."
         confirmLabel="Delete"
-        onClose={() => setDeleteCandidate(null)}
+        loading={isDeleting}
+        onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
     </Box>

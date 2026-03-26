@@ -3,6 +3,7 @@
 // Components (no "use client" directive) like this file are rendered on the
 // server and sent as HTML to the browser before JavaScript hydrates the page.
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Script from "next/script";
 import Box from "@mui/material/Box";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
@@ -12,6 +13,16 @@ import { Footer } from "@/components/Footer";
 import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
+
+// Note 1.6: `next/font/google` downloads and self-hosts the Inter font at build
+// time. This avoids a third-party Google Fonts request at runtime (privacy,
+// performance), and the generated CSS variable `--font-inter` is applied to
+// <body> so MUI's Inter font-stack resolves immediately without FOUT.
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 // Note 1.5: Metadata URLs need a stable origin so canonical, Open Graph, and
 // sitemap URLs resolve consistently in production and local previews.
@@ -85,7 +96,7 @@ export default function RootLayout({
         must avoid reformatting ordinary style attributes because even harmless
         whitespace changes count as hydration mutations.
       */}
-      <body suppressHydrationWarning>
+      <body className={inter.variable} suppressHydrationWarning>
         {/*
           Note 5: `AppRouterCacheProvider` is MUI's official App Router bridge for
           Emotion style collection during SSR. Wrapping the body contents here keeps
