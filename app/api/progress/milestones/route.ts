@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     const entries = await getUserMilestones(userId);
     return NextResponse.json({ ok: true, entries });
   } catch (err) {
+    console.error("[/api/progress/milestones GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     const created = await putMilestone(userId, body);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/milestones POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -86,7 +87,7 @@ export async function DELETE(request: Request) {
     await deleteMilestone(userId, milestoneId, year);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/milestones DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

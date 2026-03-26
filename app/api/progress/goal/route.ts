@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     }));
     return NextResponse.json({ ok: true, goals: enriched, latestEnd });
   } catch (err) {
+    console.error("[/api/progress/goal GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     const created = await putProgressGoal(userId, body);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/goal POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -83,7 +84,7 @@ export async function PUT(request: Request) {
     const updated = await putProgressGoal(userId, body);
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/progress/goal PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

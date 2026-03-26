@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     const withEta = goals.map((g) => ({ ...g, eta: estimateGoalETA(g) }));
     return NextResponse.json({ ok: true, goals: withEta });
   } catch (err) {
+    console.error("[/api/goals GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 401 },
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     const eta = estimateGoalETA(created as any);
     return NextResponse.json({ ok: true, created, eta });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/goals POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -61,7 +62,7 @@ export async function PUT(request: Request) {
     const eta = estimateGoalETA(updated as any);
     return NextResponse.json({ ok: true, updated, eta });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/goals PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
@@ -95,7 +96,7 @@ export async function DELETE(request: Request) {
     await deleteGoal(userId, goalId);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/goals DELETE]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

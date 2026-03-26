@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const budgets = await getUserBudgets(userId);
     return NextResponse.json({ ok: true, budgets });
   } catch (err) {
+    console.error("[/api/budgets GET]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       // Note 3: Status 401 (Unauthorized) is returned here because the most
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({ ok: true, created });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/budgets POST]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },
