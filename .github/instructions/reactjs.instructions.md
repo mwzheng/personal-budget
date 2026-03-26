@@ -9,11 +9,12 @@ Instructions for building high-quality ReactJS applications with modern patterns
 
 ## Project Context
 
-- Latest React version (React 19+)
+- React 18.x (this project uses `react@^18.3.1`)
 - TypeScript for type safety (when applicable)
 - Functional components with hooks as default
 - Follow React's official style guide and best practices
-- Use modern build tools (Vite, Create React App, or custom Webpack setup)
+- This project uses Next.js (App Router) as the build framework — see `nextjs.instructions.md` for framework-specific rules
+- Material-UI (MUI v6) is the primary component library — use MUI components, theme tokens, and `sx` props for styling
 - Implement proper component composition and reusability patterns
 
 ## Development Standards
@@ -110,18 +111,17 @@ Instructions for building high-quality ReactJS applications with modern patterns
 
 ### Routing
 
-- Use React Router for client-side routing
-- Implement nested routes and route protection
-- Handle route parameters and query strings properly
-- Implement lazy loading for route-based code splitting
-- Use proper navigation patterns and back button handling
-- Implement breadcrumbs and navigation state management
+- Routing is handled by Next.js App Router (not React Router); see `nextjs.instructions.md` for routing guidance
+- Use Next.js `<Link>` for client-side navigation
+- Use `useRouter`, `usePathname`, and `useSearchParams` (from `next/navigation`) for programmatic routing
+- Implement nested layouts and route protection via Next.js middleware
+- Implement lazy loading for route-based code splitting via `React.lazy` / `Suspense`
 
 ### Testing
 
 - Write unit tests for components using React Testing Library
 - Test component behavior, not implementation details
-- Use Jest for test runner and assertion library
+- Use **Vitest** as the test runner (this project uses `vitest@^1.2.0`, not Jest)
 - Implement integration tests for complex component interactions
 - Mock external dependencies and API calls appropriately
 - Test accessibility features and keyboard navigation

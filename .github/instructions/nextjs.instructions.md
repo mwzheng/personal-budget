@@ -1,11 +1,11 @@
 ---
-description: "Best practices for building Next.js (App Router) apps with modern caching, tooling, and server/client boundaries (aligned with Next.js 16.1.1)."
+description: "Best practices for building Next.js (App Router) apps with modern caching, tooling, and server/client boundaries (aligned with Next.js 15.x)."
 applyTo: "**/*.tsx, **/*.ts, **/*.jsx, **/*.js, **/*.css"
 ---
 
 # Next.js Best Practices for LLMs (2026)
 
-_Last updated: January 2026 (aligned to Next.js 16.1.1)_
+_Last updated: March 2026 (aligned to Next.js 15.x / `next@^15.1.7`)_
 
 This document summarizes the latest, authoritative best practices for building, structuring, and maintaining Next.js applications. It is intended for use by LLMs and developers to ensure code quality, maintainability, and scalability.
 
@@ -29,7 +29,7 @@ This document summarizes the latest, authoritative best practices for building, 
 - **Feature Folders:** For large apps, group by feature (e.g., `app/dashboard/`, `app/auth/`).
 - **Use `src/`** (optional): Place all source code in `src/` to separate from config files.
 
-## 2. Next.js 16+ App Router Best Practices
+## 2. Next.js 15 App Router Best Practices
 
 ### 2.1. Server and Client Component Integration (App Router)
 
@@ -67,10 +67,10 @@ export default async function DashboardPage() {
 **Summary:**
 Always move client-only UI into a Client Component and import it directly in your Server Component. Never use `next/dynamic` with `{ ssr: false }` in a Server Component.
 
-### 2.2. Next.js 16+ async request APIs (App Router)
+### 2.2. Next.js 15 async request APIs (App Router)
 
-- **Assume request-bound data is async in Server Components and Route Handlers.** In Next.js 16, APIs like `cookies()`, `headers()`, and `draftMode()` are async in the App Router.
-- **Be careful with route props:** `params` / `searchParams` may be Promises in Server Components. Prefer `await`ing them instead of treating them as plain objects.
+- **Assume request-bound data is async in Server Components and Route Handlers.** In Next.js 15, APIs like `cookies()`, `headers()`, and `draftMode()` are async in the App Router.
+- **Be careful with route props:** `params` / `searchParams` are Promises in Server Components in Next.js 15. Always `await` them instead of treating them as plain objects.
 - **Avoid dynamic rendering by accident:** Accessing request data (cookies/headers/searchParams) opts the route into dynamic behavior. Read them intentionally and isolate dynamic parts behind `Suspense` boundaries when appropriate.
 
 ---
@@ -128,16 +128,15 @@ Always move client-only UI into a Client Component and import it directly in you
 ## 6. General Best Practices
 
 - **TypeScript:** Use TypeScript for all code. Enable `strict` mode in `tsconfig.json`.
-- **ESLint & Prettier:** Enforce code style and linting. Use the official Next.js ESLint config. In Next.js 16, prefer running ESLint via the ESLint CLI (not `next lint`).
+- **ESLint & Prettier:** Enforce code style and linting. Use the official Next.js ESLint config (`eslint-config-next`). Run linting via `next lint` (or `pnpm lint`) -- the standard approach in Next.js 15.
 - **Environment Variables:** Store secrets in `.env.local`. Never commit secrets to version control.
-  - In Next.js 16, `serverRuntimeConfig` / `publicRuntimeConfig` are removed. Use environment variables instead.
-  - `NEXT_PUBLIC_` variables are **inlined at build time** (changing them after build won’t affect a deployed build).
-  - If you truly need runtime evaluation of env in a dynamic context, follow Next.js guidance (e.g., call `connection()` before reading `process.env`).
-- **Testing:** Use Jest, React Testing Library, or Playwright. Write tests for all critical logic and components.
+  - `NEXT_PUBLIC_` variables are **inlined at build time** (changing them after build will not affect a deployed build).
+  - Server-only env vars (no `NEXT_PUBLIC_` prefix) are never exposed to the browser.
+- **Testing:** Use **Vitest** for unit tests (this project uses `vitest@^1.2.0`). Use React Testing Library for component tests, and Playwright for end-to-end tests when needed. Write tests for all critical logic and components.
 - **Accessibility:** Use semantic HTML and ARIA attributes. Test with screen readers.
 - **Performance:**
   - Use built-in Image and Font optimization.
-  - Prefer **Cache Components** (`cacheComponents` + `use cache`) over legacy caching patterns.
+  - Use `fetch` caching and `revalidatePath` / `revalidateTag` for data freshness in Server Components.
   - Use Suspense and loading states for async data.
   - Avoid large client bundles; keep most logic in Server Components.
 - **Security:**
@@ -149,24 +148,24 @@ Always move client-only UI into a Client Component and import it directly in you
   - Write clear README and code comments.
   - Document public APIs and components.
 
-## 7. Caching & Revalidation (Next.js 16 Cache Components)
+## 7. Caching & Revalidation (Next.js 15)
 
-- **Prefer Cache Components for memoization/caching** in the App Router.
-  - Enable in `next.config.*` via `cacheComponents: true`.
-  - Use the **`use cache` directive** to opt a component/function into caching.
-- **Use cache tagging and lifetimes intentionally:**
-  - Use `cacheTag(...)` to associate cached results with tags.
-  - Use `cacheLife(...)` to control cache lifetime (presets or configured profiles).
-- **Revalidation guidance:**
-  - Prefer `revalidateTag(tag, 'max')` (stale-while-revalidate) for most cases.
-  - The single-argument form `revalidateTag(tag)` is legacy/deprecated.
-  - Use `updateTag(...)` inside **Server Actions** when you need “read-your-writes” / immediate consistency.
-- **Avoid `unstable_cache`** for new code; treat it as legacy and migrate toward Cache Components.
+Next.js 15 uses the standard fetch-based caching model. The Next.js 16 "Cache Components" (`use cache`, `cacheTag()`, `cacheLife()`) are **not available** in Next.js 15.
 
-## 8. Tooling updates (Next.js 16)
+- **Data fetching in Server Components:** Use `fetch` with cache options:
+  - `fetch(url, { cache: 'no-store' })` -- always dynamic (opt out of caching)
+  - `fetch(url, { next: { revalidate: 60 } })` -- ISR-style revalidation every N seconds
+  - `fetch(url)` -- defaults to cached (static) in production
+- **Revalidation:**
+  - Use `revalidatePath(path)` to purge cached pages by route.
+  - Use `revalidateTag(tag)` to purge by tag (single-arg form is correct in Next.js 15).
+- **`unstable_cache`:** Available in Next.js 15 as a way to cache non-fetch async functions. Use it where needed.
+- **Route Segment Config:** Control caching at the route level with `export const dynamic`, `export const revalidate`, and `export const fetchCache` at the top of a page or layout file.
 
-- **Turbopack is the default dev bundler.** Configure via the top-level `turbopack` field in `next.config.*` (do not use the removed `experimental.turbo`).
-- **Typed routes are stable** via `typedRoutes` (TypeScript required).
+## 8. Tooling (Next.js 15)
+
+- **Turbopack** is opt-in in Next.js 15: start the dev server with `next dev --turbopack` to use it. It is **not the default** -- the Webpack-based bundler is still the default.
+- **Typed routes** are an experimental opt-in via `experimental.typedRoutes: true` in `next.config.*` (TypeScript required). Not yet stable in 15.x.
 
 ## 9. Avoid Unnecessary Example Files
 
