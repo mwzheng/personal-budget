@@ -1,14 +1,19 @@
-<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. Updated 2026-03-21: page-width expansion, standardized action icon buttons/tooltips, budget row-load polish, and the SEO/accessibility cleanup pass moved to plan.completed.md. Updated 2026-03-23: the Google Analytics host-policy hardening pass and follow-up pageview queue fix moved to plan.completed.md. Updated 2026-03-25: transaction modal defaults, commit-authoring rules, and progress page visual overhaul moved to plan.completed.md. -->
+<!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. Updated 2026-03-21: page-width expansion, standardized action icon buttons/tooltips, budget row-load polish, and the SEO/accessibility cleanup pass moved to plan.completed.md. Updated 2026-03-23: the Google Analytics host-policy hardening pass and follow-up pageview queue fix moved to plan.completed.md. Updated 2026-03-25: transaction modal defaults, commit-authoring rules, and progress page visual overhaul moved to plan.completed.md. Updated 2026-03-26: the repository-wide cleanup pass (shared utility extraction, module splits, UI consistency work, Copilot docs cleanup, and expanded route/CSV coverage) moved to plan.completed.md. -->
 
-## Status: Completed 2026-03-25
+## Status: Active follow-up plan (updated 2026-03-26)
 
-Latest completed work: Transaction modal updated with sensible defaults (date
-defaults to today, category to Need, payment method as dropdown). Progress page
-visual overhaul: year filter removed, GoalEditor redesigned with LinearProgress
-bar and popup edit dialog, retirement/milestones/salary lists upgraded to
-responsive card grids with color-coded Chips, salary chart centered. Commit
-authoring instructions updated with commit message quality rules. Validation
-pass (`pnpm lint`, `pnpm test --run`, `pnpm build`) all clean.
+Latest completed work: The repository-wide cleanup pass is complete and recorded
+in `plan.completed.md`. That work centralized shared utilities, split large
+modules, standardized UI typography/theme usage, condensed Copilot
+instruction/skill files, strengthened auth/error handling, and expanded direct
+route and CSV edge-case test coverage across the app.
+
+Current active follow-ups are intentionally narrow:
+
+- Add direct coverage for `app/api/budgets/[id]/route.ts` (PUT/DELETE).
+- Decide and document the DynamoDB integration-test strategy for CI/local work.
+- Add a lightweight Budgets → Sankey E2E smoke test once the preferred test
+  infrastructure is chosen.
 
 # Development Plan for Porridge Budget
 
@@ -115,19 +120,18 @@ Remaining / next priorities (high level):
   - Client-side auth refresh flow implemented in `lib/apiFetch.ts` (refresh on 401/403 using refresh_token).
 
 - Pending (next priorities):
-  1. Re-enable stricter ESLint/TypeScript rules (todo: reenable-eslint-strict) — reintroduce strict `tsconfig` and enable `@typescript-eslint` recommended rules in a feature branch and fix issues incrementally.
-  2. Decide DynamoDB test mocking strategy (todo: decide-dynamodb-mock-strategy) — choose between AWS SDK client mocks (`aws-sdk-client-mock`), LocalStack, or an in-memory DynamoDB for CI and local integration tests; document trade-offs.
-  3. Add unit & integration tests for Budgets endpoints (POST/PUT/DELETE) (todo: add-budgets-endpoint-tests) — cover validation and allocations normalization.
-  4. Add E2E smoke tests for the Budgets → Sankey flow (todo: add-budgets-e2e-smoke-tests) — create minimal Playwright/Cypress tests for create → edit → select → preview → delete.
-  5. Create feature branches & PRs for the work above (todo: create-feature-branches) — `feat/reenable-eslint`, `feat/budgets-tests`, `feat/budgets-e2e`.
+  1. Decide DynamoDB test mocking strategy (todo: decide-dynamodb-mock-strategy) — choose between AWS SDK client mocks, LocalStack, or an in-memory DynamoDB for CI and local integration tests; document the trade-offs and the expected developer workflow.
+  2. Extend Budgets endpoint coverage to the item route (`app/api/budgets/[id]/route.ts`) so PUT/DELETE behavior is covered as directly as the collection route.
+  3. Add E2E smoke tests for the Budgets → Sankey flow (todo: add-budgets-e2e-smoke-tests) — create a minimal create → edit → select → preview → delete path.
+  4. Migrate from `next lint` to the standalone ESLint CLI before the Next.js 16 upgrade so the repository is ahead of the deprecation.
 
 Immediate next steps (developer tasks):
 
-1. Decide and document the DynamoDB testing approach (client mocks vs LocalStack vs in-memory) — add a short RFC in `tests/README.md` describing CI implications.
-2. Implement unit tests for allocation normalization (`lib/sankey.ts`) and server-side unit tests for `app/api/budgets` (POST/PUT/DELETE) in `feat/budgets-tests` using the chosen mocking strategy.
-3. Add E2E smoke tests for the core Budgets flow in `feat/budgets-e2e` using Playwright or Cypress and make them runnable in CI using the selected test infra.
-4. Create feature branches: `feat/reenable-eslint`, `feat/budgets-tests`, `feat/budgets-e2e`, open PRs, and assign reviewers.
-5. After tests are in place, extend CI to run coverage and optionally a lightweight E2E/smoke stage (mocked or using test Dynamo infra).
+1. Decide and document the DynamoDB testing approach (client mocks vs LocalStack vs in-memory) — add a short RFC describing CI implications and local setup.
+2. Add direct route tests for `app/api/budgets/[id]/route.ts` (PUT/DELETE) using the existing route-test mocking patterns.
+3. Add a lightweight E2E smoke test for the core Budgets → Sankey flow once the preferred browser-test runner is selected.
+4. Migrate the lint script from `next lint` to ESLint CLI and verify the same rules continue to run in CI.
+5. After the test strategy is settled, consider adding coverage reporting and an optional smoke stage to CI.
 
 (Completed work moved to `plan.completed.md` — keep that file as the authoritative record of done items.)
 
@@ -203,7 +207,7 @@ Additional entities stored in DynamoDB (separate tables recommended initially):
 
 1. Re-enable stricter ESLint & TypeScript rules — (todo: reenable-eslint-strict).
 2. Decide DynamoDB test mocking strategy — (todo: decide-dynamodb-mock-strategy).
-3. Add unit & integration tests for Budgets endpoints (POST/PUT/DELETE) — (todo: add-budgets-endpoint-tests).
+3. Add unit & integration tests for the remaining Budgets item endpoints (PUT/DELETE) after the collection-route GET/POST coverage — (todo: add-budgets-endpoint-tests).
 4. Add E2E smoke tests for Budgets → Sankey flow — (todo: add-budgets-e2e-smoke-tests).
 5. Create feature branches & open PRs for re-enable-eslint and test work — (todo: create-feature-branches).
 6. Add CI job to run budgets endpoint tests and optional E2E smoke stage (mocked) — (todo: ci-add-budgets-tests).

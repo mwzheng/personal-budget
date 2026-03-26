@@ -1,3 +1,170 @@
+# Completed: Repository-wide cleanup pass
+
+Date: 2026-03-26
+
+Summary
+
+- Completed a full-application cleanup focused on clarity, deduplication, and
+  consistency across runtime code, tests, and Copilot project metadata.
+- Extracted repeated helpers into shared modules, split oversized files into
+  smaller units, standardized key UI patterns and typography, and tightened auth
+  and API error-handling behavior.
+- Expanded the Vitest suite with direct route coverage, utility tests, DynamoDB
+  helper tests, and CSV edge-case coverage so the cleanup is protected against
+  regressions.
+
+Completed items
+
+- Shared utility extraction:
+  - Added `lib/api/dynamoClient.ts`, `lib/api/tableKeys.ts`,
+    `lib/auth/parseAuthHeader.ts`, `lib/utils/categoryColors.ts`, and
+    `lib/utils/generateId.ts`.
+  - Centralized currency formatting in `lib/utils/format.ts`.
+  - Consolidated redundant auth helpers into `lib/auth/auth.ts` and removed the
+    duplicate `lib/auth/auth2.ts` implementation.
+- UI and component cleanup:
+  - Added `hooks/useDeleteConfirmation.ts`, `hooks/useFormSubmit.ts`, and
+    `components/ui/EmptyState.tsx`.
+  - Standardized page-title typography, theme-token usage, and Inter font
+    loading across public and authenticated pages.
+- Module restructuring:
+  - Split `lib/utils/budget-planner.ts` into `budget-calculator.ts`,
+    `budget-normalizer.ts`, and `sankey-builder.ts` with a barrel re-export.
+  - Split `lib/demo/demoApi.ts` into a thin dispatcher plus focused handler
+    modules under `lib/demo/handlers/`.
+- Copilot/docs cleanup:
+  - Removed redundant instruction files, fixed broken skill paths, condensed the
+    verbose instruction/skill files, and corrected stale Next.js/Vitest guidance.
+- Test expansion:
+  - Added direct route tests for budgets collection routes, goals, salary, and
+    progress routes.
+  - Added direct shared-utility tests and stronger DynamoDB/demo-mode/analytics
+    regression coverage.
+  - Added CSV import/export edge-case coverage.
+
+Files changed
+
+- `README.md`
+- `.github/copilot-instructions.md`
+- `.github/instructions/*`
+- `.github/skills/*`
+- `app/**/*`
+- `components/**/*`
+- `hooks/**/*`
+- `lib/**/*`
+- `test/**/*`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- The main remaining testing gap is direct PUT/DELETE coverage for
+  `app/api/budgets/[id]/route.ts`.
+- A documented DynamoDB integration-test strategy and a lightweight Budgets →
+  Sankey E2E smoke test are the next logical follow-ups.
+
+# Completed: Add direct progress API route tests
+
+Date: 2026-03-26
+
+Summary
+
+- Added a dedicated Vitest suite for the progress route handlers under
+  `app/api/progress`, covering the goal, retirement, and milestones endpoints at
+  the request/response boundary.
+- Mocked `getPayloadFromRequest`, `upsertUserProfile`, and the shared progress
+  data helpers so the tests verify route behavior without depending on Cognito
+  or DynamoDB.
+- Locked down route-specific edge cases such as derived progress percentages,
+  retirement change/pct calculations, and DELETE query-string fallback parsing.
+
+Completed items
+
+- Added `test/progress-routes.test.ts` with coverage for:
+  - `app/api/progress/goal`
+    - GET happy path with `latestEnd` and `progressPct` derivation.
+    - POST happy path.
+    - PUT happy path.
+    - Missing payload/required-field failures.
+    - Auth failure behavior.
+  - `app/api/progress/retirement`
+    - GET happy path with year sorting plus `change`/`pct` derived fields.
+    - POST happy path.
+    - PUT happy path.
+    - DELETE happy path using query-parameter fallback.
+    - Missing payload/ID failures.
+    - Auth failure behavior.
+  - `app/api/progress/milestones`
+    - GET happy path.
+    - POST happy path.
+    - DELETE happy path using query-parameter fallback.
+    - Missing payload/ID failures.
+    - Auth failure behavior.
+- Updated `plan.md` so the active plan summary now points at this test coverage
+  as the latest completed work.
+
+Files changed
+
+- `test/progress-routes.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- The progress route suite now covers the direct API handlers; future follow-up
+  work can stay focused on component wiring or broader integration flows.
+
+# Completed: Add direct Budgets API collection-route tests
+
+Date: 2026-03-26
+
+Summary
+
+- Added a direct Vitest suite for `app/api/budgets/route.ts` that exercises the
+  GET/POST handlers at the request/response boundary.
+- Mocked `getUserIdFromRequest` and the DynamoDB layer so the tests stay aligned
+  with existing route-test patterns while avoiding real auth or database calls.
+- Locked down payload validation, auth failure handling, and route-specific body
+  normalization such as trimming names, dropping invalid expenses, and inferring
+  `monthlyIncome` from total expenses when it is omitted.
+
+Completed items
+
+- Added `test/budgets-route.test.ts` with coverage for:
+  - GET returning the authenticated user's budgets via `getUserBudgets(userId)`.
+  - POST creating a budget for the authenticated user.
+  - POST returning the route's structured `validation_error` response for an
+    invalid/missing payload.
+  - GET preserving the route's current auth-failure response shape.
+  - POST normalizing whitespace-heavy budget names and expense rows before
+    calling `putBudget`.
+- Updated `plan.md` so the active plan now tracks only the remaining
+  `app/api/budgets/[id]` PUT/DELETE route coverage.
+
+Files changed
+
+- `test/budgets-route.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- The remaining budgets-endpoint follow-up is the item-route coverage for
+  `app/api/budgets/[id]/route.ts` (PUT/DELETE); the collection route is now
+  directly covered.
+
 # Completed: Transaction modal defaults, commit-authoring rules, and progress page visual overhaul
 
 Date: 2026-03-25
