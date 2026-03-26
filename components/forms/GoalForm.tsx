@@ -1,11 +1,11 @@
 // Note 1: GoalForm is a reusable form that supports both creating a new goal
 // (POST) and updating an existing one (PUT). The distinction is determined by
-// whether `defaultGoal.goalId` is present. This "upsert" pattern avoids the
-// need for two separate form components.
+// whether `defaultGoal.goalId` is present. This "upsert" pattern is handled by
+// the shared useFormSubmit hook so the form only owns field state.
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
-import { apiFetch } from "@/lib/api/apiFetch";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
 
 type Goal = {
@@ -42,43 +42,29 @@ export default function GoalForm({
   const [expectedAnnualReturn, setExpectedAnnualReturn] = useState(
     String(defaultGoal?.expectedAnnualReturn ?? ""),
   );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Note 3: useFormSubmit handles the POST/PUT decision, loading state, error
+  // state, and the `{ ok, created, updated }` response contract. The form only
+  // needs to construct the body and call `apiSubmit`.
+  const {
+    submit: apiSubmit,
+    isSubmitting: loading,
+    error,
+  } = useFormSubmit({ baseUrl: "/api/goals", onSuccess: onSaved });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const body = {
-        goalId: defaultGoal?.goalId,
-        name: name.trim(),
-        targetAmount: Number(sanitizeNumberString(targetAmount)),
-        currentSaved: Number(sanitizeNumberString(currentSaved)),
-        monthlyContribution: Number(sanitizeNumberString(monthlyContribution)),
-        expectedAnnualReturn: Number(
-          sanitizeNumberString(expectedAnnualReturn),
-        ),
-      };
-      // Note 3: If `defaultGoal.goalId` exists we are editing an existing goal
-      // so PUT is used. Otherwise POST creates a new goal. The API assigns the
-      // `goalId` on the server for new goals, ensuring unique IDs from one place.
-      const res = await apiFetch("/api/goals", {
-        method: defaultGoal?.goalId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Save failed");
-      // Note 4: `onSaved?.()` uses optional chaining to call the callback only
-      // if it was provided. The parent component uses this to close the form and
-      // refresh the goal list after a successful save.
-      onSaved?.(data.created || data.updated);
-    } catch (err: any) {
-      setError(err.message || String(err));
-    } finally {
-      setLoading(false);
-    }
+    // Note 4: `goalId` is always included in the body — the server ignores it
+    // for POST (new goals get a server-assigned ID) and uses it for PUT lookups.
+    const body: Record<string, unknown> = {
+      goalId: defaultGoal?.goalId,
+      name: name.trim(),
+      targetAmount: Number(sanitizeNumberString(targetAmount)),
+      currentSaved: Number(sanitizeNumberString(currentSaved)),
+      monthlyContribution: Number(sanitizeNumberString(monthlyContribution)),
+      expectedAnnualReturn: Number(sanitizeNumberString(expectedAnnualReturn)),
+    };
+    await apiSubmit(body, Boolean(defaultGoal?.goalId));
   };
 
   return (

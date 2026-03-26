@@ -1,7 +1,10 @@
+// Note 1: RetirementForm handles POST (create) and PUT (update) for retirement
+// progress entries. The upsert logic is delegated to useFormSubmit so the form
+// only owns field state and body construction.
 "use client";
 import React, { useState } from "react";
 import { Box, TextField, Button, Stack } from "@mui/material";
-import { apiFetch } from "@/lib/api/apiFetch";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
 
 export default function RetirementForm({
@@ -22,33 +25,25 @@ export default function RetirementForm({
   const [endAmount, setEndAmount] = useState(
     String(defaultEntry?.endAmount ?? "0"),
   );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    submit: apiSubmit,
+    isSubmitting: loading,
+    error,
+  } = useFormSubmit({
+    baseUrl: "/api/progress/retirement",
+    onSuccess: onSaved,
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const body: any = {
-        year: Number(sanitizeNumberString(year)),
-        startAmount: Number(sanitizeNumberString(startAmount)),
-        endAmount: Number(sanitizeNumberString(endAmount)),
-      };
-      if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
-      const res = await apiFetch("/api/progress/retirement", {
-        method: defaultEntry?.entryId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Save failed");
-      onSaved?.(data.created || data.updated);
-    } catch (err: any) {
-      setError(err.message || String(err));
-    } finally {
-      setLoading(false);
-    }
+    const body: Record<string, unknown> = {
+      year: Number(sanitizeNumberString(year)),
+      startAmount: Number(sanitizeNumberString(startAmount)),
+      endAmount: Number(sanitizeNumberString(endAmount)),
+    };
+    if (defaultEntry?.entryId) body.entryId = defaultEntry.entryId;
+    await apiSubmit(body, Boolean(defaultEntry?.entryId));
   };
 
   return (

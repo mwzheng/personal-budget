@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { Box, Button, Stack, TextField } from "@mui/material";
-import { apiFetch } from "@/lib/api/apiFetch";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { sanitizeNumberString } from "@/lib/utils/format";
 
 interface Props {
@@ -17,8 +17,15 @@ export default function MilestoneForm({ onSaved, onCancel }: Props) {
   const [amount, setAmount] = useState("");
   const [year, setYear] = useState("");
   const [age, setAge] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    submit: apiSubmit,
+    isSubmitting: loading,
+    error,
+  } = useFormSubmit({
+    baseUrl: "/api/progress/milestones",
+    onSuccess: onSaved,
+  });
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -27,43 +34,19 @@ export default function MilestoneForm({ onSaved, onCancel }: Props) {
       return;
     }
 
-    setError(null);
-    setLoading(true);
+    const body: Record<string, unknown> = {
+      amount: Number(sanitizeNumberString(amount)),
+    };
 
-    try {
-      const body: { amount: number; year?: number; age?: number } = {
-        amount: Number(sanitizeNumberString(amount)),
-      };
-
-      if (year) {
-        body.year = Number(sanitizeNumberString(year));
-      }
-
-      if (age) {
-        body.age = Number(sanitizeNumberString(age));
-      }
-
-      const response = await apiFetch("/api/progress/milestones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await response.json();
-
-      if (!data.ok) {
-        throw new Error(data.error || "Create failed");
-      }
-
-      await Promise.resolve(onSaved?.());
-    } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : String(submitError),
-      );
-    } finally {
-      setLoading(false);
+    if (year) {
+      body.year = Number(sanitizeNumberString(year));
     }
+
+    if (age) {
+      body.age = Number(sanitizeNumberString(age));
+    }
+
+    await apiSubmit(body);
   };
 
   return (
