@@ -29,7 +29,6 @@ interface ProgressChartRow {
 interface Props {
   salaryEntries: SalaryEntry[];
   retirementEntries: RetirementEntry[];
-  selectedYears?: string[];
   loading?: boolean;
   error?: string | null;
 }
@@ -37,39 +36,20 @@ interface Props {
 export default function ProgressCharts({
   salaryEntries,
   retirementEntries,
-  selectedYears = [],
   loading = false,
   error = null,
 }: Props) {
   const theme = useTheme();
   const data = useMemo(() => {
-    const selectedYearSet = new Set(selectedYears);
-
-    // Note 2: Filtering before the merge keeps the X-axis stable for both lines.
-    // That means a selected year disappears from both salary and retirement at the
-    // same time instead of leaving partial rows behind.
-    const filteredRetirementEntries =
-      selectedYearSet.size === 0
-        ? retirementEntries
-        : retirementEntries.filter((entry) =>
-            selectedYearSet.has(String(entry.year)),
-          );
-    const filteredSalaryEntries =
-      selectedYearSet.size === 0
-        ? salaryEntries
-        : salaryEntries.filter((entry) =>
-            selectedYearSet.has(String(entry.year)),
-          );
-
-    // Note 3: Build maps by year first so the merge stays linear instead of
+    // Note 2: Build maps by year first so the merge stays linear instead of
     // repeatedly searching the arrays for matching years.
     const retirementByYear = new Map<number, number>();
-    for (const entry of filteredRetirementEntries) {
+    for (const entry of retirementEntries) {
       retirementByYear.set(entry.year, entry.endAmount);
     }
 
     const salaryByYear = new Map<number, number>();
-    for (const entry of filteredSalaryEntries) {
+    for (const entry of salaryEntries) {
       salaryByYear.set(entry.year, entry.amount);
     }
 
@@ -84,7 +64,7 @@ export default function ProgressCharts({
         salary: salaryByYear.get(year) ?? null,
       }),
     );
-  }, [retirementEntries, salaryEntries, selectedYears]);
+  }, [retirementEntries, salaryEntries]);
 
   const tooltipContent = ({ active, label, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -141,9 +121,7 @@ export default function ProgressCharts({
             }}
           >
             <Typography color="text.secondary">
-              {selectedYears.length > 0
-                ? "No progress data for the selected years."
-                : "Add salary or retirement history to see progress over time."}
+              Add salary or retirement history to see progress over time.
             </Typography>
           </Box>
         ) : (
