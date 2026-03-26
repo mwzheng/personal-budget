@@ -10,7 +10,7 @@ The repository exposes specialized Copilot skills that can (and should) be used 
 - `documentation-writer` — Diátaxis-style documentation expert for producing structured docs and guides.
 - `first-ask` — Interactive task refinement workflow to clarify scope before implementation (requires Joyride).
 - `git-commit` — Create git commits with intelligent staging and conventional commit messages.
-- `javascript-typescript-jest` — Generate and improve JavaScript/TypeScript tests using Jest and best practices.
+- `javascript-typescript-jest` — Generate and improve JavaScript/TypeScript tests using Vitest (primary) or Jest, including mocking strategies and best practices.
 - `make-skill-template` — Scaffold a new Copilot skill template.
 - `mentoring-juniors` — Socratic mentoring workflow for teaching and guiding junior developers.
 - `prd` — Generate Product Requirements Documents (PRDs) with structure and acceptance criteria.

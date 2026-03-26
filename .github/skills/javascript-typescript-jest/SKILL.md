@@ -1,7 +1,11 @@
 ---
 name: javascript-typescript-jest
-description: "Best practices for writing JavaScript/TypeScript tests using Jest, including mocking strategies, test structure, and common patterns."
+description: "Best practices for writing JavaScript/TypeScript tests using Vitest (primary) or Jest, including mocking strategies, test structure, and common patterns."
 ---
+
+### Test Runner
+
+This project uses **Vitest** (`vitest@^1.2.0`) as its primary test runner. The APIs below default to Vitest; Jest equivalents are noted where they differ. Most matchers and test structure patterns are shared between the two runners.
 
 ### Test Structure
 
@@ -14,16 +18,16 @@ description: "Best practices for writing JavaScript/TypeScript tests using Jest,
 ### Effective Mocking
 
 - Mock external dependencies (APIs, databases, etc.) to isolate your tests
-- Use `jest.mock()` for module-level mocks
-- Use `jest.spyOn()` for specific function mocks
-- Use `mockImplementation()` or `mockReturnValue()` to define mock behavior
-- Reset mocks between tests with `jest.resetAllMocks()` in `afterEach`
+- Use `vi.mock()` for module-level mocks (Jest equivalent: `jest.mock()`)
+- Use `vi.spyOn()` for specific function mocks (Jest equivalent: `jest.spyOn()`)
+- Use `mockImplementation()` or `mockReturnValue()` to define mock behavior (same API in both runners)
+- Reset mocks between tests with `vi.resetAllMocks()` in `afterEach` (Jest: `jest.resetAllMocks()`)
 
 ### Testing Async Code
 
 - Always return promises or use async/await syntax in tests
 - Use `resolves`/`rejects` matchers for promises
-- Set appropriate timeouts for slow tests with `jest.setTimeout()`
+- Set appropriate timeouts for slow tests with `vi.setConfig({ testTimeout: 10000 })` (Jest: `jest.setTimeout()`)
 
 ### Snapshot Testing
 
@@ -38,7 +42,9 @@ description: "Best practices for writing JavaScript/TypeScript tests using Jest,
 - Query elements by accessibility roles, labels, or text content
 - Use `userEvent` over `fireEvent` for more realistic user interactions
 
-## Common Jest Matchers
+## Common Matchers (Vitest & Jest)
+
+These matchers work identically in both Vitest and Jest:
 
 - Basic: `expect(value).toBe(expected)`, `expect(value).toEqual(expected)`
 - Truthiness: `expect(value).toBeTruthy()`, `expect(value).toBeFalsy()`
