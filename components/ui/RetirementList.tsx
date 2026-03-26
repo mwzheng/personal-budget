@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
-  List,
-  ListItem,
-  ListItemText,
+  Card,
+  CardContent,
+  Chip,
   Typography,
   Stack,
-  Divider,
 } from "@mui/material";
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
@@ -132,47 +131,109 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      <List>
-        {entries.map((entry) => (
-          <React.Fragment key={entry.entryId}>
-            <ListItem
-              secondaryAction={
-                <Stack direction="row" spacing={0.75}>
-                  <ActionIconButton
-                    tooltip="Edit"
-                    ariaLabel={`Edit retirement entry for ${entry.year}`}
-                    onClick={() => {
-                      setEditing(entry);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <EditOutlinedIcon fontSize="small" />
-                  </ActionIconButton>
-                  <ActionIconButton
-                    tooltip="Delete"
-                    ariaLabel={`Delete retirement entry for ${entry.year}`}
-                    tone="danger"
-                    onClick={() =>
-                      setDeleteCandidate({
-                        entryId: entry.entryId!,
-                        year: entry.year,
-                      })
-                    }
-                  >
-                    <DeleteOutlineRoundedIcon fontSize="small" />
-                  </ActionIconButton>
+      {/* Note 3: Responsive card grid — single column on mobile (xs),
+          two columns on sm+. Each card surfaces year, start/end amounts,
+          and the computed change with a colour-coded Chip for quick scanning. */}
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(2, minmax(0, 1fr))",
+          },
+        }}
+      >
+        {entries.map((entry) => {
+          const change = Number(
+            entry.change ?? entry.endAmount - entry.startAmount,
+          );
+          const pct = entry.pct;
+
+          // Note 4: Chip colour is derived from the sign of the change so the
+          // user gets an instant positive/negative visual signal.
+          const chipColor: "success" | "error" | "default" =
+            change > 0 ? "success" : change < 0 ? "error" : "default";
+
+          return (
+            <Card key={entry.entryId}>
+              <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                {/* ── Top row: year heading + action buttons ── */}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{ mb: 1.5 }}
+                >
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {entry.year}
+                  </Typography>
+                  <Stack direction="row" spacing={0.75}>
+                    <ActionIconButton
+                      tooltip="Edit"
+                      ariaLabel={`Edit retirement entry for ${entry.year}`}
+                      onClick={() => {
+                        setEditing(entry);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </ActionIconButton>
+                    <ActionIconButton
+                      tooltip="Delete"
+                      ariaLabel={`Delete retirement entry for ${entry.year}`}
+                      tone="danger"
+                      onClick={() =>
+                        setDeleteCandidate({
+                          entryId: entry.entryId!,
+                          year: entry.year,
+                        })
+                      }
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </ActionIconButton>
+                  </Stack>
                 </Stack>
-              }
-            >
-              <ListItemText
-                primary={`${entry.year} — start: $${Number(entry.startAmount).toLocaleString()} end: $${Number(entry.endAmount).toLocaleString()}`}
-                secondary={`Change: $${Number(entry.change ?? entry.endAmount - entry.startAmount).toLocaleString()} ${entry.pct !== null && entry.pct !== undefined ? `(${entry.pct}%)` : ""}`}
-              />
-            </ListItem>
-            <Divider component="li" />
-          </React.Fragment>
-        ))}
-      </List>
+
+                {/* ── Middle row: start / end amounts side-by-side ── */}
+                <Stack direction="row" spacing={3} sx={{ mb: 1.5 }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Start
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      ${Number(entry.startAmount).toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      End
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      ${Number(entry.endAmount).toLocaleString()}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {/* ── Bottom row: change amount + percentage chip ── */}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Change: ${change.toLocaleString()}
+                  </Typography>
+                  {pct !== null && pct !== undefined ? (
+                    <Chip
+                      label={`${pct}%`}
+                      size="small"
+                      variant="outlined"
+                      color={chipColor}
+                    />
+                  ) : null}
+                </Stack>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </Box>
 
       {entries.length === 0 && !loading ? (
         <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>

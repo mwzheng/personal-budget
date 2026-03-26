@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {
   Box,
   Button,
-  List,
-  ListItem,
-  ListItemText,
+  Card,
+  CardContent,
+  Stack,
   Typography,
 } from "@mui/material";
 import MilestoneForm from "@/components/forms/MilestoneForm";
@@ -129,47 +129,64 @@ export default function MilestonesList() {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      <List>
-        {items.length === 0 && !loading ? (
-          <ListItem>
-            <ListItemText
-              primary={
-                <Typography
-                  color="text.secondary"
-                  sx={{ py: 2, textAlign: "center" }}
-                >
-                  No milestones yet.
-                </Typography>
-              }
-            />
-          </ListItem>
-        ) : null}
+      {items.length === 0 && !loading ? (
+        <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+          No milestones yet.
+        </Typography>
+      ) : null}
+
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(2, minmax(0, 1fr))",
+          },
+        }}
+      >
         {items.map((item) => (
-          <ListItem
-            key={item.milestoneId}
-            secondaryAction={
-              <ActionIconButton
-                tooltip="Delete"
-                ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
-                tone="danger"
-                onClick={() =>
-                  setDeleteCandidate({
-                    milestoneId: item.milestoneId,
-                    year: item.year,
-                  })
-                }
+          <Card key={item.milestoneId}>
+            <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
               >
-                <DeleteOutlineRoundedIcon fontSize="small" />
-              </ActionIconButton>
-            }
-          >
-            <ListItemText
-              primary={`$${Number(item.amount).toLocaleString()}`}
-              secondary={`${item.year ? `Year: ${item.year}` : ""} ${item.age ? ` Age: ${item.age}` : ""}`}
-            />
-          </ListItem>
+                <Typography variant="h6" fontWeight={600}>
+                  ${Number(item.amount).toLocaleString()}
+                </Typography>
+                <ActionIconButton
+                  tooltip="Delete"
+                  ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
+                  tone="danger"
+                  onClick={() =>
+                    setDeleteCandidate({
+                      milestoneId: item.milestoneId,
+                      year: item.year,
+                    })
+                  }
+                >
+                  <DeleteOutlineRoundedIcon fontSize="small" />
+                </ActionIconButton>
+              </Stack>
+
+              <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                {item.year ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Year: {item.year}
+                  </Typography>
+                ) : null}
+                {item.age ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Age: {item.age}
+                  </Typography>
+                ) : null}
+              </Stack>
+            </CardContent>
+          </Card>
         ))}
-      </List>
+      </Box>
 
       <ConfirmDialog
         open={Boolean(deleteCandidate)}
