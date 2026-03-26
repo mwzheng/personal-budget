@@ -111,4 +111,37 @@ describe("reports year helpers", () => {
     expect(aggregates.spendingAmount).toBe(30);
     expect(aggregates.totalAmount).toBe(50);
   });
+
+  // Note 2: Aggregating an empty transaction list must produce zeroed totals
+  // rather than undefined fields — protects report views on new accounts.
+  it("returns zeroed aggregates when the transaction list is empty", () => {
+    const aggregates = aggregateTransactions([]);
+
+    expect(aggregates.totalAmount).toBe(0);
+    expect(aggregates.spendingAmount).toBe(0);
+  });
+
+  it("filters out all transactions when no year matches the selected years", () => {
+    const filtered = filterTransactions(transactions, {
+      years: ["2099"],
+      startDate: null,
+      endDate: null,
+      tags: [],
+      search: "",
+    });
+
+    expect(filtered).toEqual([]);
+  });
+
+  it("returns all transactions when no filter criteria are specified", () => {
+    const filtered = filterTransactions(transactions, {
+      years: [],
+      startDate: null,
+      endDate: null,
+      tags: [],
+      search: "",
+    });
+
+    expect(filtered).toHaveLength(transactions.length);
+  });
 });

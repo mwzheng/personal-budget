@@ -110,4 +110,11 @@ describe("transaction calendar helpers", () => {
     expect(events).toHaveLength(1);
     expect(events[0].id).toBe("valid");
   });
+
+  // Note 2: An empty input must produce an empty events array rather than
+  // throwing. This edge case can happen when a user has no transactions yet.
+  it("returns an empty array when no transactions are provided", () => {
+    const events = mapTransactionsToCalendarEvents([]);
+    expect(events).toEqual([]);
+  });
 });

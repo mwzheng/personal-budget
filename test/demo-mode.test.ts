@@ -169,6 +169,244 @@ describe("demo mode", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  // Note 2: Handler-module coverage — these tests hit the split handler files
+  // (goalHandlers, salaryHandlers, progressHandlers) to verify that each
+  // handler correctly reads from / writes to the demo store without any real
+  // network calls. The fetchSpy guard confirms no HTTP traffic is produced.
+
+  it("serves demo goals and supports creating then deleting a goal", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const listResponse = await apiFetch("/api/goals");
+    const listPayload = (await listResponse.json()) as {
+      ok: boolean;
+      goals: Array<{ goalId: string; name: string }>;
+    };
+    expect(listPayload.ok).toBe(true);
+    expect(Array.isArray(listPayload.goals)).toBe(true);
+
+    const createResponse = await apiFetch("/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Emergency Fund",
+        targetAmount: 10000,
+        currentSaved: 500,
+        monthlyContribution: 200,
+      }),
+    });
+    const createPayload = (await createResponse.json()) as {
+      ok: boolean;
+      created: { goalId: string };
+    };
+    expect(createPayload.ok).toBe(true);
+    expect(createPayload.created.goalId).toMatch(/^demo-goal-/);
+
+    // Delete the goal we just created and confirm it is removed
+    const deleteResponse = await apiFetch("/api/goals", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goalId: createPayload.created.goalId }),
+    });
+    expect(((await deleteResponse.json()) as { ok: boolean }).ok).toBe(true);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when creating a goal without a payload", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    // Note 3: readJsonBody returns null for JSON-null body, which the handler
+    // treats as a missing payload and responds with 400.
+    const response = await apiFetch("/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(null),
+    });
+
+    expect(response.status).toBe(400);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("serves salary entries and supports creating then deleting an entry", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const listResponse = await apiFetch("/api/salary");
+    const listPayload = (await listResponse.json()) as {
+      ok: boolean;
+      entries: Array<{ entryId: string; year: number; amount: number }>;
+    };
+    expect(listPayload.ok).toBe(true);
+    expect(Array.isArray(listPayload.entries)).toBe(true);
+
+    const createResponse = await apiFetch("/api/salary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ year: 2030, amount: 95000 }),
+    });
+    const createPayload = (await createResponse.json()) as {
+      ok: boolean;
+      created: { entryId: string; year: number };
+    };
+    expect(createPayload.ok).toBe(true);
+    expect(createPayload.created.year).toBe(2030);
+
+    const deleteResponse = await apiFetch("/api/salary", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entryId: createPayload.created.entryId }),
+    });
+    expect(((await deleteResponse.json()) as { ok: boolean }).ok).toBe(true);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when creating a salary entry without year or amount", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const response = await apiFetch("/api/salary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: "No year or amount" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("serves retirement entries and supports creating a new entry", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const listResponse = await apiFetch("/api/progress/retirement");
+    const listPayload = (await listResponse.json()) as {
+      ok: boolean;
+      entries: Array<unknown>;
+    };
+    expect(listPayload.ok).toBe(true);
+    expect(Array.isArray(listPayload.entries)).toBe(true);
+
+    const createResponse = await apiFetch("/api/progress/retirement", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        year: 2030,
+        startAmount: 100000,
+        endAmount: 115000,
+      }),
+    });
+    const createPayload = (await createResponse.json()) as {
+      ok: boolean;
+      created: { entryId: string; year: number };
+    };
+    expect(createPayload.ok).toBe(true);
+    expect(createPayload.created.year).toBe(2030);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when creating a retirement entry with missing amounts", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const response = await apiFetch("/api/progress/retirement", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ year: 2030 }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("creates and retrieves progress goal in demo mode", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const createResponse = await apiFetch("/api/progress/goal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetAmount: 500000 }),
+    });
+    const createPayload = (await createResponse.json()) as {
+      ok: boolean;
+      created: { goalId: string; targetAmount: number };
+    };
+    expect(createPayload.ok).toBe(true);
+    expect(createPayload.created.targetAmount).toBe(500000);
+
+    const getResponse = await apiFetch("/api/progress/goal");
+    const getPayload = (await getResponse.json()) as {
+      ok: boolean;
+      goals: Array<{ targetAmount: number }>;
+    };
+    expect(getPayload.ok).toBe(true);
+    expect(getPayload.goals.some((g) => g.targetAmount === 500000)).toBe(true);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("creates and deletes a milestone in demo mode", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const createResponse = await apiFetch("/api/progress/milestones", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: 100000, year: 2035 }),
+    });
+    const createPayload = (await createResponse.json()) as {
+      ok: boolean;
+      created: { milestoneId: string };
+    };
+    expect(createPayload.ok).toBe(true);
+
+    const deleteResponse = await apiFetch("/api/progress/milestones", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ milestoneId: createPayload.created.milestoneId }),
+    });
+    expect(((await deleteResponse.json()) as { ok: boolean }).ok).toBe(true);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when deleting a milestone without providing a milestoneId", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await startDemoSession();
+
+    const response = await apiFetch("/api/progress/milestones", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("does not restore Cognito tokens after sign-out during a refresh", async () => {
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN = "https://auth.example.com";
     process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID = "client-123";
