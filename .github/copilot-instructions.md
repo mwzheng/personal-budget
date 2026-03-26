@@ -28,14 +28,11 @@ Detailed rules are kept in `.github/instructions/`. Always open and follow the r
 
 - `devops-core-principles.instructions.md` — DevOps core principles (CALMS, DORA metrics) and cultural guidance.
 - `github-actions-ci-cd-best-practices.instructions.md` — CI/CD workflow guidance and GitHub Actions best practices.
-- `markdown.instructions.md` — Markdown content rules and validation requirements.
 - `reactjs.instructions.md` — React component and testing guidance.
 - `code-review-generic.instructions.md` — Generic code review checklist and reviewer guidance.
 - `typescript-5-es2022.instructions.md` — TypeScript 5 / ES2022 guidelines, typing, and async patterns.
 - `update-docs-on-code-change.instructions.md` — When and how to update documentation when code changes.
 - `html-css-style-color-guide.instructions.md` — HTML/CSS styling and color guidance.
-- `add-educational-comments.instructions.md` — Rules for adding developer-facing explanatory comments to changed files.
-- `prettier-after-updates.instructions.md` — Enforce running Prettier before committing edits.
 - `nextjs.instructions.md` — Next.js App Router best practices.
 - `performance-optimization.instructions.md` — Performance optimization guidelines for frontend and backend.
 - `commit-authoring.instructions.md` — Commit author enforcement and commit message rules.
