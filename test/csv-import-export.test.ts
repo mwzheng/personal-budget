@@ -1,6 +1,8 @@
 // Note 1: These tests pin the current CSV edge-case behavior at the smallest
 // stable boundaries: pure parser/export helpers for data-shape rules, plus the
 // import route for HTTP-level error handling and persistence orchestration.
+import { readFileSync } from "fs";
+import { join } from "path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth/requestUser", () => ({
@@ -122,6 +124,48 @@ describe("loadTransactionsFromCSV edge cases", () => {
         paymentMethod: "Debit, card",
         tags: ["housing", "monthly"],
       },
+    ]);
+  });
+});
+
+describe("CSV import template", () => {
+  it("stays aligned with the parser schema and sample rows", () => {
+    const template = readFileSync(
+      join(process.cwd(), "public", "templates", "expenses-template.csv"),
+      "utf-8",
+    );
+
+    expect(template.split(/\r?\n/, 1)[0]).toBe(
+      "Name,Amount,Category,Date,Notes,Payment Method,Tags",
+    );
+    expect(loadTransactionsFromCSV(template)).toEqual([
+      expect.objectContaining({
+        id: "t-0",
+        name: "Groceries",
+        amount: 54.23,
+        category: "Need",
+        date: "2025-03-01",
+        paymentMethod: "Card",
+        tags: ["groceries", "home"],
+      }),
+      expect.objectContaining({
+        id: "t-1",
+        name: "Coffee",
+        amount: 4.5,
+        category: "Want",
+        date: "2025-03-02",
+        paymentMethod: "Card",
+        tags: ["coffee", "treat"],
+      }),
+      expect.objectContaining({
+        id: "t-2",
+        name: "Emergency Fund",
+        amount: 200,
+        category: "Saving",
+        date: "2025-03-03",
+        paymentMethod: "Bank Transfer",
+        tags: ["savings", "transfer"],
+      }),
     ]);
   });
 });

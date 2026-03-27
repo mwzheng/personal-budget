@@ -3,7 +3,9 @@ import { SankeyData } from "../types/types";
 export interface SankeyLayoutMetrics {
   height: number;
   nodeSpacing: number;
+  leftMargin: number;
   rightMargin: number;
+  chartMaxWidth: number;
   labelFontSize: number;
   nodeThickness: number;
   nodeInnerPadding: number;
@@ -92,14 +94,30 @@ export function getSankeyLayoutMetrics(data: SankeyData): SankeyLayoutMetrics {
     1200,
     Math.max(540, 240 + maxNodesInLayer * 60 + Math.max(maxDepth - 3, 0) * 32),
   );
-  const rightMargin = Math.min(380, Math.max(160, 72 + maxLabelLength * 7));
+  /**
+   * Note 3: Outside labels naturally pull the chart's visual weight to the
+   * right. We keep a healthy right margin for readable labels, but add a
+   * smaller balancing left margin and a centered max width so the graph still
+   * feels centered inside the card on wider viewports.
+   */
+  const rightMargin = Math.min(320, Math.max(132, 76 + maxLabelLength * 6));
+  const leftMargin = Math.min(
+    164,
+    Math.max(56, Math.round(rightMargin * (maxDepth >= 4 ? 0.5 : 0.42))),
+  );
+  const chartMaxWidth = Math.min(
+    1360,
+    Math.max(900, 760 + maxDepth * 120 + maxLabelLength * 6),
+  );
   const labelFontSize =
-    maxLabelLength > 28 ? 10 : maxLabelLength > 20 ? 11 : 12;
+    maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
 
   return {
     height,
     nodeSpacing,
+    leftMargin,
     rightMargin,
+    chartMaxWidth,
     labelFontSize,
     nodeThickness,
     nodeInnerPadding,

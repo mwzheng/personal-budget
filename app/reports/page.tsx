@@ -41,7 +41,11 @@ import {
   getAvailableReportYears,
   resolveDefaultReportYears,
 } from "@/lib/utils/aggregations";
-import { getLastSelectedReportYears } from "@/lib/utils/storage";
+import {
+  getLastSelectedReportTransactionsView,
+  getLastSelectedReportYears,
+  setLastSelectedReportTransactionsView,
+} from "@/lib/utils/storage";
 import {
   FilterParams,
   ReportsAggregates,
@@ -286,6 +290,10 @@ export default function ReportsPage() {
     // transaction data from browser storage before the auth-scoped API responds.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  useEffect(() => {
+    setTransactionsView(getLastSelectedReportTransactionsView());
+  }, []);
 
   async function handleSaveTransaction(t: Transaction) {
     const wasEmpty = allTransactions.length === 0;
@@ -649,7 +657,9 @@ export default function ReportsPage() {
               value={transactionsView}
               onChange={(_event, nextView) => {
                 if (nextView !== null) {
-                  setTransactionsView(nextView as TransactionsViewMode);
+                  const resolvedView = nextView as TransactionsViewMode;
+                  setTransactionsView(resolvedView);
+                  setLastSelectedReportTransactionsView(resolvedView);
                 }
               }}
               aria-label="Choose the transaction results view"

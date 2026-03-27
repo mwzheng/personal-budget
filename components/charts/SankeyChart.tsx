@@ -6,7 +6,7 @@
 "use client";
 
 import { ResponsiveSankey } from "@nivo/sankey";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { useMemo } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -25,6 +25,10 @@ function getNodeColor(node: { id: string | number; color?: string }): string {
 export function SankeyChart({ data }: Props) {
   const theme = useTheme();
   const metrics = useMemo(() => getSankeyLayoutMetrics(data), [data]);
+  const labelOutlineColor = alpha(
+    theme.palette.background.paper,
+    theme.palette.mode === "dark" ? 0.94 : 0.96,
+  );
 
   if (!data.nodes.length || !data.links.length) {
     return (
@@ -48,10 +52,22 @@ export function SankeyChart({ data }: Props) {
   }
 
   return (
-    <div style={{ height: metrics.height, width: "100%" }}>
+    <div
+      style={{
+        height: metrics.height,
+        width: "100%",
+        maxWidth: metrics.chartMaxWidth,
+        margin: "0 auto",
+      }}
+    >
       <ResponsiveSankey
         data={data}
-        margin={{ top: 24, right: metrics.rightMargin, bottom: 24, left: 48 }}
+        margin={{
+          top: 24,
+          right: metrics.rightMargin,
+          bottom: 24,
+          left: metrics.leftMargin,
+        }}
         align="justify"
         sort="input"
         label="label"
@@ -113,8 +129,8 @@ export function SankeyChart({ data }: Props) {
               fontSize: metrics.labelFontSize,
               fontWeight: 800,
               paintOrder: "stroke",
-              stroke: theme.palette.common.black,
-              strokeWidth: 3,
+              stroke: labelOutlineColor,
+              strokeWidth: 4,
               strokeLinejoin: "round",
               pointerEvents: "none",
             },

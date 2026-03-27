@@ -5,6 +5,7 @@
 "use client";
 
 import { StatusAlert } from "@/components/ui/StatusAlert";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -12,6 +13,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -42,6 +44,8 @@ interface Props {
   /** Called after the server import succeeds so the parent can refetch account data. */
   onImported: () => void;
 }
+
+const CSV_TEMPLATE_PATH = "/templates/expenses-template.csv";
 
 export function ImportCsvDialog({ open, onClose, onImported }: Props) {
   const [state, setState] = useState<ImportState>({ stage: "idle" });
@@ -136,9 +140,30 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         {state.stage === "idle" && (
           <Box>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Select a CSV file to import. The file must match the sample{" "}
-              <code>expenses.csv</code> format:
+              Select a CSV file to import. Download the template if you want a
+              starter file that matches the supported columns and sample values.
             </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              alignItems={{ sm: "center" }}
+              sx={{ mb: 2 }}
+            >
+              <Button
+                component="a"
+                href={CSV_TEMPLATE_PATH}
+                download
+                variant="outlined"
+                startIcon={<DownloadOutlinedIcon />}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Download template
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                Uses the same schema as the importer: Name, Amount, Category,
+                Date, Notes, Payment Method, and Tags.
+              </Typography>
+            </Stack>
             <Typography
               component="pre"
               variant="caption"
@@ -218,20 +243,31 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         </Button>
 
         {(state.stage === "idle" || isError) && (
-          <Button
-            variant="contained"
-            component="label"
-            disabled={isParsing || confirming}
-          >
-            Choose CSV File
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              hidden
-              onChange={handleFileChange}
-            />
-          </Button>
+          <>
+            <Button
+              component="a"
+              href={CSV_TEMPLATE_PATH}
+              download
+              startIcon={<DownloadOutlinedIcon />}
+              disabled={isParsing || confirming}
+            >
+              Download template
+            </Button>
+            <Button
+              variant="contained"
+              component="label"
+              disabled={isParsing || confirming}
+            >
+              Choose CSV File
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                hidden
+                onChange={handleFileChange}
+              />
+            </Button>
+          </>
         )}
 
         {isPreview && (

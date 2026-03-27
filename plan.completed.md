@@ -1,3 +1,66 @@
+# Completed: Persist reports view, add CSV template, and polish Sankey readability
+
+Date: 2026-03-27
+
+Summary
+
+- Persisted the Reports table/calendar toggle so the page restores the user's
+  last-used view instead of always resetting to the table.
+- Improved the Reports calendar legibility with taller day cells, larger event
+  text, more breathing room, and clearer visual treatment for individual items.
+- Simplified the home page feature area by removing the extra visible intro copy
+  and added a downloadable CSV template that matches the import schema.
+- Refined the budget Sankey section with a clearer title, more centered chart
+  framing, and softer/high-contrast labels that are easier to read.
+
+Completed items
+
+- Added report-view preference helpers in `lib/utils/storage.ts` and restored /
+  persisted the value from `app/reports/page.tsx`.
+- Updated `components/transactions/TransactionCalendar.tsx` and
+  `app/globals.css` so the calendar shows taller cells, more event rows,
+  larger typography, stronger hover feedback, and improved event readability.
+- Removed the visible home-page feature heading/subcopy from `app/page.tsx`
+  while preserving semantics with a visually hidden section heading.
+- Added `public/templates/expenses-template.csv` plus download actions in
+  `components/transactions/ImportCsvDialog.tsx`.
+- Renamed the Sankey card in `app/sankey/page.tsx` to `Visualize Your Budget`
+  and refined chart layout/readability in `components/charts/SankeyChart.tsx`
+  and `lib/utils/sankey-layout.ts`.
+- Added regression coverage in `test/storage-utils.test.ts`,
+  `test/csv-import-export.test.ts`, and `test/sankey-layout.test.ts`.
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to keep the docs and
+  progress record in sync with the UI changes.
+
+Files changed
+
+- `README.md`
+- `app/globals.css`
+- `app/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `components/charts/SankeyChart.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `components/transactions/TransactionCalendar.tsx`
+- `lib/utils/sankey-layout.ts`
+- `lib/utils/storage.ts`
+- `public/templates/expenses-template.csv`
+- `test/csv-import-export.test.ts`
+- `test/sankey-layout.test.ts`
+- `test/storage-utils.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Planned commit message: `feat(ui): polish reports calendar, csv import, and sankey`
+
+Notes / next steps
+
+- The active roadmap remains focused on direct Budgets route coverage, deciding
+  the DynamoDB integration-test strategy, and adding a lightweight Budgets →
+  Sankey E2E smoke test.
+
 # Completed: Repository-wide cleanup pass
 
 Date: 2026-03-26
@@ -1960,3 +2023,4 @@ Modified files:
 - Tests: ✔ 47/47 passed
 - Build: ✔ 30 routes (including /robots.txt and /sitemap.xml)
 - Prettier: ✔ All files formatted
+
