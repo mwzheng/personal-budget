@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import {
   ResponsiveContainer,
-  AreaChart,
+  ComposedChart,
   Area,
   Line,
   XAxis,
@@ -21,7 +21,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
 
-interface ActualMilestone {
+export interface ActualMilestone {
   year: number;
   amount: number;
 }
@@ -30,6 +30,7 @@ interface Props {
   rows: FireProjectionRow[];
   fireNumber: number;
   yearsToFire: number | null;
+  retirementHistory?: Array<{ year: number; endAmount: number }>;
   actualMilestones?: ActualMilestone[];
   loading?: boolean;
 }
@@ -46,25 +47,53 @@ export default function FireProjectionChart({
   rows,
   fireNumber,
   yearsToFire,
+  retirementHistory = [],
   actualMilestones = [],
   loading = false,
 }: Props) {
-  const chartData = useMemo(
-    () =>
-      rows.map((r) => ({
-        name: String(r.calendarYear),
-        balance: Math.round(r.endBalance),
-        balanceReal: Math.round(r.endBalanceReal),
-        fireTarget: Math.round(r.fireNumber),
-      })),
-    [rows],
-  );
+  // Merge historical retirement data + projected data into a unified timeline
+  const chartData = useMemo(() => {
+    const projectionData = rows.map((r) => ({
+      name: String(r.calendarYear),
+      balance: Math.round(r.endBalance) as number | null,
+      balanceReal: Math.round(r.endBalanceReal) as number | null,
+      fireTarget: Math.round(r.fireNumber) as number | null,
+      actualBalance: null as number | null,
+    }));
+
+    if (retirementHistory.length === 0) return projectionData;
+
+    const projectionStartYear =
+      rows.length > 0 ? rows[0].calendarYear : Infinity;
+
+    const historicalData = retirementHistory
+      .filter((e) => e.year < projectionStartYear)
+      .sort((a, b) => a.year - b.year)
+      .map((e) => ({
+        name: String(e.year),
+        balance: null as number | null,
+        balanceReal: null as number | null,
+        fireTarget: null as number | null,
+        actualBalance: Math.round(e.endAmount),
+      }));
+
+    // Connect historical line to the projected line at the transition point
+    if (historicalData.length > 0 && projectionData.length > 0) {
+      projectionData[0].actualBalance = projectionData[0].balance;
+    }
+
+    return [...historicalData, ...projectionData];
+  }, [rows, retirementHistory]);
 
   const milestoneLines = useMemo(() => {
     if (chartData.length === 0) return [];
-    const maxVal = Math.max(
-      ...chartData.map((d) => Math.max(d.balance, d.balanceReal, d.fireTarget)),
+    const allValues = chartData.flatMap((d) =>
+      [d.balance, d.balanceReal, d.fireTarget, d.actualBalance].filter(
+        (v): v is number => v != null,
+      ),
     );
+    if (allValues.length === 0) return [];
+    const maxVal = Math.max(...allValues);
     const step = 500_000;
     const lines: number[] = [];
     for (let m = step; m <= maxVal; m += step) {
@@ -76,7 +105,7 @@ export default function FireProjectionChart({
   if (loading) {
     return (
       <Box sx={{ mb: 2 }}>
-        <ChartLoadingState height={360} legendItems={3} />
+        <ChartLoadingState height={400} legendItems={3} />
       </Box>
     );
   }
@@ -106,13 +135,14 @@ export default function FireProjectionChart({
     payload,
   }: ProjectionTooltipProps) => {
     if (!active || !payload?.length) return null;
-    const rows = payload
+    const tooltipRows = payload
       .filter((e) => e.value !== null && e.value !== undefined)
       .map((e) => {
         const labelMap: Record<string, string> = {
           balance: "Portfolio (Nominal)",
           balanceReal: "Portfolio (Real)",
           fireTarget: "FIRE Target",
+          actualBalance: "Actual Portfolio",
         };
         return {
           label: labelMap[String(e.dataKey)] ?? String(e.dataKey),
@@ -120,15 +150,17 @@ export default function FireProjectionChart({
           color: e.color,
         };
       });
-    return rows.length > 0 ? (
-      <ChartTooltipCard title={String(label)} rows={rows} />
+    return tooltipRows.length > 0 ? (
+      <ChartTooltipCard title={String(label)} rows={tooltipRows} />
     ) : null;
   };
 
+  const hasActualData = retirementHistory.length > 0;
+
   return (
-    <Box sx={{ width: "100%", height: 360, mx: "auto" }}>
+    <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
+        <ComposedChart
           data={chartData}
           margin={{ top: 35, right: 30, left: 30, bottom: 5 }}
         >
@@ -143,6 +175,25 @@ export default function FireProjectionChart({
           <YAxis tickFormatter={formatAxis} tick={{ fill: "#aaa" }} />
           <Tooltip content={tooltipContent} />
 
+          {/* $500K milestone reference lines */}
+          {milestoneLines.map((m) => (
+            <ReferenceLine
+              key={`ms-${m}`}
+              y={m}
+              stroke="#9e9e9e"
+              strokeWidth={1}
+              strokeDasharray="6 3"
+              label={{
+                value: formatAxis(m),
+                position: "right",
+                fill: "#757575",
+                fontSize: 11,
+                fontWeight: 500,
+              }}
+            />
+          ))}
+
+          {/* Projected portfolio (nominal) — filled area */}
           <Area
             type="monotone"
             dataKey="balance"
@@ -150,7 +201,10 @@ export default function FireProjectionChart({
             strokeWidth={2}
             fill="url(#fireBalanceFill)"
             name="Portfolio (Nominal)"
+            connectNulls={false}
           />
+
+          {/* Projected portfolio (inflation-adjusted) — dashed */}
           <Line
             type="monotone"
             dataKey="balanceReal"
@@ -158,8 +212,11 @@ export default function FireProjectionChart({
             strokeWidth={2}
             strokeDasharray="6 3"
             dot={false}
+            connectNulls={false}
             name="Portfolio (Real)"
           />
+
+          {/* FIRE target line — dashed red */}
           <Line
             type="monotone"
             dataKey="fireTarget"
@@ -167,9 +224,24 @@ export default function FireProjectionChart({
             strokeWidth={2}
             strokeDasharray="4 4"
             dot={false}
+            connectNulls={false}
             name="FIRE Target"
           />
 
+          {/* Actual portfolio history — solid orange */}
+          {hasActualData && (
+            <Line
+              type="monotone"
+              dataKey="actualBalance"
+              stroke="#ff9800"
+              strokeWidth={2.5}
+              dot={{ fill: "#ff9800", r: 3, strokeWidth: 0 }}
+              connectNulls={false}
+              name="Actual Portfolio"
+            />
+          )}
+
+          {/* Vertical FIRE achievement line */}
           {yearsToFire !== null && (
             <ReferenceLine
               x={String(new Date().getFullYear() + yearsToFire)}
@@ -186,6 +258,7 @@ export default function FireProjectionChart({
             />
           )}
 
+          {/* Horizontal FIRE number line */}
           <ReferenceLine
             y={fireNumber}
             stroke="#ef5350"
@@ -193,28 +266,13 @@ export default function FireProjectionChart({
             strokeDasharray="2 2"
           />
 
-          {milestoneLines.map((m) => (
-            <ReferenceLine
-              key={`ms-${m}`}
-              y={m}
-              stroke="#bdbdbd"
-              strokeWidth={0.5}
-              strokeDasharray="4 4"
-              label={{
-                value: formatAxis(m),
-                position: "right",
-                fill: "#9e9e9e",
-                fontSize: 10,
-              }}
-            />
-          ))}
-
+          {/* Actual milestone markers (orange dots at $500K crossings) */}
           {actualMilestones.map((ms) => (
             <ReferenceDot
               key={`actual-${ms.amount}`}
               x={String(ms.year)}
               y={ms.amount}
-              r={6}
+              r={7}
               fill="#ff9800"
               stroke="#fff"
               strokeWidth={2}
@@ -227,7 +285,7 @@ export default function FireProjectionChart({
               }}
             />
           ))}
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </Box>
   );

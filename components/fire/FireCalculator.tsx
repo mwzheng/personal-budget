@@ -231,6 +231,7 @@ export default function FireCalculator() {
                 rows={projection.rows}
                 fireNumber={projection.summary.fireNumber}
                 yearsToFire={projection.summary.yearsToFire}
+                retirementHistory={retirementEntries}
                 actualMilestones={actualMilestones}
                 loading={loadingScenarios}
               />
@@ -286,21 +287,36 @@ export default function FireCalculator() {
                   </Typography>
                 </Stack>
                 {actualMilestones.length > 0 && (
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        bgcolor: "#ff9800",
-                        borderRadius: "50%",
-                        border: "2px solid #fff",
-                        boxShadow: "0 0 0 1px #ff9800",
-                      }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      Actual Milestone
-                    </Typography>
-                  </Stack>
+                  <>
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 3,
+                          bgcolor: "#ff9800",
+                          borderRadius: 1,
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Actual Portfolio
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          bgcolor: "#ff9800",
+                          borderRadius: "50%",
+                          border: "2px solid #fff",
+                          boxShadow: "0 0 0 1px #ff9800",
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Actual Milestone
+                      </Typography>
+                    </Stack>
+                  </>
                 )}
               </Stack>
             </Paper>

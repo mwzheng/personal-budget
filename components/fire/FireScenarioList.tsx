@@ -85,58 +85,57 @@ export default function FireScenarioList({
                     borderColor: isActive ? "primary.main" : "divider",
                   }}
                 >
-                  <CardActionArea onClick={() => onSelect(s)}>
-                    <CardContent sx={{ py: 1.5, px: 2 }}>
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
+                  <Stack direction="row" alignItems="flex-start">
+                    <CardActionArea
+                      onClick={() => onSelect(s)}
+                      sx={{ flex: 1 }}
+                    >
+                      <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
                           {s.name}
                         </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            requestDelete(s);
-                          }}
-                          aria-label={`Delete ${s.name}`}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}
                         >
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}
-                      >
-                        <Chip
-                          label={`FIRE: ${formatCurrencyWhole(fireNum)}`}
-                          size="small"
-                          color="info"
-                          variant="outlined"
-                        />
-                        <Chip
-                          label={
-                            summary.yearsToFire !== null
-                              ? `${summary.yearsToFire}yr`
-                              : "N/A"
-                          }
-                          size="small"
-                          color={
-                            summary.yearsToFire !== null ? "success" : "default"
-                          }
-                          variant="outlined"
-                        />
-                        <Chip
-                          label={`${(s.annualReturnRate * 100).toFixed(0)}% ret.`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Stack>
-                    </CardContent>
-                  </CardActionArea>
+                          <Chip
+                            label={`FIRE: ${formatCurrencyWhole(fireNum)}`}
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={
+                              summary.yearsToFire !== null
+                                ? `${summary.yearsToFire}yr`
+                                : "N/A"
+                            }
+                            size="small"
+                            color={
+                              summary.yearsToFire !== null
+                                ? "success"
+                                : "default"
+                            }
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={`${(s.annualReturnRate * 100).toFixed(0)}% ret.`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Stack>
+                      </CardContent>
+                    </CardActionArea>
+                    <IconButton
+                      size="small"
+                      onClick={() => requestDelete(s)}
+                      aria-label={`Delete ${s.name}`}
+                      sx={{ mt: 1, mr: 0.5 }}
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
                 </Card>
               </Grid>
             );
