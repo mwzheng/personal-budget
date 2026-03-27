@@ -24,4 +24,6 @@ export const SK_PREFIX = {
   MILESTONE: "milestone#",
   /** Progress goals — `progressGoal#<goalId>` */
   PROGRESS_GOAL: "progressGoal#",
+  /** FIRE scenarios — `fireScenario#<scenarioId>` */
+  FIRE_SCENARIO: "fireScenario#",
 } as const;

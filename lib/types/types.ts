@@ -231,3 +231,53 @@ export interface SankeyResponse {
   sankeyData: SankeyData;
   budgetSuggestion: Record<string, number>;
 }
+
+// ---------------------------------------------------------------------------
+// FIRE (Financial Independence, Retire Early) calculator types
+// ---------------------------------------------------------------------------
+
+// Note 21: FireScenario stores the user-provided inputs for a FIRE projection.
+// Only the inputs are persisted to DynamoDB; projection rows are computed
+// client-side in real-time for instant feedback as the user adjusts sliders.
+export interface FireScenario {
+  scenarioId?: string;
+  name: string;
+  currentBalance: number;
+  monthlyContribution: number;
+  annualReturnRate: number; // decimal, e.g. 0.07 = 7%
+  annualInflationRate: number; // decimal, e.g. 0.03 = 3%
+  annualExpenses: number;
+  withdrawalRate: number; // decimal, e.g. 0.04 = 4%
+  targetFireNumber?: number | null; // auto-calculated if null/undefined
+  projectionYears: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Note 22: Each row represents one year in the projection table/chart.
+// Both nominal and inflation-adjusted (real) values are stored so the UI
+// can toggle between views or overlay them on the same chart.
+export interface FireProjectionRow {
+  year: number; // 0-based index (0 = current year)
+  calendarYear: number;
+  startBalance: number;
+  contributions: number;
+  growth: number;
+  endBalance: number;
+  endBalanceReal: number; // inflation-adjusted
+  fireNumber: number; // nominal target (grows with inflation)
+  fireNumberReal: number; // constant real target
+  isFIREd: boolean;
+}
+
+// Note 23: FireSummary provides the headline metrics displayed in the
+// summary card above the chart. `yearsToFire` is null when the target
+// is unreachable within the projection window.
+export interface FireSummary {
+  fireNumber: number;
+  yearsToFire: number | null;
+  fireDate: string | null;
+  totalContributions: number;
+  finalBalance: number;
+  finalBalanceReal: number;
+}

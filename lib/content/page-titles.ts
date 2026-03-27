@@ -27,6 +27,7 @@ export const ROUTE_PATHS = {
   goals: "/goals",
   progress: "/progress",
   salary: "/salary",
+  fire: "/fire",
 } as const;
 
 export const PAGE_TITLE_KEYS = {
@@ -43,6 +44,7 @@ export const PAGE_TITLE_KEYS = {
   GOALS: "goals",
   PROGRESS: "progress",
   SALARY: "salary",
+  FIRE: "fire",
 } as const;
 
 export type AppRoute = (typeof ROUTE_PATHS)[keyof typeof ROUTE_PATHS];
@@ -132,6 +134,13 @@ export const PAGE_TITLES = {
       "Store yearly salary entries and compare income changes over time.",
     requiresAuth: true,
   },
+  [PAGE_TITLE_KEYS.FIRE]: {
+    route: ROUTE_PATHS.fire,
+    title: `FIRE Calculator - ${APP_NAME}`,
+    description:
+      "Calculate your Financial Independence number, project investment growth, and compare retirement scenarios.",
+    requiresAuth: true,
+  },
 } satisfies Record<PageTitleKey, PageTitleEntry<AppRoute>>;
 
 // Note 3: These grouped route lists let navigation, analytics, and metadata
@@ -164,6 +173,7 @@ export const AUTHENTICATED_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.GOALS,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
+  PAGE_TITLE_KEYS.FIRE,
 ] as const;
 
 export const LIVE_PAGE_TITLE_KEYS = [
@@ -180,6 +190,7 @@ export const LIVE_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.GOALS,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
+  PAGE_TITLE_KEYS.FIRE,
 ] as const;
 
 // Note 4: A route-indexed lookup keeps client-side title resolution fast and

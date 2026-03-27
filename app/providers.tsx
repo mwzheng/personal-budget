@@ -217,12 +217,18 @@ const darkTheme = createTheme({
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Note 5: Some browser extensions like Dark Reader inject CSS custom
-    // properties (e.g. `--darkreader-bg-...`) as inline styles onto DOM
-    // elements. These can conflict with MUI's own inline styles and cause
-    // visual glitches. This cleanup function strips those injected variables
-    // without touching untouched MUI styles, which keeps hydration stable.
+    // properties (e.g. `--darkreader-bg-...`) and `data-darkreader-inline-*`
+    // attributes onto DOM elements. These can conflict with MUI's own inline
+    // styles and trigger hydration diffs, so the cleanup removes only those
+    // extension-owned markers without rewriting untouched app styles.
     const removeDarkReaderVars = () => {
-      document.querySelectorAll("[style]").forEach((el) => {
+      document.querySelectorAll("*").forEach((el) => {
+        Array.from(el.attributes).forEach((attr) => {
+          if (attr.name.startsWith("data-darkreader-inline-")) {
+            el.removeAttribute(attr.name);
+          }
+        });
+
         const style = el.getAttribute("style");
         if (!style || !style.includes("--darkreader-")) return;
         // Note 6: The guard above is important: without it, merely trimming and
