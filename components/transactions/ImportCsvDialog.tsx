@@ -251,7 +251,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               startIcon={<DownloadOutlinedIcon />}
               disabled={isParsing || confirming}
             >
-              Download Template
+              Download template
             </Button>
             <Button
               variant="contained"
