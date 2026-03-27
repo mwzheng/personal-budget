@@ -2,7 +2,6 @@
 
 import React from "react";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
 import InputAdornment from "@mui/material/InputAdornment";
 import Slider from "@mui/material/Slider";
 import Stack from "@mui/material/Stack";
@@ -99,64 +98,56 @@ export default function FireForm({
         fullWidth
       />
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Current Balance"
-            type="number"
-            value={values.currentBalance || ""}
-            onChange={handleNumber("currentBalance")}
-            size="small"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">$</InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Monthly Contribution"
-            type="number"
-            value={values.monthlyContribution || ""}
-            onChange={handleNumber("monthlyContribution")}
-            size="small"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">$</InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Annual Expenses"
-            type="number"
-            value={values.annualExpenses || ""}
-            onChange={handleNumber("annualExpenses")}
-            size="small"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">$</InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Projection Years"
-            type="number"
-            value={values.projectionYears || ""}
-            onChange={handleNumber("projectionYears")}
-            size="small"
-            fullWidth
-            inputProps={{ min: 1, max: 60 }}
-          />
-        </Grid>
-      </Grid>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+          gap: 2,
+        }}
+      >
+        <TextField
+          label="Current Balance"
+          type="number"
+          value={values.currentBalance || ""}
+          onChange={handleNumber("currentBalance")}
+          size="small"
+          fullWidth
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
+        />
+        <TextField
+          label="Monthly Contribution"
+          type="number"
+          value={values.monthlyContribution || ""}
+          onChange={handleNumber("monthlyContribution")}
+          size="small"
+          fullWidth
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
+        />
+        <TextField
+          label="Annual Expenses"
+          type="number"
+          value={values.annualExpenses || ""}
+          onChange={handleNumber("annualExpenses")}
+          size="small"
+          fullWidth
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
+        />
+        <TextField
+          label="Projection Years"
+          type="number"
+          value={values.projectionYears || ""}
+          onChange={handleNumber("projectionYears")}
+          size="small"
+          fullWidth
+          inputProps={{ min: 1, max: 60 }}
+        />
+      </Box>
 
       <RateSlider
         label="Annual Return Rate"

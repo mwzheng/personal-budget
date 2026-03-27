@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import SaveIcon from "@mui/icons-material/Save";
 import { apiFetch } from "@/lib/api/apiFetch";
 import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
-import type { FireScenario } from "@/lib/types/types";
+import type { FireScenario, RetirementEntry } from "@/lib/types/types";
 import FireForm from "./FireForm";
 import FireProjectionChart from "./FireProjectionChart";
 import FireProjectionTable from "./FireProjectionTable";
@@ -36,6 +36,9 @@ export default function FireCalculator() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingScenarios, setLoadingScenarios] = useState(true);
+  const [retirementEntries, setRetirementEntries] = useState<RetirementEntry[]>(
+    [],
+  );
 
   // Fetch saved scenarios on mount
   const fetchScenarios = useCallback(async () => {
@@ -55,7 +58,34 @@ export default function FireCalculator() {
 
   useEffect(() => {
     void fetchScenarios();
+
+    // Fetch retirement history for actual milestone overlay
+    void (async () => {
+      try {
+        const res = await apiFetch("/api/progress/retirement");
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.entries)) {
+          setRetirementEntries(data.entries);
+        }
+      } catch {
+        // Non-critical — chart still works without actual milestones
+      }
+    })();
   }, [fetchScenarios]);
+
+  // Derive actual milestones the user has crossed (every $500K)
+  const actualMilestones = useMemo(() => {
+    if (retirementEntries.length === 0) return [];
+    const sorted = [...retirementEntries].sort((a, b) => a.year - b.year);
+    const maxAmount = Math.max(...sorted.map((e) => e.endAmount));
+    const step = 500_000;
+    const milestones: { year: number; amount: number }[] = [];
+    for (let target = step; target <= maxAmount; target += step) {
+      const entry = sorted.find((e) => e.endAmount >= target);
+      if (entry) milestones.push({ year: entry.year, amount: target });
+    }
+    return milestones;
+  }, [retirementEntries]);
 
   // Real-time projection calculation
   const computedFireNumber = useMemo(
@@ -201,13 +231,14 @@ export default function FireCalculator() {
                 rows={projection.rows}
                 fireNumber={projection.summary.fireNumber}
                 yearsToFire={projection.summary.yearsToFire}
+                actualMilestones={actualMilestones}
                 loading={loadingScenarios}
               />
               <Stack
                 direction="row"
                 spacing={2}
                 justifyContent="center"
-                sx={{ mt: 1 }}
+                sx={{ mt: 1, flexWrap: "wrap", rowGap: 1 }}
               >
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   <Box
@@ -254,6 +285,23 @@ export default function FireCalculator() {
                     FIRE Target
                   </Typography>
                 </Stack>
+                {actualMilestones.length > 0 && (
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        bgcolor: "#ff9800",
+                        borderRadius: "50%",
+                        border: "2px solid #fff",
+                        boxShadow: "0 0 0 1px #ff9800",
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      Actual Milestone
+                    </Typography>
+                  </Stack>
+                )}
               </Stack>
             </Paper>
 

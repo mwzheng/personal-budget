@@ -13,6 +13,7 @@ import {
   Tooltip,
   CartesianGrid,
   ReferenceLine,
+  ReferenceDot,
   type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
@@ -20,10 +21,16 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
 
+interface ActualMilestone {
+  year: number;
+  amount: number;
+}
+
 interface Props {
   rows: FireProjectionRow[];
   fireNumber: number;
   yearsToFire: number | null;
+  actualMilestones?: ActualMilestone[];
   loading?: boolean;
 }
 
@@ -39,6 +46,7 @@ export default function FireProjectionChart({
   rows,
   fireNumber,
   yearsToFire,
+  actualMilestones = [],
   loading = false,
 }: Props) {
   const chartData = useMemo(
@@ -51,6 +59,19 @@ export default function FireProjectionChart({
       })),
     [rows],
   );
+
+  const milestoneLines = useMemo(() => {
+    if (chartData.length === 0) return [];
+    const maxVal = Math.max(
+      ...chartData.map((d) => Math.max(d.balance, d.balanceReal, d.fireTarget)),
+    );
+    const step = 500_000;
+    const lines: number[] = [];
+    for (let m = step; m <= maxVal; m += step) {
+      lines.push(m);
+    }
+    return lines;
+  }, [chartData]);
 
   if (loading) {
     return (
@@ -109,7 +130,7 @@ export default function FireProjectionChart({
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
-          margin={{ top: 10, right: 30, left: 30, bottom: 5 }}
+          margin={{ top: 35, right: 30, left: 30, bottom: 5 }}
         >
           <defs>
             <linearGradient id="fireBalanceFill" x1="0" y1="0" x2="0" y2="1">
@@ -171,6 +192,41 @@ export default function FireProjectionChart({
             strokeWidth={1}
             strokeDasharray="2 2"
           />
+
+          {milestoneLines.map((m) => (
+            <ReferenceLine
+              key={`ms-${m}`}
+              y={m}
+              stroke="#bdbdbd"
+              strokeWidth={0.5}
+              strokeDasharray="4 4"
+              label={{
+                value: formatAxis(m),
+                position: "right",
+                fill: "#9e9e9e",
+                fontSize: 10,
+              }}
+            />
+          ))}
+
+          {actualMilestones.map((ms) => (
+            <ReferenceDot
+              key={`actual-${ms.amount}`}
+              x={String(ms.year)}
+              y={ms.amount}
+              r={6}
+              fill="#ff9800"
+              stroke="#fff"
+              strokeWidth={2}
+              label={{
+                value: `✓ ${formatAxis(ms.amount)}`,
+                position: "top",
+                fill: "#e65100",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            />
+          ))}
         </AreaChart>
       </ResponsiveContainer>
     </Box>

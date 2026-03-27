@@ -76,7 +76,7 @@ export default function FireScenarioList({
             const isActive = s.scenarioId === activeScenarioId;
 
             return (
-              <Grid item xs={12} sm={6} key={s.scenarioId}>
+              <Grid item xs={12} key={s.scenarioId}>
                 <Card
                   variant={isActive ? "elevation" : "outlined"}
                   elevation={isActive ? 3 : 0}
@@ -106,7 +106,11 @@ export default function FireScenarioList({
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Stack>
-                      <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}
+                      >
                         <Chip
                           label={`FIRE: ${formatCurrencyWhole(fireNum)}`}
                           size="small"
