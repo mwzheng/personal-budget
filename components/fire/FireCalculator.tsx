@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,6 +16,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import SaveIcon from "@mui/icons-material/Save";
 import { apiFetch } from "@/lib/api/apiFetch";
+import { selectLatestFireScenario } from "@/lib/utils/fire-scenarios";
 import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
 import type { FireScenario, RetirementEntry } from "@/lib/types/types";
 import FireForm from "./FireForm";
@@ -39,6 +46,8 @@ export default function FireCalculator() {
   const [retirementEntries, setRetirementEntries] = useState<RetirementEntry[]>(
     [],
   );
+  const hasAttemptedInitialScenarioLoad = useRef(false);
+  const hasUserInteracted = useRef(false);
 
   // Fetch saved scenarios on mount
   const fetchScenarios = useCallback(async () => {
@@ -73,6 +82,20 @@ export default function FireCalculator() {
     })();
   }, [fetchScenarios]);
 
+  useEffect(() => {
+    if (loadingScenarios || hasAttemptedInitialScenarioLoad.current) return;
+
+    hasAttemptedInitialScenarioLoad.current = true;
+
+    if (hasUserInteracted.current || current.scenarioId) return;
+
+    const latestScenario = selectLatestFireScenario(scenarios);
+    if (!latestScenario) return;
+
+    setCurrent({ ...latestScenario });
+    setError(null);
+  }, [loadingScenarios, scenarios]);
+
   // Derive actual milestones the user has crossed (every $500K)
   const actualMilestones = useMemo(() => {
     if (retirementEntries.length === 0) return [];
@@ -97,17 +120,20 @@ export default function FireCalculator() {
 
   const handleFieldChange = useCallback(
     (field: string, value: string | number) => {
+      hasUserInteracted.current = true;
       setCurrent((prev) => ({ ...prev, [field]: value }));
     },
     [],
   );
 
   const handleSelectScenario = useCallback((s: FireScenario) => {
+    hasUserInteracted.current = true;
     setCurrent({ ...s });
     setError(null);
   }, []);
 
   const handleNewScenario = useCallback(() => {
+    hasUserInteracted.current = true;
     setCurrent({ ...DEFAULT_SCENARIO, name: "New Scenario" });
     setError(null);
   }, []);

@@ -156,6 +156,10 @@ export default function FireProjectionChart({
   };
 
   const hasActualData = retirementHistory.length > 0;
+  const fireAchievementYear =
+    yearsToFire != null
+      ? rows.find((row) => row.year === yearsToFire)?.calendarYear
+      : null;
 
   return (
     <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
@@ -242,9 +246,9 @@ export default function FireProjectionChart({
           )}
 
           {/* Vertical FIRE achievement line */}
-          {yearsToFire !== null && (
+          {fireAchievementYear != null && (
             <ReferenceLine
-              x={String(new Date().getFullYear() + yearsToFire)}
+              x={String(fireAchievementYear)}
               stroke="#4caf50"
               strokeWidth={2}
               strokeDasharray="3 3"

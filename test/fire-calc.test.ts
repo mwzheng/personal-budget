@@ -1,5 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
+import {
+  calculateFireNumber,
+  formatFireDateLabel,
+  generateProjection,
+} from "@/lib/utils/fire";
 import type { FireScenario } from "@/lib/types/types";
 
 function buildScenario(overrides?: Partial<FireScenario>): FireScenario {
@@ -113,6 +117,17 @@ describe("generateProjection", () => {
     expect(summary.fireDate).not.toBeNull();
   });
 
+  it("generates fireDate at midnight UTC to avoid hydration drift", () => {
+    const scenario = buildScenario({
+      currentBalance: 900_000,
+      monthlyContribution: 20_000,
+      annualReturnRate: 0.07,
+      projectionYears: 5,
+    });
+    const { summary } = generateProjection(scenario);
+    expect(summary.fireDate).toMatch(/T00:00:00\.000Z$/);
+  });
+
   it("calculates inflation-adjusted values correctly", () => {
     const scenario = buildScenario({
       annualInflationRate: 0.03,
@@ -176,5 +191,15 @@ describe("generateProjection", () => {
       const expected = row.startBalance + row.contributions + row.growth;
       expect(row.endBalance).toBeCloseTo(expected, 2);
     }
+  });
+});
+
+describe("formatFireDateLabel", () => {
+  it("returns an em dash when no fire date exists", () => {
+    expect(formatFireDateLabel(null)).toBe("—");
+  });
+
+  it("formats ISO dates in UTC so SSR and hydration stay aligned", () => {
+    expect(formatFireDateLabel("2026-01-01T00:00:00.000Z")).toBe("Jan 2026");
   });
 });

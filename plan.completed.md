@@ -1,3 +1,96 @@
+# Completed: FIRE hydration mismatch follow-up
+
+Date: 2026-03-27
+
+Summary
+
+- Investigated the FIRE page hydration warning and traced the reported
+  AppBar/Paper/Slider diffs to a mix of extension-driven DOM mutation and one
+  app-side timezone-sensitive render path.
+- Hardened the existing Dark Reader mitigation so it also removes
+  `data-darkreader-inline-*` attributes before and after hydration.
+- Removed a timezone-sensitive FIRE summary date formatting path so the server
+  and client render the same label.
+
+Completed items
+
+- Updated `app/layout.tsx` so the pre-hydration cleanup script strips both
+  `--darkreader-*` inline style variables and `data-darkreader-inline-*`
+  attributes inserted by style-mutating extensions.
+- Updated `app/providers.tsx` so the post-hydration cleanup effect removes the
+  same extension-owned attributes without rewriting untouched app styles.
+- Added `formatFireDateLabel` in `lib/utils/fire.ts` and switched
+  `components/fire/FireSummaryCard.tsx` to a UTC-backed formatter instead of
+  `toLocaleDateString(...)` during render.
+- Updated `components/fire/FireProjectionChart.tsx` to derive the FIRE marker
+  year from projection rows instead of recomputing it with `new Date()` during
+  render.
+- Added targeted validation coverage in `test/fire-calc.test.ts` for the stable
+  FIRE date formatter.
+- Ran targeted validation with `pnpm exec vitest run test/fire-calc.test.ts`
+  and `pnpm build`.
+- Updated `plan.md` and `plan.completed.md` to keep the progress record in sync.
+
+Files changed
+
+- `app/layout.tsx`
+- `app/providers.tsx`
+- `components/fire/FireProjectionChart.tsx`
+- `components/fire/FireSummaryCard.tsx`
+- `lib/utils/fire.ts`
+- `test/fire-calc.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Planned commit message: `fix(fire): harden hydration mismatch handling`
+
+Notes / next steps
+
+- The remaining reported warning signature still matches browser-extension
+  behavior when Dark Reader or similar tools mutate the DOM before React
+  hydrates. Validate in a browser with extensions disabled if warnings persist.
+
+# Completed: Polish FIRE saved scenario card hover and delete alignment
+
+Date: 2026-03-27
+
+Summary
+
+- Centered the saved-scenario delete action vertically within each FIRE
+  scenario card.
+- Extended the card hover/focus surface styling so the delete-action side feels
+  like part of the same highlighted card.
+- Preserved separate select vs. delete behavior and kept the markup free of
+  nested interactive buttons.
+
+Completed items
+
+- Updated `components/fire/FireScenarioList.tsx` so the card owns the shared
+  hover/focus treatment instead of the left-side action area alone.
+- Replaced the delete button's top-offset positioning with a flex-aligned action
+  container so the icon stays vertically centered.
+- Added explicit event propagation protection on delete and kept the select
+  interaction isolated to the scenario action area.
+- Ran targeted validation with `pnpm exec next lint --file components/fire/FireScenarioList.tsx`.
+- Updated `plan.md` and `plan.completed.md` to keep the progress record in sync.
+
+Files changed
+
+- `components/fire/FireScenarioList.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Planned commit message: `fix(fire): polish saved scenario card actions`
+
+Notes / next steps
+
+- Consider adding focused component coverage for FIRE scenario card interactions
+  if a dedicated test file is introduced for the calculator UI.
+
 # Completed: Persist reports view, add CSV template, and polish Sankey readability
 
 Date: 2026-03-27
@@ -2023,4 +2116,3 @@ Modified files:
 - Tests: ✔ 47/47 passed
 - Build: ✔ 30 routes (including /robots.txt and /sitemap.xml)
 - Prettier: ✔ All files formatted
-

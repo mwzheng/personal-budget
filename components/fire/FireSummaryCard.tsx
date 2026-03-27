@@ -7,6 +7,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { formatCurrencyWhole } from "@/lib/utils/format";
+import { formatFireDateLabel } from "@/lib/utils/fire";
 import type { FireSummary } from "@/lib/types/types";
 
 interface Props {
@@ -45,12 +46,7 @@ export default function FireSummaryCard({ summary }: Props) {
       ? `${summary.yearsToFire} year${summary.yearsToFire === 1 ? "" : "s"}`
       : "Not reachable";
 
-  const fireDateLabel = summary.fireDate
-    ? new Date(summary.fireDate).toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+  const fireDateLabel = formatFireDateLabel(summary.fireDate);
 
   return (
     <Paper sx={{ p: 2.5 }} elevation={1}>

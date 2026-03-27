@@ -87,9 +87,10 @@ export default function RootLayout({
         Note 4: `suppressHydrationWarning` on <body> reduces React's hydration
         warnings when server-rendered HTML differs from the client. A common
         cause is browser extensions (e.g. Dark Reader) that inject inline
-        styles before React hydrates. To proactively avoid hydration mismatches
-        caused by such extensions, an inline script runs before React's
-        hydration to strip any Dark Reader style variables from elements.
+        styles and `data-darkreader-inline-*` attributes before React hydrates.
+        To proactively avoid hydration mismatches caused by such extensions, an
+        inline script runs before React's hydration to strip those extension
+        markers from elements.
 
         The <Script strategy="beforeInteractive"> component ensures the
         cleanup runs before React hydrates client components, but the script
@@ -108,8 +109,16 @@ export default function RootLayout({
           <Script id="cleanup-darkreader" strategy="beforeInteractive">
             {`(function cleanupDarkReaderVars(){
   try {
+    function removeDarkReaderAttributes(el){
+      Array.from(el.attributes || []).forEach(function(attr){
+        if (attr.name.indexOf('data-darkreader-inline-') === 0) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    }
     function clean(){
-      document.querySelectorAll('[style]').forEach(function(el){
+      document.querySelectorAll('*').forEach(function(el){
+        removeDarkReaderAttributes(el);
         var style = el.getAttribute('style');
         if (!style || style.indexOf('--darkreader-') === -1) return;
         var cleaned = style

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
@@ -80,15 +81,44 @@ export default function FireScenarioList({
                 <Card
                   variant={isActive ? "elevation" : "outlined"}
                   elevation={isActive ? 3 : 0}
-                  sx={{
+                  sx={(theme) => ({
+                    overflow: "hidden",
                     border: isActive ? 2 : 1,
                     borderColor: isActive ? "primary.main" : "divider",
-                  }}
+                    transition: theme.transitions.create(
+                      ["background-color", "border-color", "box-shadow"],
+                      {
+                        duration: theme.transitions.duration.shorter,
+                      },
+                    ),
+                    "&:hover": {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                    "&:focus-within": {
+                      backgroundColor: theme.palette.action.hover,
+                      boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
+                    },
+                  })}
                 >
-                  <Stack direction="row" alignItems="flex-start">
+                  <Stack direction="row" alignItems="stretch">
                     <CardActionArea
                       onClick={() => onSelect(s)}
-                      sx={{ flex: 1 }}
+                      aria-pressed={isActive}
+                      sx={{
+                        flex: 1,
+                        alignSelf: "stretch",
+                        borderRadius: 0,
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          backgroundColor: "transparent",
+                        },
+                        "&.Mui-focusVisible": {
+                          backgroundColor: "transparent",
+                        },
+                        "& .MuiCardActionArea-focusHighlight": {
+                          display: "none",
+                        },
+                      }}
                     >
                       <CardContent sx={{ py: 1.5, px: 2 }}>
                         <Typography variant="subtitle2" fontWeight={600}>
@@ -127,14 +157,24 @@ export default function FireScenarioList({
                         </Stack>
                       </CardContent>
                     </CardActionArea>
-                    <IconButton
-                      size="small"
-                      onClick={() => requestDelete(s)}
-                      aria-label={`Delete ${s.name}`}
-                      sx={{ mt: 1, mr: 0.5 }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        pr: 0.5,
+                      }}
                     >
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          requestDelete(s);
+                        }}
+                        aria-label={`Delete ${s.name}`}
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </Stack>
                 </Card>
               </Grid>

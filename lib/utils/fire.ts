@@ -13,6 +13,18 @@ export function calculateFireNumber(
   return annualExpenses / withdrawalRate;
 }
 
+const fireDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** Formats a FIRE target date in a timezone-stable way for SSR + hydration. */
+export function formatFireDateLabel(fireDate: string | null): string {
+  if (!fireDate) return "—";
+  return fireDateFormatter.format(new Date(fireDate));
+}
+
 /** Runs a month-by-month simulation and returns yearly projection rows + summary. */
 export function generateProjection(scenario: FireScenario): {
   rows: FireProjectionRow[];
@@ -85,7 +97,7 @@ export function generateProjection(scenario: FireScenario): {
     yearsToFire: firstFireYear,
     fireDate:
       firstFireYear !== null
-        ? new Date(currentYear + firstFireYear, 0, 1).toISOString()
+        ? new Date(Date.UTC(currentYear + firstFireYear, 0, 1)).toISOString()
         : null,
     totalContributions,
     finalBalance: lastRow?.endBalance ?? currentBalance,
