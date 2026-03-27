@@ -50,7 +50,7 @@ export function generateProjection(scenario: FireScenario): {
     annualReturnRate > 0 ? Math.pow(1 + annualReturnRate, 1 / 12) - 1 : 0;
 
   const rows: FireProjectionRow[] = [];
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getUTCFullYear();
 
   let balance = currentBalance;
   let totalContributions = 0;
