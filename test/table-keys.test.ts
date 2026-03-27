@@ -30,6 +30,10 @@ describe("SK_PREFIX constants", () => {
     expect(SK_PREFIX.PROGRESS_GOAL).toBe("progressGoal#");
   });
 
+  it("FIRE_SCENARIO is 'fireScenario#'", () => {
+    expect(SK_PREFIX.FIRE_SCENARIO).toBe("fireScenario#");
+  });
+
   it("every prefix is a non-empty string ending with '#'", () => {
     for (const [key, value] of Object.entries(SK_PREFIX)) {
       expect(typeof value, `SK_PREFIX.${key} should be a string`).toBe(
@@ -54,6 +58,7 @@ describe("SK_PREFIX constants", () => {
         "RETIREMENT",
         "MILESTONE",
         "PROGRESS_GOAL",
+        "FIRE_SCENARIO",
       ].sort(),
     );
   });

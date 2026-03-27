@@ -48,6 +48,7 @@ const AUTH_TABS = [
   { label: "Reports", value: "reports", href: ROUTE_PATHS.reports },
   { label: "Progress", value: "progress", href: ROUTE_PATHS.progress },
   { label: "Budget", value: "sankey", href: ROUTE_PATHS.sankey },
+  { label: "FIRE", value: "fire", href: ROUTE_PATHS.fire },
 ] as const;
 
 function isRouteSelected(pathname: string, href: string) {
@@ -70,7 +71,9 @@ export function AppNav() {
       ? "reports"
       : isRouteSelected(pathname, ROUTE_PATHS.progress)
         ? "progress"
-        : false;
+        : isRouteSelected(pathname, ROUTE_PATHS.fire)
+          ? "fire"
+          : false;
   const isInfoRoute = INFO_MENU_ITEMS.some(({ href }) =>
     isRouteSelected(pathname, href),
   );
