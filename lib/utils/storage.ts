@@ -13,6 +13,10 @@ import type { Transaction } from "../types/types";
 // names that would silently create a second, disconnected data store.
 const STORAGE_KEY = "personal-budget-transactions";
 const REPORT_YEAR_STORAGE_KEY = "personal-budget-last-report-year";
+const REPORT_TRANSACTIONS_VIEW_STORAGE_KEY =
+  "personal-budget-last-report-transactions-view";
+
+type ReportTransactionsViewPreference = "table" | "calendar";
 
 // Note 3: `typeof window === "undefined"` is true during SSR in Next.js. Returning
 // an empty array instead of throwing keeps server-side rendering safe, even though
@@ -157,4 +161,21 @@ export function clearLastSelectedReportYears(): void {
 
 export function clearLastSelectedReportYear(): void {
   clearLastSelectedReportYears();
+}
+
+// Note 14: Reports view mode is stored separately from the year filter so the
+// page can restore how the user prefers to scan results without coupling that
+// UI preference to the currently available transaction data.
+export function getLastSelectedReportTransactionsView(): ReportTransactionsViewPreference {
+  if (typeof window === "undefined") return "table";
+
+  const raw = localStorage.getItem(REPORT_TRANSACTIONS_VIEW_STORAGE_KEY);
+  return raw === "calendar" || raw === "table" ? raw : "table";
+}
+
+export function setLastSelectedReportTransactionsView(
+  view: ReportTransactionsViewPreference,
+): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(REPORT_TRANSACTIONS_VIEW_STORAGE_KEY, view);
 }

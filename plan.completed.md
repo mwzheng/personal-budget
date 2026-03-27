@@ -1,3 +1,66 @@
+# Completed: Persist reports view, add CSV template, and polish Sankey readability
+
+Date: 2026-03-27
+
+Summary
+
+- Persisted the Reports table/calendar toggle so the page restores the user's
+  last-used view instead of always resetting to the table.
+- Improved the Reports calendar legibility with taller day cells, larger event
+  text, more breathing room, and clearer visual treatment for individual items.
+- Simplified the home page feature area by removing the extra visible intro copy
+  and added a downloadable CSV template that matches the import schema.
+- Refined the budget Sankey section with a clearer title, more centered chart
+  framing, and softer/high-contrast labels that are easier to read.
+
+Completed items
+
+- Added report-view preference helpers in `lib/utils/storage.ts` and restored /
+  persisted the value from `app/reports/page.tsx`.
+- Updated `components/transactions/TransactionCalendar.tsx` and
+  `app/globals.css` so the calendar shows taller cells, more event rows,
+  larger typography, stronger hover feedback, and improved event readability.
+- Removed the visible home-page feature heading/subcopy from `app/page.tsx`
+  while preserving semantics with a visually hidden section heading.
+- Added `public/templates/expenses-template.csv` plus download actions in
+  `components/transactions/ImportCsvDialog.tsx`.
+- Renamed the Sankey card in `app/sankey/page.tsx` to `Visualize Your Budget`
+  and refined chart layout/readability in `components/charts/SankeyChart.tsx`
+  and `lib/utils/sankey-layout.ts`.
+- Added regression coverage in `test/storage-utils.test.ts`,
+  `test/csv-import-export.test.ts`, and `test/sankey-layout.test.ts`.
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to keep the docs and
+  progress record in sync with the UI changes.
+
+Files changed
+
+- `README.md`
+- `app/globals.css`
+- `app/page.tsx`
+- `app/reports/page.tsx`
+- `app/sankey/page.tsx`
+- `components/charts/SankeyChart.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `components/transactions/TransactionCalendar.tsx`
+- `lib/utils/sankey-layout.ts`
+- `lib/utils/storage.ts`
+- `public/templates/expenses-template.csv`
+- `test/csv-import-export.test.ts`
+- `test/sankey-layout.test.ts`
+- `test/storage-utils.test.ts`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Planned commit message: `feat(ui): polish reports calendar, csv import, and sankey`
+
+Notes / next steps
+
+- The active roadmap remains focused on direct Budgets route coverage, deciding
+  the DynamoDB integration-test strategy, and adding a lightweight Budgets →
+  Sankey E2E smoke test.
+
 # Completed: Repository-wide cleanup pass
 
 Date: 2026-03-26
@@ -1960,3 +2023,55 @@ Modified files:
 - Tests: ✔ 47/47 passed
 - Build: ✔ 30 routes (including /robots.txt and /sitemap.xml)
 - Prettier: ✔ All files formatted
+
+# Completed: Remove home feature intro copy and add CSV import template download
+
+Date: 2026-03-27
+
+Summary
+
+- Removed the extra visible heading/description above the home-page feature grid
+  while keeping the section labeled for assistive technology.
+- Added a public CSV template file that mirrors the reports importer schema and
+  includes representative sample rows.
+- Wired a download-template action into the CSV import dialog and added a test
+  plus README note so the workflow stays discoverable and aligned over time.
+
+Completed items
+
+- Updated `app/page.tsx` to remove the visible "Build a clearer budgeting
+  routine" block and replace it with a visually hidden `h2` so the feature
+  section still has an accessible label.
+- Added `public/templates/expenses-template.csv` with the importer's exact
+  header columns (`Name,Amount,Category,Date,Notes,Payment Method,Tags`) and
+  sample Need/Want/Saving rows using supported date/category formats.
+- Updated `components/transactions/ImportCsvDialog.tsx` so the idle-state copy
+  points users to the template, includes an outlined download button in the
+  dialog body, and exposes a second download action beside the file-picker
+  button for better discoverability.
+- Added a regression check in `test/csv-import-export.test.ts` that reads the
+  public template file and asserts it still parses into the expected
+  transactions through `loadTransactionsFromCSV`.
+- Documented the downloadable CSV template in `README.md`.
+- Updated `plan.md` and `plan.completed.md` together so the active/completed
+  planning records stay synchronized.
+
+Files changed
+
+- `app/page.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `public/templates/expenses-template.csv`
+- `test/csv-import-export.test.ts`
+- `README.md`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree changes only in this session (no git commit created yet).
+
+Notes / next steps
+
+- If the CSV schema changes later, update both `lib/utils/csvParser.ts` and the
+  public template/test together so the import dialog never advertises stale
+  columns or sample values.

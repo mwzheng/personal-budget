@@ -27,6 +27,17 @@ const HOME_FEATURE_ICONS = {
 
 const HOME_PAGE_DESCRIPTION =
   "Track expenses, plan budgets, and review spending trends with a manual-first personal budgeting app built for clarity and reflection.";
+const VISUALLY_HIDDEN_SX = {
+  border: 0,
+  clip: "rect(0 0 0 0)",
+  height: 1,
+  margin: -1,
+  overflow: "hidden",
+  padding: 0,
+  position: "absolute",
+  whiteSpace: "nowrap",
+  width: 1,
+} as const;
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
 ).replace(/\/+$/, "");
@@ -136,22 +147,13 @@ export default function Home() {
         </Box>
 
         <Box component="section" aria-labelledby="home-features-title">
-          <Box sx={{ maxWidth: 720, mb: { xs: 3, md: 4 } }}>
-            <Typography
-              id="home-features-title"
-              component="h2"
-              variant="h4"
-              fontWeight={700}
-              gutterBottom
-            >
-              Build a clearer budgeting routine
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Explore the core tools that keep budgeting deliberate, visible,
-              and grounded in the details you actually review.
-            </Typography>
-          </Box>
-
+          <Typography
+            id="home-features-title"
+            component="h2"
+            sx={VISUALLY_HIDDEN_SX}
+          >
+            Core budgeting features
+          </Typography>
           <Grid container spacing={3} sx={{ pt: { xs: 1, md: 2 } }}>
             {features.map((feature) => {
               const Icon = HOME_FEATURE_ICONS[feature.id];

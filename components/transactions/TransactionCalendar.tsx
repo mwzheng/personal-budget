@@ -101,7 +101,7 @@ export function TransactionCalendar({
             headerToolbar={{ left: "prev,next today", center: "title" }}
             height="auto"
             fixedWeekCount={false}
-            dayMaxEventRows={4}
+            dayMaxEventRows={5}
             eventDisplay="block"
             eventInteractive
             events={events}

@@ -493,7 +493,7 @@ export default function SankeyPage() {
         <Grid item xs={12}>
           <Card>
             <CardHeader
-              title="Sankey Section"
+              title="Visualize Your Budget"
               subheader="Money flows from Net Income into optional user-defined path layers and then into the final expense leaves."
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 700 }}
               subheaderTypographyProps={{ variant: "caption" }}

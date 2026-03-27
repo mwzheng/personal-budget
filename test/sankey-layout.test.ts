@@ -42,6 +42,8 @@ describe("getSankeyLayoutMetrics", () => {
     expect(normalMetrics.nodeThickness).toBe(largeMetrics.nodeThickness);
     expect(largeMetrics.nodeThickness).toBeLessThanOrEqual(18);
     expect(largeMetrics.nodeSpacing).toBeLessThanOrEqual(18);
+    expect(largeMetrics.leftMargin).toBeGreaterThanOrEqual(56);
+    expect(largeMetrics.rightMargin).toBeGreaterThan(largeMetrics.leftMargin);
   });
 
   it("keeps dense layers readable without runaway height or spacing", () => {
@@ -65,5 +67,33 @@ describe("getSankeyLayoutMetrics", () => {
     expect(metrics.nodeSpacing).toBeLessThanOrEqual(14);
     expect(metrics.height).toBeLessThan(1200);
     expect(metrics.height).toBeGreaterThanOrEqual(540);
+    expect(metrics.chartMaxWidth).toBeGreaterThanOrEqual(900);
+    expect(metrics.chartMaxWidth).toBeLessThanOrEqual(1360);
+  });
+
+  it("keeps labels readable while preserving softer chart framing", () => {
+    const longLabelData: SankeyData = {
+      nodes: [
+        { id: "income", label: "Net Income" },
+        {
+          id: "essentials",
+          label: "Core Living Essentials and Monthly Bills",
+        },
+        {
+          id: "expense:essentials",
+          label: "Rent, Utilities, Insurance, and Groceries",
+        },
+      ],
+      links: [
+        { source: "income", target: "essentials", value: 2500 },
+        { source: "essentials", target: "expense:essentials", value: 2500 },
+      ],
+    };
+
+    const metrics = getSankeyLayoutMetrics(longLabelData);
+
+    expect(metrics.labelFontSize).toBe(11);
+    expect(metrics.leftMargin).toBeGreaterThanOrEqual(56);
+    expect(metrics.rightMargin).toBeLessThanOrEqual(320);
   });
 });
