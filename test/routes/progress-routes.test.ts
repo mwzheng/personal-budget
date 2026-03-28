@@ -5,7 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth2", () => ({
+vi.mock("@/lib/auth/auth", () => ({
   getPayloadFromRequest: vi.fn(),
 }));
 
@@ -40,7 +40,7 @@ import {
   POST as postRetirement,
   PUT as putRetirementRoute,
 } from "@/app/api/progress/retirement/route";
-import { getPayloadFromRequest } from "@/lib/auth2";
+import { getPayloadFromRequest } from "@/lib/auth/auth";
 import { upsertUserProfile } from "@/lib/auth/users";
 import {
   deleteMilestone,

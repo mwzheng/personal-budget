@@ -2,7 +2,7 @@
 // Year-over-year (YoY) growth is computed on the GET response so the client
 // can display it in a chart without extra computation.
 import { NextResponse } from "next/server";
-import { getPayloadFromRequest } from "../../../lib/auth2";
+import { getPayloadFromRequest } from "@/lib/auth/auth";
 import { upsertUserProfile } from "@/lib/auth/users";
 import { putSalary, getUserSalary, deleteSalary } from "@/lib/utils/salary";
 

@@ -3,7 +3,7 @@
  * The regex `^Bearer (.+)$` captures everything after "Bearer " into group 1.
  * The `i` flag makes the match case-insensitive so both "Bearer" and "bearer"
  * are accepted, following the RFC 6750 spec. Extracting this into a shared
- * helper eliminates the duplicated regex in auth.ts and auth2.ts.
+ * helper eliminates duplication across auth modules.
  */
 
 const BEARER_RE = /^Bearer (.+)$/i;

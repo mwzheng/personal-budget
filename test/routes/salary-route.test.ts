@@ -3,7 +3,7 @@
 // if the DynamoDB helpers are refactored behind the route later.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth2", () => ({
+vi.mock("@/lib/auth/auth", () => ({
   getPayloadFromRequest: vi.fn(),
 }));
 
@@ -18,7 +18,7 @@ vi.mock("@/lib/utils/salary", () => ({
 }));
 
 import { DELETE, GET, POST, PUT } from "@/app/api/salary/route";
-import { getPayloadFromRequest } from "@/lib/auth2";
+import { getPayloadFromRequest } from "@/lib/auth/auth";
 import { upsertUserProfile } from "@/lib/auth/users";
 import { deleteSalary, getUserSalary, putSalary } from "@/lib/utils/salary";
 

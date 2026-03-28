@@ -134,7 +134,7 @@ Copy the stack outputs into `.env.local` at the repository root:
 # .env.local
 NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
 NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
-DYNAMODB_TABLE_NAME=personal-budget-infra-dev-transactions
+DYNAMODB_TABLE=personal-budget-infra-dev-transactions
 AWS_REGION=us-east-1
 ```
 

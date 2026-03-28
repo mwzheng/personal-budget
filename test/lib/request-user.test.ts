@@ -6,14 +6,8 @@ const { getPayloadFromRequestMock } = vi.hoisted(() => ({
   getPayloadFromRequestMock: vi.fn(),
 }));
 
-// Note 2: requestUser.ts imports `getPayloadFromRequest` from the consolidated
-// `@/lib/auth/auth` module. The top-level `@/lib/auth2` re-export is also
-// mocked so any transitive resolution still hits the same fake.
+// Note 2: requestUser.ts imports `getPayloadFromRequest` from `@/lib/auth/auth`.
 vi.mock("@/lib/auth/auth", () => ({
-  getPayloadFromRequest: getPayloadFromRequestMock,
-}));
-
-vi.mock("@/lib/auth2", () => ({
   getPayloadFromRequest: getPayloadFromRequestMock,
 }));
 

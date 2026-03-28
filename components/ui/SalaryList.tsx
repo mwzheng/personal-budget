@@ -21,7 +21,7 @@ import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
-import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";

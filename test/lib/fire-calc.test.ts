@@ -58,7 +58,8 @@ describe("generateProjection", () => {
   it("sets calendarYear starting from current year", () => {
     const scenario = buildScenario({ projectionYears: 5 });
     const { rows } = generateProjection(scenario);
-    const thisYear = new Date().getFullYear();
+    // generateProjection uses getUTCFullYear(); match that here
+    const thisYear = new Date().getUTCFullYear();
     expect(rows[0].calendarYear).toBe(thisYear);
     expect(rows[4].calendarYear).toBe(thisYear + 4);
   });

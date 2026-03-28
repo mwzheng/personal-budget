@@ -39,7 +39,7 @@ const VISUALLY_HIDDEN_SX = {
   width: 1,
 } as const;
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
 
 export const metadata: Metadata = {

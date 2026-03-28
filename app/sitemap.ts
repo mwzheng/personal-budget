@@ -7,7 +7,7 @@
  * budget on content pages instead of login and authenticated app routes.
  *
  * Note 2: Set `NEXT_PUBLIC_SITE_URL` in your environment to the production
- * domain (e.g. "https://porridgebudget.com"). The fallback is a placeholder.
+ * domain (e.g. "https://porridge-budgeting.vercel.app"). The fallback is a placeholder.
  */
 
 import type { MetadataRoute } from "next";
@@ -15,7 +15,7 @@ import type { MetadataRoute } from "next";
 import { ROUTE_PATHS } from "@/lib/content/page-titles";
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
 
 export default function sitemap(): MetadataRoute.Sitemap {

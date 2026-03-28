@@ -56,7 +56,7 @@ COGNITO_USER_POOL_ID=<cognito_user_pool_id>
 DYNAMODB_TABLE=<transactions_table_name>
 AWS_REGION=us-east-1
 NEXT_PUBLIC_GA_ID=<ga4_measurement_id>
-NEXT_PUBLIC_SITE_URL=https://porridgebudget.com
+NEXT_PUBLIC_SITE_URL=https://porridge-budgeting.vercel.app
 ```
 
 Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.

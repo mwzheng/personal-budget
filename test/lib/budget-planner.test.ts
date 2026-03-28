@@ -7,7 +7,7 @@ import {
   buildBudgetInsights,
   normalizeBudgetForEditor,
   sortSavedBudgets,
-} from "../lib/utils/budget-planner";
+} from "../../lib/utils/budget-planner";
 
 describe("buildBudgetInsights", () => {
   it("adds leftover savings when planned expenses are below income", () => {

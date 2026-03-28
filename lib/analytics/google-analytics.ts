@@ -3,7 +3,7 @@
  * on the same analytics hostname rules. Centralizing those rules here keeps the
  * canonical host, cookie scope, and measurement ID aligned across both paths.
  */
-const DEFAULT_SITE_URL = "https://porridgebudget.com";
+const DEFAULT_SITE_URL = "https://porridge-budgeting.vercel.app";
 const IPV4_HOSTNAME_PATTERN = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
