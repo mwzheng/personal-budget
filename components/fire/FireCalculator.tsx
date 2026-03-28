@@ -101,7 +101,7 @@ export default function FireCalculator() {
     if (retirementEntries.length === 0) return [];
     const sorted = [...retirementEntries].sort((a, b) => a.year - b.year);
     const maxAmount = Math.max(...sorted.map((e) => e.endAmount));
-    const step = 500_000;
+    const step = 1_000_000;
     const milestones: { year: number; amount: number }[] = [];
     for (let target = step; target <= maxAmount; target += step) {
       const entry = sorted.find((e) => e.endAmount >= target);

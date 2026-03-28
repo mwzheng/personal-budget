@@ -38,5 +38,11 @@ export const HOME_PAGE_CONTENT = {
       description:
         "Plan named expenses, preview a pie chart, and inspect grouped Sankey flows before you commit to a budget.",
     },
+    {
+      id: "fire",
+      title: "FIRE Calculator",
+      description:
+        "Calculate your Financial Independence number, project investment growth, and compare retirement scenarios with interactive charts.",
+    },
   ],
 } satisfies HomePageContent;

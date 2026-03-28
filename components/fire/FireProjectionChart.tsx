@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
 
@@ -94,7 +95,7 @@ export default function FireProjectionChart({
     );
     if (allValues.length === 0) return [];
     const maxVal = Math.max(...allValues);
-    const step = 500_000;
+    const step = 1_000_000;
     const lines: number[] = [];
     for (let m = step; m <= maxVal; m += step) {
       lines.push(m);
@@ -162,135 +163,154 @@ export default function FireProjectionChart({
       : null;
 
   return (
-    <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart
-          data={chartData}
-          margin={{ top: 35, right: 30, left: 30, bottom: 5 }}
-        >
-          <defs>
-            <linearGradient id="fireBalanceFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3f51b5" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3f51b5" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" tick={{ fill: "#aaa" }} minTickGap={30} />
-          <YAxis tickFormatter={formatAxis} tick={{ fill: "#aaa" }} />
-          <Tooltip content={tooltipContent} />
+    <ChartWrapper title="FIRE Projection">
+      <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 35, right: 30, left: 30, bottom: 5 }}
+          >
+            <defs>
+              <linearGradient id="fireBalanceFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3f51b5" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#3f51b5" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: "#aaa" }} minTickGap={30} />
+            <YAxis tickFormatter={formatAxis} tick={{ fill: "#aaa" }} />
+            <Tooltip content={tooltipContent} />
 
-          {/* $500K milestone reference lines */}
-          {milestoneLines.map((m) => (
-            <ReferenceLine
-              key={`ms-${m}`}
-              y={m}
-              stroke="#9e9e9e"
-              strokeWidth={1}
-              strokeDasharray="6 3"
-              label={{
-                value: formatAxis(m),
-                position: "right",
-                fill: "#757575",
-                fontSize: 11,
-                fontWeight: 500,
-              }}
+            {/* $1M milestone reference lines */}
+            {milestoneLines.map((m) => (
+              <ReferenceLine
+                key={`ms-${m}`}
+                y={m}
+                stroke="#616161"
+                strokeWidth={0.5}
+                strokeDasharray="8 4"
+                label={{
+                  value: formatAxis(m),
+                  position: "right",
+                  fill: "#9e9e9e",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              />
+            ))}
+
+            {/* Projected portfolio (nominal) — filled area */}
+            <Area
+              type="monotone"
+              dataKey="balance"
+              stroke="#3f51b5"
+              strokeWidth={2}
+              strokeLinecap="round"
+              fill="url(#fireBalanceFill)"
+              name="Portfolio (Nominal)"
+              connectNulls={false}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
             />
-          ))}
 
-          {/* Projected portfolio (nominal) — filled area */}
-          <Area
-            type="monotone"
-            dataKey="balance"
-            stroke="#3f51b5"
-            strokeWidth={2}
-            fill="url(#fireBalanceFill)"
-            name="Portfolio (Nominal)"
-            connectNulls={false}
-          />
-
-          {/* Projected portfolio (inflation-adjusted) — dashed */}
-          <Line
-            type="monotone"
-            dataKey="balanceReal"
-            stroke="#66bb6a"
-            strokeWidth={2}
-            strokeDasharray="6 3"
-            dot={false}
-            connectNulls={false}
-            name="Portfolio (Real)"
-          />
-
-          {/* FIRE target line — dashed red */}
-          <Line
-            type="monotone"
-            dataKey="fireTarget"
-            stroke="#ef5350"
-            strokeWidth={2}
-            strokeDasharray="4 4"
-            dot={false}
-            connectNulls={false}
-            name="FIRE Target"
-          />
-
-          {/* Actual portfolio history — solid orange */}
-          {hasActualData && (
+            {/* Projected portfolio (inflation-adjusted) — dashed */}
             <Line
               type="monotone"
-              dataKey="actualBalance"
-              stroke="#ff9800"
-              strokeWidth={2.5}
-              dot={{ fill: "#ff9800", r: 3, strokeWidth: 0 }}
+              dataKey="balanceReal"
+              stroke="#66bb6a"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeDasharray="6 3"
+              dot={false}
               connectNulls={false}
-              name="Actual Portfolio"
+              name="Portfolio (Real)"
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+              animationBegin={200}
             />
-          )}
 
-          {/* Vertical FIRE achievement line */}
-          {fireAchievementYear != null && (
+            {/* FIRE target line — dashed red */}
+            <Line
+              type="monotone"
+              dataKey="fireTarget"
+              stroke="#ef5350"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeDasharray="4 4"
+              dot={false}
+              connectNulls={false}
+              name="FIRE Target"
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+              animationBegin={400}
+            />
+
+            {/* Actual portfolio history — solid orange */}
+            {hasActualData && (
+              <Line
+                type="monotone"
+                dataKey="actualBalance"
+                stroke="#ff9800"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                dot={{ fill: "#ff9800", r: 3, strokeWidth: 0 }}
+                connectNulls={false}
+                name="Actual Portfolio"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                animationDuration={1500}
+                animationEasing="ease-in-out"
+              />
+            )}
+
+            {/* Vertical FIRE achievement line */}
+            {fireAchievementYear != null && (
+              <ReferenceLine
+                x={String(fireAchievementYear)}
+                stroke="#4caf50"
+                strokeWidth={2}
+                strokeDasharray="3 3"
+                label={{
+                  value: "🔥 FIRE!",
+                  position: "top",
+                  fill: "#4caf50",
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
+              />
+            )}
+
+            {/* Horizontal FIRE number line */}
             <ReferenceLine
-              x={String(fireAchievementYear)}
-              stroke="#4caf50"
-              strokeWidth={2}
-              strokeDasharray="3 3"
-              label={{
-                value: "🔥 FIRE!",
-                position: "top",
-                fill: "#4caf50",
-                fontWeight: 700,
-                fontSize: 13,
-              }}
+              y={fireNumber}
+              stroke="#ef5350"
+              strokeWidth={1}
+              strokeDasharray="2 2"
             />
-          )}
 
-          {/* Horizontal FIRE number line */}
-          <ReferenceLine
-            y={fireNumber}
-            stroke="#ef5350"
-            strokeWidth={1}
-            strokeDasharray="2 2"
-          />
-
-          {/* Actual milestone markers (orange dots at $500K crossings) */}
-          {actualMilestones.map((ms) => (
-            <ReferenceDot
-              key={`actual-${ms.amount}`}
-              x={String(ms.year)}
-              y={ms.amount}
-              r={7}
-              fill="#ff9800"
-              stroke="#fff"
-              strokeWidth={2}
-              label={{
-                value: `✓ ${formatAxis(ms.amount)}`,
-                position: "top",
-                fill: "#e65100",
-                fontSize: 10,
-                fontWeight: 600,
-              }}
-            />
-          ))}
-        </ComposedChart>
-      </ResponsiveContainer>
-    </Box>
+            {/* Actual milestone markers (dots at $1M crossings) */}
+            {actualMilestones.map((ms) => (
+              <ReferenceDot
+                key={`actual-${ms.amount}`}
+                x={String(ms.year)}
+                y={ms.amount}
+                r={8}
+                fill="#ff9800"
+                stroke="#fff"
+                strokeWidth={2}
+                label={{
+                  value: `${formatAxis(ms.amount)} ✓`,
+                  position: "top",
+                  fill: "#e65100",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              />
+            ))}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </Box>
+    </ChartWrapper>
   );
 }

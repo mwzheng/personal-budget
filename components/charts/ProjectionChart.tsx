@@ -12,6 +12,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 
 type ProjectionTooltipValue = number | string | Array<number | string>;
 
@@ -30,39 +31,45 @@ export default function ProjectionChart({
     balance: d.balance,
   }));
   return (
-    <div style={{ width: "100%", height: 320 }}>
-      <ResponsiveContainer>
-        <LineChart
-          data={chartData}
-          margin={{ top: 10, right: 20, left: 10, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          {/* Note 3: `minTickGap={20}` prevents overlapping X-axis labels when
-              there are many months. Recharts automatically skips tick marks that
-              would be closer together than 20px. */}
-          <XAxis dataKey="name" minTickGap={20} />
-          <YAxis />
-          <Tooltip
-            formatter={(value: ProjectionTooltipValue) => {
-              const normalizedValue = Array.isArray(value) ? value[0] : value;
-              return `$${Number(normalizedValue).toLocaleString()}`;
-            }}
-            contentStyle={{ background: "#242424", border: "1px solid #444" }}
-            labelStyle={{ color: "#fff" }}
-            itemStyle={{ color: "#fff" }}
-          />
-          {/* Note 4: `dot={false}` removes the individual data point markers.
-              With dozens or hundreds of monthly points the markers would overlap
-              and clutter the chart, so showing only the line is cleaner. */}
-          <Line
-            type="monotone"
-            dataKey="balance"
-            stroke="#3f51b5"
-            strokeWidth={2}
-            dot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <ChartWrapper title="Portfolio Projection">
+      <div style={{ width: "100%", height: 320 }}>
+        <ResponsiveContainer>
+          <LineChart
+            data={chartData}
+            margin={{ top: 10, right: 20, left: 10, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            {/* Note 3: `minTickGap={20}` prevents overlapping X-axis labels when
+                there are many months. Recharts automatically skips tick marks that
+                would be closer together than 20px. */}
+            <XAxis dataKey="name" minTickGap={20} />
+            <YAxis />
+            <Tooltip
+              formatter={(value: ProjectionTooltipValue) => {
+                const normalizedValue = Array.isArray(value) ? value[0] : value;
+                return `$${Number(normalizedValue).toLocaleString()}`;
+              }}
+              contentStyle={{ background: "#242424", border: "1px solid #444" }}
+              labelStyle={{ color: "#fff" }}
+              itemStyle={{ color: "#fff" }}
+            />
+            {/* Note 4: `dot={false}` removes the individual data point markers.
+                With dozens or hundreds of monthly points the markers would overlap
+                and clutter the chart, so showing only the line is cleaner. */}
+            <Line
+              type="monotone"
+              dataKey="balance"
+              stroke="#3f51b5"
+              strokeWidth={2}
+              strokeLinecap="round"
+              dot={false}
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </ChartWrapper>
   );
 }

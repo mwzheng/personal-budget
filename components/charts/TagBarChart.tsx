@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { TAG_CHART_PALETTE } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import { TagDataPoint } from "@/lib/types/types";
@@ -43,93 +44,106 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
   );
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      {/* Note 4: `layout="vertical"` swaps the axes so categories appear on the
-          Y-axis and amounts on the X-axis, producing horizontal bars. */}
-      <BarChart
-        layout="vertical"
-        data={data}
-        margin={{ top: 10, right: 80, bottom: 10, left: 120 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
-        <XAxis
-          type="number"
-          tick={{ fontSize: 11, fill: "#aaa" }}
-          tickFormatter={(v: number) =>
-            v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${v.toFixed(0)}`
-          }
-        />
-        <YAxis
-          type="category"
-          dataKey="name"
-          tick={{ fontSize: 12, fill: "#ddd" }}
-          width={115}
-        />
-        <Tooltip
-          cursor={false}
-          content={({ active, label, payload }) => {
-            if (!active || !payload?.length) {
-              return null;
+    <ChartWrapper title="Spending by Tag">
+      <ResponsiveContainer width="100%" height={height}>
+        {/* Note 4: `layout="vertical"` swaps the axes so categories appear on the
+            Y-axis and amounts on the X-axis, producing horizontal bars. */}
+        <BarChart
+          layout="vertical"
+          data={data}
+          margin={{ top: 10, right: 80, bottom: 10, left: 120 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#333"
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11, fill: "#aaa" }}
+            tickFormatter={(v: number) =>
+              v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${v.toFixed(0)}`
             }
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tick={{ fontSize: 12, fill: "#ddd" }}
+            width={115}
+          />
+          <Tooltip
+            cursor={false}
+            content={({ active, label, payload }) => {
+              if (!active || !payload?.length) {
+                return null;
+              }
 
-            const entry = payload[0];
-            const title =
-              typeof label === "string"
-                ? label
-                : String(entry.payload?.name ?? "Tag");
+              const entry = payload[0];
+              const title =
+                typeof label === "string"
+                  ? label
+                  : String(entry.payload?.name ?? "Tag");
 
-            return (
-              <ChartTooltipCard
-                title={title}
-                rows={[
-                  {
-                    label: "Amount",
-                    value: formatCurrency(Number(entry.value ?? 0)),
-                    color: entry.color,
-                  },
-                ]}
-              />
-            );
-          }}
-        />
-        {/* Note 5: `radius={[0, 4, 4, 0]}` rounds only the right corners of
+              return (
+                <ChartTooltipCard
+                  title={title}
+                  rows={[
+                    {
+                      label: "Amount",
+                      value: formatCurrency(Number(entry.value ?? 0)),
+                      color: entry.color,
+                    },
+                  ]}
+                />
+              );
+            }}
+          />
+          {/* Note 5: `radius={[0, 4, 4, 0]}` rounds only the right corners of
             each bar (top-right and bottom-right), giving them a polished look
             while keeping the left edge flush with the Y-axis. */}
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} activeBar={false}>
-          {data.map((entry, i) => {
-            const isActive = activeTagSet.has(entry.name);
+          <Bar
+            dataKey="value"
+            radius={[0, 4, 4, 0]}
+            animationDuration={1200}
+            animationEasing="ease-out"
+          >
+            {data.map((entry, i) => {
+              const isActive = activeTagSet.has(entry.name);
 
-            return (
-              <Cell
-                key={`cell-${entry.name}-${i}`}
-                fill={TAG_CHART_PALETTE[i % TAG_CHART_PALETTE.length]}
-                fillOpacity={hasVisibleActiveTags && !isActive ? 0.45 : 1}
-                stroke={isActive ? "#fff" : "none"}
-                strokeWidth={isActive ? 2 : 0}
-                role={onTagClick ? "button" : undefined}
-                tabIndex={onTagClick ? 0 : undefined}
-                aria-label={
-                  onTagClick
-                    ? `Filter transactions by tag ${entry.name}`
-                    : undefined
-                }
-                onClick={onTagClick ? () => onTagClick(entry.name) : undefined}
-                onKeyDown={
-                  onTagClick
-                    ? (event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          onTagClick(entry.name);
+              return (
+                <Cell
+                  key={`cell-${entry.name}-${i}`}
+                  fill={TAG_CHART_PALETTE[i % TAG_CHART_PALETTE.length]}
+                  fillOpacity={hasVisibleActiveTags && !isActive ? 0.45 : 1}
+                  stroke={isActive ? "#fff" : "none"}
+                  strokeWidth={isActive ? 2 : 0}
+                  role={onTagClick ? "button" : undefined}
+                  tabIndex={onTagClick ? 0 : undefined}
+                  aria-label={
+                    onTagClick
+                      ? `Filter transactions by tag ${entry.name}`
+                      : undefined
+                  }
+                  onClick={
+                    onTagClick ? () => onTagClick(entry.name) : undefined
+                  }
+                  onKeyDown={
+                    onTagClick
+                      ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            onTagClick(entry.name);
+                          }
                         }
-                      }
-                    : undefined
-                }
-                style={{ cursor: onTagClick ? "pointer" : "default" }}
-              />
-            );
-          })}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+                      : undefined
+                  }
+                  style={{ cursor: onTagClick ? "pointer" : "default" }}
+                />
+              );
+            })}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartWrapper>
   );
 }

@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { SalaryEntry } from "@/lib/types/types";
 
@@ -105,45 +106,56 @@ export default function SalaryChart({
   }
 
   return (
-    <Box sx={{ width: "100%", height: 320, mb: 2, mx: "auto" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 10, right: 40, left: 40, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" tick={{ fill: "#aaa" }} />
-          <YAxis
-            yAxisId={0}
-            tickFormatter={(value: number) =>
-              value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value}`
-            }
-            tick={{ fill: "#aaa" }}
-          />
-          <YAxis
-            yAxisId={1}
-            orientation="right"
-            tickFormatter={(value: number) => `${value}%`}
-            tick={{ fill: "#aaa" }}
-          />
-          <Tooltip content={tooltipContent} />
-          <Line
-            type="monotone"
-            dataKey="amount"
-            stroke="#4caf50"
-            strokeWidth={2}
-            dot
-          />
-          <Line
-            type="monotone"
-            dataKey="yoy"
-            stroke="#ff9800"
-            strokeWidth={2}
-            dot
-            yAxisId={1}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </Box>
+    <ChartWrapper title="Salary History">
+      <Box sx={{ width: "100%", height: 320, mb: 2, mx: "auto" }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 10, right: 40, left: 40, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: "#aaa" }} />
+            <YAxis
+              yAxisId={0}
+              tickFormatter={(value: number) =>
+                value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value}`
+              }
+              tick={{ fill: "#aaa" }}
+            />
+            <YAxis
+              yAxisId={1}
+              orientation="right"
+              tickFormatter={(value: number) => `${value}%`}
+              tick={{ fill: "#aaa" }}
+            />
+            <Tooltip content={tooltipContent} />
+            <Line
+              type="monotone"
+              dataKey="amount"
+              stroke="#4caf50"
+              strokeWidth={2}
+              strokeLinecap="round"
+              dot
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+            />
+            <Line
+              type="monotone"
+              dataKey="yoy"
+              stroke="#ff9800"
+              strokeWidth={2}
+              strokeLinecap="round"
+              dot
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              yAxisId={1}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+              animationBegin={200}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </Box>
+    </ChartWrapper>
   );
 }
