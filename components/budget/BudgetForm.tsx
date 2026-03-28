@@ -12,7 +12,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";

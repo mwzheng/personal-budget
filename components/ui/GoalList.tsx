@@ -20,7 +20,7 @@ import GoalForm from "@/components/forms/GoalForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
-import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { Goal } from "@/lib/types/types";
 

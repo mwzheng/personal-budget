@@ -7,7 +7,7 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ActionIconButton } from "@/components/ui/action-icon-button";
+import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
