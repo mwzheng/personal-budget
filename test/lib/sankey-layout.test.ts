@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { getSankeyLayoutMetrics } from "../lib/utils/sankey-layout";
-import { SankeyData } from "../lib/types/types";
+import { getSankeyLayoutMetrics } from "../../lib/utils/sankey-layout";
+import { SankeyData } from "../../lib/types/types";
 
 /**
  * Note 1: These tests lock in the layout guardrails that keep the Sankey

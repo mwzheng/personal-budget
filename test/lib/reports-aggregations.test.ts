@@ -9,8 +9,8 @@ import {
   getAvailableReportYears,
   resolveDefaultReportYear,
   resolveDefaultReportYears,
-} from "../lib/utils/aggregations";
-import type { Transaction } from "../lib/types/types";
+} from "../../lib/utils/aggregations";
+import type { Transaction } from "../../lib/types/types";
 
 function buildTransaction(
   id: string,

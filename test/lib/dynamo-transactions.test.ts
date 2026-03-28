@@ -28,8 +28,8 @@ import {
   getUserTransactions,
   putGoal,
   putTransaction,
-} from "../lib/api/dynamo";
-import { DEMO_USER_ID } from "../lib/auth/requestUser";
+} from "../../lib/api/dynamo";
+import { DEMO_USER_ID } from "../../lib/auth/requestUser";
 
 describe("buildTransactionsQuery", () => {
   it("restricts non-ranged queries to transaction sort keys", () => {

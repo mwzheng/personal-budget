@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeAllocations } from "../lib/utils/sankey";
+import { normalizeAllocations } from "../../lib/utils/sankey";
 
 describe("normalizeAllocations", () => {
   it("accepts explicit percentages that sum to 100", () => {

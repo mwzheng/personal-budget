@@ -12,12 +12,12 @@ vi.mock("@/lib/api/dynamo", () => ({
   putTransaction: vi.fn(),
 }));
 
-import { GET as getReports } from "../app/api/reports/route";
-import { GET as exportReports } from "../app/api/reports/export/route";
-import { POST as importReports } from "../app/api/reports/import/route";
+import { GET as getReports } from "../../app/api/reports/route";
+import { GET as exportReports } from "../../app/api/reports/export/route";
+import { POST as importReports } from "../../app/api/reports/import/route";
 import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
-import type { Transaction } from "../lib/types/types";
+import type { Transaction } from "../../lib/types/types";
 
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
 const mockedGetUserTransactions = vi.mocked(getUserTransactions);
