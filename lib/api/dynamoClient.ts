@@ -15,9 +15,8 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 // Note 2: A Map keyed by table name caches one DynamoDBDocumentClient per
-// distinct table. This preserves the singleton-per-module behavior the old
-// code relied on while allowing multiple tables (e.g., DYNAMODB_TABLE vs
-// DYNAMODB_USERS_TABLE) to each have their own connection pool.
+// distinct table. This allows multiple tables to each have their own
+// connection pool while preserving the singleton-per-module behavior.
 const clientCache = new Map<string, DynamoDBDocumentClient>();
 
 /**

@@ -83,7 +83,7 @@ If this top-level file conflicts with a per-topic instruction, the per-topic fil
 
 - Pages/screens: transactions, budgets, reports, settings
 - API/Lambda: CRUD for transactions, budgets, and user data
-- Data import/export: CSV import/export (see `sample-data/expenses.csv`) with validation and server-side upsert
+- Data import/export: CSV import/export (see `dev-sample-data/`) with validation and server-side upsert
 - Charts: spending-over-time, budget allocation, investment progress
 - CI/CD: GitHub Actions workflows should run tests, linting, and formatting before deploys (see `.github/instructions/github-actions-ci-cd-best-practices.instructions.md`)
 
