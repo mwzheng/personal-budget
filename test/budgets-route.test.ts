@@ -10,15 +10,18 @@ vi.mock("@/lib/auth/auth", () => ({
 vi.mock("@/lib/api/dynamo", () => ({
   getUserBudgets: vi.fn(),
   putBudget: vi.fn(),
+  deleteBudget: vi.fn(),
 }));
 
 import { GET, POST } from "@/app/api/budgets/route";
+import { DELETE, PUT } from "@/app/api/budgets/[id]/route";
 import { getUserIdFromRequest } from "@/lib/auth/auth";
-import { getUserBudgets, putBudget } from "@/lib/api/dynamo";
+import { getUserBudgets, putBudget, deleteBudget } from "@/lib/api/dynamo";
 
 const mockedGetUserIdFromRequest = vi.mocked(getUserIdFromRequest);
 const mockedGetUserBudgets = vi.mocked(getUserBudgets);
 const mockedPutBudget = vi.mocked(putBudget);
+const mockedDeleteBudget = vi.mocked(deleteBudget);
 
 function buildBudgetsRequest(init?: RequestInit) {
   return new Request("http://localhost/api/budgets", init);
@@ -29,6 +32,7 @@ describe("budgets api route", () => {
     mockedGetUserIdFromRequest.mockReset();
     mockedGetUserBudgets.mockReset();
     mockedPutBudget.mockReset();
+    mockedDeleteBudget.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-26T12:34:56.000Z"));
@@ -221,5 +225,145 @@ describe("budgets api route", () => {
       ok: false,
       error: "Error: Missing or invalid Authorization header",
     });
+  });
+});
+
+describe("budgets [id] api route", () => {
+  beforeEach(() => {
+    mockedGetUserIdFromRequest.mockReset();
+    mockedGetUserBudgets.mockReset();
+    mockedPutBudget.mockReset();
+    mockedDeleteBudget.mockReset();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-26T12:34:56.000Z"));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  function buildBudgetByIdRequest(init?: RequestInit) {
+    return new Request("http://localhost/api/budgets/budget-1", init);
+  }
+
+  it("deletes a budget by id for the authenticated user", async () => {
+    mockedGetUserIdFromRequest.mockResolvedValue("user-123");
+    mockedDeleteBudget.mockResolvedValue(undefined);
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await DELETE(
+      buildBudgetByIdRequest({ method: "DELETE" }),
+      context,
+    );
+
+    expect(mockedGetUserIdFromRequest).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteBudget).toHaveBeenCalledWith("user-123", "budget-1");
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true });
+  });
+
+  it("returns error response on auth failure for delete", async () => {
+    mockedGetUserIdFromRequest.mockRejectedValue(
+      new Error("Missing or invalid Authorization header"),
+    );
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await DELETE(
+      buildBudgetByIdRequest({ method: "DELETE" }),
+      context,
+    );
+
+    expect(mockedDeleteBudget).not.toHaveBeenCalled();
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Error: Missing or invalid Authorization header",
+    });
+  });
+
+  it("updates a budget with valid payload after schema validation and normalization", async () => {
+    mockedGetUserIdFromRequest.mockResolvedValue("user-456");
+    mockedPutBudget.mockImplementation(async (_userId, budget) => ({
+      ...budget,
+      budgetId: "budget-1",
+    }));
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await PUT(
+      buildBudgetByIdRequest({
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Updated Budget",
+          expenses: [
+            {
+              name: "Rent",
+              amount: 1800,
+              category: "Need",
+              group: "Housing",
+            },
+          ],
+          createdAt: "2026-01-01T00:00:00.000Z",
+        }),
+      }),
+      context,
+    );
+
+    expect(mockedPutBudget).toHaveBeenCalledTimes(1);
+    expect(mockedPutBudget).toHaveBeenCalledWith("user-456", {
+      budgetId: "budget-1",
+      name: "Updated Budget",
+      monthlyIncome: 1800,
+      expenses: [
+        {
+          expenseId: expect.any(String),
+          name: "Rent",
+          amount: 1800,
+          category: "Need",
+          group: "Housing",
+        },
+      ],
+      allocations: [{ category: "Rent", amount: 1800 }],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-03-26T12:34:56.000Z",
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      updated: {
+        budgetId: "budget-1",
+        name: "Updated Budget",
+      },
+    });
+  });
+
+  it("rejects invalid payload with 422 validation error on put", async () => {
+    mockedGetUserIdFromRequest.mockResolvedValue("user-789");
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await PUT(
+      buildBudgetByIdRequest({
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      }),
+      context,
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "validation_error",
+        issues: {
+          name: {
+            _errors: expect.arrayContaining([expect.any(String)]),
+          },
+        },
+      },
+    });
+    expect(mockedPutBudget).not.toHaveBeenCalled();
   });
 });
