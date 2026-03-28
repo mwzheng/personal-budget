@@ -27,7 +27,7 @@ const inter = Inter({
 // Note 1.5: Metadata URLs need a stable origin so canonical, Open Graph, and
 // sitemap URLs resolve consistently in production and local previews.
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
 
 const ROOT_METADATA_DESCRIPTION =

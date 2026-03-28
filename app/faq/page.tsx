@@ -30,7 +30,7 @@ const FAQ_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.FAQ);
 const FAQ_PAGE_DESCRIPTION =
   "Read common questions about Porridge Budget, including the creator, manual-first workflow, CSV support, and the product philosophy.";
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
 // Note 1.1: These style constants keep the Server Component serializable. MUI
 // client components can receive plain `sx` objects from the server, but not

@@ -17,7 +17,7 @@ import type { MetadataRoute } from "next";
 import { ROUTE_PATHS } from "@/lib/content/page-titles";
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridgebudget.com"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
 
 export default function robots(): MetadataRoute.Robots {

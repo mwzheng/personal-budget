@@ -29,17 +29,17 @@ describe("google analytics host policy", () => {
 
   it("parses the configured canonical site hostname from NEXT_PUBLIC_SITE_URL", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com/";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app/";
 
     expect(getGoogleAnalyticsBootstrapConfig()).toEqual({
       measurementId: "G-TEST123",
-      siteHostname: "porridgebudget.com",
+      siteHostname: "porridge-budgeting.vercel.app",
     });
   });
 
   it("keeps analytics enabled on localhost with a host-only cookie", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
     expect(buildGoogleAnalyticsRuntimeConfig("localhost")).toEqual({
       enabled: true,
@@ -50,12 +50,14 @@ describe("google analytics host policy", () => {
 
   it("enables analytics on the canonical host and scopes cookies to that domain", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
-    expect(buildGoogleAnalyticsRuntimeConfig("porridgebudget.com")).toEqual({
+    expect(
+      buildGoogleAnalyticsRuntimeConfig("porridge-budgeting.vercel.app"),
+    ).toEqual({
       enabled: true,
       measurementId: "G-TEST123",
-      cookieDomain: "porridgebudget.com",
+      cookieDomain: "porridge-budgeting.vercel.app",
     });
   });
 
@@ -64,31 +66,31 @@ describe("google analytics host policy", () => {
       buildGoogleAnalyticsPageViewPayload(
         "/reports",
         "Reports - Porridge Budget",
-        "https://porridgebudget.com/reports",
+        "https://porridge-budgeting.vercel.app/reports",
       ),
     ).toEqual({
       page_path: "/reports",
       page_title: "Reports - Porridge Budget",
-      page_location: "https://porridgebudget.com/reports",
+      page_location: "https://porridge-budgeting.vercel.app/reports",
     });
   });
 
   it("reuses the canonical cookie on matching subdomains", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
-    expect(buildGoogleAnalyticsRuntimeConfig("www.porridgebudget.com")).toEqual(
-      {
-        enabled: true,
-        measurementId: "G-TEST123",
-        cookieDomain: "porridgebudget.com",
-      },
-    );
+    expect(
+      buildGoogleAnalyticsRuntimeConfig("www.porridge-budgeting.vercel.app"),
+    ).toEqual({
+      enabled: true,
+      measurementId: "G-TEST123",
+      cookieDomain: "porridge-budgeting.vercel.app",
+    });
   });
 
   it("keeps analytics enabled on preview hosts with a host-scoped cookie", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
     expect(
       buildGoogleAnalyticsRuntimeConfig("personal-budget-git-main.vercel.app"),
@@ -104,9 +106,11 @@ describe("google analytics host policy", () => {
   // ever made from a misconfigured deployment.
   it("returns a fully disabled config when NEXT_PUBLIC_GA_ID is not set", () => {
     delete process.env.NEXT_PUBLIC_GA_ID;
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
-    expect(buildGoogleAnalyticsRuntimeConfig("porridgebudget.com")).toEqual({
+    expect(
+      buildGoogleAnalyticsRuntimeConfig("porridge-budgeting.vercel.app"),
+    ).toEqual({
       enabled: false,
       measurementId: null,
       cookieDomain: null,
@@ -118,7 +122,7 @@ describe("google analytics host policy", () => {
   // that is an IP address or contains no dot separator.
   it("uses a host-only cookie scope for IPv4 address hosts", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
     expect(buildGoogleAnalyticsRuntimeConfig("192.168.1.100")).toEqual({
       enabled: true,
@@ -129,7 +133,7 @@ describe("google analytics host policy", () => {
 
   it("uses a host-only cookie scope for bare hostnames without a dot", () => {
     process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-    process.env.NEXT_PUBLIC_SITE_URL = "https://porridgebudget.com";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://porridge-budgeting.vercel.app";
 
     expect(buildGoogleAnalyticsRuntimeConfig("devbox")).toEqual({
       enabled: true,
