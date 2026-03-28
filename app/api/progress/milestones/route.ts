@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPayloadFromRequest } from "../../../../lib/auth2";
+import { getPayloadFromRequest } from "@/lib/auth/auth";
 import { upsertUserProfile } from "@/lib/auth/users";
 import {
   getUserMilestones,

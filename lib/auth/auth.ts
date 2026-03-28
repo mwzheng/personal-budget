@@ -11,9 +11,8 @@
  * - `getUserIdFromRequest` — extracts the `sub` claim from an HTTP request.
  * - `getPayloadFromRequest` — returns the full verified payload from a request.
  *
- * Previously this logic was duplicated across `auth.ts` and `auth2.ts`.
- * The two files were merged because they shared identical verification logic;
- * the only difference was `getPayloadFromRequest` living exclusively in auth2.
+ * Previously this logic was duplicated across two auth modules.
+ * They were merged because they shared identical verification logic.
  */
 import { JWTPayload } from "jose";
 import { verifyCognitoJwt } from "./cognitoAuth";
