@@ -1,3 +1,90 @@
+# Completed: Comprehensive codebase audit and refactoring
+
+Date: 2026-07-17
+
+Summary
+
+Performed a full tech-lead-level audit of the entire codebase (~100+ files) and
+delivered targeted improvements across 7 commits covering dead code removal,
+auth consolidation, naming standardization, documentation fixes, test mock
+corrections, and new test coverage for 3 previously untested API routes.
+
+Completed items
+
+- Removed empty `components/goal/`, `app/projections/` directories and stale
+  `app/auth/callback/.keep` placeholder.
+- Fixed timezone-sensitive assertion in `test/fire-calc.test.ts`
+  (`getFullYear` → `getUTCFullYear`).
+- Consolidated `lib/auth2.ts` 3-line re-export: migrated 4 route files to
+  import from `@/lib/auth/auth` directly, deleted the shim.
+- Updated stale comments in `lib/auth/auth.ts` and `lib/auth/parseAuthHeader.ts`
+  referencing auth2.
+- Renamed `components/ui/action-icon-button.tsx` → `ActionIconButton.tsx`
+  (PascalCase convention) and updated 8 import sites.
+- Removed duplicate `.env.local.example` file.
+- Standardized `DYNAMODB_TABLE` env var: removed `DYNAMODB_TABLE_NAME` from
+  `env.example`, updated `infra/SAM-DEPLOY.md` reference.
+- Fixed stale `sample-data/expenses.csv` path in `.github/copilot-instructions.md`
+  to reference `dev-sample-data/`.
+- Cleaned up stale comment in `lib/api/dynamoClient.ts`.
+- Fixed 3 test files (`progress-routes`, `salary-route`, `request-user`) still
+  mocking `@/lib/auth2` after the auth consolidation.
+- Added `test/transactions-route.test.ts` (9 tests): GET, POST, PUT, DELETE
+  with auth failure, ID generation, and validation coverage.
+- Added `test/sankey-route.test.ts` (10 tests): percentage-based allocations,
+  legacy amounts, scaling, zero filtering, and Zod validation errors.
+- Extended `test/budgets-route.test.ts` with 4 tests for `/api/budgets/[id]`
+  PUT/DELETE routes including validation and auth failure.
+- Final validation: 238 tests pass, lint clean, build succeeds.
+
+Files changed
+
+- `test/fire-calc.test.ts` — UTC date fix
+- `app/api/salary/route.ts` — auth import
+- `app/api/progress/retirement/route.ts` — auth import
+- `app/api/progress/milestones/route.ts` — auth import
+- `app/api/progress/goal/route.ts` — auth import
+- `lib/auth/auth.ts` — stale comment cleanup
+- `lib/auth/parseAuthHeader.ts` — stale comment cleanup
+- `components/ui/ActionIconButton.tsx` — renamed from kebab-case
+- 8 component files — updated ActionIconButton import paths
+- `env.example` — removed DYNAMODB_TABLE_NAME
+- `infra/SAM-DEPLOY.md` — env var fix
+- `.github/copilot-instructions.md` — sample-data path fix
+- `lib/api/dynamoClient.ts` — stale comment cleanup
+- `test/progress-routes.test.ts` — auth mock path fix
+- `test/salary-route.test.ts` — auth mock path fix
+- `test/request-user.test.ts` — auth mock path + duplicate mock removal
+- `test/transactions-route.test.ts` — new file
+- `test/sankey-route.test.ts` — new file
+- `test/budgets-route.test.ts` — extended with [id] route tests
+
+Files deleted
+
+- `components/goal/` (empty directory)
+- `app/projections/` (empty directory)
+- `app/auth/callback/.keep` (stale placeholder)
+- `lib/auth2.ts` (3-line re-export shim)
+- `.env.local.example` (duplicate of env.example)
+
+Commits
+
+- `0516bb3` chore: remove empty directories, stale placeholder, and fix date test
+- `ca87015` refactor(auth): consolidate auth2 re-export into direct imports
+- `7748ed1` refactor(ui): rename action-icon-button to PascalCase convention
+- `244be9a` docs: standardize DYNAMODB_TABLE env var and fix stale references
+- `1981c5a` fix(test): update auth mock paths after auth2 consolidation
+- `184c0ba` test(transactions): add route tests for /api/transactions
+- `d9f178f` test(sankey,budgets): add sankey route tests and extend budget [id] tests
+
+Next steps
+
+- Decide and document the DynamoDB integration-test strategy for CI/local work.
+- Add a lightweight Budgets → Sankey E2E smoke test once the preferred test
+  infrastructure is chosen.
+
+---
+
 # Completed: FIRE hydration mismatch follow-up
 
 Date: 2026-03-27
