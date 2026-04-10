@@ -102,6 +102,7 @@ export interface FilterParams {
   years: string[];
   startDate: string | null;
   endDate: string | null;
+  categories: CategoryType[];
   tags: string[];
   search: string;
 }

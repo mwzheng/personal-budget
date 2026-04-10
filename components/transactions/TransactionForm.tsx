@@ -55,9 +55,12 @@ interface FormErrors {
 // that `date` always reflects the *current* day when the modal opens, rather
 // than being frozen to the module-load timestamp. Category defaults to "Need"
 // and payment method defaults to "Credit Card" per UX requirements.
-function getDefaultValues(): FormValues {
+function getDefaultValues(initialDate?: string | null): FormValues {
+  const parsedDate = initialDate ? parseISO(initialDate) : new Date();
+  const date = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+
   return {
-    date: new Date(),
+    date,
     name: "",
     amount: "",
     category: "Need",
@@ -100,12 +103,21 @@ interface Props {
   open: boolean;
   /** If provided, the dialog is in edit mode; otherwise it's in add mode. */
   transaction?: Transaction;
+  initialDate?: string | null;
   onSave: (transaction: Transaction) => void;
   onClose: () => void;
 }
 
-export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
-  const [values, setValues] = useState<FormValues>(getDefaultValues);
+export function TransactionForm({
+  open,
+  transaction,
+  initialDate,
+  onSave,
+  onClose,
+}: Props) {
+  const [values, setValues] = useState<FormValues>(() =>
+    getDefaultValues(initialDate),
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   // Note 4: `submitted` tracks whether the user has attempted to submit once.
   // Before the first submit, errors are not shown (avoids overwhelming the user
@@ -116,12 +128,14 @@ export function TransactionForm({ open, transaction, onSave, onClose }: Props) {
   useEffect(() => {
     if (open) {
       setValues(
-        transaction ? transactionToFormValues(transaction) : getDefaultValues(),
+        transaction
+          ? transactionToFormValues(transaction)
+          : getDefaultValues(initialDate),
       );
       setErrors({});
       setSubmitted(false);
     }
-  }, [open, transaction]);
+  }, [initialDate, open, transaction]);
 
   function set<K extends keyof FormValues>(key: K, value: FormValues[K]) {
     setValues((prev) => {

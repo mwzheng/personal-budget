@@ -20,6 +20,7 @@ type FullCalendarProps = ComponentProps<typeof FullCalendar>;
 interface Props {
   transactions: Transaction[];
   onTransactionSelect: (transaction: Transaction) => void;
+  onDaySelect: (date: string) => void;
 }
 
 /**
@@ -30,6 +31,7 @@ interface Props {
 export function TransactionCalendar({
   transactions,
   onTransactionSelect,
+  onDaySelect,
 }: Props) {
   const calendarRef = useRef<FullCalendar | null>(null);
   const events = useMemo(
@@ -75,8 +77,8 @@ export function TransactionCalendar({
           gap={1}
         >
           <Typography variant="body2" color="text.secondary">
-            Select a calendar entry to review the transaction details, then edit
-            or delete it from the popup.
+            Click a calendar entry to review it, or click an empty day to add a
+            transaction for that date.
           </Typography>
           {transactions.length === 0 && (
             <Typography variant="body2" color="text.secondary">
@@ -105,6 +107,7 @@ export function TransactionCalendar({
             eventDisplay="block"
             eventInteractive
             events={events}
+            dateClick={(clickInfo) => onDaySelect(clickInfo.dateStr)}
             eventClick={handleEventClick}
             // Note 2: Rendering the event body ourselves lets each tile show the
             // amount and category at a glance instead of relying on a generic title

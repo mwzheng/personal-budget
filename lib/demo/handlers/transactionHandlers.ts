@@ -9,7 +9,7 @@ import { filterTransactions } from "../../utils/aggregations";
 import { loadTransactionsFromCSV } from "../../utils/csvParser";
 import { transactionsToCsv } from "../../utils/csvExport";
 import { createDemoId, getDemoStore, updateDemoStore } from "../demoData";
-import type { Transaction } from "../../types/types";
+import type { CategoryType, Transaction } from "../../types/types";
 import {
   type HandlerContext,
   jsonResponse,
@@ -67,6 +67,17 @@ function appendImportedTransactions(
     imported,
     skipped,
   };
+}
+
+function parseCategoryFilters(raw: string | null): CategoryType[] {
+  if (!raw) return [];
+
+  return raw
+    .split(",")
+    .filter(
+      (value): value is CategoryType =>
+        value === "Need" || value === "Want" || value === "Saving",
+    );
 }
 
 export async function handleTransactionRoutes(
@@ -190,6 +201,7 @@ export async function handleTransactionRoutes(
     const years = (url.searchParams.get("years") || "")
       .split(",")
       .filter(Boolean);
+    const categories = parseCategoryFilters(url.searchParams.get("categories"));
     const tags = (url.searchParams.get("tags") || "")
       .split(",")
       .filter(Boolean);
@@ -197,6 +209,7 @@ export async function handleTransactionRoutes(
       years,
       startDate: url.searchParams.get("startDate"),
       endDate: url.searchParams.get("endDate"),
+      categories,
       tags,
       search: url.searchParams.get("search") ?? "",
     });

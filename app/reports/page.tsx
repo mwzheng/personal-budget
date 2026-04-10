@@ -100,6 +100,7 @@ const EMPTY_FILTERS: FilterParams = {
   years: [],
   startDate: null,
   endDate: null,
+  categories: [],
   tags: [],
   search: "",
 };
@@ -223,6 +224,9 @@ export default function ReportsPage() {
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
   );
+  const [newTransactionDate, setNewTransactionDate] = useState<string | null>(
+    null,
+  );
   // Note 6: The active view is UI-only state. Keeping it beside the filtered
   // transaction data means the table and calendar stay perfectly in sync without
   // triggering extra API calls or maintaining parallel copies of the same list.
@@ -303,7 +307,9 @@ export default function ReportsPage() {
       const res = await apiFetch("/api/transactions", {
         method: editTarget ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(t),
+        body: JSON.stringify(
+          editTarget ? { ...t, originalDate: editTarget.date } : t,
+        ),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -322,6 +328,7 @@ export default function ReportsPage() {
       await loadTransactions({ resetFilters: wasEmpty });
       setFormOpen(false);
       setEditTarget(undefined);
+      setNewTransactionDate(null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to save transaction",
@@ -330,7 +337,14 @@ export default function ReportsPage() {
   }
 
   function handleEditTransaction(t: Transaction) {
+    setNewTransactionDate(null);
     setEditTarget(t);
+    setFormOpen(true);
+  }
+
+  function handleAddTransaction(date?: string) {
+    setEditTarget(undefined);
+    setNewTransactionDate(date ?? null);
     setFormOpen(true);
   }
 
@@ -373,6 +387,7 @@ export default function ReportsPage() {
   function handleFormClose() {
     setFormOpen(false);
     setEditTarget(undefined);
+    setNewTransactionDate(null);
   }
 
   async function handleExport() {
@@ -384,6 +399,9 @@ export default function ReportsPage() {
         params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
+      if (filters.categories.length > 0) {
+        params.set("categories", filters.categories.join(","));
+      }
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
       if (filters.search) params.set("search", filters.search);
 
@@ -519,7 +537,7 @@ export default function ReportsPage() {
 
       {isEmpty ? (
         <EmptyState
-          onAddClick={() => setFormOpen(true)}
+          onAddClick={() => handleAddTransaction()}
           onImportClick={() => setImportOpen(true)}
         />
       ) : (
@@ -695,6 +713,7 @@ export default function ReportsPage() {
           ) : (
             <TransactionCalendar
               transactions={filtered}
+              onDaySelect={handleAddTransaction}
               onTransactionSelect={setDetailTarget}
             />
           )}
@@ -714,6 +733,7 @@ export default function ReportsPage() {
 
       <TransactionForm
         open={formOpen}
+        initialDate={newTransactionDate}
         transaction={editTarget}
         onSave={handleSaveTransaction}
         onClose={handleFormClose}
@@ -736,7 +756,7 @@ export default function ReportsPage() {
           color="primary"
           aria-label="Add transaction"
           sx={{ position: "fixed", bottom: 32, right: 32 }}
-          onClick={() => setFormOpen(true)}
+          onClick={() => handleAddTransaction()}
         >
           <AddIcon />
         </Fab>
