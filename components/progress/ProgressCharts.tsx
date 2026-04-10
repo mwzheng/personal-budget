@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
@@ -133,31 +134,42 @@ export default function ProgressCharts({
             </Typography>
           </Box>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
-              <Tooltip content={tooltipContent} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="retirement"
-                name="Retirement End"
-                stroke={theme.palette.primary.main}
-                strokeWidth={2}
-                dot
-              />
-              <Line
-                type="monotone"
-                dataKey="salary"
-                name="Salary"
-                stroke={theme.palette.success.main}
-                strokeWidth={2}
-                dot
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <ChartWrapper title="Progress Over Time">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <Tooltip content={tooltipContent} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="retirement"
+                  name="Retirement End"
+                  stroke={theme.palette.primary.main}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  dot
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="salary"
+                  name="Salary"
+                  stroke={theme.palette.success.main}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  dot
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  animationBegin={200}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
         )}
       </Box>
     </Box>

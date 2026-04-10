@@ -136,6 +136,7 @@ describe("content data invariants", () => {
       "budgets",
       "reports",
       "budget",
+      "fire",
     ]);
     expect(
       HOME_PAGE_CONTENT.features.every(

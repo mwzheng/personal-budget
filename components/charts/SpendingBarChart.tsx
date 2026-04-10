@@ -19,6 +19,7 @@ import { format, parseISO } from "date-fns";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import { TimeseriesPoint } from "@/lib/types/types";
@@ -71,90 +72,97 @@ export function SpendingBarChart({ data }: Props) {
   ] as const;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <Box sx={{ width: "100%", height: 300 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 24, right: 20, bottom: 60, left: 20 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            {/* Note 5: `angle={-45}` rotates X-axis labels 45 degrees to prevent
-                overlapping when there are many months. `textAnchor="end"` aligns
-                the rotated text so its end point sits at the tick mark. */}
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 11, fill: "#aaa" }}
-              angle={-45}
-              textAnchor="end"
-              interval={0}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: "#aaa" }}
-              tickFormatter={formatDollar}
-            />
-            <Tooltip
-              cursor={false}
-              content={({ active, label, payload }) => {
-                if (!active || !payload?.length) {
-                  return null;
-                }
-
-                const rows = payload
-                  .filter((entry) => Number(entry.value ?? 0) > 0)
-                  .map((entry) => ({
-                    label: String(entry.name ?? entry.dataKey ?? "Amount"),
-                    value: formatCurrency(Number(entry.value ?? 0)),
-                    color: entry.color,
-                  }));
-
-                return rows.length > 0 ? (
-                  <ChartTooltipCard
-                    title={typeof label === "string" ? label : undefined}
-                    rows={rows}
-                  />
-                ) : null;
-              }}
-            />
-            {/* Note 6: `stackId="a"` groups all three Bar components into one
-                stacked series. All bars with the same stackId are stacked on top of
-                each other per data point. The order of Bar elements determines the
-                visual stacking order (bottom to top). */}
-            <Bar
-              dataKey="Saving"
-              stackId="a"
-              fill={CATEGORY_HEX_COLORS.Saving}
-              name="Saving"
-              activeBar={false}
-            />
-            <Bar
-              dataKey="Need"
-              stackId="a"
-              fill={CATEGORY_HEX_COLORS.Need}
-              name="Need"
-              activeBar={false}
-            />
-            <Bar
-              dataKey="Want"
-              stackId="a"
-              fill={CATEGORY_HEX_COLORS.Want}
-              name="Want"
-              activeBar={false}
+    <ChartWrapper title="Monthly Spending">
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box sx={{ width: "100%", height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              margin={{ top: 24, right: 20, bottom: 60, left: 20 }}
             >
-              <LabelList
-                dataKey="amount"
-                position="top"
-                formatter={formatDollar}
-                style={{ fontSize: 10, fill: "#ccc" }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+              {/* Note 5: `angle={-45}` rotates X-axis labels 45 degrees to prevent
+                  overlapping when there are many months. `textAnchor="end"` aligns
+                  the rotated text so its end point sits at the tick mark. */}
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "#aaa" }}
+                angle={-45}
+                textAnchor="end"
+                interval={0}
               />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              <YAxis
+                tick={{ fontSize: 11, fill: "#aaa" }}
+                tickFormatter={formatDollar}
+              />
+              <Tooltip
+                cursor={false}
+                content={({ active, label, payload }) => {
+                  if (!active || !payload?.length) {
+                    return null;
+                  }
+
+                  const rows = payload
+                    .filter((entry) => Number(entry.value ?? 0) > 0)
+                    .map((entry) => ({
+                      label: String(entry.name ?? entry.dataKey ?? "Amount"),
+                      value: formatCurrency(Number(entry.value ?? 0)),
+                      color: entry.color,
+                    }));
+
+                  return rows.length > 0 ? (
+                    <ChartTooltipCard
+                      title={typeof label === "string" ? label : undefined}
+                      rows={rows}
+                    />
+                  ) : null;
+                }}
+              />
+              {/* Note 6: `stackId="a"` groups all three Bar components into one
+                  stacked series. All bars with the same stackId are stacked on top of
+                  each other per data point. The order of Bar elements determines the
+                  visual stacking order (bottom to top). */}
+              <Bar
+                dataKey="Saving"
+                stackId="a"
+                fill={CATEGORY_HEX_COLORS.Saving}
+                name="Saving"
+                animationDuration={1200}
+                animationEasing="ease-out"
+              />
+              <Bar
+                dataKey="Need"
+                stackId="a"
+                fill={CATEGORY_HEX_COLORS.Need}
+                name="Need"
+                animationDuration={1200}
+                animationEasing="ease-out"
+                animationBegin={150}
+              />
+              <Bar
+                dataKey="Want"
+                stackId="a"
+                fill={CATEGORY_HEX_COLORS.Want}
+                name="Want"
+                animationDuration={1200}
+                animationEasing="ease-out"
+                animationBegin={300}
+              >
+                <LabelList
+                  dataKey="amount"
+                  position="top"
+                  formatter={formatDollar}
+                  style={{ fontSize: 10, fill: "#ccc" }}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Box>
+        {/* Note 7: Moving the legend under the chart keeps the bar area visually
+            contiguous. That makes month-to-month comparisons easier before the eye
+            moves down to decode the category colors. */}
+        <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
       </Box>
-      {/* Note 7: Moving the legend under the chart keeps the bar area visually
-          contiguous. That makes month-to-month comparisons easier before the eye
-          moves down to decode the category colors. */}
-      <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
-    </Box>
+    </ChartWrapper>
   );
 }

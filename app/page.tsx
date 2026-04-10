@@ -10,6 +10,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import Paper from "@mui/material/Paper";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SavingsIcon from "@mui/icons-material/Savings";
@@ -23,6 +24,7 @@ const HOME_FEATURE_ICONS = {
   budgets: SavingsIcon,
   reports: BarChartIcon,
   budget: AutoGraphIcon,
+  fire: LocalFireDepartmentIcon,
 } as const;
 
 const HOME_PAGE_DESCRIPTION =
@@ -154,7 +156,12 @@ export default function Home() {
           >
             Core budgeting features
           </Typography>
-          <Grid container spacing={3} sx={{ pt: { xs: 1, md: 2 } }}>
+          <Grid
+            container
+            spacing={3}
+            sx={{ pt: { xs: 1, md: 2 } }}
+            justifyContent="center"
+          >
             {features.map((feature) => {
               const Icon = HOME_FEATURE_ICONS[feature.id];
               const titleId = `home-feature-${feature.id}-title`;

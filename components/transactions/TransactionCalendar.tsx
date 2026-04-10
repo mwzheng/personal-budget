@@ -98,7 +98,7 @@ export function TransactionCalendar({
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             initialDate={calendarAnchorDate}
-            headerToolbar={{ left: "prev,next today", center: "title" }}
+            headerToolbar={{ left: "title", right: "prev,next today" }}
             height="auto"
             fixedWeekCount={false}
             dayMaxEventRows={5}
