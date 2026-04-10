@@ -15,10 +15,14 @@ function parseCategoryFilters(raw: string | null): CategoryType[] {
 
   return raw
     .split(",")
-    .filter(
-      (value): value is CategoryType =>
-        value === "Need" || value === "Want" || value === "Saving",
-    );
+    .map((value) => value.trim().toLowerCase())
+    .map((value): CategoryType | null => {
+      if (value === "need") return "Need";
+      if (value === "want") return "Want";
+      if (value === "saving") return "Saving";
+      return null;
+    })
+    .filter((value): value is CategoryType => value !== null);
 }
 
 export async function GET(request: NextRequest) {
