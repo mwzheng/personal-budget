@@ -75,7 +75,10 @@ If this top-level file conflicts with a per-topic instruction, the per-topic fil
 ## AI interaction and tool usage
 
 - When the user asks about Copilot/CLI capabilities, call `fetch_copilot_cli_documentation` first and base answers on its output.
-- Use the `ask_user` tool for any clarifying question; ask one focused question at a time and prefer multiple-choice where possible.
+- Before creating a plan or making code changes, if any requirement or ambiguity exists, use the `ask_user` tool to get clarification. Ask one focused question at a time and prefer multiple-choice where possible. Do not proceed with implementation until outstanding clarifying questions are resolved.
+- During implementation: after making changes, refactor and review them, then run repository checks (format, lint, tests, build) locally or in CI before committing. Suggested commands: `pnpm dlx prettier --write .` (or `pnpm format`), `pnpm lint`, `pnpm test --run`, `pnpm build`.
+- Always commit changes with meaningful, focused commit messages. Multiple commits are allowed and encouraged for logically separate changes. When automation or Copilot assists with commits, include the Co-authored-by trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
+- Use the `ask_user` tool for any further clarifying questions during implementation; continue to ask one focused question at a time and prefer multiple-choice where possible.
 - When calling tools, report intent via the `report_intent` tool on the first tool-calling turn and when changing phases; use a short gerund phrase (<=4 words), e.g., `Updating instructions`.
 - If a specialized skill applies to the request, invoke the `skill` tool immediately as the first action (do not wait to produce text output first).
 
