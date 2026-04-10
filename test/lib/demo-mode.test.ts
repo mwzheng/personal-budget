@@ -6,9 +6,11 @@ import { apiFetch } from "@/lib/api/apiFetch";
 import {
   ACCESS_TOKEN_KEY,
   clearCognitoTokens,
+  getStoredCognitoTokens,
   hasStoredCognitoTokens,
   isAuthenticated,
   isDemoSessionActive,
+  ID_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
   startDemoSession,
 } from "@/lib/auth/cognitoClient";
@@ -70,11 +72,18 @@ describe("demo mode", () => {
   });
 
   it("starts a browser-only demo session and seeds demo data", async () => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, "real-access");
+    localStorage.setItem(ID_TOKEN_KEY, "real-id");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "real-refresh");
+
     await startDemoSession();
 
     expect(isDemoSessionActive()).toBe(true);
     expect(hasStoredCognitoTokens()).toBe(false);
     expect(isAuthenticated()).toBe(true);
+    expect(localStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(ID_TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
 
     const persistedDemoStore = localStorage.getItem(
@@ -87,27 +96,48 @@ describe("demo mode", () => {
   });
 
   it("treats a stored refresh token as evidence of an active session", () => {
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
     expect(hasStoredCognitoTokens()).toBe(true);
   });
 
+  it("restores persisted real auth state from localStorage after a restart", () => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, "access");
+    localStorage.setItem(ID_TOKEN_KEY, "id");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "refresh");
+
+    expect(getStoredCognitoTokens()).toEqual({
+      accessToken: "access",
+      idToken: "id",
+      refreshToken: "refresh",
+    });
+    expect(hasStoredCognitoTokens()).toBe(true);
+    expect(isAuthenticated()).toBe(true);
+  });
+
   it("clears all tokens when calling clearCognitoTokens", () => {
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, "access");
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh");
+    localStorage.setItem(ACCESS_TOKEN_KEY, "access");
+    localStorage.setItem(ID_TOKEN_KEY, "id");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "refresh");
+    sessionStorage.setItem("porridge-budget-demo-session", "true");
     clearCognitoTokens();
 
+    expect(localStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(ID_TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    expect(sessionStorage.getItem("porridge-budget-demo-session")).toBeNull();
     expect(isAuthenticated()).toBe(false);
   });
 
   it("removes refresh-only credentials so auth state becomes false", () => {
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-only");
 
     expect(hasStoredCognitoTokens()).toBe(true);
 
     clearCognitoTokens();
 
+    expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(hasStoredCognitoTokens()).toBe(false);
     expect(isAuthenticated()).toBe(false);
@@ -116,6 +146,9 @@ describe("demo mode", () => {
   it("serves demo transactions without touching the real network", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
+
+    localStorage.setItem(ACCESS_TOKEN_KEY, "real-access-token");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "real-refresh-token");
 
     await startDemoSession();
 
@@ -410,8 +443,8 @@ describe("demo mode", () => {
   it("does not restore Cognito tokens after sign-out during a refresh", async () => {
     process.env.NEXT_PUBLIC_COGNITO_DOMAIN = "https://auth.example.com";
     process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID = "client-123";
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, "expired-access-token");
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, "refresh-token-123");
+    localStorage.setItem(ACCESS_TOKEN_KEY, "expired-access-token");
+    localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-token-123");
 
     const fetchSpy = vi
       .fn()
@@ -436,7 +469,9 @@ describe("demo mode", () => {
 
     expect(response.status).toBe(401);
     expect(hasStoredCognitoTokens()).toBe(false);
+    expect(localStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(ACCESS_TOKEN_KEY)).toBeNull();
+    expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });

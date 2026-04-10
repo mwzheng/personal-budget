@@ -205,9 +205,15 @@ export async function getUserMonthlyAggregates(userId: string, year?: number) {
 export async function putTransaction(userId: string, tx: Transaction) {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
+  const item = buildTransactionItem(userId, tx);
 
+  await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+  return item;
+}
+
+function buildTransactionItem(userId: string, tx: Transaction) {
   const now = new Date().toISOString();
-  const item = {
+  return {
     pk: `user#${userId}`,
     // Note 15: Encoding the date in the sort key ("date#YYYY-MM-DD#<id>") allows
     // date-range queries without a secondary index. The id at the end ensures
@@ -224,7 +230,29 @@ export async function putTransaction(userId: string, tx: Transaction) {
     createdAt: tx.createdAt || now,
     updatedAt: now,
   } as const;
+}
 
+export async function updateTransaction(
+  userId: string,
+  tx: Transaction,
+  originalDate?: string,
+) {
+  const client = getDocClient(TABLE_NAME);
+  if (!client) throw new Error("DynamoDB table not configured");
+
+  if (originalDate && originalDate !== tx.date) {
+    await client.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          pk: `user#${userId}`,
+          sk: `${SK_PREFIX.TRANSACTION}${originalDate}#${tx.id}`,
+        },
+      }),
+    );
+  }
+
+  const item = buildTransactionItem(userId, tx);
   await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
   return item;
 }

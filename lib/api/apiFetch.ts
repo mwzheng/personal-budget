@@ -21,7 +21,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
     }
   }
 
-  // Attach Authorization header from sessionStorage if present (access_token or id_token)
+  // Attach Authorization header from persisted browser auth if present
   const headers = new Headers((init?.headers as HeadersInit) || {});
 
   // Helper to perform the fetch with provided headers
@@ -32,8 +32,9 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
   try {
     // Note 2: `typeof window !== "undefined"` is the standard guard for
     // client-only code. Next.js executes components on both server and client
-    // (SSR), so any code that uses browser APIs like `sessionStorage` must be
-    // wrapped in this check to avoid runtime errors during server rendering.
+    // (SSR), so any code that uses browser APIs like `localStorage` or
+    // `sessionStorage` must be wrapped in this check to avoid runtime errors
+    // during server rendering.
     if (typeof window !== "undefined") {
       const { accessToken, idToken, refreshToken } = getStoredCognitoTokens();
       // Note 3: Prefer the access token over the id token. The access token is
@@ -121,9 +122,9 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
     // ignore client-side storage errors
   }
 
-  // Note 8: This fallback runs on the server (SSR/RSC) or when sessionStorage
-  // is unavailable. Server-to-server requests do not need an Authorization header
-  // because they are authenticated through a different mechanism (e.g., IAM roles
-  // or server-side session cookies that are not visible here).
+  // Note 8: This fallback runs on the server (SSR/RSC) or when browser storage
+  // is unavailable. Server-to-server requests do not need an Authorization
+  // header because they are authenticated through a different mechanism (e.g.,
+  // IAM roles or server-side session cookies that are not visible here).
   return fetch(input, { ...(init || {}), headers });
 }

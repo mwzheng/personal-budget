@@ -34,13 +34,64 @@ function requireBrowser() {
   }
 }
 
-function setStorageValue(key: string, value?: string | null) {
-  if (!inBrowser()) return;
-  if (value) {
-    window.sessionStorage.setItem(key, value);
-    return;
+function getStoredPersistentValue(key: string) {
+  if (!inBrowser()) return null;
+
+  try {
+    const localValue = window.localStorage.getItem(key);
+    if (localValue !== null) {
+      return localValue;
+    }
+  } catch {
+    // Ignore inaccessible storage and fall back to the legacy session copy.
   }
-  window.sessionStorage.removeItem(key);
+
+  try {
+    const sessionValue = window.sessionStorage.getItem(key);
+    if (sessionValue !== null) {
+      try {
+        window.localStorage.setItem(key, sessionValue);
+        window.sessionStorage.removeItem(key);
+      } catch {
+        // Ignore migration failures; the current session can still use it.
+      }
+      return sessionValue;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function setPersistentStorageValue(key: string, value?: string | null) {
+  if (!inBrowser()) return;
+
+  try {
+    if (value) {
+      window.localStorage.setItem(key, value);
+    } else {
+      window.localStorage.removeItem(key);
+    }
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch {
+      // Ignore cleanup failures in the non-persistent fallback storage.
+    }
+    return;
+  } catch {
+    // Fall back to the current session when persistent storage is unavailable.
+  }
+
+  try {
+    if (value) {
+      window.sessionStorage.setItem(key, value);
+    } else {
+      window.sessionStorage.removeItem(key);
+    }
+  } catch {
+    // Ignore storage errors; auth state is best effort in the browser.
+  }
 }
 
 function dispatchAuthChanged() {
@@ -62,9 +113,22 @@ function setDemoSessionValue(enabled: boolean) {
 function clearStoredAuthStorage() {
   if (!inBrowser()) return;
 
-  setStorageValue(ACCESS_TOKEN_KEY, null);
-  setStorageValue(ID_TOKEN_KEY, null);
-  setStorageValue(REFRESH_TOKEN_KEY, null);
+  try {
+    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+    window.localStorage.removeItem(ID_TOKEN_KEY);
+    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch {
+    // Ignore inaccessible persistent storage during cleanup.
+  }
+
+  try {
+    window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    window.sessionStorage.removeItem(ID_TOKEN_KEY);
+    window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch {
+    // Ignore inaccessible session storage during cleanup.
+  }
+
   clearPendingCognitoAuth();
 }
 
@@ -116,15 +180,11 @@ export function getStoredCognitoTokens(): StoredCognitoTokens {
     return { accessToken: null, idToken: null, refreshToken: null };
   }
 
-  try {
-    return {
-      accessToken: window.sessionStorage.getItem(ACCESS_TOKEN_KEY),
-      idToken: window.sessionStorage.getItem(ID_TOKEN_KEY),
-      refreshToken: window.sessionStorage.getItem(REFRESH_TOKEN_KEY),
-    };
-  } catch {
-    return { accessToken: null, idToken: null, refreshToken: null };
-  }
+  return {
+    accessToken: getStoredPersistentValue(ACCESS_TOKEN_KEY),
+    idToken: getStoredPersistentValue(ID_TOKEN_KEY),
+    refreshToken: getStoredPersistentValue(REFRESH_TOKEN_KEY),
+  };
 }
 
 // Note 1: Demo auth is intentionally tracked with a dedicated session flag rather
@@ -154,9 +214,9 @@ export function isAuthenticated() {
 
 export function storeCognitoTokens(tokens: TokenResponseShape) {
   requireBrowser();
-  setStorageValue(ACCESS_TOKEN_KEY, tokens.access_token ?? null);
-  setStorageValue(ID_TOKEN_KEY, tokens.id_token ?? null);
-  setStorageValue(REFRESH_TOKEN_KEY, tokens.refresh_token ?? null);
+  setPersistentStorageValue(ACCESS_TOKEN_KEY, tokens.access_token ?? null);
+  setPersistentStorageValue(ID_TOKEN_KEY, tokens.id_token ?? null);
+  setPersistentStorageValue(REFRESH_TOKEN_KEY, tokens.refresh_token ?? null);
   setDemoSessionValue(false);
   dispatchAuthChanged();
 }

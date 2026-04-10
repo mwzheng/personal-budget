@@ -105,6 +105,42 @@ describe("reports routes user scoping", () => {
     });
   });
 
+  it("supports category filters on the reports route", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-a");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("need", {
+        amount: 25,
+        category: "Need",
+      }),
+      buildTransaction("want", {
+        amount: 30,
+        category: "Want",
+      }),
+      buildTransaction("saving", {
+        amount: 40,
+        category: "Saving",
+      }),
+    ]);
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?categories=Need,Saving&page=1&pageSize=10&includeAggregates=true",
+      ) as any,
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 2,
+      transactions: [
+        expect.objectContaining({ id: "need" }),
+        expect.objectContaining({ id: "saving" }),
+      ],
+      aggregates: expect.objectContaining({
+        totalAmount: 65,
+        spendingAmount: 25,
+      }),
+    });
+  });
+
   it("exports only the authenticated user's filtered transactions", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-b");
     mockedGetUserTransactions.mockResolvedValue([
@@ -130,6 +166,33 @@ describe("reports routes user scoping", () => {
     expect(response.headers.get("Content-Type")).toContain("text/csv");
     expect(csv).toContain('"Rent"');
     expect(csv).not.toContain('"Dining"');
+  });
+
+  it("exports only the authenticated user's selected categories", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-b");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("tx-need", {
+        name: "Rent",
+        amount: 1200,
+        category: "Need",
+      }),
+      buildTransaction("tx-saving", {
+        name: "Emergency Fund",
+        amount: 300,
+        category: "Saving",
+      }),
+    ]);
+
+    const response = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?categories=Saving",
+      ) as any,
+    );
+    const csv = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(csv).toContain('"Emergency Fund"');
+    expect(csv).not.toContain('"Rent"');
   });
 
   // Note 2: The GET /api/reports route re-throws Response objects thrown by

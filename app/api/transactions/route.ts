@@ -2,7 +2,11 @@
 // becomes an HTTP endpoint. Exporting async functions named `GET`, `POST`, `PUT`,
 // and `DELETE` maps them to the corresponding HTTP methods automatically.
 import { NextResponse } from "next/server";
-import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
+import {
+  getUserTransactions,
+  putTransaction,
+  updateTransaction,
+} from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { generateId } from "@/lib/utils/generateId";
 
@@ -48,22 +52,24 @@ export async function POST(request: Request) {
   }
 }
 
-// Note 5: `PUT /api/transactions` updates an existing transaction. DynamoDB's
-// `putTransaction` function performs an upsert (create-or-replace), so PUT and
-// POST share the same underlying data layer. The `id` field is required for PUT
-// to ensure we update the correct item.
+// Note 5: `PUT /api/transactions` updates an existing transaction. When the
+// transaction date changes, callers can include `originalDate` so the data
+// layer can remove the previous DynamoDB item before writing the replacement.
 export async function PUT(request: Request) {
   try {
     const userId = await getRequestUserId(request);
     const body = await request.json();
-    const tx = body || {};
+    const { originalDate, ...tx } = body || {};
     if (!tx.id)
       return NextResponse.json(
         { ok: false, error: "Missing id for update" },
         { status: 400 },
       );
-    // For now reuse putTransaction to upsert
-    await putTransaction(userId, tx);
+    if (originalDate) {
+      await updateTransaction(userId, tx, originalDate);
+    } else {
+      await updateTransaction(userId, tx);
+    }
     return NextResponse.json({ ok: true, updated: tx });
   } catch (err) {
     if (err instanceof Response) return err;

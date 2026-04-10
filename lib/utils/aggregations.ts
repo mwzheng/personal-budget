@@ -40,6 +40,12 @@ export function filterTransactions(
     }
     if (filters.startDate && t.date < filters.startDate) return false;
     if (filters.endDate && t.date > filters.endDate) return false;
+    if (
+      filters.categories.length > 0 &&
+      !filters.categories.includes(normalizeReportCategory(t.category))
+    ) {
+      return false;
+    }
     // Note 3: `Array.some` returns true if at least one of the filter tags is
     // found in the transaction's tag list. This implements OR logic for tags:
     // the transaction only needs to have ANY of the selected tags, not all of them.

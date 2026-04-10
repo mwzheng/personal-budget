@@ -26,7 +26,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 ## APIs (local)
 
-- `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `tags`, `search`.
+- `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `categories`, `tags`, `search`.
 - `POST /api/reports/import` — (Authenticated) Accepts `text/csv` or `{ csv }` JSON payloads and imports rows into the signed-in user's account only.
 - `GET /api/reports/export` — (Authenticated) Exports only the signed-in user's filtered transactions as CSV.
 - `GET /api/transactions` — (Authenticated) Lists transactions for the current user.
@@ -76,6 +76,10 @@ If you just want to explore the UI, the login and register screens also provide 
 `Demo Sign In` / `Demo Register` flow. That mode seeds browser-local demo data for
 reports, progress, goals, and budgets, and all demo edits stay in local storage
 until sign-out instead of writing to DynamoDB.
+
+Real hosted sign-in sessions persist across browser restarts until the user signs
+out or Cognito expires/revokes the refresh token, so reopening the app should not
+require a fresh login in the normal case.
 
 ## Getting Started (local development)
 

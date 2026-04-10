@@ -28,6 +28,7 @@ import {
   getUserTransactions,
   putGoal,
   putTransaction,
+  updateTransaction,
 } from "../../lib/api/dynamo";
 import { DEMO_USER_ID } from "../../lib/auth/requestUser";
 
@@ -234,6 +235,85 @@ describe("putTransaction — DynamoDB item shape", () => {
     expect(written.notes).toBe("");
     expect(written.paymentMethod).toBe("");
     expect(written.tags).toEqual([]);
+  });
+});
+
+describe("updateTransaction — replace existing transaction", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue({ send: sendMock });
+    sendMock.mockReset();
+    sendMock.mockResolvedValue({});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("writes the replacement item without deleting when the date is unchanged", async () => {
+    const tx = {
+      id: "tx-same-date",
+      name: "Coffee",
+      amount: 4.25,
+      category: "Want" as const,
+      date: "2025-05-01",
+      notes: "",
+      paymentMethod: "card",
+      tags: [],
+    };
+
+    const written = await updateTransaction("user-3", tx, "2025-05-01");
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const [command] = sendMock.mock.calls[0] as [
+      { input: { Item: { pk: string; sk: string } } },
+    ];
+    expect(command.input.Item).toMatchObject({
+      pk: "user#user-3",
+      sk: "date#2025-05-01#tx-same-date",
+    });
+    expect(written).toMatchObject({
+      pk: "user#user-3",
+      sk: "date#2025-05-01#tx-same-date",
+      id: "tx-same-date",
+    });
+  });
+
+  it("deletes the original record before writing the replacement when the date changes", async () => {
+    const tx = {
+      id: "tx-moved",
+      name: "Rent",
+      amount: 1200,
+      category: "Need" as const,
+      date: "2025-05-02",
+      notes: "",
+      paymentMethod: "bank",
+      tags: [],
+    };
+
+    const written = await updateTransaction("user-4", tx, "2025-04-30");
+
+    expect(sendMock).toHaveBeenCalledTimes(2);
+    const [deleteCommand] = sendMock.mock.calls[0] as [
+      { input: { Key: { pk: string; sk: string } } },
+    ];
+    const [putCommand] = sendMock.mock.calls[1] as [
+      { input: { Item: { pk: string; sk: string } } },
+    ];
+
+    expect(deleteCommand.input.Key).toEqual({
+      pk: "user#user-4",
+      sk: "date#2025-04-30#tx-moved",
+    });
+    expect(putCommand.input.Item).toMatchObject({
+      pk: "user#user-4",
+      sk: "date#2025-05-02#tx-moved",
+      id: "tx-moved",
+    });
+    expect(written).toMatchObject({
+      pk: "user#user-4",
+      sk: "date#2025-05-02#tx-moved",
+      id: "tx-moved",
+    });
   });
 });
 

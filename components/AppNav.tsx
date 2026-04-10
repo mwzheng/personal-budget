@@ -1,5 +1,5 @@
 // Note 1: "use client" makes AppNav a Client Component because it uses
-// client-only hooks and browser APIs (sessionStorage, storage events, and an
+// client-only hooks and browser APIs (localStorage/sessionStorage, storage events, and an
 // interactive hover/click menu).
 "use client";
 
@@ -78,8 +78,8 @@ export function AppNav() {
     isRouteSelected(pathname, href),
   );
 
-  // Note 4: Client-side auth detection uses sessionStorage so state is scoped to
-  // the browser tab and can be observed via storage events in other tabs.
+  // Note 4: Client-side auth detection uses browser storage so real auth can
+  // survive browser restarts while demo sessions remain tab-scoped.
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [infoMenuAnchorEl, setInfoMenuAnchorEl] =
     useState<HTMLButtonElement | null>(null);

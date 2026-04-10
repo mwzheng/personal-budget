@@ -83,6 +83,7 @@ describe("reports year helpers", () => {
       years: ["2024", "2022"],
       startDate: null,
       endDate: null,
+      categories: [],
       tags: [],
       search: "",
     });
@@ -112,6 +113,29 @@ describe("reports year helpers", () => {
     expect(aggregates.totalAmount).toBe(50);
   });
 
+  it("filters transactions by selected categories", () => {
+    const filtered = filterTransactions(
+      [
+        buildTransaction("need", "2025-01-01", { category: "Need" }),
+        buildTransaction("want", "2025-01-02", { category: "Want" }),
+        buildTransaction("saving", "2025-01-03", { category: "Saving" }),
+      ],
+      {
+        years: [],
+        startDate: null,
+        endDate: null,
+        categories: ["Need", "Saving"],
+        tags: [],
+        search: "",
+      },
+    );
+
+    expect(filtered.map((transaction) => transaction.id)).toEqual([
+      "need",
+      "saving",
+    ]);
+  });
+
   // Note 2: Aggregating an empty transaction list must produce zeroed totals
   // rather than undefined fields — protects report views on new accounts.
   it("returns zeroed aggregates when the transaction list is empty", () => {
@@ -126,6 +150,7 @@ describe("reports year helpers", () => {
       years: ["2099"],
       startDate: null,
       endDate: null,
+      categories: [],
       tags: [],
       search: "",
     });
@@ -138,6 +163,7 @@ describe("reports year helpers", () => {
       years: [],
       startDate: null,
       endDate: null,
+      categories: [],
       tags: [],
       search: "",
     });

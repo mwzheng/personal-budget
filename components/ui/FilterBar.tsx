@@ -22,7 +22,9 @@ import {
   clearLastSelectedReportYears,
   setLastSelectedReportYears,
 } from "@/lib/utils/storage";
-import { FilterParams } from "@/lib/types/types";
+import { CategoryType, FilterParams } from "@/lib/types/types";
+
+const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
 
 interface Props {
   availableTags: string[];
@@ -55,6 +57,9 @@ export function FilterBar({
   const [selectedTags, setSelectedTags] = useState<string[]>(
     () => filters.tags,
   );
+  const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
+    () => filters.categories,
+  );
   const [search, setSearch] = useState(() => filters.search);
   const [selectedYears, setSelectedYears] = useState<string[]>(
     () => filters.years,
@@ -66,6 +71,7 @@ export function FilterBar({
   useEffect(() => {
     setStartDate(parseFilterDate(filters.startDate));
     setEndDate(parseFilterDate(filters.endDate));
+    setSelectedCategories(filters.categories);
     setSelectedTags(filters.tags);
     setSearch(filters.search);
     setSelectedYears(filters.years);
@@ -79,6 +85,7 @@ export function FilterBar({
     years: string[],
     sd: Date | null,
     ed: Date | null,
+    categories: CategoryType[],
     tags: string[],
     q: string,
   ) {
@@ -86,6 +93,7 @@ export function FilterBar({
       years,
       startDate: sd ? format(sd, "yyyy-MM-dd") : null,
       endDate: ed ? format(ed, "yyyy-MM-dd") : null,
+      categories,
       tags,
       search: q,
     });
@@ -111,17 +119,32 @@ export function FilterBar({
     setStartDate(null);
     setEndDate(null);
     persistAppliedYears(nextYears);
-    applyFilters(nextYears, null, null, selectedTags, search);
+    applyFilters(
+      nextYears,
+      null,
+      null,
+      selectedCategories,
+      selectedTags,
+      search,
+    );
   }
 
   function handleApply() {
     persistAppliedYears(selectedYears);
-    applyFilters(selectedYears, startDate, endDate, selectedTags, search);
+    applyFilters(
+      selectedYears,
+      startDate,
+      endDate,
+      selectedCategories,
+      selectedTags,
+      search,
+    );
   }
 
   function handleReset() {
     setStartDate(null);
     setEndDate(null);
+    setSelectedCategories([]);
     setSelectedTags([]);
     setSearch("");
     setSelectedYears([]);
@@ -130,6 +153,7 @@ export function FilterBar({
       years: [],
       startDate: null,
       endDate: null,
+      categories: [],
       tags: [],
       search: "",
     });
@@ -214,6 +238,18 @@ export function FilterBar({
             setSelectedYears([]);
           }}
           slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
+        />
+        <Autocomplete
+          multiple
+          size="small"
+          options={CATEGORY_OPTIONS}
+          value={selectedCategories}
+          onChange={(_event, value) =>
+            setSelectedCategories(value as CategoryType[])
+          }
+          renderInput={(params) => <TextField {...params} label="Category" />}
+          sx={{ minWidth: 220, flex: "1 1 220px" }}
+          limitTags={3}
         />
         {/* Note 7: MUI's Autocomplete with `multiple` renders a tag-list input.
             `limitTags={3}` collapses overflow tags into "+N more" text to keep
