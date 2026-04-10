@@ -1,3 +1,82 @@
+# Completed: Reports transaction/editing and auth persistence polish
+
+Date: 2026-04-10
+
+Summary
+
+- Fixed transaction edits so changing the date updates the original persisted
+  transaction instead of leaving the old DynamoDB row behind.
+- Added direct transaction creation from clicked days in the reports calendar.
+- Added category filtering (`Need`, `Want`, `Saving`) across the reports
+  filtering pipeline and export/report APIs.
+- Persisted real hosted-auth sessions across browser restarts while keeping demo
+  sign-in non-persistent.
+
+Completed items
+
+- Updated `app/reports/page.tsx` to support calendar day-to-create, send
+  `originalDate` on edits, include category filters in exports, and preserve
+  clean add/edit dialog state.
+- Extended `components/transactions/TransactionCalendar.tsx` so empty-day clicks
+  open the add-transaction flow while existing-event clicks still open details.
+- Extended `components/transactions/TransactionForm.tsx` with an `initialDate`
+  path so add-mode can prefill the selected calendar day.
+- Added category filter state to `FilterParams`, `components/ui/FilterBar.tsx`,
+  and `lib/utils/aggregations.ts`, then wired category parsing into
+  `app/api/reports/route.ts`, `app/api/reports/export/route.ts`, and the demo
+  export handler.
+- Added DynamoDB-aware `updateTransaction(...)` behavior in `lib/api/dynamo.ts`
+  and routed `PUT /api/transactions` through it from
+  `app/api/transactions/route.ts`.
+- Switched real Cognito token persistence from session-scoped storage to
+  browser-persistent storage in `lib/auth/cognitoClient.ts`, keeping PKCE/demo
+  session state tab-scoped and preserving refresh/sign-out behavior.
+- Updated auth/runtime notes in `lib/api/apiFetch.ts` and `components/AppNav.tsx`.
+- Added/updated regression coverage in:
+  - `test/lib/demo-mode.test.ts`
+  - `test/lib/dynamo-transactions.test.ts`
+  - `test/lib/reports-aggregations.test.ts`
+  - `test/routes/reports-user-scope.test.ts`
+  - `test/routes/transactions-route.test.ts`
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to keep docs and the
+  progress record in sync.
+- Validation run completed with `pnpm lint`, `pnpm test --run`, and `pnpm build`
+  (existing warning remains in `components/fire/FireCalculator.tsx`).
+
+Files changed
+
+- `README.md`
+- `app/api/reports/export/route.ts`
+- `app/api/reports/route.ts`
+- `app/api/transactions/route.ts`
+- `app/reports/page.tsx`
+- `components/AppNav.tsx`
+- `components/transactions/TransactionCalendar.tsx`
+- `components/transactions/TransactionForm.tsx`
+- `components/ui/FilterBar.tsx`
+- `lib/api/apiFetch.ts`
+- `lib/api/dynamo.ts`
+- `lib/auth/cognitoClient.ts`
+- `lib/demo/handlers/transactionHandlers.ts`
+- `lib/types/types.ts`
+- `lib/utils/aggregations.ts`
+- `plan.md`
+- `plan.completed.md`
+- `test/lib/demo-mode.test.ts`
+- `test/lib/dynamo-transactions.test.ts`
+- `test/lib/reports-aggregations.test.ts`
+- `test/routes/reports-user-scope.test.ts`
+- `test/routes/transactions-route.test.ts`
+
+Commit reference
+
+- Planned commit message: `feat(reports): fix transaction edits and persist auth sessions`
+
+Notes / next steps
+
+- The only validation warning left is the pre-existing `react-hooks/exhaustive-deps`
+  warning in `components/fire/FireCalculator.tsx`.
+
 # Completed: Comprehensive codebase audit and refactoring
 
 Date: 2026-07-17
