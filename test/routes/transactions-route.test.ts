@@ -11,6 +11,7 @@ vi.mock("@/lib/api/dynamo", () => ({
   deleteTransaction: vi.fn(),
   getUserTransactions: vi.fn(),
   putTransaction: vi.fn(),
+  updateTransaction: vi.fn(),
 }));
 
 vi.mock("@/lib/utils/generateId", () => ({
@@ -22,6 +23,7 @@ import {
   deleteTransaction,
   getUserTransactions,
   putTransaction,
+  updateTransaction,
 } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { generateId } from "@/lib/utils/generateId";
@@ -30,6 +32,7 @@ const mockedDeleteTransaction = vi.mocked(deleteTransaction);
 const mockedGetUserTransactions = vi.mocked(getUserTransactions);
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
 const mockedPutTransaction = vi.mocked(putTransaction);
+const mockedUpdateTransaction = vi.mocked(updateTransaction);
 const mockedGenerateId = vi.mocked(generateId);
 
 function buildRequest(
@@ -45,6 +48,7 @@ describe("transactions api route", () => {
     mockedGetUserTransactions.mockReset();
     mockedGetRequestUserId.mockReset();
     mockedPutTransaction.mockReset();
+    mockedUpdateTransaction.mockReset();
     mockedGenerateId.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -169,7 +173,12 @@ describe("transactions api route", () => {
 
   it("updates an existing transaction when id is provided", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-300");
-    mockedPutTransaction.mockResolvedValue(undefined as never);
+    mockedUpdateTransaction.mockResolvedValue({
+      id: "tx-update-1",
+      amount: 999,
+      date: "2026-04-20",
+      category: "Utilities",
+    });
 
     const response = await PUT(
       buildRequest("http://localhost/api/transactions", {
@@ -184,7 +193,7 @@ describe("transactions api route", () => {
       }),
     );
 
-    expect(mockedPutTransaction).toHaveBeenCalledWith("user-300", {
+    expect(mockedUpdateTransaction).toHaveBeenCalledWith("user-300", {
       id: "tx-update-1",
       amount: 999,
       date: "2026-04-20",
@@ -198,6 +207,67 @@ describe("transactions api route", () => {
         amount: 999,
         date: "2026-04-20",
         category: "Utilities",
+      },
+    });
+  });
+
+  it("passes originalDate to the update helper when provided", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-300b");
+    mockedUpdateTransaction.mockResolvedValue({
+      id: "tx-update-2",
+      amount: 10,
+      date: "2026-08-03",
+      category: "Need",
+      name: "Lunch",
+      notes: "",
+      paymentMethod: "",
+      tags: [],
+    });
+
+    const response = await PUT(
+      buildRequest("http://localhost/api/transactions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "tx-update-2",
+          originalDate: "2026-07-31",
+          amount: 10,
+          date: "2026-08-03",
+          category: "Need",
+          name: "Lunch",
+          notes: "",
+          paymentMethod: "",
+          tags: [],
+        }),
+      }),
+    );
+
+    expect(mockedUpdateTransaction).toHaveBeenCalledWith(
+      "user-300b",
+      {
+        id: "tx-update-2",
+        amount: 10,
+        date: "2026-08-03",
+        category: "Need",
+        name: "Lunch",
+        notes: "",
+        paymentMethod: "",
+        tags: [],
+      },
+      "2026-07-31",
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      ok: true,
+      updated: {
+        id: "tx-update-2",
+        amount: 10,
+        date: "2026-08-03",
+        category: "Need",
+        name: "Lunch",
+        notes: "",
+        paymentMethod: "",
+        tags: [],
       },
     });
   });
