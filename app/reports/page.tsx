@@ -4,6 +4,7 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import Alert from "@mui/material/Alert";
@@ -82,6 +83,13 @@ const TagBarChart = dynamic(
     ssr: false,
     loading: () => <ChartLoadingState height={400} showLegend={false} />,
   },
+);
+const MonthComparisonModal = dynamic(
+  () =>
+    import("@/components/charts/MonthComparisonModal").then(
+      (m) => m.MonthComparisonModal,
+    ),
+  { ssr: false },
 );
 
 // Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
@@ -234,6 +242,7 @@ export default function ReportsPage() {
     useState<TransactionsViewMode>("table");
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const router = useRouter();
 
   function applyTransactions(
@@ -511,6 +520,14 @@ export default function ReportsPage() {
             <Button
               variant="outlined"
               size="small"
+              startIcon={<CompareArrowsIcon />}
+              onClick={() => setCompareOpen(true)}
+            >
+              Compare
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
               startIcon={<FileUploadOutlinedIcon />}
               onClick={() => setImportOpen(true)}
             >
@@ -745,6 +762,12 @@ export default function ReportsPage() {
         onImported={() => {
           void loadTransactions({ resetFilters: allTransactions.length === 0 });
         }}
+      />
+
+      <MonthComparisonModal
+        open={compareOpen}
+        transactions={allTransactions}
+        onClose={() => setCompareOpen(false)}
       />
 
       {/* Note 11: The Floating Action Button (FAB) is a Material Design pattern
