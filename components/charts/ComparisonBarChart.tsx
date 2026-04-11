@@ -5,6 +5,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -76,10 +77,10 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
     );
   }
 
-  const legendPayload = [
-    { value: `${labelA}`, color: CATEGORY_HEX_COLORS.Need },
-    { value: `${labelB}`, color: MONTH_B_COLORS.Need },
-  ];
+  const legendPayload = CATEGORIES.map((cat) => ({
+    value: cat,
+    color: CATEGORY_HEX_COLORS[cat],
+  }));
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -122,23 +123,47 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
             />
             <Bar
               dataKey={labelA}
-              fill={CATEGORY_HEX_COLORS.Need}
               animationDuration={800}
               animationEasing="ease-out"
               radius={[4, 4, 0, 0]}
-            />
+            >
+              {chartData.map((entry) => (
+                <Cell
+                  key={`a-${entry.category}`}
+                  fill={CATEGORY_HEX_COLORS[entry.category]}
+                />
+              ))}
+            </Bar>
             <Bar
               dataKey={labelB}
-              fill={MONTH_B_COLORS.Need}
               animationDuration={800}
               animationEasing="ease-out"
               animationBegin={200}
               radius={[4, 4, 0, 0]}
-            />
+            >
+              {chartData.map((entry) => (
+                <Cell
+                  key={`b-${entry.category}`}
+                  fill={MONTH_B_COLORS[entry.category]}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </Box>
       <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 3,
+          fontSize: 12,
+          color: "text.secondary",
+        }}
+      >
+        <span>■ Solid = {labelA}</span>
+        <span>■ Light = {labelB}</span>
+      </Box>
     </Box>
   );
 }
