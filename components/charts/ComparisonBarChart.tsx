@@ -38,6 +38,8 @@ interface Props {
 }
 
 const CATEGORIES = ["Need", "Want", "Saving"] as const;
+const MONTH_A_KEY = "monthA";
+const MONTH_B_KEY = "monthB";
 
 // Lighter variants for Month B bars to distinguish them from Month A
 const MONTH_B_COLORS: Record<string, string> = {
@@ -52,8 +54,8 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
 
   const chartData = CATEGORIES.map((cat) => ({
     category: cat,
-    [labelA]: monthA.totalByCategoryType[cat],
-    [labelB]: monthB.totalByCategoryType[cat],
+    [MONTH_A_KEY]: monthA.totalByCategoryType[cat],
+    [MONTH_B_KEY]: monthB.totalByCategoryType[cat],
   }));
 
   const hasData = CATEGORIES.some(
@@ -107,11 +109,15 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
 
                 const rows = payload
                   .filter((entry) => Number(entry.value ?? 0) > 0)
-                  .map((entry) => ({
-                    label: String(entry.name ?? ""),
-                    value: formatCurrency(Number(entry.value ?? 0)),
-                    color: entry.color,
-                  }));
+                  .map((entry, index) => {
+                    const dataKey = String(entry.dataKey ?? index);
+                    return {
+                      key: `${dataKey}-${String(label ?? "")}-${index}`,
+                      label: String(entry.name ?? ""),
+                      value: formatCurrency(Number(entry.value ?? 0)),
+                      color: entry.color,
+                    };
+                  });
 
                 return rows.length > 0 ? (
                   <ChartTooltipCard
@@ -122,7 +128,8 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
               }}
             />
             <Bar
-              dataKey={labelA}
+              dataKey={MONTH_A_KEY}
+              name={labelA}
               animationDuration={800}
               animationEasing="ease-out"
               radius={[4, 4, 0, 0]}
@@ -135,7 +142,8 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
               ))}
             </Bar>
             <Bar
-              dataKey={labelB}
+              dataKey={MONTH_B_KEY}
+              name={labelB}
               animationDuration={800}
               animationEasing="ease-out"
               animationBegin={200}

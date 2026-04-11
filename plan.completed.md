@@ -1,6 +1,6 @@
 # Completed: Month-over-month spending/saving comparison feature
 
-Date: 2026-07-18
+Date: 2026-04-11
 
 Summary
 
@@ -34,6 +34,10 @@ Completed items
 - Added 16 unit tests in `test/lib/month-comparison.test.ts` covering all
   utility functions, edge cases (empty data, single month, zero-to-nonzero
   changes), and percentage calculations
+- Followed up on same-month comparison behavior by switching
+  `ComparisonBarChart` to stable internal series keys (`monthA`, `monthB`) and
+  adding explicit tooltip row keys in `ChartTooltipCard` so duplicate month
+  labels do not trigger React key warnings
 
 ## Files Changed
 
@@ -48,6 +52,8 @@ Modified files:
 - `lib/types/types.ts`
 - `lib/utils/aggregations.ts`
 - `app/reports/page.tsx`
+- `components/charts/ChartTooltipCard.tsx`
+- `components/charts/ComparisonBarChart.tsx`
 
 ## Commits
 
@@ -55,6 +61,7 @@ Modified files:
 - `feat(reports): add month comparison modal and chart components` (74b4793)
 - `feat(reports): integrate Compare button into reports page` (83e3be2)
 - `test(reports): add month comparison unit tests` (cd3dd39)
+- `fix(reports): use stable keys for same-month comparison tooltips`
 
 ## Verification
 
