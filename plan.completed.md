@@ -38,6 +38,13 @@ Completed items
   `ComparisonBarChart` to stable internal series keys (`monthA`, `monthB`) and
   adding explicit tooltip row keys in `ChartTooltipCard` so duplicate month
   labels do not trigger React key warnings
+- Polished `MonthComparisonModal` layout by:
+  - moving summary cards to a roomier 3-up grid on larger screens
+  - tightening and centering the month selector row
+  - removing redundant period chips under the selectors
+  - reducing the month menu height for long histories
+  - rebalancing the top tags grid so columns use the available width better
+  - formatting the Transactions card as a count instead of currency
 
 ## Files Changed
 
@@ -54,6 +61,7 @@ Modified files:
 - `app/reports/page.tsx`
 - `components/charts/ChartTooltipCard.tsx`
 - `components/charts/ComparisonBarChart.tsx`
+- `components/charts/MonthComparisonModal.tsx`
 
 ## Commits
 
@@ -62,6 +70,7 @@ Modified files:
 - `feat(reports): integrate Compare button into reports page` (83e3be2)
 - `test(reports): add month comparison unit tests` (cd3dd39)
 - `fix(reports): use stable keys for same-month comparison tooltips`
+- `fix(reports): polish month comparison modal layout`
 
 ## Verification
 

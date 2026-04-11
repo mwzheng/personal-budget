@@ -17,7 +17,6 @@ import IconButton from "@mui/material/IconButton";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { format, parseISO } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
@@ -111,8 +110,11 @@ interface SummaryCardProps {
   monthB: number;
   change: number | null;
   color?: string;
+  formatter?: (value: number) => string;
   positiveIsFavorable?: boolean;
 }
+
+type SummaryCardDefinition = SummaryCardProps & { key: string };
 
 function SummaryCard({
   label,
@@ -120,16 +122,18 @@ function SummaryCard({
   monthB,
   change,
   color = "text.primary",
+  formatter = formatCurrency,
   positiveIsFavorable = false,
 }: SummaryCardProps) {
   return (
-    <Card variant="outlined" sx={{ flex: 1 }}>
-      <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+    <Card variant="outlined" sx={{ height: "100%" }}>
+      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
         <Box
           display="flex"
           justifyContent="space-between"
-          alignItems="center"
-          mb={0.5}
+          alignItems="flex-start"
+          gap={1}
+          mb={1.5}
         >
           <Typography variant="caption" color="text.secondary">
             {label}
@@ -139,32 +143,60 @@ function SummaryCard({
             positiveIsFavorable={positiveIsFavorable}
           />
         </Box>
-        <Stack direction="row" spacing={2} alignItems="baseline">
-          <Box sx={{ flex: 1 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            columnGap: 2,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="body2"
               color="text.secondary"
-              fontSize="0.65rem"
+              fontSize="0.7rem"
+              mb={0.5}
             >
               Month A
             </Typography>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ color }}>
-              {formatCurrency(monthA)}
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{
+                color,
+                lineHeight: 1.25,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {formatter(monthA)}
             </Typography>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="body2"
               color="text.secondary"
-              fontSize="0.65rem"
+              fontSize="0.7rem"
+              mb={0.5}
             >
               Month B
             </Typography>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ color }}>
-              {formatCurrency(monthB)}
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{
+                color,
+                lineHeight: 1.25,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {formatter(monthB)}
             </Typography>
           </Box>
-        </Stack>
+        </Box>
       </CardContent>
     </Card>
   );
@@ -192,8 +224,12 @@ function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "1fr auto auto auto",
-          gap: 1,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1.2fr) repeat(3, minmax(84px, 1fr))",
+            sm: "minmax(0, 1.2fr) repeat(3, minmax(110px, 1fr))",
+          },
+          columnGap: { xs: 1.5, sm: 2.5 },
+          rowGap: 1.25,
           alignItems: "center",
         }}
       >
@@ -262,12 +298,25 @@ function MonthSelector({
   onChange: (period: string) => void;
 }) {
   return (
-    <FormControl size="small" sx={{ minWidth: 160 }}>
+    <FormControl
+      size="small"
+      sx={{ width: { xs: "100%", sm: 220 }, maxWidth: { xs: 320, sm: "none" } }}
+    >
       <InputLabel>{label}</InputLabel>
       <Select
         value={value}
         label={label}
         onChange={(e) => onChange(e.target.value)}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: 280,
+              "& .MuiMenuItem-root": {
+                minHeight: 40,
+              },
+            },
+          },
+        }}
       >
         {months.map((m) => (
           <MenuItem key={m} value={m}>
@@ -312,6 +361,55 @@ export function MonthComparisonModal({
     () => buildMonthComparison(transactions, periodA, periodB),
     [transactions, periodA, periodB],
   );
+  const summaryCards: SummaryCardDefinition[] = [
+    {
+      key: "total",
+      label: "Total",
+      monthA: comparison.monthA.totalAmount,
+      monthB: comparison.monthB.totalAmount,
+      change: comparison.changes.totalAmount,
+    },
+    {
+      key: "spending",
+      label: "Spending",
+      monthA: comparison.monthA.spendingAmount,
+      monthB: comparison.monthB.spendingAmount,
+      change: comparison.changes.spendingAmount,
+    },
+    {
+      key: "need",
+      label: "Needs",
+      monthA: comparison.monthA.totalByCategoryType.Need,
+      monthB: comparison.monthB.totalByCategoryType.Need,
+      change: comparison.changes.Need,
+      color: CATEGORY_HEX_COLORS.Need,
+    },
+    {
+      key: "want",
+      label: "Wants",
+      monthA: comparison.monthA.totalByCategoryType.Want,
+      monthB: comparison.monthB.totalByCategoryType.Want,
+      change: comparison.changes.Want,
+      color: CATEGORY_HEX_COLORS.Want,
+    },
+    {
+      key: "saving",
+      label: "Savings",
+      monthA: comparison.monthA.totalByCategoryType.Saving,
+      monthB: comparison.monthB.totalByCategoryType.Saving,
+      change: comparison.changes.Saving,
+      color: CATEGORY_HEX_COLORS.Saving,
+      positiveIsFavorable: true,
+    },
+    {
+      key: "transactions",
+      label: "Transactions",
+      monthA: comparison.monthA.transactionCount,
+      monthB: comparison.monthB.transactionCount,
+      change: comparison.changes.transactionCount,
+      formatter: (value: number) => value.toString(),
+    },
+  ];
 
   return (
     <Dialog
@@ -342,13 +440,17 @@ export function MonthComparisonModal({
         </IconButton>
       </DialogTitle>
       <Divider />
-      <DialogContent sx={{ pt: 2.5 }}>
+      <DialogContent sx={{ pt: 2.5, px: { xs: 2, sm: 3 } }}>
         {/* Month selectors */}
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          alignItems={{ sm: "center" }}
-          mb={3}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "center",
+            alignItems: "center",
+            gap: { xs: 1.5, sm: 3 },
+            mb: 3,
+          }}
         >
           <MonthSelector
             label="Month A"
@@ -369,76 +471,15 @@ export function MonthComparisonModal({
             months={availableMonths}
             onChange={setPeriodB}
           />
-        </Stack>
-
-        {/* Period labels */}
-        <Stack direction="row" spacing={1} mb={2}>
-          <Chip
-            label={`A: ${formatMonthLabel(periodA)}`}
-            size="small"
-            variant="outlined"
-          />
-          <Chip
-            label={`B: ${formatMonthLabel(periodB)}`}
-            size="small"
-            variant="outlined"
-          />
-        </Stack>
+        </Box>
 
         {/* Summary cards */}
-        <Grid container spacing={1.5} mb={3}>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Total"
-              monthA={comparison.monthA.totalAmount}
-              monthB={comparison.monthB.totalAmount}
-              change={comparison.changes.totalAmount}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Spending"
-              monthA={comparison.monthA.spendingAmount}
-              monthB={comparison.monthB.spendingAmount}
-              change={comparison.changes.spendingAmount}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Needs"
-              monthA={comparison.monthA.totalByCategoryType.Need}
-              monthB={comparison.monthB.totalByCategoryType.Need}
-              change={comparison.changes.Need}
-              color={CATEGORY_HEX_COLORS.Need}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Wants"
-              monthA={comparison.monthA.totalByCategoryType.Want}
-              monthB={comparison.monthB.totalByCategoryType.Want}
-              change={comparison.changes.Want}
-              color={CATEGORY_HEX_COLORS.Want}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Savings"
-              monthA={comparison.monthA.totalByCategoryType.Saving}
-              monthB={comparison.monthB.totalByCategoryType.Saving}
-              change={comparison.changes.Saving}
-              color={CATEGORY_HEX_COLORS.Saving}
-              positiveIsFavorable
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} md={2}>
-            <SummaryCard
-              label="Transactions"
-              monthA={comparison.monthA.transactionCount}
-              monthB={comparison.monthB.transactionCount}
-              change={comparison.changes.transactionCount}
-            />
-          </Grid>
+        <Grid container spacing={2} mb={3}>
+          {summaryCards.map((card) => (
+            <Grid key={card.key} item xs={12} sm={6} md={4}>
+              <SummaryCard {...card} />
+            </Grid>
+          ))}
         </Grid>
 
         {/* Grouped bar chart */}

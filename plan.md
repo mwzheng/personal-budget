@@ -5,7 +5,8 @@
 Latest completed work: month-over-month spending/saving comparison on the reports
 page, including a follow-up fix so comparing the same month twice uses stable
 chart series keys and unique tooltip row keys without React duplicate-key
-warnings. All work recorded in `plan.completed.md`.
+warnings, plus a layout polish pass for the comparison modal's cards, selectors,
+and top-tags grid. All work recorded in `plan.completed.md`.
 
 Current active follow-ups are intentionally narrow:
 
