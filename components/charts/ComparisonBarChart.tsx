@@ -1,0 +1,144 @@
+"use client";
+
+import Box from "@mui/material/Box";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { format, parseISO } from "date-fns";
+
+import { ChartLegend } from "@/components/charts/ChartLegend";
+import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
+import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import { formatCurrency } from "@/lib/utils/format";
+import type { MonthSummary } from "@/lib/types/types";
+
+function formatMonth(period: string): string {
+  try {
+    return format(parseISO(`${period}-01`), "MMM yyyy");
+  } catch {
+    return period;
+  }
+}
+
+function formatDollar(value: number): string {
+  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+  return `$${value.toFixed(0)}`;
+}
+
+interface Props {
+  monthA: MonthSummary;
+  monthB: MonthSummary;
+}
+
+const CATEGORIES = ["Need", "Want", "Saving"] as const;
+
+// Lighter variants for Month B bars to distinguish them from Month A
+const MONTH_B_COLORS: Record<string, string> = {
+  Need: "#ef9a9a",
+  Want: "#90caf9",
+  Saving: "#a5d6a7",
+};
+
+export function ComparisonBarChart({ monthA, monthB }: Props) {
+  const labelA = formatMonth(monthA.period);
+  const labelB = formatMonth(monthB.period);
+
+  const chartData = CATEGORIES.map((cat) => ({
+    category: cat,
+    [labelA]: monthA.totalByCategoryType[cat],
+    [labelB]: monthB.totalByCategoryType[cat],
+  }));
+
+  const hasData = CATEGORIES.some(
+    (cat) =>
+      monthA.totalByCategoryType[cat] > 0 ||
+      monthB.totalByCategoryType[cat] > 0,
+  );
+
+  if (!hasData) {
+    return (
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 5,
+          color: "text.secondary",
+          height: 280,
+        }}
+      >
+        No category data for the selected months
+      </Box>
+    );
+  }
+
+  const legendPayload = [
+    { value: `${labelA}`, color: CATEGORY_HEX_COLORS.Need },
+    { value: `${labelB}`, color: MONTH_B_COLORS.Need },
+  ];
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box sx={{ width: "100%", height: 280 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 16, right: 20, bottom: 8, left: 20 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis
+              dataKey="category"
+              tick={{ fontSize: 12, fill: "#aaa" }}
+              interval={0}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: "#aaa" }}
+              tickFormatter={formatDollar}
+            />
+            <Tooltip
+              cursor={false}
+              content={({ active, label, payload }) => {
+                if (!active || !payload?.length) return null;
+
+                const rows = payload
+                  .filter((entry) => Number(entry.value ?? 0) > 0)
+                  .map((entry) => ({
+                    label: String(entry.name ?? ""),
+                    value: formatCurrency(Number(entry.value ?? 0)),
+                    color: entry.color,
+                  }));
+
+                return rows.length > 0 ? (
+                  <ChartTooltipCard
+                    title={typeof label === "string" ? label : undefined}
+                    rows={rows}
+                  />
+                ) : null;
+              }}
+            />
+            <Bar
+              dataKey={labelA}
+              fill={CATEGORY_HEX_COLORS.Need}
+              animationDuration={800}
+              animationEasing="ease-out"
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar
+              dataKey={labelB}
+              fill={MONTH_B_COLORS.Need}
+              animationDuration={800}
+              animationEasing="ease-out"
+              animationBegin={200}
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </Box>
+      <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
+    </Box>
+  );
+}
