@@ -1,11 +1,11 @@
 <!-- Note 1: Development plan: living document for roadmap and todos. Updated 2026-03-08 to record documentation work and new test/CI todos. Updated 2026-03-09: Copilot instruction index updated (commit 9db76bb). Updated 2026-03-12: reports default-year persistence, quick tag filtering, report chart/filter polish, and the progress module code-quality refactor pass moved to plan.completed.md. Updated 2026-03-15: budget planner UI polish, latest-saved-budget restore, the path-based Sankey follow-up, and the browser-only demo sign-in flow moved to plan.completed.md. Updated 2026-03-16: signed-out nav cleanup plus auth-page demo CTA copy simplification moved to plan.completed.md. Updated 2026-03-17: refresh-token-sensitive auth guard now checks stored refresh tokens, the public-pages/calendar/contact feature cleanup plus its footer/nav/copy polish follow-up have moved to plan.completed.md, and the latest About/Contact/Home polish plus reports/progress/salary chart-loading readability pass are also recorded there. Updated 2026-03-21: page-width expansion, standardized action icon buttons/tooltips, budget row-load polish, and the SEO/accessibility cleanup pass moved to plan.completed.md. Updated 2026-03-23: the Google Analytics host-policy hardening pass and follow-up pageview queue fix moved to plan.completed.md. Updated 2026-03-25: transaction modal defaults, commit-authoring rules, and progress page visual overhaul moved to plan.completed.md. Updated 2026-03-26: the repository-wide cleanup pass (shared utility extraction, module splits, UI consistency work, Copilot docs cleanup, and expanded route/CSV coverage) moved to plan.completed.md. Updated 2026-03-27: the reports-view persistence, calendar readability polish, home-page feature-heading cleanup, CSV template download, Sankey readability pass, FIRE scenario-card hover/delete polish, and the FIRE hydration mismatch follow-up moved to plan.completed.md. Updated 2026-04-10: transaction edit replacement, calendar day-create, reports category filtering, and persistent real-auth sessions moved to plan.completed.md. Updated 2026-07-17: comprehensive codebase audit — dead code cleanup, auth2 consolidation, naming fixes, doc updates, and new test coverage — moved to plan.completed.md. -->
 
-## Status: Active follow-up plan (updated 2026-07-17)
+## Status: Active follow-up plan (updated 2026-07-18)
 
-Latest completed work: transaction edits now replace the original DynamoDB row
-when the date changes, the reports calendar supports adding a transaction from a
-clicked day, reports can be filtered by category type, and real hosted-auth
-sessions persist across browser restarts. All work recorded in
+Latest completed work: month-over-month spending/saving comparison feature on the
+reports page. A Compare button opens a modal with side-by-side summary cards,
+percentage change indicators, a grouped bar chart, and top tags comparison. Users
+can change either month to any month with data. All work recorded in
 `plan.completed.md`.
 
 Current active follow-ups are intentionally narrow:

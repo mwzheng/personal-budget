@@ -1,4 +1,68 @@
-# Completed: Reports transaction/editing and auth persistence polish
+# Completed: Month-over-month spending/saving comparison feature
+
+Date: 2026-07-18
+
+Summary
+
+Added a month comparison feature to the reports page. A "Compare" button in the
+reports header opens an MUI Dialog modal that shows side-by-side monthly data
+with summary cards, percentage change indicators, a grouped bar chart, and top
+tags comparison. Defaults to comparing the previous month with the current month.
+Users can change either month to any month that has data.
+
+Completed items
+
+- Added `MonthSummary` and `MonthComparisonData` interfaces to `lib/types/types.ts`
+- Added 5 utility functions to `lib/utils/aggregations.ts`:
+  - `getAvailableMonths` — extracts sorted unique YYYY-MM periods
+  - `getMonthTransactions` — filters transactions to a single month
+  - `buildMonthSummary` — computes totals, category breakdown, transaction count, top tags
+  - `buildMonthComparison` — builds full comparison with percentage changes
+  - `getDefaultComparisonMonths` — smart defaults (prev/current month if data exists)
+- Created `components/charts/ComparisonBarChart.tsx` — grouped Recharts bar chart
+  with distinct color palettes for Month A (solid) and Month B (lighter variants)
+- Created `components/charts/MonthComparisonModal.tsx` — full MUI Dialog with:
+  - Month selectors restricted to months with data
+  - 6 summary cards (Total, Spending, Need, Want, Saving, Transactions)
+  - Percentage change indicators (green=favorable, red=unfavorable)
+  - ComparisonBarChart visualization
+  - Top tags comparison grid
+- Integrated into `app/reports/page.tsx`:
+  - Compare button with `CompareArrowsIcon` in header next to Import/Export
+  - Dynamic import of MonthComparisonModal with SSR disabled
+  - `compareOpen` state for modal control
+- Added 16 unit tests in `test/lib/month-comparison.test.ts` covering all
+  utility functions, edge cases (empty data, single month, zero-to-nonzero
+  changes), and percentage calculations
+
+## Files Changed
+
+New files:
+
+- `components/charts/ComparisonBarChart.tsx`
+- `components/charts/MonthComparisonModal.tsx`
+- `test/lib/month-comparison.test.ts`
+
+Modified files:
+
+- `lib/types/types.ts`
+- `lib/utils/aggregations.ts`
+- `app/reports/page.tsx`
+
+## Commits
+
+- `feat(reports): add month comparison types and utility functions` (179d636)
+- `feat(reports): add month comparison modal and chart components` (74b4793)
+- `feat(reports): integrate Compare button into reports page` (83e3be2)
+- `test(reports): add month comparison unit tests` (cd3dd39)
+
+## Verification
+
+- Lint: ✔ No errors (1 pre-existing warning in FireCalculator)
+- Tests: ✔ 261/261 passed (29 test files)
+- Build: ✔ All 32 routes compiled successfully
+
+---
 
 Date: 2026-04-10
 
