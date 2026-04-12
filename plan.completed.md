@@ -57,7 +57,7 @@ Files changed
 
 Commit reference
 
-- Planned commit message: `docs(content): refresh app copy and planning docs`
+- `docs(content): refresh app copy and planning docs` (`fce906f`)
 
 Notes / next steps
 
