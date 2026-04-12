@@ -12,7 +12,7 @@ export const FAQ_ITEMS = [
     category: "creator",
     question: `Who built ${APP_NAME}?`,
     answer:
-      "Porridge Budget was developed and is maintained by a software engineer with over four years of professional experience. It is a personal project maintained alongside full-time work.",
+      "Porridge Budget was developed and is maintained by a software engineer with over five years of professional experience. It is a personal project maintained alongside full-time work.",
   },
   {
     id: "why-it-exists",
@@ -47,7 +47,7 @@ export const FAQ_ITEMS = [
     category: "features",
     question: "What can I track today?",
     answer:
-      "The current app focuses on transactions, reports, budgets, goals, salary history, and longer-term progress views. It is meant to help with both day-to-day spending review and slower-moving financial momentum.",
+      "The current app focuses on transactions, reports with month comparison, budgets, goals, FIRE scenarios, salary history, and longer-term progress views. It is meant to help with both day-to-day spending review and slower-moving financial momentum.",
   },
   {
     id: "demo-mode",
@@ -63,6 +63,34 @@ export const FAQ_ITEMS = [
     answer:
       "Yes. Export matters because the project is supposed to support ownership, not lock-in. Keeping data portable is consistent with the spreadsheet-and-Notion roots of the app.",
   },
+  {
+    id: "fire-calculator",
+    category: "features",
+    question: "What is the FIRE calculator?",
+    answer:
+      "FIRE stands for Financial Independence, Retire Early. The calculator lets you project investment growth under different assumptions, compare multiple scenarios, and estimate how long it could take to reach your target number.",
+  },
+  {
+    id: "goals-tracking",
+    category: "features",
+    question: "How do savings goals work?",
+    answer:
+      "You can create named savings goals with a target amount and monthly contribution. The app estimates progress over time so you can see how close you are to each target.",
+  },
+  {
+    id: "month-comparison",
+    category: "features",
+    question: "Can I compare spending between months?",
+    answer:
+      "Yes. The reports page includes a Compare button that opens a side-by-side month view with summary cards, percentage changes, a grouped bar chart, and top-tag comparisons.",
+  },
+  {
+    id: "progress-tracking",
+    category: "features",
+    question: "What does the progress page track?",
+    answer:
+      "The progress page combines salary history, retirement contributions, and financial milestones into one long-term workspace with charts and year-aware views.",
+  },
 ] as const satisfies readonly FaqItem[];
 
 export const FAQ_PAGE_CONTENT = {
@@ -70,7 +98,7 @@ export const FAQ_PAGE_CONTENT = {
     eyebrow: "FAQ",
     title: `Questions about ${APP_NAME}`,
     summary:
-      "Short answers about the creator, the workflow, and why the product favors manual budgeting over passive automation.",
+      "Short answers about the creator, the workflow, core features, and why the product favors manual budgeting over passive automation.",
   },
   items: FAQ_ITEMS,
 } satisfies FaqPageContent;

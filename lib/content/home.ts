@@ -21,28 +21,34 @@ export const HOME_PAGE_CONTENT = {
         "Import and review transaction history so spending reports stay grounded in the details that matter.",
     },
     {
-      id: "budgets",
-      title: "Budgets",
-      description:
-        "Create, save, and apply budgets to see how well your plan matches real monthly decisions.",
-    },
-    {
       id: "reports",
-      title: "Reports",
+      title: "Reports & Comparison",
       description:
-        "Explore spending over time, by category, and by tag with charts that stay readable as the data changes.",
+        "Explore spending over time, by category, and by tag with interactive charts and side-by-side month comparisons.",
     },
     {
       id: "budget",
-      title: "Budget",
+      title: "Budgets & Sankey",
       description:
-        "Plan named expenses, preview a pie chart, and inspect grouped Sankey flows before you commit to a budget.",
+        "Create named budgets with expense rows, preview a pie chart, and inspect grouped Sankey flows before you commit to a plan.",
     },
     {
       id: "fire",
       title: "FIRE Calculator",
       description:
         "Calculate your Financial Independence number, project investment growth, and compare retirement scenarios with interactive charts.",
+    },
+    {
+      id: "goals",
+      title: "Savings Goals",
+      description:
+        "Set savings targets, track progress with monthly contributions, and review the milestones that matter over time.",
+    },
+    {
+      id: "progress",
+      title: "Progress Tracker",
+      description:
+        "Follow salary history, retirement contributions, and milestones from one long-term financial progress workspace.",
     },
   ],
 } satisfies HomePageContent;

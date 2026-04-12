@@ -1,3 +1,78 @@
+# Porridge Budget — Completed Work Log
+
+This file is the authoritative record of completed work, listed in reverse
+chronological order (newest first). Each entry includes the date, summary,
+completed items, files changed, commit reference, and notes.
+
+When work is finished, move it from `plan.md` to this file in the same commit.
+
+---
+
+# Completed: Application content, documentation, and roadmap refresh
+
+Date: 2026-04-12
+
+Summary
+
+- Reviewed the full application for outdated page copy, documentation, and
+  roadmap notes.
+- Updated the shared home/about/FAQ content so the public-facing descriptions
+  better reflect the current feature set, creator profile, and reports compare
+  flow.
+- Cleaned the planning docs and added a dedicated future-ideas backlog file.
+
+Completed items
+
+- Updated `lib/content/about.ts` so the creator profile now reflects 5+ years of
+  experience.
+- Refreshed `lib/content/home.ts`, `lib/types/content.ts`, and `app/page.tsx`
+  so the home feature grid highlights reports comparison, goals, and progress
+  instead of the old duplicate Budgets/Budget framing.
+- Expanded `lib/content/faq.ts` with newer feature coverage for FIRE, savings
+  goals, month comparison, and progress tracking, while also refreshing the
+  creator/feature wording.
+- Updated `test/lib/content-data.test.ts` so the content invariants align with
+  the refreshed home-page feature set.
+- Updated `README.md` so the product summary, reports page description, and
+  roadmap notes match the current application.
+- Updated `docs/aws-credentials.md` to use a DynamoDB example instead of an S3
+  example.
+- Rewrote `plan.md` into a concise active follow-up plan and added
+  `docs/future-feature-ideas.md` as the dedicated product-ideas backlog.
+- Added a file header to `plan.completed.md` and recorded this cleanup pass.
+
+Files changed
+
+- `README.md`
+- `app/page.tsx`
+- `docs/aws-credentials.md`
+- `docs/future-feature-ideas.md`
+- `lib/content/about.ts`
+- `lib/content/faq.ts`
+- `lib/content/home.ts`
+- `lib/types/content.ts`
+- `plan.md`
+- `plan.completed.md`
+- `test/lib/content-data.test.ts`
+
+Commit reference
+
+- Planned commit message: `docs(content): refresh app copy and planning docs`
+
+Notes / next steps
+
+- The active roadmap now focuses on the DynamoDB integration-test strategy, a
+  Budgets -> Sankey smoke test, and the ESLint CLI migration.
+
+## Verification
+
+- `pnpm lint` — passes; Next.js still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning.
+- `pnpm test --run` — 261/261 tests passed across 29 test files.
+- `pnpm build` — passes; all 32 routes compiled successfully.
+
+---
+
 # Completed: Month-over-month spending/saving comparison feature
 
 Date: 2026-04-11
