@@ -1,4 +1,159 @@
-# Completed: Reports transaction/editing and auth persistence polish
+# Porridge Budget — Completed Work Log
+
+This file is the authoritative record of completed work, listed in reverse
+chronological order (newest first). Each entry includes the date, summary,
+completed items, files changed, commit reference, and notes.
+
+When work is finished, move it from `plan.md` to this file in the same commit.
+
+---
+
+# Completed: Application content, documentation, and roadmap refresh
+
+Date: 2026-04-12
+
+Summary
+
+- Reviewed the full application for outdated page copy, documentation, and
+  roadmap notes.
+- Updated the shared home/about/FAQ content so the public-facing descriptions
+  better reflect the current feature set, creator profile, and reports compare
+  flow.
+- Cleaned the planning docs and added a dedicated future-ideas backlog file.
+
+Completed items
+
+- Updated `lib/content/about.ts` so the creator profile now reflects 5+ years of
+  experience.
+- Refreshed `lib/content/home.ts`, `lib/types/content.ts`, and `app/page.tsx`
+  so the home feature grid highlights reports comparison, goals, and progress
+  instead of the old duplicate Budgets/Budget framing.
+- Expanded `lib/content/faq.ts` with newer feature coverage for FIRE, savings
+  goals, month comparison, and progress tracking, while also refreshing the
+  creator/feature wording.
+- Updated `test/lib/content-data.test.ts` so the content invariants align with
+  the refreshed home-page feature set.
+- Updated `README.md` so the product summary, reports page description, and
+  roadmap notes match the current application.
+- Updated `docs/aws-credentials.md` to use a DynamoDB example instead of an S3
+  example.
+- Rewrote `plan.md` into a concise active follow-up plan and added
+  `docs/future-feature-ideas.md` as the dedicated product-ideas backlog.
+- Added a file header to `plan.completed.md` and recorded this cleanup pass.
+
+Files changed
+
+- `README.md`
+- `app/page.tsx`
+- `docs/aws-credentials.md`
+- `docs/future-feature-ideas.md`
+- `lib/content/about.ts`
+- `lib/content/faq.ts`
+- `lib/content/home.ts`
+- `lib/types/content.ts`
+- `plan.md`
+- `plan.completed.md`
+- `test/lib/content-data.test.ts`
+
+Commit reference
+
+- `docs(content): refresh app copy and planning docs` (`fce906f`)
+
+Notes / next steps
+
+- The active roadmap now focuses on the DynamoDB integration-test strategy, a
+  Budgets -> Sankey smoke test, and the ESLint CLI migration.
+
+## Verification
+
+- `pnpm lint` — passes; Next.js still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning.
+- `pnpm test --run` — 261/261 tests passed across 29 test files.
+- `pnpm build` — passes; all 32 routes compiled successfully.
+
+---
+
+# Completed: Month-over-month spending/saving comparison feature
+
+Date: 2026-04-11
+
+Summary
+
+Added a month comparison feature to the reports page. A "Compare" button in the
+reports header opens an MUI Dialog modal that shows side-by-side monthly data
+with summary cards, percentage change indicators, a grouped bar chart, and top
+tags comparison. Defaults to comparing the previous month with the current month.
+Users can change either month to any month that has data.
+
+Completed items
+
+- Added `MonthSummary` and `MonthComparisonData` interfaces to `lib/types/types.ts`
+- Added 5 utility functions to `lib/utils/aggregations.ts`:
+  - `getAvailableMonths` — extracts sorted unique YYYY-MM periods
+  - `getMonthTransactions` — filters transactions to a single month
+  - `buildMonthSummary` — computes totals, category breakdown, transaction count, top tags
+  - `buildMonthComparison` — builds full comparison with percentage changes
+  - `getDefaultComparisonMonths` — smart defaults (prev/current month if data exists)
+- Created `components/charts/ComparisonBarChart.tsx` — grouped Recharts bar chart
+  with distinct color palettes for Month A (solid) and Month B (lighter variants)
+- Created `components/charts/MonthComparisonModal.tsx` — full MUI Dialog with:
+  - Month selectors restricted to months with data
+  - 6 summary cards (Total, Spending, Need, Want, Saving, Transactions)
+  - Percentage change indicators (green=favorable, red=unfavorable)
+  - ComparisonBarChart visualization
+  - Top tags comparison grid
+- Integrated into `app/reports/page.tsx`:
+  - Compare button with `CompareArrowsIcon` in header next to Import/Export
+  - Dynamic import of MonthComparisonModal with SSR disabled
+  - `compareOpen` state for modal control
+- Added 16 unit tests in `test/lib/month-comparison.test.ts` covering all
+  utility functions, edge cases (empty data, single month, zero-to-nonzero
+  changes), and percentage calculations
+- Followed up on same-month comparison behavior by switching
+  `ComparisonBarChart` to stable internal series keys (`monthA`, `monthB`) and
+  adding explicit tooltip row keys in `ChartTooltipCard` so duplicate month
+  labels do not trigger React key warnings
+- Polished `MonthComparisonModal` layout by:
+  - moving summary cards to a roomier 3-up grid on larger screens
+  - tightening and centering the month selector row
+  - removing redundant period chips under the selectors
+  - reducing the month menu height for long histories
+  - rebalancing the top tags grid so columns use the available width better
+  - formatting the Transactions card as a count instead of currency
+
+## Files Changed
+
+New files:
+
+- `components/charts/ComparisonBarChart.tsx`
+- `components/charts/MonthComparisonModal.tsx`
+- `test/lib/month-comparison.test.ts`
+
+Modified files:
+
+- `lib/types/types.ts`
+- `lib/utils/aggregations.ts`
+- `app/reports/page.tsx`
+- `components/charts/ChartTooltipCard.tsx`
+- `components/charts/ComparisonBarChart.tsx`
+- `components/charts/MonthComparisonModal.tsx`
+
+## Commits
+
+- `feat(reports): add month comparison types and utility functions` (179d636)
+- `feat(reports): add month comparison modal and chart components` (74b4793)
+- `feat(reports): integrate Compare button into reports page` (83e3be2)
+- `test(reports): add month comparison unit tests` (cd3dd39)
+- `fix(reports): use stable keys for same-month comparison tooltips`
+- `fix(reports): polish month comparison modal layout`
+
+## Verification
+
+- Lint: ✔ No errors (1 pre-existing warning in FireCalculator)
+- Tests: ✔ 261/261 passed (29 test files)
+- Build: ✔ All 32 routes compiled successfully
+
+---
 
 Date: 2026-04-10
 

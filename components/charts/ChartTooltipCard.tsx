@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 interface ChartTooltipRow {
+  key?: string;
   label: string;
   value: string;
   color?: string;
@@ -53,7 +54,7 @@ export function ChartTooltipCard({ title, rows }: Props) {
       <Stack spacing={0.75}>
         {rows.map((row) => (
           <Stack
-            key={`${row.label}-${row.value}`}
+            key={row.key ?? `${row.label}-${row.value}`}
             direction="row"
             justifyContent="space-between"
             alignItems="center"

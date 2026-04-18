@@ -136,6 +136,35 @@ export interface ReportsAggregates {
   tagDiagramData: TagDataPoint[];
 }
 
+// Note 12b: MonthSummary captures a single month's financial snapshot for use in
+// side-by-side month comparisons. Keeping it separate from ReportsAggregates lets
+// the comparison utility return a lean object focused on the metrics that matter
+// when contrasting two periods.
+export interface MonthSummary {
+  period: string; // YYYY-MM
+  totalAmount: number;
+  spendingAmount: number;
+  totalByCategoryType: { Need: number; Want: number; Saving: number };
+  transactionCount: number;
+  topTags: TagDataPoint[];
+}
+
+// Note 12c: MonthComparisonData bundles two MonthSummary snapshots plus the
+// pre-computed percentage changes between them. Storing the deltas here avoids
+// every UI consumer re-deriving the same arithmetic.
+export interface MonthComparisonData {
+  monthA: MonthSummary;
+  monthB: MonthSummary;
+  changes: {
+    totalAmount: number | null;
+    spendingAmount: number | null;
+    Need: number | null;
+    Want: number | null;
+    Saving: number | null;
+    transactionCount: number | null;
+  };
+}
+
 // Note 13: ReportsResponse is the full payload returned by GET /api/reports.
 // Wrapping transactions + metadata in one typed object makes the API contract
 // explicit and is easy to validate with tools like Zod.

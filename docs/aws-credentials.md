@@ -56,13 +56,13 @@ You can also use `vercel env pull .env.local` to pull environment variables into
 Example (AWS SDK v3 — server only):
 
 ```ts
-import { S3Client } from "@aws-sdk/client-s3";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 // The SDK will use the environment variables automatically (preferred):
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+const dynamodb = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 // Or pass credentials explicitly (not recommended unless you need to override):
-// const s3 = new S3Client({
+// const dynamodb = new DynamoDBClient({
 //   region: process.env.AWS_REGION,
 //   credentials: {
 //     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",

@@ -133,10 +133,11 @@ describe("content data invariants", () => {
     expect(HOME_PAGE_CONTENT.hero.title).toBe("Porridge Budget");
     expect(HOME_PAGE_CONTENT.features.map((feature) => feature.id)).toEqual([
       "transactions",
-      "budgets",
       "reports",
       "budget",
       "fire",
+      "goals",
+      "progress",
     ]);
     expect(
       HOME_PAGE_CONTENT.features.every(

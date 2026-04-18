@@ -5,7 +5,10 @@ import {
   CategoryType,
   Transaction,
   FilterParams,
+  MonthComparisonData,
+  MonthSummary,
   ReportsAggregates,
+  TagDataPoint,
   TimeseriesPoint,
 } from "../types/types";
 
@@ -209,4 +212,142 @@ export function createYearDateRange(
     startDate: `${year}-01-01`,
     endDate: `${year}-12-31`,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Month comparison utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns every unique "YYYY-MM" period present in the transaction list,
+ * sorted chronologically (oldest first).
+ */
+export function getAvailableMonths(transactions: Transaction[]): string[] {
+  const set = new Set<string>();
+  for (const t of transactions) {
+    set.add(t.date.substring(0, 7));
+  }
+  return Array.from(set).sort();
+}
+
+/**
+ * Filters transactions to those belonging to a single "YYYY-MM" period.
+ */
+export function getMonthTransactions(
+  transactions: Transaction[],
+  period: string,
+): Transaction[] {
+  return transactions.filter((t) => t.date.substring(0, 7) === period);
+}
+
+/**
+ * Builds a MonthSummary for a single month: totals, category breakdown,
+ * transaction count, and top 10 tags by spend.
+ */
+export function buildMonthSummary(
+  transactions: Transaction[],
+  period: string,
+): MonthSummary {
+  const monthTxns = getMonthTransactions(transactions, period);
+  const totalAmount = monthTxns.reduce((sum, t) => sum + t.amount, 0);
+  const totalByCategoryType = { Need: 0, Want: 0, Saving: 0 };
+  const tagMap: Record<string, number> = {};
+
+  for (const t of monthTxns) {
+    const category = normalizeReportCategory(t.category);
+    totalByCategoryType[category] += t.amount;
+    for (const tag of t.tags) {
+      tagMap[tag] = (tagMap[tag] || 0) + t.amount;
+    }
+  }
+
+  const topTags: TagDataPoint[] = Object.entries(tagMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
+
+  return {
+    period,
+    totalAmount,
+    spendingAmount: totalByCategoryType.Need + totalByCategoryType.Want,
+    totalByCategoryType,
+    transactionCount: monthTxns.length,
+    topTags,
+  };
+}
+
+/**
+ * Computes the percentage change from `oldVal` to `newVal`.
+ * Returns `null` when `oldVal` is zero (division by zero).
+ */
+function pctChange(oldVal: number, newVal: number): number | null {
+  if (oldVal === 0) return newVal === 0 ? 0 : null;
+  return ((newVal - oldVal) / Math.abs(oldVal)) * 100;
+}
+
+/**
+ * Builds a full side-by-side comparison between two month periods (A → B).
+ * Changes are expressed as percentage deltas from A to B.
+ */
+export function buildMonthComparison(
+  transactions: Transaction[],
+  periodA: string,
+  periodB: string,
+): MonthComparisonData {
+  const monthA = buildMonthSummary(transactions, periodA);
+  const monthB = buildMonthSummary(transactions, periodB);
+
+  return {
+    monthA,
+    monthB,
+    changes: {
+      totalAmount: pctChange(monthA.totalAmount, monthB.totalAmount),
+      spendingAmount: pctChange(monthA.spendingAmount, monthB.spendingAmount),
+      Need: pctChange(
+        monthA.totalByCategoryType.Need,
+        monthB.totalByCategoryType.Need,
+      ),
+      Want: pctChange(
+        monthA.totalByCategoryType.Want,
+        monthB.totalByCategoryType.Want,
+      ),
+      Saving: pctChange(
+        monthA.totalByCategoryType.Saving,
+        monthB.totalByCategoryType.Saving,
+      ),
+      transactionCount: pctChange(
+        monthA.transactionCount,
+        monthB.transactionCount,
+      ),
+    },
+  };
+}
+
+/**
+ * Returns sensible default months for the comparison modal:
+ * [previousMonth, currentMonth] based on available transaction data.
+ * Falls back to the two most recent months when the calendar "current" month
+ * has no data.
+ */
+export function getDefaultComparisonMonths(
+  transactions: Transaction[],
+  today: Date = new Date(),
+): [string, string] {
+  const months = getAvailableMonths(transactions);
+  if (months.length === 0) {
+    const y = today.getFullYear();
+    const m = today.getMonth(); // 0-indexed
+    const curr = `${y}-${String(m + 1).padStart(2, "0")}`;
+    const prev = m === 0 ? `${y - 1}-12` : `${y}-${String(m).padStart(2, "0")}`;
+    return [prev, curr];
+  }
+  if (months.length === 1) return [months[0], months[0]];
+
+  // Try to find the current calendar month in available data
+  const currPeriod = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const currIdx = months.indexOf(currPeriod);
+  if (currIdx > 0) return [months[currIdx - 1], months[currIdx]];
+
+  // Fall back to the two most recent months with data
+  return [months[months.length - 2], months[months.length - 1]];
 }

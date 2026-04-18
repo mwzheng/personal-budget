@@ -40,7 +40,7 @@ export const CREATOR_PROFILE = {
   name: "Mickey",
   role: "Full Stack Software Engineer",
   experienceSummary:
-    "4+ years of experience, currently working full time, and a huge advocate for saving and budgeting wisely.",
+    "5+ years of experience, currently working full time, and a huge advocate for saving and budgeting wisely.",
   bio: [
     "I'm a full stack software engineer who likes building practical tools around real workflows.",
 
@@ -94,7 +94,7 @@ export const ABOUT_PAGE_CONTENT = {
     },
     {
       label: "Experience",
-      value: "4+ years",
+      value: "5+ years",
     },
     {
       label: "Project type",

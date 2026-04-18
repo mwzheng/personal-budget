@@ -1,6 +1,6 @@
 # Porridge Budget
 
-Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, and investment progress with CSV import/export and interactive charts that can be downloaded as PNG images.
+Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, savings goals, and investment progress with CSV import/export, month-over-month comparisons, and interactive charts that can be downloaded as PNG images.
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
-- `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, a transactions table backed by authenticated per-user APIs, and a CSV import dialog with a downloadable template.
+- `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and a CSV import dialog with a downloadable template.
 - `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
 - `/goals` — Savings goal tracking with target progress, edit/delete actions, and reusable goal forms.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
@@ -106,13 +106,13 @@ require a fresh login in the normal case.
 
 ## Notes & next steps
 
-- Reports, CSV import/export, and transaction CRUD are now bound to the authenticated Cognito user. Shared sample CSV data is only exposed in explicit demo mode (`DISABLE_AUTH=true`).
-- A comprehensive cleanup pass was completed on 2026-03-26: repeated utility logic was centralized, `budget-planner.ts` and demo-mode API logic were split into focused modules, auth helpers were consolidated, and the UI typography/color/font usage was standardized.
-- Direct route coverage now exists for budgets collection routes, goals, salary, progress routes, shared utility modules, DynamoDB helper behavior, and CSV import/export edge cases.
-- The primary public and authenticated pages now use wider `xl` containers, edit/delete affordances are standardized as icon-only buttons with tooltips, and the app loads `Inter` via `next/font` for more consistent typography.
-- Public pages now ship stronger SEO defaults through shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
+- All authenticated report, import, export, budget, goals, salary, progress, and transaction APIs are scoped to the signed-in Cognito user. Demo mode (`DISABLE_AUTH=true`) uses browser-local sample data instead of DynamoDB.
+- The reports page now includes month-over-month comparison alongside the existing charts, calendar/table views, and CSV flows.
+- The current Vitest suite covers route handlers, shared utilities, auth helpers, DynamoDB behavior, and CSV edge cases across 29 test files.
+- Public pages ship shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
-- The main follow-up still worth adding is direct test coverage for `app/api/budgets/[id]/route.ts` (PUT/DELETE) plus a documented DynamoDB integration-test strategy.
+- The active roadmap is now focused on documenting the DynamoDB integration-test strategy, adding a lightweight Budgets -> Sankey smoke test, and migrating `pnpm lint` from `next lint` to the standalone ESLint CLI.
+- Candidate product ideas are tracked in `docs/future-feature-ideas.md`.
 
 ## Contributing
 

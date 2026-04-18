@@ -14,6 +14,7 @@ import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import Paper from "@mui/material/Paper";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SavingsIcon from "@mui/icons-material/Savings";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
 
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
@@ -21,14 +22,15 @@ import { APP_NAME, ROUTE_PATHS } from "@/lib/content/page-titles";
 
 const HOME_FEATURE_ICONS = {
   transactions: ReceiptLongIcon,
-  budgets: SavingsIcon,
   reports: BarChartIcon,
   budget: AutoGraphIcon,
   fire: LocalFireDepartmentIcon,
+  goals: SavingsIcon,
+  progress: TrendingUpIcon,
 } as const;
 
 const HOME_PAGE_DESCRIPTION =
-  "Track expenses, plan budgets, and review spending trends with a manual-first personal budgeting app built for clarity and reflection.";
+  "Track expenses, compare months, plan budgets, and review long-term progress with a manual-first personal budgeting app built for clarity and reflection.";
 const VISUALLY_HIDDEN_SX = {
   border: 0,
   clip: "rect(0 0 0 0)",
