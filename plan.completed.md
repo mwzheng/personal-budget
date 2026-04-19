@@ -8,6 +8,99 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Adaptive monthly chart label layout
+
+Date: 2026-04-19
+
+Summary
+
+- Updated the monthly chart total labels so they switch from horizontal to a
+  diagonal layout when there are many bars on screen.
+- Tuned the layout to stay readable for denser month ranges by also tightening
+  the label sizing and top spacing.
+
+Completed items
+
+- Updated `components/charts/SpendingBarChart.tsx` so monthly bar total labels
+  stay horizontal for shorter ranges, rotate diagonally for denser ranges, and
+  use a more compact font/spacing for very crowded views.
+- Adjusted the chart's top margin to match the denser label layout when
+  diagonal labels are active.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this follow-up)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Spending total label and legend spacing follow-up
+
+Date: 2026-04-19
+
+Summary
+
+- Fixed the missing total label above the stacked spending bar in the monthly
+  chart.
+- Reduced the gap between the monthly chart and its legend and gave the plot a
+  bit more height so the chart uses the section space more effectively.
+
+Completed items
+
+- Updated `components/charts/SpendingBarChart.tsx` so the stacked spending total
+  renders through the bar-label path rather than the previous stacked
+  `LabelList` path, which was not surfacing the label reliably.
+- Reduced the chart-to-legend spacing and slightly increased the monthly chart
+  height.
+- Updated `app/reports/page.tsx` loading-state height for the taller monthly
+  chart.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `app/reports/page.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this follow-up)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
 # Completed: Reports chart sizing and spacing polish
 
 Date: 2026-04-19

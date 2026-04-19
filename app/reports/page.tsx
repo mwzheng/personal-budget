@@ -64,7 +64,7 @@ const SpendingPieChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <ChartLoadingState height={280} legendItems={3} />,
+    loading: () => <SpendingBreakdownLoadingState />,
   },
 );
 const SpendingBarChart = dynamic(
@@ -91,6 +91,53 @@ const MonthComparisonModal = dynamic(
     ),
   { ssr: false },
 );
+
+function SpendingBreakdownLoadingState() {
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: 340,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Skeleton
+          variant="circular"
+          animation="wave"
+          width={220}
+          height={220}
+        />
+      </Box>
+      <Stack
+        direction="row"
+        justifyContent="center"
+        spacing={2.5}
+        useFlexGap
+        flexWrap="wrap"
+      >
+        {Array.from({ length: 3 }, (_, index) => (
+          <Box
+            key={`spending-breakdown-loading-${index}`}
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Skeleton variant="circular" width={12} height={12} />
+            <Skeleton variant="text" width={72} />
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
 
 // Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
 // `ReportsAggregates` type contract when there are no transactions to aggregate.
@@ -645,7 +692,7 @@ export default function ReportsPage() {
                   }}
                 >
                   {loading ? (
-                    <ChartLoadingState height={340} legendItems={3} />
+                    <SpendingBreakdownLoadingState />
                   ) : (
                     <SpendingPieChart data={agg.totalByCategoryType} />
                   )}
@@ -691,7 +738,7 @@ export default function ReportsPage() {
             <Divider />
             <CardContent sx={{ p: 3 }}>
               {loading ? (
-                <ChartLoadingState height={340} legendItems={4} />
+                <ChartLoadingState height={360} legendItems={4} />
               ) : (
                 <SpendingBarChart data={agg.timeseries} />
               )}

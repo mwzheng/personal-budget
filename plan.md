@@ -4,6 +4,11 @@
 
 Latest completed work:
 
+- Made the monthly chart totals adapt to density so labels rotate diagonally for
+  crowded month ranges and remain readable when many bars are shown.
+- Fixed the stacked spending total label in the monthly chart and tightened the
+  gap between that chart and its legend so the plot area uses more vertical
+  space.
 - Tightened the reports chart sizing so Top Spending Tags shows only the top 10
   tags with less wasted left space, the spending breakdown chart is larger and
   vertically centered, and the monthly bar chart is slightly taller.

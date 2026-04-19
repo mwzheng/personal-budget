@@ -8,8 +8,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  LabelList,
-  LabelProps as RechartsLabelProps,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,24 +41,34 @@ function formatDollar(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
-type ChartDataPoint = TimeseriesPoint & { label: string };
-type ChartLabelProps = RechartsLabelProps & { payload?: ChartDataPoint };
+type ChartLabelPositionProps = {
+  x?: number | string;
+  y?: number | string;
+  width?: number | string;
+};
+const EMPTY_SVG_LABEL = <g />;
 
 function renderBarTotalLabel(
-  props: ChartLabelProps,
+  props: ChartLabelPositionProps,
   totalAmount: number,
+  angle: number,
+  fontSize: number,
 ): JSX.Element | null {
   if (totalAmount <= 0) {
     return null;
   }
 
+  const x = Number(props.x ?? 0) + Number(props.width ?? 0) / 2;
+  const y = Number(props.y ?? 0) - 8;
+
   return (
     <text
-      x={Number(props.x ?? 0) + Number(props.width ?? 0) / 2}
-      y={Number(props.y ?? 0) - 8}
+      x={x}
+      y={y}
       fill="#ccc"
-      fontSize={10}
+      fontSize={fontSize}
       textAnchor="middle"
+      transform={angle === 0 ? undefined : `rotate(${angle} ${x} ${y})`}
     >
       {formatDollar(totalAmount)}
     </text>
@@ -89,6 +97,11 @@ export function SpendingBarChart({ data }: Props) {
     ...entry,
     label: formatMonth(entry.period),
   }));
+  const labelAngle =
+    chartData.length > 14 ? -55 : chartData.length > 8 ? -35 : 0;
+  const labelFontSize =
+    chartData.length > 14 ? 8 : chartData.length > 8 ? 9 : 10;
+  const chartTopMargin = labelAngle === 0 ? 24 : 40;
   const legendPayload = [
     { value: "Needs", color: CATEGORY_HEX_COLORS.Need },
     { value: "Wants", color: CATEGORY_HEX_COLORS.Want },
@@ -98,12 +111,12 @@ export function SpendingBarChart({ data }: Props) {
 
   return (
     <ChartWrapper title="Monthly Spending, Income & Savings">
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ width: "100%", height: 340 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Box sx={{ width: "100%", height: 360 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 24, right: 20, bottom: 60, left: 20 }}
+              margin={{ top: chartTopMargin, right: 20, bottom: 60, left: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
               {/* Note 5: `angle={-45}` rotates X-axis labels 45 degrees to prevent
@@ -150,18 +163,27 @@ export function SpendingBarChart({ data }: Props) {
                 name="Needs"
                 animationDuration={1200}
                 animationEasing="ease-out"
-              >
-                <LabelList
-                  content={(props: ChartLabelProps) => {
-                    const payload = props.payload;
-                    if (!payload || payload.Want > 0) {
-                      return null;
-                    }
+                label={(
+                  props: ChartLabelPositionProps & { index?: number },
+                ) => {
+                  const entry =
+                    typeof props.index === "number"
+                      ? chartData[props.index]
+                      : undefined;
+                  if (!entry || entry.Want > 0) {
+                    return EMPTY_SVG_LABEL;
+                  }
 
-                    return renderBarTotalLabel(props, payload.spendingAmount);
-                  }}
-                />
-              </Bar>
+                  return (
+                    renderBarTotalLabel(
+                      props,
+                      entry.spendingAmount,
+                      labelAngle,
+                      labelFontSize,
+                    ) ?? EMPTY_SVG_LABEL
+                  );
+                }}
+              />
               <Bar
                 dataKey="Want"
                 stackId="spending"
@@ -170,18 +192,27 @@ export function SpendingBarChart({ data }: Props) {
                 animationDuration={1200}
                 animationEasing="ease-out"
                 radius={[4, 4, 0, 0]}
-              >
-                <LabelList
-                  content={(props: ChartLabelProps) => {
-                    const payload = props.payload;
-                    if (!payload || payload.Want <= 0) {
-                      return null;
-                    }
+                label={(
+                  props: ChartLabelPositionProps & { index?: number },
+                ) => {
+                  const entry =
+                    typeof props.index === "number"
+                      ? chartData[props.index]
+                      : undefined;
+                  if (!entry || entry.Want <= 0) {
+                    return EMPTY_SVG_LABEL;
+                  }
 
-                    return renderBarTotalLabel(props, payload.spendingAmount);
-                  }}
-                />
-              </Bar>
+                  return (
+                    renderBarTotalLabel(
+                      props,
+                      entry.spendingAmount,
+                      labelAngle,
+                      labelFontSize,
+                    ) ?? EMPTY_SVG_LABEL
+                  );
+                }}
+              />
               <Bar
                 dataKey="incomeAmount"
                 fill="#26a69a"
@@ -190,18 +221,27 @@ export function SpendingBarChart({ data }: Props) {
                 animationEasing="ease-out"
                 animationBegin={150}
                 radius={[4, 4, 0, 0]}
-              >
-                <LabelList
-                  content={(props: ChartLabelProps) => {
-                    const payload = props.payload;
-                    if (!payload) {
-                      return null;
-                    }
+                label={(
+                  props: ChartLabelPositionProps & { index?: number },
+                ) => {
+                  const entry =
+                    typeof props.index === "number"
+                      ? chartData[props.index]
+                      : undefined;
+                  if (!entry) {
+                    return EMPTY_SVG_LABEL;
+                  }
 
-                    return renderBarTotalLabel(props, payload.incomeAmount);
-                  }}
-                />
-              </Bar>
+                  return (
+                    renderBarTotalLabel(
+                      props,
+                      entry.incomeAmount,
+                      labelAngle,
+                      labelFontSize,
+                    ) ?? EMPTY_SVG_LABEL
+                  );
+                }}
+              />
               <Bar
                 dataKey="Saving"
                 fill={CATEGORY_HEX_COLORS.Saving}
@@ -210,25 +250,34 @@ export function SpendingBarChart({ data }: Props) {
                 animationEasing="ease-out"
                 animationBegin={300}
                 radius={[4, 4, 0, 0]}
-              >
-                <LabelList
-                  content={(props: ChartLabelProps) => {
-                    const payload = props.payload;
-                    if (!payload) {
-                      return null;
-                    }
+                label={(
+                  props: ChartLabelPositionProps & { index?: number },
+                ) => {
+                  const entry =
+                    typeof props.index === "number"
+                      ? chartData[props.index]
+                      : undefined;
+                  if (!entry) {
+                    return EMPTY_SVG_LABEL;
+                  }
 
-                    return renderBarTotalLabel(props, payload.Saving);
-                  }}
-                />
-              </Bar>
+                  return (
+                    renderBarTotalLabel(
+                      props,
+                      entry.Saving,
+                      labelAngle,
+                      labelFontSize,
+                    ) ?? EMPTY_SVG_LABEL
+                  );
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Box>
         {/* Note 7: Moving the legend under the chart keeps the bar area visually
             contiguous. That makes month-to-month comparisons easier before the eye
             moves down to decode the category colors. */}
-        <ChartLegend payload={legendPayload} gap={3} justifyContent="center" />
+        <ChartLegend payload={legendPayload} gap={2} justifyContent="center" />
       </Box>
     </ChartWrapper>
   );
