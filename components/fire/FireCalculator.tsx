@@ -99,7 +99,7 @@ export default function FireCalculator() {
 
     setCurrent({ ...latestScenario });
     setError(null);
-  }, [loadingScenarios, scenarios]);
+  }, [loadingScenarios, scenarios, current.scenarioId]);
 
   // Derive actual milestones the user has crossed (every $500K)
   const actualMilestones = useMemo(() => {
