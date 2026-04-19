@@ -95,7 +95,7 @@ describe("reports year helpers", () => {
     ]);
   });
 
-  it("normalizes legacy category labels and excludes savings from spendingAmount", () => {
+  it("normalizes legacy category labels, tracks income separately, and excludes savings from spendingAmount", () => {
     const aggregates = aggregateTransactions([
       buildTransaction("want", "2025-01-01", {
         amount: 30,
@@ -105,12 +105,17 @@ describe("reports year helpers", () => {
         amount: 20,
         category: "Savings" as Transaction["category"],
       }),
+      buildTransaction("income", "2025-01-03", {
+        amount: 100,
+        category: "Income",
+      }),
     ]);
 
     expect(aggregates.totalByCategoryType.Want).toBe(30);
     expect(aggregates.totalByCategoryType.Saving).toBe(20);
     expect(aggregates.spendingAmount).toBe(30);
-    expect(aggregates.totalAmount).toBe(50);
+    expect(aggregates.incomeAmount).toBe(100);
+    expect(aggregates.totalAmount).toBe(150);
   });
 
   it("filters transactions by selected categories", () => {
@@ -119,12 +124,13 @@ describe("reports year helpers", () => {
         buildTransaction("need", "2025-01-01", { category: "Need" }),
         buildTransaction("want", "2025-01-02", { category: "Want" }),
         buildTransaction("saving", "2025-01-03", { category: "Saving" }),
+        buildTransaction("income", "2025-01-04", { category: "Income" }),
       ],
       {
         years: [],
         startDate: null,
         endDate: null,
-        categories: ["Need", "Saving"],
+        categories: ["Need", "Saving", "Income"],
         tags: [],
         search: "",
       },
@@ -133,6 +139,47 @@ describe("reports year helpers", () => {
     expect(filtered.map((transaction) => transaction.id)).toEqual([
       "need",
       "saving",
+      "income",
+    ]);
+  });
+
+  it("builds monthly spending and income series separately", () => {
+    const aggregates = aggregateTransactions([
+      buildTransaction("need", "2025-01-01", {
+        amount: 60,
+        category: "Need",
+      }),
+      buildTransaction("saving", "2025-01-02", {
+        amount: 15,
+        category: "Saving",
+      }),
+      buildTransaction("income", "2025-01-03", {
+        amount: 300,
+        category: "Income",
+      }),
+      buildTransaction("want", "2025-02-01", {
+        amount: 25,
+        category: "Want",
+      }),
+    ]);
+
+    expect(aggregates.timeseries).toEqual([
+      {
+        period: "2025-01",
+        spendingAmount: 60,
+        incomeAmount: 300,
+        Need: 60,
+        Want: 0,
+        Saving: 15,
+      },
+      {
+        period: "2025-02",
+        spendingAmount: 25,
+        incomeAmount: 0,
+        Need: 0,
+        Want: 25,
+        Saving: 0,
+      },
     ]);
   });
 
@@ -143,6 +190,7 @@ describe("reports year helpers", () => {
 
     expect(aggregates.totalAmount).toBe(0);
     expect(aggregates.spendingAmount).toBe(0);
+    expect(aggregates.incomeAmount).toBe(0);
   });
 
   it("filters out all transactions when no year matches the selected years", () => {

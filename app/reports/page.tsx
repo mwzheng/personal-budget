@@ -64,7 +64,7 @@ const SpendingPieChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <ChartLoadingState height={280} legendItems={3} />,
+    loading: () => <SpendingBreakdownLoadingState />,
   },
 );
 const SpendingBarChart = dynamic(
@@ -92,6 +92,53 @@ const MonthComparisonModal = dynamic(
   { ssr: false },
 );
 
+function SpendingBreakdownLoadingState() {
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: 340,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Skeleton
+          variant="circular"
+          animation="wave"
+          width={220}
+          height={220}
+        />
+      </Box>
+      <Stack
+        direction="row"
+        justifyContent="center"
+        spacing={2.5}
+        useFlexGap
+        flexWrap="wrap"
+      >
+        {Array.from({ length: 3 }, (_, index) => (
+          <Box
+            key={`spending-breakdown-loading-${index}`}
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Skeleton variant="circular" width={12} height={12} />
+            <Skeleton variant="text" width={72} />
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
+
 // Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
 // `ReportsAggregates` type contract when there are no transactions to aggregate.
 // Passing this to charts instead of `null` avoids null checks inside each chart
@@ -99,6 +146,7 @@ const MonthComparisonModal = dynamic(
 const EMPTY_AGGREGATES: ReportsAggregates = {
   totalAmount: 0,
   spendingAmount: 0,
+  incomeAmount: 0,
   totalByCategoryType: { Need: 0, Want: 0, Saving: 0 },
   timeseries: [],
   tagDiagramData: [],
@@ -194,8 +242,8 @@ function EmptyState({
         textAlign="center"
         maxWidth={400}
       >
-        Add transactions manually or import a CSV file matching the{" "}
-        <code>expenses.csv</code> format.
+        Add transactions manually or import either an expenses CSV or an income
+        CSV using the supported templates.
       </Typography>
       <Stack direction="row" gap={2} mt={1}>
         <Button
@@ -503,7 +551,7 @@ export default function ReportsPage() {
             variant="h5"
             fontWeight={700}
           >
-            Spending Reports
+            Income & Spending Reports
           </Typography>
           <Typography
             id={PAGE_DESCRIPTION_ID}
@@ -511,8 +559,8 @@ export default function ReportsPage() {
             color="text.secondary"
             sx={{ mt: 0.5 }}
           >
-            Filter transactions, compare charts, and manage CSV imports from one
-            reporting dashboard.
+            Filter transactions, compare spending with income, and manage CSV
+            imports from one reporting dashboard.
           </Typography>
         </Box>
         {!isEmpty && (
@@ -574,9 +622,24 @@ export default function ReportsPage() {
             />
           )}
 
-          <Grid container spacing={2} mb={3}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "repeat(2, minmax(0, 1fr))",
+                md: "repeat(5, minmax(0, 1fr))",
+              },
+              gap: 2,
+              mb: 3,
+            }}
+          >
             {(
               [
+                {
+                  label: "Total Income",
+                  value: fmt(agg.incomeAmount),
+                  color: "#26a69a",
+                },
                 {
                   label: "Total Spending",
                   value: fmt(agg.spendingAmount),
@@ -599,26 +662,37 @@ export default function ReportsPage() {
                 },
               ] as const
             ).map((s) => (
-              <Grid item xs={6} sm={3} key={s.label}>
-                <StatCard {...s} loading={loading} />
-              </Grid>
+              <StatCard key={s.label} {...s} loading={loading} />
             ))}
-          </Grid>
+          </Box>
 
           <Grid container spacing={3} mb={3}>
             <Grid item xs={12} md={5}>
-              <Card sx={{ height: "100%" }}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 <CardHeader
-                  title="Category Breakdown"
+                  title="Spending Breakdown"
                   titleTypographyProps={{
                     variant: "subtitle1",
                     fontWeight: 600,
                   }}
                 />
                 <Divider />
-                <CardContent sx={{ p: 3 }}>
+                <CardContent
+                  sx={{
+                    p: 3,
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
                   {loading ? (
-                    <ChartLoadingState height={280} legendItems={3} />
+                    <SpendingBreakdownLoadingState />
                   ) : (
                     <SpendingPieChart data={agg.totalByCategoryType} />
                   )}
@@ -626,20 +700,30 @@ export default function ReportsPage() {
               </Card>
             </Grid>
             <Grid item xs={12} md={7}>
-              <Card sx={{ height: "100%" }}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 <CardHeader
-                  title="Spending Over Time"
+                  title="Top Spending Tags"
                   titleTypographyProps={{
                     variant: "subtitle1",
                     fontWeight: 600,
                   }}
                 />
                 <Divider />
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: 3, flex: 1 }}>
                   {loading ? (
-                    <ChartLoadingState height={300} legendItems={3} />
+                    <ChartLoadingState height={400} showLegend={false} />
                   ) : (
-                    <SpendingBarChart data={agg.timeseries} />
+                    <TagBarChart
+                      data={agg.tagDiagramData}
+                      activeTags={filters.tags}
+                      onTagClick={handleQuickTagFilter}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -648,21 +732,15 @@ export default function ReportsPage() {
 
           <Card sx={{ mb: 3 }}>
             <CardHeader
-              title="Top Spending Tags"
-              subheader="Aggregated spend by tag across filtered transactions. Click a bar to focus on one tag."
+              title="Spending vs Income"
               titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
-              subheaderTypographyProps={{ variant: "caption" }}
             />
             <Divider />
             <CardContent sx={{ p: 3 }}>
               {loading ? (
-                <ChartLoadingState height={400} showLegend={false} />
+                <ChartLoadingState height={360} legendItems={4} />
               ) : (
-                <TagBarChart
-                  data={agg.tagDiagramData}
-                  activeTags={filters.tags}
-                  onTagClick={handleQuickTagFilter}
-                />
+                <SpendingBarChart data={agg.timeseries} />
               )}
             </CardContent>
           </Card>

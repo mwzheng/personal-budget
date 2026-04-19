@@ -1,9 +1,28 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-04-12)
+## Status: Active follow-up plan (updated 2026-04-19)
 
 Latest completed work:
 
+- Made the monthly chart totals adapt to density so labels rotate diagonally for
+  crowded month ranges and remain readable when many bars are shown.
+- Fixed the stacked spending total label in the monthly chart and tightened the
+  gap between that chart and its legend so the plot area uses more vertical
+  space.
+- Tightened the reports chart sizing so Top Spending Tags shows only the top 10
+  tags with less wasted left space, the spending breakdown chart is larger and
+  vertically centered, and the monthly bar chart is slightly taller.
+- Swapped the reports chart layout so Top Spending Tags appears in the upper
+  card slot and the monthly spending/income chart sits below with totals shown
+  above every major bar.
+- Expanded the reports monthly chart to show savings as its own bar alongside
+  the stacked Need/Want spending bar and the income bar.
+- Updated the reports spending-vs-income chart so monthly spending is broken
+  into stacked Need and Want segments while income remains a separate bar.
+- Fixed the reports month-comparison/card rendering warning and deferred
+  calendar month navigation to avoid the FullCalendar `flushSync` console error.
+- Added income-aware reporting so the reports page can import income CSVs,
+  filter income transactions, and chart monthly spending versus income.
 - Reviewed the full application for outdated copy and documentation.
 - Updated shared home/about/FAQ content to reflect the current feature set and
   creator profile.

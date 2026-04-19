@@ -22,9 +22,8 @@ import {
   clearLastSelectedReportYears,
   setLastSelectedReportYears,
 } from "@/lib/utils/storage";
-import { CategoryType, FilterParams } from "@/lib/types/types";
-
-const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
+import { FilterParams, TransactionCategoryType } from "@/lib/types/types";
+import { TRANSACTION_CATEGORY_OPTIONS } from "@/lib/utils/transaction-categories";
 
 interface Props {
   availableTags: string[];
@@ -57,9 +56,9 @@ export function FilterBar({
   const [selectedTags, setSelectedTags] = useState<string[]>(
     () => filters.tags,
   );
-  const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
-    () => filters.categories,
-  );
+  const [selectedCategories, setSelectedCategories] = useState<
+    TransactionCategoryType[]
+  >(() => filters.categories);
   const [search, setSearch] = useState(() => filters.search);
   const [selectedYears, setSelectedYears] = useState<string[]>(
     () => filters.years,
@@ -85,7 +84,7 @@ export function FilterBar({
     years: string[],
     sd: Date | null,
     ed: Date | null,
-    categories: CategoryType[],
+    categories: TransactionCategoryType[],
     tags: string[],
     q: string,
   ) {
@@ -242,10 +241,10 @@ export function FilterBar({
         <Autocomplete
           multiple
           size="small"
-          options={CATEGORY_OPTIONS}
+          options={TRANSACTION_CATEGORY_OPTIONS}
           value={selectedCategories}
           onChange={(_event, value) =>
-            setSelectedCategories(value as CategoryType[])
+            setSelectedCategories(value as TransactionCategoryType[])
           }
           renderInput={(params) => <TextField {...params} label="Category" />}
           sx={{ minWidth: 220, flex: "1 1 220px" }}

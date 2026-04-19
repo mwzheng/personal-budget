@@ -1,10 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import {
+  buildProjectionBreakdownRows,
   calculateFireNumber,
   formatFireDateLabel,
   generateProjection,
 } from "@/lib/utils/fire";
-import type { FireScenario } from "@/lib/types/types";
+import type { FireScenario, RetirementEntry } from "@/lib/types/types";
 
 function buildScenario(overrides?: Partial<FireScenario>): FireScenario {
   return {
@@ -17,6 +18,19 @@ function buildScenario(overrides?: Partial<FireScenario>): FireScenario {
     withdrawalRate: 0.04,
     targetFireNumber: null,
     projectionYears: 30,
+    ...overrides,
+  };
+}
+
+function buildRetirementEntry(
+  year: number,
+  overrides?: Partial<RetirementEntry>,
+): RetirementEntry {
+  return {
+    entryId: `ret-${year}`,
+    year,
+    startAmount: 100_000,
+    endAmount: 120_000,
     ...overrides,
   };
 }
@@ -62,6 +76,13 @@ describe("generateProjection", () => {
     const thisYear = new Date().getUTCFullYear();
     expect(rows[0].calendarYear).toBe(thisYear);
     expect(rows[4].calendarYear).toBe(thisYear + 4);
+  });
+
+  it("supports overriding the projection start year", () => {
+    const scenario = buildScenario({ projectionYears: 3 });
+    const { rows } = generateProjection(scenario, { startYear: 2023 });
+
+    expect(rows.map((row) => row.calendarYear)).toEqual([2023, 2024, 2025]);
   });
 
   it("uses auto-calculated FIRE number when targetFireNumber is null", () => {
@@ -192,6 +213,70 @@ describe("generateProjection", () => {
       const expected = row.startBalance + row.contributions + row.growth;
       expect(row.endBalance).toBeCloseTo(expected, 2);
     }
+  });
+});
+
+describe("buildProjectionBreakdownRows", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("combines past estimated rows with future projected rows", () => {
+    const historicalRows = generateProjection(
+      buildScenario({
+        currentBalance: 25_000,
+        projectionYears: 3,
+      }),
+      { startYear: 2023 },
+    ).rows;
+    const futureRows = generateProjection(
+      buildScenario({
+        currentBalance: 53_600,
+        projectionYears: 3,
+      }),
+    );
+
+    const rows = buildProjectionBreakdownRows({
+      historicalEstimatedRows: historicalRows,
+      futureProjectedRows: futureRows.rows,
+      retirementEntries: [
+        buildRetirementEntry(2023, { startAmount: 25_000, endAmount: 31_250 }),
+        buildRetirementEntry(2024, { startAmount: 31_250, endAmount: 40_800 }),
+        buildRetirementEntry(2025, { startAmount: 40_800, endAmount: 53_600 }),
+      ],
+    });
+
+    expect(rows.map((row) => row.calendarYear)).toEqual([
+      2023, 2024, 2025, 2026, 2027, 2028,
+    ]);
+    expect(rows[0].rowType).toBe("historical-estimate");
+    expect(rows[0].actualEndBalance).toBe(31_250);
+    expect(rows[0].contributions).toBeNull();
+    expect(rows[0].growth).toBeNull();
+    expect(rows[3].rowType).toBe("projection");
+    expect(rows[3].actualEndBalance).toBeNull();
+  });
+
+  it("attaches recorded balances to overlapping projected years", () => {
+    const futureRows = generateProjection(
+      buildScenario({ projectionYears: 2 }),
+    );
+
+    const rows = buildProjectionBreakdownRows({
+      futureProjectedRows: futureRows.rows,
+      retirementEntries: [
+        buildRetirementEntry(2026),
+        buildRetirementEntry(2027),
+      ],
+    });
+
+    expect(rows.map((row) => row.actualEndBalance)).toEqual([120_000, 120_000]);
+    expect(rows.every((row) => row.rowType === "projection")).toBe(true);
   });
 });
 

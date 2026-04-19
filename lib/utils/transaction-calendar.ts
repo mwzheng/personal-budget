@@ -5,13 +5,10 @@
  */
 import { format, isValid, parseISO } from "date-fns";
 
-import type { CategoryType, Transaction } from "@/lib/types/types";
+import type { Transaction, TransactionCategoryType } from "@/lib/types/types";
+import { TRANSACTION_CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 
-const CATEGORY_EVENT_COLORS: Record<CategoryType, string> = {
-  Need: "#ef5350",
-  Want: "#42a5f5",
-  Saving: "#66bb6a",
-};
+const CATEGORY_EVENT_COLORS = TRANSACTION_CATEGORY_HEX_COLORS;
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,7 +19,7 @@ export interface TransactionCalendarEventDetails {
   transaction: Transaction;
   amountLabel: string;
   transactionName: string;
-  categoryLabel: CategoryType;
+  categoryLabel: TransactionCategoryType;
   accessibilityLabel: string;
 }
 

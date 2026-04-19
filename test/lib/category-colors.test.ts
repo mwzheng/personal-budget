@@ -3,6 +3,8 @@ import {
   CATEGORY_HEX_COLORS,
   CATEGORY_CHIP_COLORS,
   TAG_CHART_PALETTE,
+  TRANSACTION_CATEGORY_HEX_COLORS,
+  TRANSACTION_CATEGORY_CHIP_COLORS,
 } from "@/lib/utils/categoryColors";
 
 const EXPECTED_CATEGORIES = ["Need", "Want", "Saving"] as const;
@@ -54,6 +56,24 @@ describe("CATEGORY_CHIP_COLORS", () => {
 
   it("maps Saving to 'success' (MUI semantic token)", () => {
     expect(CATEGORY_CHIP_COLORS.Saving).toBe("success");
+  });
+});
+
+describe("TRANSACTION_CATEGORY_HEX_COLORS", () => {
+  it("extends expense colors with an income color", () => {
+    expect(TRANSACTION_CATEGORY_HEX_COLORS).toMatchObject({
+      ...CATEGORY_HEX_COLORS,
+      Income: "#26a69a",
+    });
+  });
+});
+
+describe("TRANSACTION_CATEGORY_CHIP_COLORS", () => {
+  it("extends expense chip colors with an income chip color", () => {
+    expect(TRANSACTION_CATEGORY_CHIP_COLORS).toMatchObject({
+      ...CATEGORY_CHIP_COLORS,
+      Income: "primary",
+    });
   });
 });
 

@@ -1,7 +1,9 @@
 import type {
+  FireProjectionBreakdownRow,
   FireScenario,
   FireProjectionRow,
   FireSummary,
+  RetirementEntry,
 } from "@/lib/types/types";
 
 /** Returns `annualExpenses / withdrawalRate`, or 0 when the rate is non-positive. */
@@ -26,7 +28,10 @@ export function formatFireDateLabel(fireDate: string | null): string {
 }
 
 /** Runs a month-by-month simulation and returns yearly projection rows + summary. */
-export function generateProjection(scenario: FireScenario): {
+export function generateProjection(
+  scenario: FireScenario,
+  options?: { startYear?: number },
+): {
   rows: FireProjectionRow[];
   summary: FireSummary;
 } {
@@ -50,7 +55,7 @@ export function generateProjection(scenario: FireScenario): {
     annualReturnRate > 0 ? Math.pow(1 + annualReturnRate, 1 / 12) - 1 : 0;
 
   const rows: FireProjectionRow[] = [];
-  const currentYear = new Date().getUTCFullYear();
+  const startYear = options?.startYear ?? new Date().getUTCFullYear();
 
   let balance = currentBalance;
   let totalContributions = 0;
@@ -78,7 +83,7 @@ export function generateProjection(scenario: FireScenario): {
 
     rows.push({
       year,
-      calendarYear: currentYear + year,
+      calendarYear: startYear + year,
       startBalance,
       contributions: yearContributions,
       growth,
@@ -97,7 +102,7 @@ export function generateProjection(scenario: FireScenario): {
     yearsToFire: firstFireYear,
     fireDate:
       firstFireYear !== null
-        ? new Date(Date.UTC(currentYear + firstFireYear, 0, 1)).toISOString()
+        ? new Date(Date.UTC(startYear + firstFireYear, 0, 1)).toISOString()
         : null,
     totalContributions,
     finalBalance: lastRow?.endBalance ?? currentBalance,
@@ -105,4 +110,52 @@ export function generateProjection(scenario: FireScenario): {
   };
 
   return { rows, summary };
+}
+
+interface BuildProjectionBreakdownRowsOptions {
+  historicalEstimatedRows?: FireProjectionRow[];
+  futureProjectedRows: FireProjectionRow[];
+  retirementEntries: RetirementEntry[];
+}
+
+/** Combines past estimated rows, current/future projections, and recorded actuals. */
+export function buildProjectionBreakdownRows({
+  historicalEstimatedRows = [],
+  futureProjectedRows,
+  retirementEntries,
+}: BuildProjectionBreakdownRowsOptions): FireProjectionBreakdownRow[] {
+  const actualEndByYear = new Map(
+    retirementEntries.map((entry) => [entry.year, entry.endAmount]),
+  );
+
+  const mapRow = (
+    row: FireProjectionRow,
+    rowType: FireProjectionBreakdownRow["rowType"],
+  ): FireProjectionBreakdownRow => {
+    const actualEndBalance = actualEndByYear.get(row.calendarYear) ?? null;
+
+    return {
+      rowType,
+      calendarYear: row.calendarYear,
+      startBalance: row.startBalance,
+      contributions:
+        rowType === "historical-estimate" && actualEndBalance !== null
+          ? null
+          : row.contributions,
+      growth:
+        rowType === "historical-estimate" && actualEndBalance !== null
+          ? null
+          : row.growth,
+      endBalance: row.endBalance,
+      endBalanceReal: row.endBalanceReal,
+      actualEndBalance,
+      fireNumber: row.fireNumber,
+      isFIREd: row.isFIREd,
+    };
+  };
+
+  return [
+    ...historicalEstimatedRows.map((row) => mapRow(row, "historical-estimate")),
+    ...futureProjectedRows.map((row) => mapRow(row, "projection")),
+  ];
 }

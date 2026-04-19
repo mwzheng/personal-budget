@@ -22,6 +22,14 @@ import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
 
+export const FIRE_CHART_LABELS = {
+  projectedNominal: "Projected balance (future dollars)",
+  projectedReal: "Projected balance (today's dollars)",
+  fireTarget: "FIRE target (future dollars)",
+  actualBalance: "Actual recorded balance",
+  actualMilestone: "Actual milestone reached",
+} as const;
+
 export interface ActualMilestone {
   year: number;
   amount: number;
@@ -52,38 +60,47 @@ export default function FireProjectionChart({
   actualMilestones = [],
   loading = false,
 }: Props) {
-  // Merge historical retirement data + projected data into a unified timeline
+  // Merge projections and recorded yearly balances into one chart timeline.
   const chartData = useMemo(() => {
-    const projectionData = rows.map((r) => ({
-      name: String(r.calendarYear),
-      balance: Math.round(r.endBalance) as number | null,
-      balanceReal: Math.round(r.endBalanceReal) as number | null,
-      fireTarget: Math.round(r.fireNumber) as number | null,
-      actualBalance: null as number | null,
-    }));
+    const rowsByYear = new Map<
+      number,
+      {
+        name: string;
+        balance: number | null;
+        balanceReal: number | null;
+        fireTarget: number | null;
+        actualBalance: number | null;
+      }
+    >();
 
-    if (retirementHistory.length === 0) return projectionData;
-
-    const projectionStartYear =
-      rows.length > 0 ? rows[0].calendarYear : Infinity;
-
-    const historicalData = retirementHistory
-      .filter((e) => e.year < projectionStartYear)
-      .sort((a, b) => a.year - b.year)
-      .map((e) => ({
-        name: String(e.year),
-        balance: null as number | null,
-        balanceReal: null as number | null,
-        fireTarget: null as number | null,
-        actualBalance: Math.round(e.endAmount),
-      }));
-
-    // Connect historical line to the projected line at the transition point
-    if (historicalData.length > 0 && projectionData.length > 0) {
-      projectionData[0].actualBalance = projectionData[0].balance;
+    for (const row of rows) {
+      rowsByYear.set(row.calendarYear, {
+        name: String(row.calendarYear),
+        balance: Math.round(row.endBalance),
+        balanceReal: Math.round(row.endBalanceReal),
+        fireTarget: Math.round(row.fireNumber),
+        actualBalance: null,
+      });
     }
 
-    return [...historicalData, ...projectionData];
+    for (const entry of retirementHistory) {
+      const existing = rowsByYear.get(entry.year) ?? {
+        name: String(entry.year),
+        balance: null,
+        balanceReal: null,
+        fireTarget: null,
+        actualBalance: null,
+      };
+
+      rowsByYear.set(entry.year, {
+        ...existing,
+        actualBalance: Math.round(entry.endAmount),
+      });
+    }
+
+    return [...rowsByYear.entries()]
+      .sort(([leftYear], [rightYear]) => leftYear - rightYear)
+      .map(([, value]) => value);
   }, [rows, retirementHistory]);
 
   const milestoneLines = useMemo(() => {
@@ -140,10 +157,10 @@ export default function FireProjectionChart({
       .filter((e) => e.value !== null && e.value !== undefined)
       .map((e) => {
         const labelMap: Record<string, string> = {
-          balance: "Portfolio (Nominal)",
-          balanceReal: "Portfolio (Real)",
-          fireTarget: "FIRE Target",
-          actualBalance: "Actual Portfolio",
+          balance: FIRE_CHART_LABELS.projectedNominal,
+          balanceReal: FIRE_CHART_LABELS.projectedReal,
+          fireTarget: FIRE_CHART_LABELS.fireTarget,
+          actualBalance: FIRE_CHART_LABELS.actualBalance,
         };
         return {
           label: labelMap[String(e.dataKey)] ?? String(e.dataKey),
@@ -159,7 +176,7 @@ export default function FireProjectionChart({
   const hasActualData = retirementHistory.length > 0;
   const fireAchievementYear =
     yearsToFire != null
-      ? rows.find((row) => row.year === yearsToFire)?.calendarYear
+      ? rows.findLast((row) => row.year === yearsToFire)?.calendarYear
       : null;
 
   return (
@@ -207,13 +224,13 @@ export default function FireProjectionChart({
               strokeWidth={2}
               strokeLinecap="round"
               fill="url(#fireBalanceFill)"
-              name="Portfolio (Nominal)"
+              name={FIRE_CHART_LABELS.projectedNominal}
               connectNulls={false}
               animationDuration={1500}
               animationEasing="ease-in-out"
             />
 
-            {/* Projected portfolio (inflation-adjusted) — dashed */}
+            {/* Projected portfolio in today's dollars — dashed */}
             <Line
               type="monotone"
               dataKey="balanceReal"
@@ -223,14 +240,14 @@ export default function FireProjectionChart({
               strokeDasharray="6 3"
               dot={false}
               connectNulls={false}
-              name="Portfolio (Real)"
+              name={FIRE_CHART_LABELS.projectedReal}
               activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
               animationDuration={1500}
               animationEasing="ease-in-out"
               animationBegin={200}
             />
 
-            {/* FIRE target line — dashed red */}
+            {/* FIRE target line in future dollars — dashed red */}
             <Line
               type="monotone"
               dataKey="fireTarget"
@@ -240,14 +257,14 @@ export default function FireProjectionChart({
               strokeDasharray="4 4"
               dot={false}
               connectNulls={false}
-              name="FIRE Target"
+              name={FIRE_CHART_LABELS.fireTarget}
               activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
               animationDuration={1500}
               animationEasing="ease-in-out"
               animationBegin={400}
             />
 
-            {/* Actual portfolio history — solid orange */}
+            {/* Actual recorded balances — solid orange */}
             {hasActualData && (
               <Line
                 type="monotone"
@@ -257,7 +274,7 @@ export default function FireProjectionChart({
                 strokeLinecap="round"
                 dot={{ fill: "#ff9800", r: 3, strokeWidth: 0 }}
                 connectNulls={false}
-                name="Actual Portfolio"
+                name={FIRE_CHART_LABELS.actualBalance}
                 activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
                 animationDuration={1500}
                 animationEasing="ease-in-out"

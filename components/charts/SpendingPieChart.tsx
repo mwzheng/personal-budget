@@ -42,13 +42,29 @@ export function SpendingPieChart({ data }: Props) {
 
   return (
     <ChartWrapper title="Spending Breakdown">
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          height: "100%",
+        }}
+      >
         {/* Note 3: The plot area and legend are laid out independently so the pie
             can stay visually centered inside the card instead of being nudged upward
             to make room for the legend inside the SVG. */}
-        <Box sx={{ width: "100%", height: 280 }}>
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 340,
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 20, right: 28, bottom: 20, left: 28 }}>
+            <PieChart margin={{ top: 12, right: 16, bottom: 12, left: 16 }}>
               {/* Note 4: `innerRadius={50}` turns the pie into a donut chart.
                   The empty center can be used to show a total label in future
                   iterations. `paddingAngle={2}` adds a small gap between slices
@@ -59,8 +75,8 @@ export function SpendingPieChart({ data }: Props) {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={88}
-                innerRadius={50}
+                outerRadius={108}
+                innerRadius={64}
                 paddingAngle={2}
                 label={({ name, percent }) =>
                   `${name} ${(percent * 100).toFixed(0)}%`
