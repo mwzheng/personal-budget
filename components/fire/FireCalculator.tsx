@@ -17,10 +17,14 @@ import Typography from "@mui/material/Typography";
 import SaveIcon from "@mui/icons-material/Save";
 import { apiFetch } from "@/lib/api/apiFetch";
 import { selectLatestFireScenario } from "@/lib/utils/fire-scenarios";
-import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
+import {
+  buildProjectionBreakdownRows,
+  calculateFireNumber,
+  generateProjection,
+} from "@/lib/utils/fire";
 import type { FireScenario, RetirementEntry } from "@/lib/types/types";
 import FireForm from "./FireForm";
-import FireProjectionChart from "./FireProjectionChart";
+import FireProjectionChart, { FIRE_CHART_LABELS } from "./FireProjectionChart";
 import FireProjectionTable from "./FireProjectionTable";
 import FireScenarioList from "./FireScenarioList";
 import FireSummaryCard from "./FireSummaryCard";
@@ -38,6 +42,7 @@ const DEFAULT_SCENARIO: FireScenario = {
 };
 
 export default function FireCalculator() {
+  const currentCalendarYear = useMemo(() => new Date().getUTCFullYear(), []);
   const [scenarios, setScenarios] = useState<FireScenario[]>([]);
   const [current, setCurrent] = useState<FireScenario>({ ...DEFAULT_SCENARIO });
   const [saving, setSaving] = useState(false);
@@ -117,6 +122,35 @@ export default function FireCalculator() {
   );
 
   const projection = useMemo(() => generateProjection(current), [current]);
+  const historicalEstimateRows = useMemo(() => {
+    const earliestHistoricalEntry = [...retirementEntries]
+      .filter((entry) => entry.year < currentCalendarYear)
+      .sort((left, right) => left.year - right.year)[0];
+
+    if (!earliestHistoricalEntry) {
+      return [];
+    }
+
+    const historicalYears = currentCalendarYear - earliestHistoricalEntry.year;
+    if (historicalYears <= 0) {
+      return [];
+    }
+
+    return generateProjection(
+      {
+        ...current,
+        currentBalance: earliestHistoricalEntry.startAmount,
+        projectionYears: historicalYears,
+      },
+      { startYear: earliestHistoricalEntry.year },
+    ).rows;
+  }, [current, currentCalendarYear, retirementEntries]);
+  const chartRows = [...historicalEstimateRows, ...projection.rows];
+  const breakdownRows = buildProjectionBreakdownRows({
+    historicalEstimatedRows: historicalEstimateRows,
+    futureProjectedRows: projection.rows,
+    retirementEntries,
+  });
 
   const handleFieldChange = useCallback(
     (field: string, value: string | number) => {
@@ -254,7 +288,7 @@ export default function FireCalculator() {
                 Projection Over Time
               </Typography>
               <FireProjectionChart
-                rows={projection.rows}
+                rows={chartRows}
                 fireNumber={projection.summary.fireNumber}
                 yearsToFire={projection.summary.yearsToFire}
                 retirementHistory={retirementEntries}
@@ -277,7 +311,7 @@ export default function FireCalculator() {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    Portfolio (Nominal)
+                    {FIRE_CHART_LABELS.projectedNominal}
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -293,7 +327,7 @@ export default function FireCalculator() {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    Portfolio (Real)
+                    {FIRE_CHART_LABELS.projectedReal}
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -309,7 +343,7 @@ export default function FireCalculator() {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    FIRE Target
+                    {FIRE_CHART_LABELS.fireTarget}
                   </Typography>
                 </Stack>
                 {actualMilestones.length > 0 && (
@@ -324,7 +358,7 @@ export default function FireCalculator() {
                         }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        Actual Portfolio
+                        {FIRE_CHART_LABELS.actualBalance}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -339,7 +373,7 @@ export default function FireCalculator() {
                         }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        Actual Milestone
+                        {FIRE_CHART_LABELS.actualMilestone}
                       </Typography>
                     </Stack>
                   </>
@@ -351,7 +385,7 @@ export default function FireCalculator() {
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
                 Year-by-Year Breakdown
               </Typography>
-              <FireProjectionTable rows={projection.rows} />
+              <FireProjectionTable rows={breakdownRows} />
             </Paper>
           </Stack>
         </Grid>

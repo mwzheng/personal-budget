@@ -314,6 +314,22 @@ export interface FireProjectionRow {
   isFIREd: boolean;
 }
 
+// Note 22b: The breakdown table can prepend historical retirement entries ahead
+// of the projected rows so the timeline starts at the user's first submitted
+// year. Historical rows leave unknown projected-only fields as `null`.
+export interface FireProjectionBreakdownRow {
+  rowType: "historical-estimate" | "projection";
+  calendarYear: number;
+  startBalance: number;
+  contributions: number | null;
+  growth: number | null;
+  endBalance: number;
+  endBalanceReal: number | null;
+  actualEndBalance: number | null;
+  fireNumber: number | null;
+  isFIREd: boolean;
+}
+
 // Note 23: FireSummary provides the headline metrics displayed in the
 // summary card above the chart. `yearsToFire` is null when the target
 // is unreachable within the projection window.

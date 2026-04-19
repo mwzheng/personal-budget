@@ -15,13 +15,25 @@ import Typography from "@mui/material/Typography";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { formatCurrencyWhole } from "@/lib/utils/format";
-import type { FireProjectionRow } from "@/lib/types/types";
+import type { FireProjectionBreakdownRow } from "@/lib/types/types";
 
 interface Props {
-  rows: FireProjectionRow[];
+  rows: FireProjectionBreakdownRow[];
 }
 
 const COLLAPSED_ROW_COUNT = 10;
+
+function renderCurrencyCell(value: number | null) {
+  if (value === null) {
+    return (
+      <Typography component="span" variant="caption" color="text.secondary">
+        —
+      </Typography>
+    );
+  }
+
+  return formatCurrencyWhole(value);
+}
 
 export default function FireProjectionTable({ rows }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -50,22 +62,25 @@ export default function FireProjectionTable({ rows }: Props) {
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Start Balance
+                Projected Start
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Contributions
+                Planned Contributions
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Growth
+                Projected Growth
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                End Balance
+                Projected End (Future $)
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                End (Real)
+                Projected End (Today&apos;s $)
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                FIRE Target
+                Actual End
+              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 700 }}>
+                FIRE Target (Future $)
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 700 }}>
                 Status
@@ -73,15 +88,12 @@ export default function FireProjectionTable({ rows }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleRows.map((row) => {
+            {visibleRows.map((row, index) => {
               const isFireYear =
-                row.isFIREd &&
-                (row.year === 0 ||
-                  !rows[row.year - 1] ||
-                  !rows[row.year - 1].isFIREd);
+                row.isFIREd && !(visibleRows[index - 1]?.isFIREd ?? false);
               return (
                 <TableRow
-                  key={row.calendarYear}
+                  key={`${row.rowType}-${row.calendarYear}`}
                   sx={{
                     bgcolor: isFireYear ? "rgba(76, 175, 80, 0.08)" : undefined,
                   }}
@@ -91,22 +103,32 @@ export default function FireProjectionTable({ rows }: Props) {
                     {formatCurrencyWhole(row.startBalance)}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrencyWhole(row.contributions)}
+                    {renderCurrencyCell(row.contributions)}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrencyWhole(row.growth)}
+                    {renderCurrencyCell(row.growth)}
                   </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 600 }}>
                     {formatCurrencyWhole(row.endBalance)}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrencyWhole(row.endBalanceReal)}
+                    {renderCurrencyCell(row.endBalanceReal)}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrencyWhole(row.fireNumber)}
+                    {renderCurrencyCell(row.actualEndBalance)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {renderCurrencyCell(row.fireNumber)}
                   </TableCell>
                   <TableCell align="center">
-                    {row.isFIREd ? (
+                    {row.actualEndBalance !== null ? (
+                      <Chip
+                        label="Actual recorded"
+                        size="small"
+                        color="warning"
+                        variant="outlined"
+                      />
+                    ) : row.isFIREd ? (
                       <Chip
                         label="🔥 FIRE"
                         size="small"
