@@ -75,6 +75,7 @@ describe("buildMonthSummary", () => {
     expect(summary.period).toBe("2025-03");
     expect(summary.totalAmount).toBe(550);
     expect(summary.spendingAmount).toBe(250);
+    expect(summary.incomeAmount).toBe(0);
     expect(summary.totalByCategoryType).toEqual({
       Need: 200,
       Want: 50,
@@ -88,6 +89,11 @@ describe("buildMonthSummary", () => {
       tx("1", "2025-03-01", { amount: 100, tags: ["groceries", "food"] }),
       tx("2", "2025-03-02", { amount: 200, tags: ["rent"] }),
       tx("3", "2025-03-03", { amount: 50, tags: ["food"] }),
+      tx("4", "2025-03-04", {
+        amount: 1200,
+        category: "Income",
+        tags: ["payroll"],
+      }),
     ];
 
     const summary = buildMonthSummary(txns, "2025-03");
@@ -96,11 +102,26 @@ describe("buildMonthSummary", () => {
     expect(summary.topTags[1]).toEqual({ name: "food", value: 150 });
   });
 
+  it("tracks monthly income separately from spending", () => {
+    const summary = buildMonthSummary(
+      [
+        tx("income", "2025-03-01", { amount: 2200, category: "Income" }),
+        tx("need", "2025-03-02", { amount: 150, category: "Need" }),
+      ],
+      "2025-03",
+    );
+
+    expect(summary.totalAmount).toBe(2350);
+    expect(summary.spendingAmount).toBe(150);
+    expect(summary.incomeAmount).toBe(2200);
+  });
+
   it("returns zeroed summary for a month with no data", () => {
     const summary = buildMonthSummary([], "2025-06");
 
     expect(summary.totalAmount).toBe(0);
     expect(summary.spendingAmount).toBe(0);
+    expect(summary.incomeAmount).toBe(0);
     expect(summary.transactionCount).toBe(0);
     expect(summary.topTags).toEqual([]);
   });
@@ -111,8 +132,10 @@ describe("buildMonthComparison", () => {
     const txns = [
       tx("1", "2025-01-01", { amount: 100, category: "Need" }),
       tx("2", "2025-01-02", { amount: 50, category: "Want" }),
+      tx("income-a", "2025-01-03", { amount: 500, category: "Income" }),
       tx("3", "2025-02-01", { amount: 200, category: "Need" }),
       tx("4", "2025-02-02", { amount: 50, category: "Want" }),
+      tx("income-b", "2025-02-03", { amount: 750, category: "Income" }),
     ];
 
     const comparison = buildMonthComparison(txns, "2025-01", "2025-02");
@@ -123,8 +146,10 @@ describe("buildMonthComparison", () => {
     expect(comparison.changes.Need).toBeCloseTo(100);
     // Want: 50 → 50 = 0%
     expect(comparison.changes.Want).toBeCloseTo(0);
-    // Total: 150 → 250 = +66.67%
-    expect(comparison.changes.totalAmount).toBeCloseTo(66.67, 1);
+    // Income: 500 → 750 = +50%
+    expect(comparison.changes.incomeAmount).toBeCloseTo(50);
+    // Total: 650 → 1000 = +53.85%
+    expect(comparison.changes.totalAmount).toBeCloseTo(53.85, 1);
   });
 
   it("returns null for changes when base month has zero in a category", () => {
@@ -143,6 +168,7 @@ describe("buildMonthComparison", () => {
 
     expect(comparison.changes.totalAmount).toBe(0);
     expect(comparison.changes.spendingAmount).toBe(0);
+    expect(comparison.changes.incomeAmount).toBe(0);
     expect(comparison.monthA.transactionCount).toBe(0);
     expect(comparison.monthB.transactionCount).toBe(0);
   });

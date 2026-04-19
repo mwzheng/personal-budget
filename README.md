@@ -17,7 +17,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
-- `/reports` — Interactive Reports page with tag/date filtering, summary cards, pie chart (Needs/Wants/Savings), time-series chart, top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and a CSV import dialog with a downloadable template.
+- `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
 - `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
 - `/goals` — Savings goal tracking with target progress, edit/delete actions, and reusable goal forms.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
@@ -27,7 +27,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 ## APIs (local)
 
 - `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `categories`, `tags`, `search`.
-- `POST /api/reports/import` — (Authenticated) Accepts `text/csv` or `{ csv }` JSON payloads and imports rows into the signed-in user's account only.
+- `POST /api/reports/import` — (Authenticated) Accepts `text/csv` or `{ csv }` JSON payloads and imports rows into the signed-in user's account only. Supports both the expense schema (`Name,Amount,Category,Date,Notes,Payment Method,Tags`) and the income schema (`Source,Amount,Pay Date`).
 - `GET /api/reports/export` — (Authenticated) Exports only the signed-in user's filtered transactions as CSV.
 - `GET /api/transactions` — (Authenticated) Lists transactions for the current user.
 - `POST /api/transactions` — (Authenticated) Creates a transaction for the current user.

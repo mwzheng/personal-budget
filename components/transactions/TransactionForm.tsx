@@ -23,8 +23,8 @@ import { format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import type { Transaction } from "@/lib/types/types";
 import { generateId } from "@/lib/utils/generateId";
+import { TRANSACTION_CATEGORY_OPTIONS } from "@/lib/utils/transaction-categories";
 
-const CATEGORY_OPTIONS = ["Need", "Want", "Saving"] as const;
 // Note 2b: Payment method is now a fixed set of options so users pick from a
 // dropdown rather than free-typing. "Credit Card" is listed first as the default.
 const PAYMENT_METHOD_OPTIONS = ["Credit Card", "Cash", "Bank"] as const;
@@ -246,7 +246,7 @@ export function TransactionForm({
               value={values.category}
               onChange={(e) => set("category", e.target.value)}
             >
-              {CATEGORY_OPTIONS.map((c) => (
+              {TRANSACTION_CATEGORY_OPTIONS.map((c) => (
                 <MenuItem key={c} value={c}>
                   {c}
                 </MenuItem>

@@ -26,7 +26,9 @@ interface Props {
 }
 
 export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
-  if (data.length === 0) {
+  const visibleData = data.slice(0, 10);
+
+  if (visibleData.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
         No tag data for selected filters
@@ -37,9 +39,9 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
   // Note 3: Chart height grows with the number of tags to ensure every bar has
   // enough vertical space to be readable. `Math.max(300, ...)` sets a minimum
   // height for cases where there are only one or two tags.
-  const height = Math.max(300, data.length * 32 + 60);
+  const height = Math.max(320, visibleData.length * 34 + 48);
   const activeTagSet = new Set(activeTags);
-  const hasVisibleActiveTags = data.some((entry) =>
+  const hasVisibleActiveTags = visibleData.some((entry) =>
     activeTagSet.has(entry.name),
   );
 
@@ -50,8 +52,8 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
             Y-axis and amounts on the X-axis, producing horizontal bars. */}
         <BarChart
           layout="vertical"
-          data={data}
-          margin={{ top: 10, right: 80, bottom: 10, left: 120 }}
+          data={visibleData}
+          margin={{ top: 8, right: 24, bottom: 8, left: 20 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -69,7 +71,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
             type="category"
             dataKey="name"
             tick={{ fontSize: 12, fill: "#ddd" }}
-            width={115}
+            width={92}
           />
           <Tooltip
             cursor={false}
@@ -107,7 +109,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
             animationDuration={1200}
             animationEasing="ease-out"
           >
-            {data.map((entry, i) => {
+            {visibleData.map((entry, i) => {
               const isActive = activeTagSet.has(entry.name);
 
               return (

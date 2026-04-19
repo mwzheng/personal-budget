@@ -8,6 +8,337 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Reports chart sizing and spacing polish
+
+Date: 2026-04-19
+
+Summary
+
+- Reduced clutter in the Top Spending Tags section by limiting it to the top 10
+  tags and removing the extra descriptive subtitle.
+- Rebalanced the chart sizing so the tags chart uses more of its card width, the
+  spending breakdown donut is larger and vertically centered, and the monthly
+  spending/income chart is slightly taller.
+
+Completed items
+
+- Updated `components/charts/TagBarChart.tsx` to render only the top 10 tags and
+  reduced the left-side chart margin / label width so the bars use more of the
+  available section width.
+- Updated `app/reports/page.tsx` to remove the Top Spending Tags subtitle and
+  adjust the chart card layout/loading states for the new sizing.
+- Updated `components/charts/SpendingPieChart.tsx` to enlarge the donut chart
+  and keep it centered vertically within its card.
+- Updated `components/charts/SpendingBarChart.tsx` to increase the monthly chart
+  height slightly.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `app/reports/page.tsx`
+- `components/charts/TagBarChart.tsx`
+- `components/charts/SpendingPieChart.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Reports chart layout swap and bar totals
+
+Date: 2026-04-19
+
+Summary
+
+- Swapped the positions of the Top Spending Tags chart and the monthly
+  spending/income chart on the reports page.
+- Added total labels above the spending and savings bars so every major monthly
+  bar now shows its amount, not just income.
+
+Completed items
+
+- Updated `app/reports/page.tsx` so the Top Spending Tags chart now appears in
+  the upper-right card beside the spending breakdown pie chart, and the monthly
+  spending/income chart now appears in the full-width card below.
+- Updated `components/charts/SpendingBarChart.tsx` to render total labels above
+  the stacked spending bar and the savings bar, while preserving the existing
+  income total label.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `app/reports/page.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Savings bar added to the monthly reports chart
+
+Date: 2026-04-19
+
+Summary
+
+- Expanded the reports monthly chart so it now shows savings as its own bar in
+  addition to the stacked spending breakdown and income bar.
+- Kept the existing Need/Want spending split intact so the chart still shows
+  spending composition clearly.
+
+Completed items
+
+- Updated `components/charts/SpendingBarChart.tsx` to render `Saving` as a
+  separate monthly bar.
+- Updated the chart legend and title so the chart accurately describes the new
+  monthly spending, income, and savings view.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Need vs Want breakdown in the reports spending bar
+
+Date: 2026-04-19
+
+Summary
+
+- Updated the reports spending-vs-income chart so the spending side now shows a
+  visible Need vs Want breakdown instead of one solid spending bar.
+- Kept income as its own monthly comparison bar so the chart still reads cleanly
+  as spending versus income.
+
+Completed items
+
+- Updated `components/charts/SpendingBarChart.tsx` to render stacked `Need` and
+  `Want` bars for spending, while preserving the separate `Income` bar.
+- Updated the chart legend to match the new stacked spending breakdown.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this reports follow-up.
+
+Files changed
+
+- `components/charts/SpendingBarChart.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Reports modal key warning and calendar flushSync regression fix
+
+Date: 2026-04-19
+
+Summary
+
+- Removed the `key` prop from the object spread passed into the month
+  comparison summary cards so React no longer warns during reports rendering.
+- Deferred FullCalendar month navigation in the reports calendar view so
+  `gotoDate` no longer triggers the `flushSync` lifecycle warning.
+
+Completed items
+
+- Updated `components/charts/MonthComparisonModal.tsx` so each summary card key
+  is passed directly on the wrapping `Grid` element instead of being spread into
+  `SummaryCard`.
+- Updated `components/transactions/TransactionCalendar.tsx` to compare the
+  currently focused date before navigation and schedule `gotoDate` via a
+  timeout, keeping FullCalendar navigation outside React's active render cycle.
+- Updated `plan.md` and `plan.completed.md` to keep the active plan and
+  completed history synchronized for this follow-up fix.
+
+Files changed
+
+- `components/charts/MonthComparisonModal.tsx`
+- `components/transactions/TransactionCalendar.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
+# Completed: Income CSV imports and monthly spending-vs-income reporting
+
+Date: 2026-04-19
+
+Summary
+
+- Added a new `Income` transaction category to the reports flow without widening
+  the budget/sankey expense-category model.
+- Extended CSV importing so the reports page accepts both expense CSVs and
+  income CSVs shaped like `Source,Amount,Pay Date`.
+- Updated the reports dashboard to show monthly spending versus income while
+  keeping spending-only charts and tag summaries accurate.
+
+Completed items
+
+- Added `TransactionCategoryType` in `lib/types/types.ts` so reports
+  transactions can include `Income` while budget categories stay limited to
+  `Need`, `Want`, and `Saving`.
+- Added `lib/utils/transaction-categories.ts` to centralize transaction
+  category options, normalization, and query-filter parsing.
+- Updated the reports/category filter pipeline in `components/ui/FilterBar.tsx`,
+  `app/api/reports/route.ts`, `app/api/reports/export/route.ts`, and
+  `lib/demo/handlers/transactionHandlers.ts` to accept `Income`.
+- Extended `lib/utils/csvParser.ts` so it parses both the existing expense CSV
+  schema and the new income CSV schema, mapping income rows to normal reports
+  transactions.
+- Added `public/templates/income-template.csv` and refreshed
+  `components/transactions/ImportCsvDialog.tsx` so the UI documents both
+  supported import formats.
+- Updated `lib/utils/aggregations.ts`, `components/charts/SpendingBarChart.tsx`,
+  `components/charts/MonthComparisonModal.tsx`, and `app/reports/page.tsx` to
+  track `incomeAmount`, render a monthly spending-vs-income chart, and expose
+  income-aware summary cards while keeping spending breakdowns expense-only.
+- Updated transaction presentation helpers in
+  `lib/utils/categoryColors.ts`, `lib/utils/transaction-calendar.ts`,
+  `components/transactions/TransactionsTable.tsx`,
+  `components/transactions/TransactionDetailDialog.tsx`, and
+  `components/transactions/TransactionForm.tsx` so income rows render and edit
+  correctly throughout the reports UI.
+- Expanded coverage in:
+  - `test/lib/calendar-view.test.ts`
+  - `test/lib/category-colors.test.ts`
+  - `test/lib/month-comparison.test.ts`
+  - `test/lib/reports-aggregations.test.ts`
+  - `test/routes/csv-import-export.test.ts`
+  - `test/routes/reports-user-scope.test.ts`
+- Updated `README.md`, `plan.md`, and `plan.completed.md` to keep the project
+  docs aligned with the new income-reporting behavior.
+
+Files changed
+
+- `README.md`
+- `app/api/reports/export/route.ts`
+- `app/api/reports/route.ts`
+- `app/reports/page.tsx`
+- `components/charts/MonthComparisonModal.tsx`
+- `components/charts/SpendingBarChart.tsx`
+- `components/transactions/ImportCsvDialog.tsx`
+- `components/transactions/TransactionDetailDialog.tsx`
+- `components/transactions/TransactionForm.tsx`
+- `components/transactions/TransactionsTable.tsx`
+- `components/ui/FilterBar.tsx`
+- `lib/demo/handlers/transactionHandlers.ts`
+- `lib/types/types.ts`
+- `lib/utils/aggregations.ts`
+- `lib/utils/categoryColors.ts`
+- `lib/utils/csvParser.ts`
+- `lib/utils/transaction-calendar.ts`
+- `lib/utils/transaction-categories.ts`
+- `plan.md`
+- `plan.completed.md`
+- `public/templates/income-template.csv`
+- `test/lib/calendar-view.test.ts`
+- `test/lib/category-colors.test.ts`
+- `test/lib/month-comparison.test.ts`
+- `test/lib/reports-aggregations.test.ts`
+- `test/routes/csv-import-export.test.ts`
+- `test/routes/reports-user-scope.test.ts`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- Repo validation still reports the pre-existing
+  `components/fire/FireCalculator.tsx` `react-hooks/exhaustive-deps` warning
+  during lint/build.
+
+## Verification
+
+- `pnpm lint` — passes with the existing `FireCalculator` warning.
+- `pnpm test --run` — passes.
+- `pnpm build` — passes.
+
+---
+
 # Completed: Application content, documentation, and roadmap refresh
 
 Date: 2026-04-12

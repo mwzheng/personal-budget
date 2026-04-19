@@ -23,7 +23,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { Transaction } from "@/lib/types/types";
-import { CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
+import { TRANSACTION_CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
 
 type SortField = "date" | "name" | "amount" | "category";
 type SortDir = "asc" | "desc";
@@ -163,7 +163,7 @@ export function TransactionsTable({
                     <Chip
                       label={t.category}
                       size="small"
-                      color={CATEGORY_CHIP_COLORS[t.category]}
+                      color={TRANSACTION_CATEGORY_CHIP_COLORS[t.category]}
                     />
                   </TableCell>
                   <TableCell>{t.paymentMethod}</TableCell>

@@ -50,9 +50,15 @@ describe("transaction calendar helpers", () => {
         category: "Saving",
         date: "2025-03-03",
       }),
+      buildTransaction("income", {
+        name: "Paycheck",
+        amount: 2400,
+        category: "Income",
+        date: "2025-03-04",
+      }),
     ]);
 
-    expect(events).toHaveLength(3);
+    expect(events).toHaveLength(4);
     expect(events[0]).toMatchObject({
       id: "need",
       title: "Rent",
@@ -97,6 +103,19 @@ describe("transaction calendar helpers", () => {
         amountLabel: "$300.00",
         categoryLabel: "Saving",
         accessibilityLabel: "March 3, 2025: Emergency fund, $300.00, Saving.",
+      },
+    });
+    expect(events[3]).toMatchObject({
+      backgroundColor: "#26a69a",
+      borderColor: "#26a69a",
+      classNames: [
+        "transaction-calendar__event",
+        "transaction-calendar__event--income",
+      ],
+      extendedProps: {
+        amountLabel: "$2,400.00",
+        categoryLabel: "Income",
+        accessibilityLabel: "March 4, 2025: Paycheck, $2,400.00, Income.",
       },
     });
   });

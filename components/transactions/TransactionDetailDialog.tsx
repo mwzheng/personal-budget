@@ -18,7 +18,7 @@ import {
   formatTransactionAmount,
   formatTransactionLongDate,
 } from "@/lib/utils/transaction-calendar";
-import { CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
+import { TRANSACTION_CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
 
 interface DetailRowProps {
   label: string;
@@ -102,7 +102,7 @@ export function TransactionDetailDialog({
               <Chip
                 label={transaction.category}
                 size="small"
-                color={CATEGORY_CHIP_COLORS[transaction.category]}
+                color={TRANSACTION_CATEGORY_CHIP_COLORS[transaction.category]}
               />
               <Typography variant="h5" fontWeight={700}>
                 {formatTransactionAmount(transaction.amount)}

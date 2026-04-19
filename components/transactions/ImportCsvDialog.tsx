@@ -45,7 +45,8 @@ interface Props {
   onImported: () => void;
 }
 
-const CSV_TEMPLATE_PATH = "/templates/expenses-template.csv";
+const EXPENSES_TEMPLATE_PATH = "/templates/expenses-template.csv";
+const INCOME_TEMPLATE_PATH = "/templates/income-template.csv";
 
 export function ImportCsvDialog({ open, onClose, onImported }: Props) {
   const [state, setState] = useState<ImportState>({ stage: "idle" });
@@ -140,8 +141,9 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         {state.stage === "idle" && (
           <Box>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Select a CSV file to import. Download the template if you want a
-              starter file that matches the supported columns and sample values.
+              Select a CSV file to import. The reports page supports both the
+              expense schema (`Name, Amount, Category, Date, Notes, Payment
+              Method, Tags`) and the income schema (`Source, Amount, Pay Date`).
             </Typography>
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -151,17 +153,27 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             >
               <Button
                 component="a"
-                href={CSV_TEMPLATE_PATH}
+                href={EXPENSES_TEMPLATE_PATH}
                 download
                 variant="outlined"
                 startIcon={<DownloadOutlinedIcon />}
                 sx={{ alignSelf: "flex-start" }}
               >
-                Download template
+                Expense template
+              </Button>
+              <Button
+                component="a"
+                href={INCOME_TEMPLATE_PATH}
+                download
+                variant="outlined"
+                startIcon={<DownloadOutlinedIcon />}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Income template
               </Button>
               <Typography variant="body2" color="text.secondary">
-                Uses the same schema as the importer: Name, Amount, Category,
-                Date, Notes, Payment Method, and Tags.
+                Use either template as a starter file, or import your own CSV
+                when it matches one of the supported column sets.
               </Typography>
             </Stack>
             <Typography
@@ -176,7 +188,9 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                 overflow: "auto",
               }}
             >
-              Name,Amount,Category,Date,Notes,Payment Method,Tags
+              {
+                "Name,Amount,Category,Date,Notes,Payment Method,Tags\nSource,Amount,Pay Date"
+              }
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Imported rows are written to your signed-in account after you
@@ -246,12 +260,21 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           <>
             <Button
               component="a"
-              href={CSV_TEMPLATE_PATH}
+              href={EXPENSES_TEMPLATE_PATH}
               download
               startIcon={<DownloadOutlinedIcon />}
               disabled={isParsing || confirming}
             >
-              Download template
+              Expense template
+            </Button>
+            <Button
+              component="a"
+              href={INCOME_TEMPLATE_PATH}
+              download
+              startIcon={<DownloadOutlinedIcon />}
+              disabled={isParsing || confirming}
+            >
+              Income template
             </Button>
             <Button
               variant="contained"

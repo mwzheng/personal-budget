@@ -126,6 +126,37 @@ describe("loadTransactionsFromCSV edge cases", () => {
       },
     ]);
   });
+
+  it("parses the income CSV schema into income transactions", () => {
+    const csv = [
+      "Source,Amount,Pay Date",
+      'Employer,"$2,500.00",03/14/2025',
+      "Tax Refund,$125.50,2025-03-20",
+    ].join("\n");
+
+    expect(loadTransactionsFromCSV(csv)).toEqual([
+      {
+        id: "t-0",
+        name: "Employer",
+        amount: 2500,
+        category: "Income",
+        date: "2025-03-14",
+        notes: "",
+        paymentMethod: "",
+        tags: [],
+      },
+      {
+        id: "t-1",
+        name: "Tax Refund",
+        amount: 125.5,
+        category: "Income",
+        date: "2025-03-20",
+        notes: "",
+        paymentMethod: "",
+        tags: [],
+      },
+    ]);
+  });
 });
 
 describe("CSV import template", () => {
@@ -168,6 +199,38 @@ describe("CSV import template", () => {
       }),
     ]);
   });
+
+  it("provides an income template aligned with the income CSV parser schema", () => {
+    const template = readFileSync(
+      join(process.cwd(), "public", "templates", "income-template.csv"),
+      "utf-8",
+    );
+
+    expect(template.split(/\r?\n/, 1)[0]).toBe("Source,Amount,Pay Date");
+    expect(loadTransactionsFromCSV(template)).toEqual([
+      expect.objectContaining({
+        id: "t-0",
+        name: "Employer Payroll",
+        amount: 2450,
+        category: "Income",
+        date: "2025-03-14",
+      }),
+      expect.objectContaining({
+        id: "t-1",
+        name: "Freelance Project",
+        amount: 450,
+        category: "Income",
+        date: "2025-03-21",
+      }),
+      expect.objectContaining({
+        id: "t-2",
+        name: "Tax Refund",
+        amount: 125.5,
+        category: "Income",
+        date: "2025-03-28",
+      }),
+    ]);
+  });
 });
 
 describe("transactionsToCsv edge cases", () => {
@@ -191,6 +254,31 @@ describe("transactionsToCsv edge cases", () => {
         '"Rent, ""North""","$1234.50","Need","2025-01-04","Line 1 He said ""hello""","Debit, card","housing, monthly"',
       ].join("\n"),
     );
+  });
+
+  it("round-trips exported income transactions through the CSV parser", () => {
+    const transactions: Transaction[] = [
+      {
+        id: "tx-income-1",
+        name: "Paycheck",
+        amount: 2100,
+        category: "Income",
+        date: "2025-03-14",
+        notes: "",
+        paymentMethod: "",
+        tags: [],
+      },
+    ];
+
+    expect(loadTransactionsFromCSV(transactionsToCsv(transactions))).toEqual([
+      expect.objectContaining({
+        id: "t-0",
+        name: "Paycheck",
+        amount: 2100,
+        category: "Income",
+        date: "2025-03-14",
+      }),
+    ]);
   });
 });
 
@@ -273,5 +361,47 @@ describe("POST /api/reports/import edge cases", () => {
       skipped: [],
       transactions: [expect.objectContaining({ name: "Lunch" })],
     });
+  });
+
+  it("imports income CSV rows into the authenticated user's account", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-income");
+    mockedPutTransaction.mockResolvedValue({} as never);
+
+    const csv = [
+      "Source,Amount,Pay Date",
+      'Employer,"$2,500.00",03/14/2025',
+      "Tax Refund,$125.50,03/21/2025",
+    ].join("\n");
+
+    const response = await importReports(
+      new Request("http://localhost/api/reports/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv }),
+      }) as any,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockedPutTransaction).toHaveBeenCalledTimes(2);
+    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
+      1,
+      "user-income",
+      expect.objectContaining({
+        name: "Employer",
+        amount: 2500,
+        category: "Income",
+        date: "2025-03-14",
+      }),
+    );
+    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
+      2,
+      "user-income",
+      expect.objectContaining({
+        name: "Tax Refund",
+        amount: 125.5,
+        category: "Income",
+        date: "2025-03-21",
+      }),
+    );
   });
 });

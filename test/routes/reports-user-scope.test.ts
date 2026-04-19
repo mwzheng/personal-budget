@@ -141,6 +141,38 @@ describe("reports routes user scoping", () => {
     });
   });
 
+  it("supports income category filters and income-aware aggregates on the reports route", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-income");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("income", {
+        amount: 2500,
+        category: "Income",
+        name: "Employer",
+      }),
+      buildTransaction("need", {
+        amount: 200,
+        category: "Need",
+        name: "Rent",
+      }),
+    ]);
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?categories=Income&page=1&pageSize=10&includeAggregates=true",
+      ) as any,
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 1,
+      transactions: [expect.objectContaining({ id: "income" })],
+      aggregates: expect.objectContaining({
+        totalAmount: 2500,
+        spendingAmount: 0,
+        incomeAmount: 2500,
+      }),
+    });
+  });
+
   it("exports only the authenticated user's filtered transactions", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-b");
     mockedGetUserTransactions.mockResolvedValue([
@@ -193,6 +225,79 @@ describe("reports routes user scoping", () => {
     expect(response.status).toBe(200);
     expect(csv).toContain('"Emergency Fund"');
     expect(csv).not.toContain('"Rent"');
+  });
+
+  it("exports only the authenticated user's income transactions when filtered by income", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-b");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("tx-income", {
+        name: "Employer",
+        amount: 2500,
+        category: "Income",
+      }),
+      buildTransaction("tx-need", {
+        name: "Rent",
+        amount: 1200,
+        category: "Need",
+      }),
+    ]);
+
+    const response = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?categories=Income",
+      ) as any,
+    );
+    const csv = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(csv).toContain('"Employer"');
+    expect(csv).toContain('"Income"');
+    expect(csv).not.toContain('"Rent"');
+  });
+
+  it("imports income CSV rows into the authenticated user's account", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-c-income");
+    mockedPutTransaction.mockResolvedValue({} as never);
+
+    const csv = [
+      "Source,Amount,Pay Date",
+      'Employer,"$2,500.00",2025-02-01',
+      "Tax Refund,$80.00,02/26/2025",
+    ].join("\n");
+
+    const response = await importReports(
+      new Request("http://localhost/api/reports/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv }),
+      }) as any,
+    );
+
+    expect(mockedPutTransaction).toHaveBeenCalledTimes(2);
+    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
+      1,
+      "user-c-income",
+      expect.objectContaining({
+        name: "Employer",
+        amount: 2500,
+        category: "Income",
+        date: "2025-02-01",
+      }),
+    );
+    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
+      2,
+      "user-c-income",
+      expect.objectContaining({
+        name: "Tax Refund",
+        amount: 80,
+        category: "Income",
+        date: "2025-02-26",
+      }),
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      importedCount: 2,
+      skipped: [],
+    });
   });
 
   // Note 2: The GET /api/reports route re-throws Response objects thrown by

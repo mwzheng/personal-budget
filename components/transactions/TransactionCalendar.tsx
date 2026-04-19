@@ -23,6 +23,14 @@ interface Props {
   onDaySelect: (date: string) => void;
 }
 
+function formatCalendarDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 /**
  * Note 1: This component stays presentational: it renders the filtered
  * transactions as calendar events and reports clicks upward so ReportsPage keeps
@@ -50,12 +58,29 @@ export function TransactionCalendar({
   }, [events]);
 
   useEffect(() => {
-    if (!calendarRef.current) return;
+    const calendarApi = calendarRef.current?.getApi();
+    if (!calendarApi) return;
 
-    // Note 3: Reports often filter into historical months, so keeping the
-    // visible month anchored to the newest filtered event prevents the calendar
-    // from opening on an empty current-month grid that looks broken.
-    calendarRef.current.getApi().gotoDate(calendarAnchorDate);
+    if (formatCalendarDate(calendarApi.getDate()) === calendarAnchorDate) {
+      return;
+    }
+
+    // Note 3: FullCalendar internally uses flushSync during gotoDate, so we
+    // defer the navigation until after React finishes the current render cycle.
+    const timeoutId = window.setTimeout(() => {
+      const nextCalendarApi = calendarRef.current?.getApi();
+      if (!nextCalendarApi) return;
+
+      if (
+        formatCalendarDate(nextCalendarApi.getDate()) !== calendarAnchorDate
+      ) {
+        nextCalendarApi.gotoDate(calendarAnchorDate);
+      }
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [calendarAnchorDate]);
 
   const handleEventClick: NonNullable<FullCalendarProps["eventClick"]> = (

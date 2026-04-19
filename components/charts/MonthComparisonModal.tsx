@@ -364,10 +364,19 @@ export function MonthComparisonModal({
   const summaryCards: SummaryCardDefinition[] = [
     {
       key: "total",
-      label: "Total",
+      label: "Total Activity",
       monthA: comparison.monthA.totalAmount,
       monthB: comparison.monthB.totalAmount,
       change: comparison.changes.totalAmount,
+    },
+    {
+      key: "income",
+      label: "Income",
+      monthA: comparison.monthA.incomeAmount,
+      monthB: comparison.monthB.incomeAmount,
+      change: comparison.changes.incomeAmount,
+      color: "#26a69a",
+      positiveIsFavorable: true,
     },
     {
       key: "spending",
@@ -475,8 +484,8 @@ export function MonthComparisonModal({
 
         {/* Summary cards */}
         <Grid container spacing={2} mb={3}>
-          {summaryCards.map((card) => (
-            <Grid key={card.key} item xs={12} sm={6} md={4}>
+          {summaryCards.map(({ key, ...card }) => (
+            <Grid key={key} item xs={12} sm={6} md={4}>
               <SummaryCard {...card} />
             </Grid>
           ))}
@@ -486,7 +495,7 @@ export function MonthComparisonModal({
         <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent sx={{ p: 2 }}>
             <Typography variant="subtitle2" fontWeight={600} mb={1}>
-              Category Comparison
+              Expense Category Comparison
             </Typography>
             <ComparisonBarChart
               monthA={comparison.monthA}

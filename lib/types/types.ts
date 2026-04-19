@@ -2,10 +2,12 @@
 // and interfaces used across both the frontend and backend of the app.
 // Centralizing types here prevents duplication and keeps data contracts explicit.
 
-// Note 2: A TypeScript union type restricts a variable to a fixed set of string
-// literals. Using "Want" | "Need" | "Saving" instead of plain `string` means the
-// compiler will catch typos (e.g., "want") at build time rather than at runtime.
+// Note 2: Budget and expense-allocation flows still use only the three spending
+// buckets below. Reports transactions widen this with a separate
+// `TransactionCategoryType` so income can be added without leaking into budget
+// editors or Sankey allocations.
 export type CategoryType = "Want" | "Need" | "Saving";
+export type TransactionCategoryType = CategoryType | "Income";
 
 // Note 3: An `interface` describes the shape of an object. Unlike a `class`, it
 // has no runtime representation -- it is erased during compilation to JavaScript.
@@ -14,9 +16,9 @@ export interface Transaction {
   id: string;
   name: string;
   amount: number;
-  // Note 4: CategoryType here reuses the union defined above. TypeScript will
-  // enforce that only "Want", "Need", or "Saving" can be assigned to this field.
-  category: CategoryType;
+  // Note 4: Reports transactions can now represent income as well as spending and
+  // savings movements, so the transaction union is wider than the budget one.
+  category: TransactionCategoryType;
   date: string; // ISO YYYY-MM-DD
   notes: string;
   paymentMethod: string;
@@ -102,7 +104,7 @@ export interface FilterParams {
   years: string[];
   startDate: string | null;
   endDate: string | null;
-  categories: CategoryType[];
+  categories: TransactionCategoryType[];
   tags: string[];
   search: string;
 }
@@ -112,7 +114,8 @@ export interface FilterParams {
 // by category, enabling stacked bar or area charts.
 export interface TimeseriesPoint {
   period: string; // YYYY-MM
-  amount: number;
+  spendingAmount: number;
+  incomeAmount: number;
   Need: number;
   Want: number;
   Saving: number;
@@ -125,13 +128,22 @@ export interface TagDataPoint {
   value: number;
 }
 
+export interface ReportsCategoryTotals {
+  Need: number;
+  Want: number;
+  Saving: number;
+}
+
 // Note 12: ReportsAggregates bundles all pre-computed summary statistics that the
 // reports page needs. `spendingAmount` excludes Savings so the UI can label the
 // main card as "Total Spending" without conflating it with money moved into savings.
+// `incomeAmount` is tracked separately so the reports page can compare inflows and
+// outflows month by month without treating income as a spending category.
 export interface ReportsAggregates {
   totalAmount: number;
   spendingAmount: number;
-  totalByCategoryType: { Need: number; Want: number; Saving: number };
+  incomeAmount: number;
+  totalByCategoryType: ReportsCategoryTotals;
   timeseries: TimeseriesPoint[];
   tagDiagramData: TagDataPoint[];
 }
@@ -144,7 +156,8 @@ export interface MonthSummary {
   period: string; // YYYY-MM
   totalAmount: number;
   spendingAmount: number;
-  totalByCategoryType: { Need: number; Want: number; Saving: number };
+  incomeAmount: number;
+  totalByCategoryType: ReportsCategoryTotals;
   transactionCount: number;
   topTags: TagDataPoint[];
 }
@@ -158,6 +171,7 @@ export interface MonthComparisonData {
   changes: {
     totalAmount: number | null;
     spendingAmount: number | null;
+    incomeAmount: number | null;
     Need: number | null;
     Want: number | null;
     Saving: number | null;

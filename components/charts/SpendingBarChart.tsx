@@ -1,7 +1,6 @@
-// Note 1: SpendingBarChart renders a stacked bar chart where each bar represents
-// one calendar month. The three stacked segments correspond to Need, Want, and
-// Saving categories. Stacking lets the viewer compare both the total per month
-// and the composition within each month in a single glance.
+// Note 1: SpendingBarChart keeps income and savings as separate monthly bars
+// while splitting spending into stacked Need and Want segments. That preserves a
+// simple high-level comparison and still shows what the spending is made of.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -10,6 +9,7 @@ import {
   BarChart,
   CartesianGrid,
   LabelList,
+  LabelProps as RechartsLabelProps,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,6 +43,30 @@ function formatDollar(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
+type ChartDataPoint = TimeseriesPoint & { label: string };
+type ChartLabelProps = RechartsLabelProps & { payload?: ChartDataPoint };
+
+function renderBarTotalLabel(
+  props: ChartLabelProps,
+  totalAmount: number,
+): JSX.Element | null {
+  if (totalAmount <= 0) {
+    return null;
+  }
+
+  return (
+    <text
+      x={Number(props.x ?? 0) + Number(props.width ?? 0) / 2}
+      y={Number(props.y ?? 0) - 8}
+      fill="#ccc"
+      fontSize={10}
+      textAnchor="middle"
+    >
+      {formatDollar(totalAmount)}
+    </text>
+  );
+}
+
 interface Props {
   data: TimeseriesPoint[];
 }
@@ -66,15 +90,16 @@ export function SpendingBarChart({ data }: Props) {
     label: formatMonth(entry.period),
   }));
   const legendPayload = [
-    { value: "Need", color: CATEGORY_HEX_COLORS.Need },
-    { value: "Want", color: CATEGORY_HEX_COLORS.Want },
-    { value: "Saving", color: CATEGORY_HEX_COLORS.Saving },
+    { value: "Needs", color: CATEGORY_HEX_COLORS.Need },
+    { value: "Wants", color: CATEGORY_HEX_COLORS.Want },
+    { value: "Income", color: "#26a69a" },
+    { value: "Savings", color: CATEGORY_HEX_COLORS.Saving },
   ] as const;
 
   return (
-    <ChartWrapper title="Monthly Spending">
+    <ChartWrapper title="Monthly Spending, Income & Savings">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ width: "100%", height: 300 }}>
+        <Box sx={{ width: "100%", height: 340 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
@@ -118,41 +143,83 @@ export function SpendingBarChart({ data }: Props) {
                   ) : null;
                 }}
               />
-              {/* Note 6: `stackId="a"` groups all three Bar components into one
-                  stacked series. All bars with the same stackId are stacked on top of
-                  each other per data point. The order of Bar elements determines the
-                  visual stacking order (bottom to top). */}
-              <Bar
-                dataKey="Saving"
-                stackId="a"
-                fill={CATEGORY_HEX_COLORS.Saving}
-                name="Saving"
-                animationDuration={1200}
-                animationEasing="ease-out"
-              />
               <Bar
                 dataKey="Need"
-                stackId="a"
+                stackId="spending"
                 fill={CATEGORY_HEX_COLORS.Need}
-                name="Need"
+                name="Needs"
+                animationDuration={1200}
+                animationEasing="ease-out"
+              >
+                <LabelList
+                  content={(props: ChartLabelProps) => {
+                    const payload = props.payload;
+                    if (!payload || payload.Want > 0) {
+                      return null;
+                    }
+
+                    return renderBarTotalLabel(props, payload.spendingAmount);
+                  }}
+                />
+              </Bar>
+              <Bar
+                dataKey="Want"
+                stackId="spending"
+                fill={CATEGORY_HEX_COLORS.Want}
+                name="Wants"
+                animationDuration={1200}
+                animationEasing="ease-out"
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList
+                  content={(props: ChartLabelProps) => {
+                    const payload = props.payload;
+                    if (!payload || payload.Want <= 0) {
+                      return null;
+                    }
+
+                    return renderBarTotalLabel(props, payload.spendingAmount);
+                  }}
+                />
+              </Bar>
+              <Bar
+                dataKey="incomeAmount"
+                fill="#26a69a"
+                name="Income"
                 animationDuration={1200}
                 animationEasing="ease-out"
                 animationBegin={150}
-              />
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList
+                  content={(props: ChartLabelProps) => {
+                    const payload = props.payload;
+                    if (!payload) {
+                      return null;
+                    }
+
+                    return renderBarTotalLabel(props, payload.incomeAmount);
+                  }}
+                />
+              </Bar>
               <Bar
-                dataKey="Want"
-                stackId="a"
-                fill={CATEGORY_HEX_COLORS.Want}
-                name="Want"
+                dataKey="Saving"
+                fill={CATEGORY_HEX_COLORS.Saving}
+                name="Savings"
                 animationDuration={1200}
                 animationEasing="ease-out"
                 animationBegin={300}
+                radius={[4, 4, 0, 0]}
               >
                 <LabelList
-                  dataKey="amount"
-                  position="top"
-                  formatter={formatDollar}
-                  style={{ fontSize: 10, fill: "#ccc" }}
+                  content={(props: ChartLabelProps) => {
+                    const payload = props.payload;
+                    if (!payload) {
+                      return null;
+                    }
+
+                    return renderBarTotalLabel(props, payload.Saving);
+                  }}
                 />
               </Bar>
             </BarChart>

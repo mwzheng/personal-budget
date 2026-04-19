@@ -9,7 +9,7 @@
  * - CATEGORY_CHIP_COLORS → MUI Chip `color` prop (semantic token)
  * - TAG_CHART_PALETTE    → 15-color cycling palette for per-tag bar charts
  */
-import type { CategoryType } from "@/lib/types/types";
+import type { CategoryType, TransactionCategoryType } from "@/lib/types/types";
 
 // Note 2: Hex values intentionally mirror MUI's default palette so charts
 // look visually consistent with themed components even though Recharts
@@ -30,6 +30,22 @@ export const CATEGORY_CHIP_COLORS: Record<
   Need: "error",
   Want: "info",
   Saving: "success",
+};
+
+export const TRANSACTION_CATEGORY_HEX_COLORS: Record<
+  TransactionCategoryType,
+  string
+> = {
+  ...CATEGORY_HEX_COLORS,
+  Income: "#26a69a",
+};
+
+export const TRANSACTION_CATEGORY_CHIP_COLORS: Record<
+  TransactionCategoryType,
+  "error" | "info" | "success" | "primary"
+> = {
+  ...CATEGORY_CHIP_COLORS,
+  Income: "primary",
 };
 
 // Note 4: A 15-color palette for the TagBarChart. The first three entries

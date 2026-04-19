@@ -2,24 +2,23 @@
 // both the API layer (server-side) and optionally in-browser without re-fetching.
 // Pure functions with no side effects are easy to unit test and reason about.
 import {
-  CategoryType,
   Transaction,
   FilterParams,
   MonthComparisonData,
   MonthSummary,
+  ReportsCategoryTotals,
   ReportsAggregates,
   TagDataPoint,
   TimeseriesPoint,
 } from "../types/types";
+import { normalizeTransactionCategory } from "./transaction-categories";
 
-// Note 1a: Historical data can contain legacy plural labels such as "Wants" or
-// "Savings". Normalizing them here keeps summary cards and charts stable even if
-// older records were stored before the stricter UI/category validation existed.
-function normalizeReportCategory(raw: string): CategoryType {
-  const value = raw.trim().toLowerCase();
-  if (value === "need" || value === "needs") return "Need";
-  if (value === "saving" || value === "savings") return "Saving";
-  return "Want";
+function createEmptyCategoryTotals(): ReportsCategoryTotals {
+  return { Need: 0, Want: 0, Saving: 0 };
+}
+
+function isIncomeTransaction(transaction: Transaction): boolean {
+  return normalizeTransactionCategory(transaction.category) === "Income";
 }
 
 /**
@@ -45,7 +44,7 @@ export function filterTransactions(
     if (filters.endDate && t.date > filters.endDate) return false;
     if (
       filters.categories.length > 0 &&
-      !filters.categories.includes(normalizeReportCategory(t.category))
+      !filters.categories.includes(normalizeTransactionCategory(t.category))
     ) {
       return false;
     }
@@ -83,13 +82,18 @@ export function aggregateTransactions(
   // Note 6: `Array.reduce` accumulates a running sum across all transactions.
   // The initial value `0` ensures correctness for empty arrays.
   const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+  let incomeAmount = 0;
 
   // Note 7: Pre-initializing the object with zeroes avoids a conditional inside
   // the loop and ensures the keys are always present even if no transactions
   // exist for a given category.
-  const totalByCategoryType = { Need: 0, Want: 0, Saving: 0 };
+  const totalByCategoryType = createEmptyCategoryTotals();
   for (const t of transactions) {
-    const category = normalizeReportCategory(t.category);
+    const category = normalizeTransactionCategory(t.category);
+    if (category === "Income") {
+      incomeAmount += t.amount;
+      continue;
+    }
     totalByCategoryType[category] += t.amount;
   }
   const spendingAmount = totalByCategoryType.Need + totalByCategoryType.Want;
@@ -102,11 +106,24 @@ export function aggregateTransactions(
   for (const t of transactions) {
     const period = t.date.substring(0, 7); // YYYY-MM
     if (!tsMap[period]) {
-      tsMap[period] = { period, amount: 0, Need: 0, Want: 0, Saving: 0 };
+      tsMap[period] = {
+        period,
+        spendingAmount: 0,
+        incomeAmount: 0,
+        Need: 0,
+        Want: 0,
+        Saving: 0,
+      };
     }
-    const category = normalizeReportCategory(t.category);
-    tsMap[period].amount += t.amount;
+    const category = normalizeTransactionCategory(t.category);
+    if (category === "Income") {
+      tsMap[period].incomeAmount += t.amount;
+      continue;
+    }
     tsMap[period][category] += t.amount;
+    if (category !== "Saving") {
+      tsMap[period].spendingAmount += t.amount;
+    }
   }
   // Note 9: `Object.values` returns the hash map values as an array.
   // `localeCompare` on the "YYYY-MM" period strings sorts them chronologically.
@@ -119,6 +136,9 @@ export function aggregateTransactions(
   // value and sliced to the top 15. Limiting to 15 keeps chart legends readable.
   const tagMap: Record<string, number> = {};
   for (const t of transactions) {
+    if (isIncomeTransaction(t)) {
+      continue;
+    }
     for (const tag of t.tags) {
       tagMap[tag] = (tagMap[tag] || 0) + t.amount;
     }
@@ -131,6 +151,7 @@ export function aggregateTransactions(
   return {
     totalAmount,
     spendingAmount,
+    incomeAmount,
     totalByCategoryType,
     timeseries,
     tagDiagramData,
@@ -250,11 +271,16 @@ export function buildMonthSummary(
 ): MonthSummary {
   const monthTxns = getMonthTransactions(transactions, period);
   const totalAmount = monthTxns.reduce((sum, t) => sum + t.amount, 0);
-  const totalByCategoryType = { Need: 0, Want: 0, Saving: 0 };
+  const totalByCategoryType = createEmptyCategoryTotals();
+  let incomeAmount = 0;
   const tagMap: Record<string, number> = {};
 
   for (const t of monthTxns) {
-    const category = normalizeReportCategory(t.category);
+    const category = normalizeTransactionCategory(t.category);
+    if (category === "Income") {
+      incomeAmount += t.amount;
+      continue;
+    }
     totalByCategoryType[category] += t.amount;
     for (const tag of t.tags) {
       tagMap[tag] = (tagMap[tag] || 0) + t.amount;
@@ -270,6 +296,7 @@ export function buildMonthSummary(
     period,
     totalAmount,
     spendingAmount: totalByCategoryType.Need + totalByCategoryType.Want,
+    incomeAmount,
     totalByCategoryType,
     transactionCount: monthTxns.length,
     topTags,
@@ -303,6 +330,7 @@ export function buildMonthComparison(
     changes: {
       totalAmount: pctChange(monthA.totalAmount, monthB.totalAmount),
       spendingAmount: pctChange(monthA.spendingAmount, monthB.spendingAmount),
+      incomeAmount: pctChange(monthA.incomeAmount, monthB.incomeAmount),
       Need: pctChange(
         monthA.totalByCategoryType.Need,
         monthB.totalByCategoryType.Need,

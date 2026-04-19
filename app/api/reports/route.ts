@@ -8,22 +8,7 @@ import {
 } from "@/lib/utils/aggregations";
 import { getUserTransactions } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
-import type { CategoryType } from "@/lib/types/types";
-
-function parseCategoryFilters(raw: string | null): CategoryType[] {
-  if (!raw) return [];
-
-  return raw
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .map((value): CategoryType | null => {
-      if (value === "need") return "Need";
-      if (value === "want") return "Want";
-      if (value === "saving") return "Saving";
-      return null;
-    })
-    .filter((value): value is CategoryType => value !== null);
-}
+import { parseTransactionCategoryFilters } from "@/lib/utils/transaction-categories";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +17,9 @@ export async function GET(request: NextRequest) {
     const years = yearsParam ? yearsParam.split(",").filter(Boolean) : [];
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const categories = parseCategoryFilters(searchParams.get("categories"));
+    const categories = parseTransactionCategoryFilters(
+      searchParams.get("categories"),
+    );
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
