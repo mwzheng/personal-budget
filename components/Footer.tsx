@@ -16,6 +16,7 @@ import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
 
 import { FOOTER_CONTENT, FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import type {
   FooterLinkGroup,
   LinkDefinition,
@@ -163,10 +164,10 @@ export function Footer() {
       sx={{
         mt: "auto",
         bgcolor: "background.paper",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 3 } }}>
         <Box
           sx={{
             display: "grid",
@@ -219,8 +220,8 @@ export function Footer() {
 
         <Divider
           sx={{
-            borderColor: "rgba(255, 255, 255, 0.06)",
-            my: { xs: 1.5, md: 2 },
+            borderColor: SERVER_THEME_TOKENS.border.subtle,
+            my: { xs: 2, md: 2.5 },
           }}
         />
 
@@ -228,7 +229,7 @@ export function Footer() {
           variant="body2"
           color="text.secondary"
           align="center"
-          sx={{ pt: 1 }}
+          sx={{ pt: 1.25 }}
         >
           © {currentYear} {brandName}
         </Typography>

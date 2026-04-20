@@ -131,7 +131,7 @@ export interface ContactPageContent {
 }
 
 export interface HomeFeatureCardContent {
-  id: "transactions" | "reports" | "budget" | "fire" | "goals" | "progress";
+  id: "transactions" | "reports" | "budget" | "fire" | "progress";
   title: string;
   description: string;
 }

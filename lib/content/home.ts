@@ -39,12 +39,6 @@ export const HOME_PAGE_CONTENT = {
         "Calculate your Financial Independence number, project investment growth, and compare retirement scenarios with interactive charts.",
     },
     {
-      id: "goals",
-      title: "Savings Goals",
-      description:
-        "Set savings targets, track progress with monthly contributions, and review the milestones that matter over time.",
-    },
-    {
       id: "progress",
       title: "Progress Tracker",
       description:

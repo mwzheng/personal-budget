@@ -203,69 +203,9 @@ describe("demo mode", () => {
   });
 
   // Note 2: Handler-module coverage — these tests hit the split handler files
-  // (goalHandlers, salaryHandlers, progressHandlers) to verify that each
-  // handler correctly reads from / writes to the demo store without any real
-  // network calls. The fetchSpy guard confirms no HTTP traffic is produced.
-
-  it("serves demo goals and supports creating then deleting a goal", async () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
-
-    await startDemoSession();
-
-    const listResponse = await apiFetch("/api/goals");
-    const listPayload = (await listResponse.json()) as {
-      ok: boolean;
-      goals: Array<{ goalId: string; name: string }>;
-    };
-    expect(listPayload.ok).toBe(true);
-    expect(Array.isArray(listPayload.goals)).toBe(true);
-
-    const createResponse = await apiFetch("/api/goals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Emergency Fund",
-        targetAmount: 10000,
-        currentSaved: 500,
-        monthlyContribution: 200,
-      }),
-    });
-    const createPayload = (await createResponse.json()) as {
-      ok: boolean;
-      created: { goalId: string };
-    };
-    expect(createPayload.ok).toBe(true);
-    expect(createPayload.created.goalId).toMatch(/^demo-goal-/);
-
-    // Delete the goal we just created and confirm it is removed
-    const deleteResponse = await apiFetch("/api/goals", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goalId: createPayload.created.goalId }),
-    });
-    expect(((await deleteResponse.json()) as { ok: boolean }).ok).toBe(true);
-
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("returns 400 when creating a goal without a payload", async () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
-
-    await startDemoSession();
-
-    // Note 3: readJsonBody returns null for JSON-null body, which the handler
-    // treats as a missing payload and responds with 400.
-    const response = await apiFetch("/api/goals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(null),
-    });
-
-    expect(response.status).toBe(400);
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
+  // (salaryHandlers and progressHandlers) to verify that each handler correctly
+  // reads from / writes to the demo store without any real network calls. The
+  // fetchSpy guard confirms no HTTP traffic is produced.
 
   it("serves salary entries and supports creating then deleting an entry", async () => {
     const fetchSpy = vi.fn();
@@ -368,7 +308,7 @@ describe("demo mode", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("creates and retrieves progress goal in demo mode", async () => {
+  it("creates and retrieves the progress goal in demo mode", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 

@@ -12,8 +12,6 @@
 export const SK_PREFIX = {
   /** Transactions — `date#YYYY-MM-DD#<id>` */
   TRANSACTION: "date#",
-  /** Savings goals — `goal#<goalId>` */
-  GOAL: "goal#",
   /** Budget plans — `budget#<budgetId>` */
   BUDGET: "budget#",
   /** Salary entries — `salary#<year>#<id>` */

@@ -127,7 +127,7 @@ export const ABOUT_PAGE_CONTENT = {
       id: "product-direction",
       heading: "Product Direction",
       paragraphs: [
-        "I want the app to feel like a personal tool, not a financial firehose. Reports, goals, and progress views should support deliberate planning rather than endless configuration.",
+        "I want the app to feel like a personal tool, not a financial firehose. Reports, budgets, and progress views should support deliberate planning rather than endless configuration.",
         "If a future feature makes the workflow faster, it still needs to preserve the sense of ownership that came from my original Excel and Notion habit.",
       ],
     },

@@ -1,5 +1,6 @@
 "use client";
 
+import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -243,7 +244,10 @@ export default function RetirementList({ onEntriesChanged }: Props) {
       </Box>
 
       {entries.length === 0 && !loading ? (
-        <EmptyState message="No retirement entries yet." />
+        <EmptyState
+          icon={<SavingsOutlinedIcon />}
+          message="No retirement entries yet."
+        />
       ) : null}
 
       <ConfirmDialog

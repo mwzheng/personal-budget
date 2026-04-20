@@ -136,7 +136,6 @@ describe("content data invariants", () => {
       "reports",
       "budget",
       "fire",
-      "goals",
       "progress",
     ]);
     expect(

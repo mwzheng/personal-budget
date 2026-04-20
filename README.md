@@ -1,6 +1,6 @@
 # Porridge Budget
 
-Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, savings goals, and investment progress with CSV import/export, month-over-month comparisons, and interactive charts that can be downloaded as PNG images.
+Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, long-term progress, and investment planning with CSV import/export, month-over-month comparisons, and interactive charts that can be downloaded as PNG images.
 
 ## Tech Stack
 
@@ -19,7 +19,6 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
 - `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
 - `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
-- `/goals` — Savings goal tracking with target progress, edit/delete actions, and reusable goal forms.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
 - `/fire` — FIRE calculator for projecting investment growth, comparing scenarios, and downloading the projection chart as PNG.
 - `/salary` — Dedicated salary history entry and comparison screen.
@@ -37,7 +36,6 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload) with monthly income, expense rows, and legacy allocation compatibility.
 - `GET /api/budgets/:id`, `PUT /api/budgets/:id`, `DELETE /api/budgets/:id` — (Authenticated) Fetch, update, or delete a saved budget by id.
 - `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`.
-- `GET /api/goals`, `POST /api/goals`, `PUT /api/goals`, `DELETE /api/goals` — Goals CRUD with ETA enrichment and body/query fallback for delete identifiers.
 - `GET /api/salary`, `POST /api/salary`, `PUT /api/salary`, `DELETE /api/salary` — Salary history CRUD with server-computed YoY values on reads.
 - `GET /api/progress/goal`, `POST /api/progress/goal`, `PUT /api/progress/goal` — Long-term progress goal CRUD with derived progress fields.
 - `GET /api/progress/retirement`, `POST /api/progress/retirement`, `PUT /api/progress/retirement`, `DELETE /api/progress/retirement` — Retirement-history CRUD with derived change metrics.
@@ -74,7 +72,7 @@ individual page titles instead of collapsing into the default app title.
 
 If you just want to explore the UI, the login and register screens also provide a
 `Demo Sign In` / `Demo Register` flow. That mode seeds browser-local demo data for
-reports, progress, goals, and budgets, and all demo edits stay in local storage
+reports, progress, and budgets, and all demo edits stay in local storage
 until sign-out instead of writing to DynamoDB.
 
 Real hosted sign-in sessions persist across browser restarts until the user signs
@@ -106,7 +104,7 @@ require a fresh login in the normal case.
 
 ## Notes & next steps
 
-- All authenticated report, import, export, budget, goals, salary, progress, and transaction APIs are scoped to the signed-in Cognito user. Demo mode (`DISABLE_AUTH=true`) uses browser-local sample data instead of DynamoDB.
+- All authenticated report, import, export, budget, salary, progress, and transaction APIs are scoped to the signed-in Cognito user. Demo mode (`DISABLE_AUTH=true`) uses browser-local sample data instead of DynamoDB.
 - The reports page now includes month-over-month comparison alongside the existing charts, calendar/table views, and CSV flows.
 - The current Vitest suite covers route handlers, shared utilities, auth helpers, DynamoDB behavior, and CSV edge cases across 29 test files.
 - Public pages ship shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.

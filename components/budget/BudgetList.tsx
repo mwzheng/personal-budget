@@ -5,6 +5,7 @@
  */
 "use client";
 
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
@@ -143,6 +144,7 @@ export function BudgetList({
 
         {!loading && budgets.length === 0 ? (
           <EmptyState
+            icon={<AccountBalanceWalletOutlinedIcon />}
             message="Save a budget to reuse the same expense plan later."
             variant="body2"
           />

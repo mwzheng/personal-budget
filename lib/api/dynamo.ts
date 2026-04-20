@@ -15,7 +15,7 @@ import { join } from "path";
 import { loadTransactionsFromCSV } from "../utils/csvParser";
 import { isDemoUserId } from "../auth/requestUser";
 import { generateId } from "../utils/generateId";
-import type { Goal, Transaction } from "../types/types";
+import type { Transaction } from "../types/types";
 import { SK_PREFIX } from "./tableKeys";
 
 // Note 2: Reading the table name from an environment variable means the same
@@ -29,7 +29,7 @@ const TABLE_NAME = process.env.DYNAMODB_TABLE || "";
 // Note 5: The DynamoDB table uses a single-table design with a composite primary
 // key: `pk` (partition key) and `sk` (sort key). All data for a user shares the
 // same `pk = "user#<userId>"`, and different entity types are distinguished by
-// the `sk` prefix (e.g. "date#...", "goal#...", "budget#...").
+// the `sk` prefix (e.g. "date#...", "budget#...", "progressGoal#...").
 // Note 5a: Reports must only read items whose sort key starts with `date#`. That
 // guard prevents progress/salary/milestone entities in the same partition from
 // leaking into transaction charts and tables.
@@ -268,71 +268,6 @@ export async function deleteTransaction(
   // Both partition key and sort key must be provided -- the sort key cannot be
   // omitted even though we only want to delete by transaction id.
   const sk = `${SK_PREFIX.TRANSACTION}${date}#${txId}`;
-  await client.send(
-    new DeleteCommand({
-      TableName: TABLE_NAME,
-      Key: { pk: `user#${userId}`, sk },
-    }),
-  );
-  return { ok: true };
-}
-
-export async function putGoal(userId: string, goal: Goal) {
-  const client = getDocClient(TABLE_NAME);
-  if (!client) throw new Error("DynamoDB table not configured");
-  const now = new Date().toISOString();
-  // Note 17: ID generation is delegated to the shared `generateId` utility.
-  const id = goal.goalId || generateId();
-  const item = {
-    pk: `user#${userId}`,
-    sk: `${SK_PREFIX.GOAL}${id}`,
-    goalId: id,
-    name: goal.name,
-    targetAmount: goal.targetAmount,
-    currentSaved: goal.currentSaved ?? 0,
-    monthlyContribution: goal.monthlyContribution ?? 0,
-    expectedAnnualReturn: goal.expectedAnnualReturn ?? 0,
-    createdAt: goal.createdAt || now,
-    updatedAt: now,
-  } as const;
-
-  await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
-  return item;
-}
-
-export async function getUserGoals(userId: string): Promise<Goal[]> {
-  const client = getDocClient(TABLE_NAME);
-  if (!client) return [];
-  const pk = `user#${userId}`;
-  // Note 18: `begins_with` is a DynamoDB key condition function that efficiently
-  // scans only items whose sort key starts with the given prefix. Combined with
-  // the partition key condition, this retrieves all goals for a user without
-  // scanning items of other entity types (transactions, budgets, etc.).
-  const params = {
-    TableName: TABLE_NAME,
-    KeyConditionExpression: "#pk = :pk and begins_with(#sk, :prefix)",
-    ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
-    ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.GOAL },
-  } as const;
-
-  const res = await client.send(new QueryCommand(params));
-  const items = res.Items ?? [];
-  return items.map((item) => ({
-    goalId: String(item.goalId || ""),
-    name: String(item.name || ""),
-    targetAmount: Number(item.targetAmount || 0),
-    currentSaved: Number(item.currentSaved || 0),
-    monthlyContribution: Number(item.monthlyContribution || 0),
-    expectedAnnualReturn: Number(item.expectedAnnualReturn || 0),
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  }));
-}
-
-export async function deleteGoal(userId: string, goalId: string) {
-  const client = getDocClient(TABLE_NAME);
-  if (!client) throw new Error("DynamoDB table not configured");
-  const sk = `${SK_PREFIX.GOAL}${goalId}`;
   await client.send(
     new DeleteCommand({
       TableName: TABLE_NAME,

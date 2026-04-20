@@ -3,7 +3,11 @@ import { PutCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { getDocClient } from "../api/dynamoClient";
 import { generateId } from "./generateId";
 import { SK_PREFIX } from "../api/tableKeys";
-import type { Goal, MilestoneEntry, RetirementEntry } from "../types/types";
+import type {
+  MilestoneEntry,
+  ProgressGoal,
+  RetirementEntry,
+} from "../types/types";
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || "";
 
@@ -28,7 +32,6 @@ interface MilestoneQueryItem {
 
 interface ProgressGoalQueryItem {
   goalId?: unknown;
-  name?: unknown;
   targetAmount?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -181,7 +184,7 @@ export async function deleteMilestone(
 
 export async function putProgressGoal(
   userId: string,
-  g: { goalId?: string; targetAmount: number; name?: string },
+  g: { goalId?: string; targetAmount: number },
 ) {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
@@ -191,7 +194,6 @@ export async function putProgressGoal(
     pk: `user#${userId}`,
     sk: `${SK_PREFIX.PROGRESS_GOAL}${id}`,
     goalId: id,
-    name: g.name || "Progress Goal",
     targetAmount: g.targetAmount,
     createdAt: now,
     updatedAt: now,
@@ -200,7 +202,9 @@ export async function putProgressGoal(
   return item;
 }
 
-export async function getUserProgressGoals(userId: string): Promise<Goal[]> {
+export async function getUserProgressGoals(
+  userId: string,
+): Promise<ProgressGoal[]> {
   const client = getDocClient(TABLE_NAME);
   if (!client) return [];
   const pk = `user#${userId}`;
@@ -217,7 +221,6 @@ export async function getUserProgressGoals(userId: string): Promise<Goal[]> {
   const items = (res.Items ?? []) as ProgressGoalQueryItem[];
   return items.map((item) => ({
     goalId: String(item.goalId || ""),
-    name: String(item.name || ""),
     targetAmount: Number(item.targetAmount || 0),
     createdAt: readOptionalString(item.createdAt),
     updatedAt: readOptionalString(item.updatedAt),

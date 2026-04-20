@@ -25,6 +25,7 @@ import {
   ROUTE_PATHS,
   getPageTitleEntry,
 } from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import type {
   ContentNotice,
   ContentSection,
@@ -59,13 +60,13 @@ const SOCIAL_ICON_BY_PLATFORM = {
   github: GitHubIcon,
   linkedin: LinkedInIcon,
 } as const;
-// Note 1.1: MUI client components can receive plain `sx` objects from a Server
-// Component, but not theme callback functions, so these shared colors stay
-// flattened here to keep the route prerenderable.
-const ABOUT_PRIMARY = "#2D7DD2";
-const ABOUT_BACKGROUND = "#1a1a1a";
-const ABOUT_PAPER = "#242424";
-const ABOUT_BORDER = alpha("#ffffff", 0.08);
+// Note 1.1: Server Components still need plain token values for `sx`, so these
+// route styles derive from one shared server-safe palette instead of duplicating
+// theme colors locally.
+const ABOUT_PRIMARY = SERVER_THEME_TOKENS.palette.primary;
+const ABOUT_BACKGROUND = SERVER_THEME_TOKENS.palette.backgroundDefault;
+const ABOUT_PAPER = SERVER_THEME_TOKENS.palette.backgroundPaper;
+const ABOUT_BORDER = SERVER_THEME_TOKENS.border.standard;
 const ABOUT_HERO_BACKGROUND = `linear-gradient(140deg, ${alpha(
   ABOUT_PRIMARY,
   0.18,

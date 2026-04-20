@@ -6,10 +6,6 @@ describe("SK_PREFIX constants", () => {
     expect(SK_PREFIX.TRANSACTION).toBe("date#");
   });
 
-  it("GOAL is 'goal#'", () => {
-    expect(SK_PREFIX.GOAL).toBe("goal#");
-  });
-
   it("BUDGET is 'budget#'", () => {
     expect(SK_PREFIX.BUDGET).toBe("budget#");
   });
@@ -52,7 +48,6 @@ describe("SK_PREFIX constants", () => {
     expect(keys).toEqual(
       [
         "TRANSACTION",
-        "GOAL",
         "BUDGET",
         "SALARY",
         "RETIREMENT",

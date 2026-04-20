@@ -5,10 +5,10 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import GoalEditor from "@/components/progress/GoalEditor";
 import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
+import PageHeader from "@/components/ui/PageHeader";
 import RetirementList from "@/components/ui/RetirementList";
 import SalaryList from "@/components/ui/SalaryList";
 import { apiFetch } from "@/lib/api/apiFetch";
@@ -19,9 +19,6 @@ interface ApiEntriesResponse<T> {
   entries?: T[];
   error?: string;
 }
-
-const PAGE_TITLE_ID = "progress-page-title";
-const PAGE_DESCRIPTION_ID = "progress-page-description";
 
 export default function Page() {
   // Note 1: The page owns the shared chart dataset so salary/retirement edits can
@@ -76,30 +73,11 @@ export default function Page() {
   }, [refreshChartData]);
 
   return (
-    <Container
-      component="main"
-      maxWidth="xl"
-      aria-labelledby={PAGE_TITLE_ID}
-      aria-describedby={PAGE_DESCRIPTION_ID}
-      sx={{ py: 4 }}
-    >
-      <Typography
-        id={PAGE_TITLE_ID}
-        component="h1"
-        variant="h5"
-        fontWeight={700}
-        gutterBottom
-      >
-        Progress Tracker
-      </Typography>
-      <Typography
-        id={PAGE_DESCRIPTION_ID}
-        variant="body2"
-        color="text.secondary"
-      >
-        Review salary history, retirement contributions, and milestones from one
-        long-term progress workspace.
-      </Typography>
+    <Container component="main" maxWidth="xl" sx={{ py: 4 }}>
+      <PageHeader
+        title="Progress Tracker"
+        description="Review salary history, retirement contributions, and milestones from one long-term progress workspace."
+      />
 
       <Stack spacing={3} sx={{ mt: 3 }}>
         <Paper sx={{ p: 3 }} elevation={1}>

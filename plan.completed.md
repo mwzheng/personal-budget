@@ -8,6 +8,213 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Home card cleanup and custom 404 redirect
+
+Date: 2026-04-19
+
+Summary
+
+- Removed the clickable link behavior from the home-page feature cards while
+  keeping the existing visual polish and supporting copy.
+- Added a custom 404 experience that explains the missing page, offers a manual
+  route back home, and automatically redirects visitors to the home page.
+
+Completed items
+
+- Reworked the feature card section in `app/page.tsx` so the cards remain static
+  informational panels instead of acting like login links.
+- Added `app/not-found.tsx` for the App Router not-found experience and
+  `components/NotFoundHomeRedirect.tsx` to handle the delayed client-side
+  redirect back to `ROUTE_PATHS.home`.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and
+  completed history stay synchronized for this follow-up.
+
+Files changed
+
+- `app/page.tsx`
+- `app/not-found.tsx`
+- `components/NotFoundHomeRedirect.tsx`
+- `plan.md`
+- `plan.completed.md`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- The custom 404 page keeps a visible fallback button in case the automatic
+  redirect is delayed or blocked.
+
+## Verification
+
+- `pnpm lint` — passes
+- `pnpm test --run` — passes
+- `rm -rf .next tsconfig.tsbuildinfo && pnpm build` — passes
+
+---
+
+# Completed: UI and navigation consistency polish
+
+Date: 2026-04-20
+
+Summary
+
+- Improved the authenticated and marketing UX with a responsive mobile
+  navigation, clearer home-page CTAs, more consistent page framing, and small
+  shared-component polish across the app.
+- Tightened visual consistency by extracting shared server-safe theme tokens,
+  improving empty states, and refining loading feedback and reports actions for
+  smaller screens.
+- Aligned the Progress Goal editor and shared goal model after review so the
+  remaining goal workflow is consistently treated as a single unnamed target.
+
+Completed items
+
+- Added a hamburger + Drawer mobile nav in `components/AppNav.tsx`, kept the
+  desktop tab layout for md+, and made Register a distinct contained CTA.
+- Updated `app/page.tsx` with home hero CTA buttons, clickable feature cards,
+  and subtle circular icon treatments that fit the existing dark theme.
+- Added `components/ui/PageHeader.tsx` and adopted it on the Progress page;
+  increased footer padding and extracted shared server-safe theme tokens for
+  `app/about/page.tsx` and `app/faq/page.tsx`.
+- Enhanced `app/reports/page.tsx` with previous-period trend indicators and a
+  mobile-visible Add Transaction toolbar button while preserving the existing
+  FAB on larger screens.
+- Added icon-supported empty states in the remaining list views and updated
+  `components/ui/ConfirmDialog.tsx` to show a visible loading spinner with
+  better busy-state accessibility.
+- Removed the now-unused `name` requirement from the remaining Progress Goal
+  flow so `GoalEditor`, shared types, demo handlers, persistence, and route
+  tests all agree on the current unnamed-target behavior.
+- Updated `plan.md` and `plan.completed.md` together so the active plan and
+  completed history remain synchronized.
+
+Files changed
+
+- `app/about/page.tsx`
+- `app/faq/page.tsx`
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `app/providers.tsx`
+- `app/reports/page.tsx`
+- `components/AppNav.tsx`
+- `components/Footer.tsx`
+- `components/budget/BudgetList.tsx`
+- `components/fire/FireScenarioList.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/ui/ConfirmDialog.tsx`
+- `components/ui/EmptyState.tsx`
+- `components/ui/PageHeader.tsx`
+- `components/progress/GoalEditor.tsx`
+- `components/ui/RetirementList.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/theme/server-theme-tokens.ts`
+- `lib/demo/demoData.ts`
+- `lib/demo/handlers/progressHandlers.ts`
+- `lib/types/types.ts`
+- `lib/utils/progress.ts`
+- `plan.md`
+- `plan.completed.md`
+- `test/routes/progress-routes.test.ts`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- The broader repository follow-ups in `plan.md` remain unchanged; this entry
+  closes the UI/UX polish work from the approved plan.
+
+## Verification
+
+- `pnpm lint` — passes
+- `pnpm test --run` — passes
+- `rm -rf .next tsconfig.tsbuildinfo && pnpm build` — passes
+
+---
+
+# Completed: Removed standalone savings goals feature
+
+Date: 2026-04-20
+
+Summary
+
+- Removed the standalone `/goals` page, `/api/goals` route, and the supporting
+  UI, DynamoDB, utility, and demo-mode code for the old savings-goals feature.
+- Preserved the separate Progress Goal flow used by the Progress page and
+  `/api/progress/goal`, while narrowing shared types and demo data around that
+  remaining goal model.
+
+Completed items
+
+- Deleted the standalone goals page, API route, demo handler, ETA helper, and
+  goal-specific UI/tests that only supported `/goals`.
+- Removed the old `goal#` DynamoDB key path and savings-goal CRUD helpers from
+  the shared data layer, leaving the progress-goal storage path intact.
+- Updated shared marketing/content copy, route metadata, robots rules, README,
+  and future-ideas docs so the current feature set no longer advertises the
+  removed savings-goals experience.
+- Updated demo-mode, content, table-key, and DynamoDB tests to reflect the new
+  surface area while keeping Progress Goal coverage in place.
+- Updated `plan.md` and `plan.completed.md` together for this prerequisite UI/UX
+  cleanup task.
+
+Files changed
+
+- `.github/copilot-instructions.md`
+- `README.md`
+- `app/auth/login/layout.tsx`
+- `app/page.tsx`
+- `app/robots.ts`
+- `components/ui/EmptyState.tsx`
+- `docs/future-feature-ideas.md`
+- `hooks/useFormSubmit.ts`
+- `lib/api/dynamo.ts`
+- `lib/api/tableKeys.ts`
+- `lib/content/about.ts`
+- `lib/content/faq.ts`
+- `lib/content/home.ts`
+- `lib/content/page-titles.ts`
+- `lib/demo/demoApi.ts`
+- `lib/demo/demoData.ts`
+- `lib/demo/handlers/progressHandlers.ts`
+- `lib/types/content.ts`
+- `lib/types/types.ts`
+- `lib/utils/generateId.ts`
+- `lib/utils/progress.ts`
+- `plan.md`
+- `plan.completed.md`
+- `test/lib/content-data.test.ts`
+- `test/lib/demo-mode.test.ts`
+- `test/lib/dynamo-transactions.test.ts`
+- `test/lib/table-keys.test.ts`
+- deleted: `app/api/goals/route.ts`
+- deleted: `app/goals/page.tsx`
+- deleted: `components/forms/GoalForm.tsx`
+- deleted: `components/ui/GoalList.tsx`
+- deleted: `lib/demo/handlers/goalHandlers.ts`
+- deleted: `lib/utils/goals.ts`
+- deleted: `test/routes/goals-route.test.ts`
+
+Commit reference
+
+- Working tree only (not committed in this session)
+
+Notes / next steps
+
+- The Progress page goal editor and `/api/progress/goal` remain in place and now
+  represent the only goal-related workflow in the app.
+
+## Verification
+
+- `pnpm lint` — passes
+- `pnpm test --run` — passes
+- `pnpm build` — passes
+
+---
+
 # Completed: Adaptive monthly chart label layout
 
 Date: 2026-04-19

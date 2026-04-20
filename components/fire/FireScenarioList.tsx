@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -18,6 +19,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EmptyState from "@/components/ui/EmptyState";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
@@ -63,9 +65,13 @@ export default function FireScenarioList({
       </Stack>
 
       {scenarios.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          No saved scenarios yet. Adjust the form and save your first one.
-        </Typography>
+        <Box sx={{ mb: 2 }}>
+          <EmptyState
+            icon={<InsightsOutlinedIcon />}
+            message="No saved scenarios yet. Adjust the form and save your first one."
+            variant="body2"
+          />
+        </Box>
       ) : (
         <Grid container spacing={1.5} sx={{ mb: 2 }}>
           {scenarios.map((s) => {
