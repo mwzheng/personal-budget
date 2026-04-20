@@ -72,9 +72,9 @@ they are options to evaluate after the current testing and tooling follow-ups.
     - Let users add notes to specific months, such as vacations or one-time
       expenses.
 18. **Goal sharing / read-only export**
-    - Generate a simple shareable view for savings-goal progress.
+    - Generate a simple shareable view for progress-goal milestones.
 19. **Onboarding flow**
-    - Guide new users through their first budget, transaction import, and goal.
+    - Guide new users through their first budget, transaction import, and progress goal.
 20. **Search across notes and descriptions**
     - Add richer transaction search for imported or historical data.
 

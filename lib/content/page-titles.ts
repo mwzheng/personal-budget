@@ -24,7 +24,6 @@ export const ROUTE_PATHS = {
   signout: "/auth/signout",
   reports: "/reports",
   sankey: "/sankey",
-  goals: "/goals",
   progress: "/progress",
   salary: "/salary",
   fire: "/fire",
@@ -41,7 +40,6 @@ export const PAGE_TITLE_KEYS = {
   SIGNOUT: "signout",
   REPORTS: "reports",
   SANKEY: "sankey",
-  GOALS: "goals",
   PROGRESS: "progress",
   SALARY: "salary",
   FIRE: "fire",
@@ -79,7 +77,7 @@ export const PAGE_TITLES = {
     route: ROUTE_PATHS.login,
     title: `Sign in - ${APP_NAME}`,
     description:
-      "Sign in to review budgets, reports, goals, and other personal finance progress.",
+      "Sign in to review budgets, reports, and other personal finance progress.",
   },
   [PAGE_TITLE_KEYS.REGISTER]: {
     route: ROUTE_PATHS.register,
@@ -111,13 +109,6 @@ export const PAGE_TITLES = {
     title: `Budget - ${APP_NAME}`,
     description:
       "Plan named expenses and visualize a monthly budget with pie and Sankey charts.",
-    requiresAuth: true,
-  },
-  [PAGE_TITLE_KEYS.GOALS]: {
-    route: ROUTE_PATHS.goals,
-    title: `Goals - ${APP_NAME}`,
-    description:
-      "Track savings targets and review the milestones that matter over time.",
     requiresAuth: true,
   },
   [PAGE_TITLE_KEYS.PROGRESS]: {
@@ -170,7 +161,6 @@ export const PLANNED_PUBLIC_PAGE_TITLE_KEYS = [] as const;
 export const AUTHENTICATED_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.REPORTS,
   PAGE_TITLE_KEYS.SANKEY,
-  PAGE_TITLE_KEYS.GOALS,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,
@@ -187,7 +177,6 @@ export const LIVE_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.SIGNOUT,
   PAGE_TITLE_KEYS.REPORTS,
   PAGE_TITLE_KEYS.SANKEY,
-  PAGE_TITLE_KEYS.GOALS,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,

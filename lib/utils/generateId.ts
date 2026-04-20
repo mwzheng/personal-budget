@@ -5,8 +5,9 @@
  * randomness needs:
  *
  *  • `generateId` — UUID-based identifiers for domain entities (transactions,
- *    budgets, goals, etc.). Uses `crypto.randomUUID()` when available and falls
- *    back to a `Date.now()` + random-suffix approach for older runtimes.
+ *    budgets, progress goals, etc.). Uses `crypto.randomUUID()` when available
+ *    and falls back to a `Date.now()` + random-suffix approach for older
+ *    runtimes.
  *
  *  • `randomString` — Fixed-length alphanumeric strings for security-sensitive
  *    flows such as PKCE code verifiers and OAuth state parameters. Built on

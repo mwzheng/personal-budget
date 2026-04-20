@@ -1,9 +1,34 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-04-19)
+## Status: Active follow-up plan (updated 2026-04-20)
 
 Latest completed work:
 
+- Removed the home-page feature card links so the cards stay informative and
+  visually polished without behaving like login CTAs.
+- Added a custom App Router 404 page with clear not-found copy, a manual route
+  back home, and an automatic redirect to the home page after a short delay.
+- Aligned the Progress Goal editor, shared types, demo handlers, and route tests
+  around the current unnamed single-target goal model so the post-review state is
+  internally consistent.
+- Added a mobile-friendly AppNav drawer for smaller screens while keeping the
+  desktop tab layout, and made Register a distinct primary CTA.
+- Added home-page hero CTAs, polished feature icons with tinted circular
+  treatments, and made feature cards clickable with clearer sign-in/demo
+  affordances.
+- Added a reusable `PageHeader` component for page-level consistency, increased
+  footer breathing room, and extracted shared server-safe theme tokens for the
+  About and FAQ pages.
+- Added subtle previous-period trend indicators to the reports summary cards and
+  exposed a mobile toolbar action for adding transactions without relying on the
+  floating FAB alone.
+- Added consistent empty-state icons across the remaining list screens and
+  improved `ConfirmDialog` loading feedback with an in-button spinner and
+  accessible busy state.
+- Removed the standalone Savings Goals page/API/demo flow while preserving the
+  separate Progress Goal used by the Progress page.
+- Updated shared copy, route metadata, DynamoDB/demo helpers, and tests to
+  reflect the removed standalone goals feature.
 - Made the monthly chart totals adapt to density so labels rotate diagonally for
   crowded month ranges and remain readable when many bars are shown.
 - Fixed the stacked spending total label in the monthly chart and tightened the
@@ -45,11 +70,11 @@ Current active follow-ups:
 
 - **Public pages:** `/`, `/about`, `/faq`, `/contact`, and auth entry/sign-out
   routes.
-- **Authenticated pages:** `/reports`, `/sankey`, `/goals`, `/progress`,
-  `/salary`, and `/fire`.
+- **Authenticated pages:** `/reports`, `/sankey`, `/progress`, `/salary`, and
+  `/fire`.
 - **Core capabilities:** transaction CRUD, CSV import/export, month comparison,
-  saved budgets with Sankey visualization, savings goals, salary/progress
-  tracking, FIRE projections, and demo mode.
+  saved budgets with Sankey visualization, salary/progress tracking, FIRE
+  projections, and demo mode.
 - **Data model:** Cognito-scoped DynamoDB persistence with explicit browser-only
   demo fallbacks.
 - **Documentation sources:**

@@ -47,7 +47,7 @@ export const FAQ_ITEMS = [
     category: "features",
     question: "What can I track today?",
     answer:
-      "The current app focuses on transactions, reports with month comparison, budgets, goals, FIRE scenarios, salary history, and longer-term progress views. It is meant to help with both day-to-day spending review and slower-moving financial momentum.",
+      "The current app focuses on transactions, reports with month comparison, budgets, FIRE scenarios, salary history, and longer-term progress views. It is meant to help with both day-to-day spending review and slower-moving financial momentum.",
   },
   {
     id: "demo-mode",
@@ -69,13 +69,6 @@ export const FAQ_ITEMS = [
     question: "What is the FIRE calculator?",
     answer:
       "FIRE stands for Financial Independence, Retire Early. The calculator lets you project investment growth under different assumptions, compare multiple scenarios, and estimate how long it could take to reach your target number.",
-  },
-  {
-    id: "goals-tracking",
-    category: "features",
-    question: "How do savings goals work?",
-    answer:
-      "You can create named savings goals with a target amount and monthly contribution. The app estimates progress over time so you can see how close you are to each target.",
   },
   {
     id: "month-comparison",

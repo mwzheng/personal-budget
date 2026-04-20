@@ -25,13 +25,7 @@ import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { apiFetch } from "@/lib/api/apiFetch";
-
-// Note 2: Domain types kept local because they are only relevant to this
-// component's API contract with /api/progress/goal.
-interface ProgressGoal {
-  goalId?: string;
-  targetAmount: number;
-}
+import type { ProgressGoal } from "@/lib/types/types";
 
 interface GoalApiResponse {
   ok: boolean;

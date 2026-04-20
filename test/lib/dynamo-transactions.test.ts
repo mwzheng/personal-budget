@@ -23,10 +23,8 @@ import {
   buildTransactionsQuery,
   deleteTransaction,
   getUserBudgets,
-  getUserGoals,
   getUserMonthlyAggregates,
   getUserTransactions,
-  putGoal,
   putTransaction,
   updateTransaction,
 } from "../../lib/api/dynamo";
@@ -122,14 +120,9 @@ describe("getUserTransactions — no client fallback", () => {
   });
 });
 
-describe("getUserGoals and getUserBudgets — no client fallback", () => {
+describe("getUserBudgets and monthly aggregates — no client fallback", () => {
   beforeEach(() => {
     getDocClientMock.mockReturnValue(null);
-  });
-
-  it("returns an empty goals array when DynamoDB is not configured", async () => {
-    const goals = await getUserGoals("user-xyz");
-    expect(goals).toEqual([]);
   });
 
   it("returns an empty budgets array when DynamoDB is not configured", async () => {
@@ -169,12 +162,6 @@ describe("write/delete operations throw when DynamoDB is not configured", () => 
   it("deleteTransaction throws a descriptive error", async () => {
     await expect(
       deleteTransaction("user-abc", "tx-1", "2025-01-10"),
-    ).rejects.toThrow("DynamoDB table not configured");
-  });
-
-  it("putGoal throws a descriptive error", async () => {
-    await expect(
-      putGoal("user-abc", { name: "Emergency Fund", targetAmount: 5000 }),
     ).rejects.toThrow("DynamoDB table not configured");
   });
 });

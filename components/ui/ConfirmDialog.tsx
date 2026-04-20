@@ -7,12 +7,26 @@
  * pattern: title, descriptive message, cancel/confirm buttons.
  */
 
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+
+const srOnlyStyles = {
+  border: 0,
+  clip: "rect(0 0 0 0)",
+  height: 1,
+  margin: -1,
+  overflow: "hidden",
+  padding: 0,
+  position: "absolute",
+  whiteSpace: "nowrap",
+  width: 1,
+} as const;
 
 export interface ConfirmDialogProps {
   /** Controls visibility */
@@ -52,6 +66,7 @@ export function ConfirmDialog({
       onClose={onClose}
       maxWidth="xs"
       fullWidth
+      aria-busy={loading}
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-description"
     >
@@ -71,8 +86,18 @@ export function ConfirmDialog({
           variant="contained"
           disabled={loading}
           autoFocus
+          sx={{ minWidth: 112 }}
         >
-          {confirmLabel}
+          {loading ? (
+            <>
+              <CircularProgress size={20} color="inherit" aria-hidden="true" />
+              <Box component="span" sx={srOnlyStyles}>
+                {confirmLabel} in progress
+              </Box>
+            </>
+          ) : (
+            confirmLabel
+          )}
         </Button>
       </DialogActions>
     </Dialog>

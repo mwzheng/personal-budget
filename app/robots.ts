@@ -37,7 +37,6 @@ export default function robots(): MetadataRoute.Robots {
           ROUTE_PATHS.reports,
           ROUTE_PATHS.sankey,
           ROUTE_PATHS.progress,
-          ROUTE_PATHS.goals,
           ROUTE_PATHS.salary,
         ],
       },

@@ -21,6 +21,7 @@ import {
   getPageTitleEntryByPathname,
   normalizeAppPathname,
 } from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 type Gtag = {
   (command: "config", targetId: string, config: Record<string, unknown>): void;
@@ -50,11 +51,11 @@ const darkTheme = createTheme({
     // Note 3: MUI palette colors follow the Material Design convention:
     // `main` is the primary color used for buttons, links, and highlights.
     // `primary` and `secondary` are used throughout MUI's default component styles.
-    primary: { main: "#2D7DD2" },
-    secondary: { main: "#4caf50" },
+    primary: { main: SERVER_THEME_TOKENS.palette.primary },
+    secondary: { main: SERVER_THEME_TOKENS.palette.secondary },
     background: {
-      default: "#1a1a1a",
-      paper: "#242424",
+      default: SERVER_THEME_TOKENS.palette.backgroundDefault,
+      paper: SERVER_THEME_TOKENS.palette.backgroundPaper,
     },
   },
   typography: {
@@ -82,7 +83,7 @@ const darkTheme = createTheme({
           backgroundImage: "none",
           borderRadius: 12,
           // Note 5: Subtle border gives cards visual separation without heavy shadows
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          border: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
           transition:
             "box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out",
         },
@@ -108,7 +109,7 @@ const darkTheme = createTheme({
       styleOverrides: {
         paper: {
           borderRadius: 16,
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6)",
           backgroundImage: "none",
         },
@@ -192,14 +193,14 @@ const darkTheme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderColor: "rgba(255, 255, 255, 0.06)",
+          borderColor: SERVER_THEME_TOKENS.border.subtle,
         },
       },
     },
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: "rgba(255, 255, 255, 0.06)",
+          borderColor: SERVER_THEME_TOKENS.border.subtle,
         },
       },
     },
@@ -207,7 +208,7 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
         },
       },
     },

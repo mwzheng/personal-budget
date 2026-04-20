@@ -95,12 +95,10 @@ describe("progress api routes", () => {
     mockedGetUserProgressGoals.mockResolvedValue([
       {
         goalId: "goal-1",
-        name: "Financial Independence",
         targetAmount: 200000,
       },
       {
         goalId: "goal-2",
-        name: "Placeholder Goal",
         targetAmount: 0,
       },
     ]);
@@ -139,13 +137,11 @@ describe("progress api routes", () => {
       goals: [
         {
           goalId: "goal-1",
-          name: "Financial Independence",
           targetAmount: 200000,
           progressPct: 75,
         },
         {
           goalId: "goal-2",
-          name: "Placeholder Goal",
           targetAmount: 0,
           progressPct: null,
         },
@@ -156,7 +152,6 @@ describe("progress api routes", () => {
   it("creates a progress goal for the authenticated user", async () => {
     mockedPutProgressGoal.mockResolvedValue({
       goalId: "goal-3",
-      name: "Progress Goal",
       targetAmount: 500000,
     });
 
@@ -176,7 +171,6 @@ describe("progress api routes", () => {
       ok: true,
       created: {
         goalId: "goal-3",
-        name: "Progress Goal",
         targetAmount: 500000,
       },
     });
@@ -185,7 +179,6 @@ describe("progress api routes", () => {
   it("updates a progress goal when goalId and targetAmount are present", async () => {
     mockedPutProgressGoal.mockResolvedValue({
       goalId: "goal-1",
-      name: "Financial Independence",
       targetAmount: 250000,
     });
 
@@ -196,7 +189,6 @@ describe("progress api routes", () => {
         body: JSON.stringify({
           goalId: "goal-1",
           targetAmount: 250000,
-          name: "Financial Independence",
         }),
       }),
     );
@@ -204,13 +196,11 @@ describe("progress api routes", () => {
     expect(mockedPutProgressGoal).toHaveBeenCalledWith("user-123", {
       goalId: "goal-1",
       targetAmount: 250000,
-      name: "Financial Independence",
     });
     await expect(response.json()).resolves.toEqual({
       ok: true,
       updated: {
         goalId: "goal-1",
-        name: "Financial Independence",
         targetAmount: 250000,
       },
     });

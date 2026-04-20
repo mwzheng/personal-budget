@@ -1,5 +1,6 @@
 "use client";
 
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -134,7 +135,7 @@ export default function MilestonesList() {
       ) : null}
 
       {items.length === 0 && !loading ? (
-        <EmptyState message="No milestones yet." />
+        <EmptyState icon={<FlagOutlinedIcon />} message="No milestones yet." />
       ) : null}
 
       <Box

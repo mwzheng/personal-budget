@@ -42,7 +42,7 @@ If this top-level file conflicts with a per-topic instruction, the per-topic fil
 
 ## Project overview
 
-- Purpose: Build a personal budgeting application to track income, expenses, and savings goals.
+- Purpose: Build a personal budgeting application to track income, expenses, and long-term financial progress.
 - Tech stack:
   - Frontend: Next.js + TypeScript (App Router preferred)
   - UI: Material-UI (MUI)

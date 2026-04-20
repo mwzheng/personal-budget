@@ -1,9 +1,9 @@
 /**
  * Note 1: useFormSubmit standardizes the POST/PUT upsert pattern shared by
- * several form components (SalaryForm, RetirementForm, GoalForm, MilestoneForm).
+ * several form components (SalaryForm, RetirementForm, MilestoneForm).
  * It manages loading and error state, calls `apiFetch` with a JSON body, and
- * interprets the `{ ok, created, updated, error }` API response contract that
- * all progress/salary/goal routes follow.
+ * interprets the `{ ok, created, updated, error }` response contract shared by
+ * the current progress and salary routes.
  *
  * Why a hook instead of a plain helper?  The loading and error states are React
  * state that must live inside the component tree so the UI re-renders when they

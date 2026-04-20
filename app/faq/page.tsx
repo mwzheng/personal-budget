@@ -25,6 +25,7 @@ import {
   ROUTE_PATHS,
   getPageTitleEntry,
 } from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 const FAQ_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.FAQ);
 const FAQ_PAGE_DESCRIPTION =
@@ -32,19 +33,18 @@ const FAQ_PAGE_DESCRIPTION =
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
-// Note 1.1: These style constants keep the Server Component serializable. MUI
-// client components can receive plain `sx` objects from the server, but not
-// theme callback functions, so the current dark-theme colors are flattened here.
-const FAQ_PRIMARY = "#2D7DD2";
-const FAQ_PAPER = "#242424";
-const FAQ_BORDER = alpha("#ffffff", 0.08);
+// Note 1.1: These plain values keep the Server Component serializable while
+// still reusing the app's shared dark palette from one server-safe token file.
+const FAQ_PRIMARY = SERVER_THEME_TOKENS.palette.primary;
+const FAQ_PAPER = SERVER_THEME_TOKENS.palette.backgroundPaper;
+const FAQ_BORDER = SERVER_THEME_TOKENS.border.standard;
 const FAQ_CATEGORY_BORDER = alpha(FAQ_PRIMARY, 0.35);
 const FAQ_HERO_BORDER = alpha(FAQ_PRIMARY, 0.26);
 const FAQ_HERO_BACKGROUND = `linear-gradient(160deg, ${alpha(
   FAQ_PRIMARY,
   0.2,
 )} 0%, ${alpha(FAQ_PAPER, 0.98)} 32%, ${FAQ_PAPER} 100%)`;
-const FAQ_HERO_SHADOW = `0 24px 48px ${alpha("#000000", 0.24)}`;
+const FAQ_HERO_SHADOW = `0 24px 48px ${SERVER_THEME_TOKENS.shadow.deep}`;
 const FAQ_ACCORDION_BACKGROUND = alpha(FAQ_PAPER, 0.94);
 
 export const metadata: Metadata = {
@@ -150,12 +150,12 @@ export default function FaqPage() {
                 <Chip
                   label={`${items.length} questions`}
                   variant="outlined"
-                  sx={{ borderColor: alpha("#ffffff", 0.18) }}
+                  sx={{ borderColor: SERVER_THEME_TOKENS.border.strong }}
                 />
                 <Chip
                   label={`${categories.length} topics`}
                   variant="outlined"
-                  sx={{ borderColor: alpha("#ffffff", 0.18) }}
+                  sx={{ borderColor: SERVER_THEME_TOKENS.border.strong }}
                 />
               </Stack>
             </Stack>

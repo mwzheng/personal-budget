@@ -1,6 +1,6 @@
 /**
  * Note 1: Shared empty-state presentation extracted from the list components
- * (BudgetList, GoalList, SalaryList, RetirementList, MilestonesList).
+ * (BudgetList, SalaryList, RetirementList, MilestonesList).
  * Centralising the pattern keeps the visual treatment consistent and avoids
  * duplicating the same Typography + centering boilerplate in every list.
  */
@@ -28,9 +28,42 @@ export default function EmptyState({
   variant,
 }: EmptyStateProps) {
   return (
-    <Box sx={{ py: 2, textAlign: "center" }}>
-      {icon ? <Box sx={{ mb: 1 }}>{icon}</Box> : null}
-      <Typography color="text.secondary" variant={variant}>
+    <Box
+      sx={{
+        py: 2.5,
+        px: 1,
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 1,
+      }}
+    >
+      {icon ? (
+        <Box
+          aria-hidden="true"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            bgcolor: "action.hover",
+            color: "text.secondary",
+            "& svg": {
+              fontSize: 28,
+            },
+          }}
+        >
+          {icon}
+        </Box>
+      ) : null}
+      <Typography
+        color="text.secondary"
+        variant={variant}
+        sx={{ maxWidth: 360 }}
+      >
         {message}
       </Typography>
     </Box>

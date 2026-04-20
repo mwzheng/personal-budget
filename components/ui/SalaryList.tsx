@@ -4,6 +4,7 @@
 // piece focused and independently testable.
 "use client";
 
+import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -236,7 +237,10 @@ export default function SalaryList({ onEntriesChanged }: Props) {
       </Box>
 
       {entries.length === 0 && !loading ? (
-        <EmptyState message="No salary history yet." />
+        <EmptyState
+          icon={<TrendingUpOutlinedIcon />}
+          message="No salary history yet."
+        />
       ) : null}
 
       <ConfirmDialog

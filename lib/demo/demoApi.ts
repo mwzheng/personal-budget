@@ -14,7 +14,6 @@
 
 import { handleTransactionRoutes } from "./handlers/transactionHandlers";
 import { handleBudgetRoutes } from "./handlers/budgetHandlers";
-import { handleGoalRoutes } from "./handlers/goalHandlers";
 import { handleSalaryRoutes } from "./handlers/salaryHandlers";
 import { handleProgressRoutes } from "./handlers/progressHandlers";
 import { jsonResponse, type HandlerContext } from "./handlers/handlerUtils";
@@ -49,7 +48,6 @@ const handlers = [
   handleTransactionRoutes,
   handleSalaryRoutes,
   handleProgressRoutes,
-  handleGoalRoutes,
   handleBudgetRoutes,
 ];
 

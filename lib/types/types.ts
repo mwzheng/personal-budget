@@ -73,27 +73,14 @@ export interface MilestoneEntry {
   updatedAt?: string;
 }
 
-// Note 8b: Goals are reused across the API routes, forms, and list components.
-// Keeping the optional progress fields together here avoids the previous pattern
-// where each file re-declared a slightly different "goal-like" shape.
-export interface GoalEta {
-  // Note 8c: API responses are serialized as JSON, and JSON would coerce
-  // `Infinity` to `null`. Modeling "unreachable" as `null` keeps the transport
-  // format honest and lets clients distinguish a real month count from "no ETA".
-  months: number | null;
-  projectedDate: string | null;
-}
-
-export interface Goal {
+// Note 8b: Progress goals are the long-term target records used by the Progress
+// page and `/api/progress/goal`. The current UX supports a single unnamed goal,
+// so the shared shape only includes the persisted identity and target amount.
+export interface ProgressGoal {
   goalId?: string;
-  name: string;
   targetAmount: number;
-  currentSaved?: number;
-  monthlyContribution?: number;
-  expectedAnnualReturn?: number;
   createdAt?: string;
   updatedAt?: string;
-  eta?: GoalEta | null;
 }
 
 // Note 9: FilterParams is used by the aggregations layer and the reports API to

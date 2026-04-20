@@ -4,18 +4,21 @@
  */
 
 import type { Metadata } from "next";
+import NextLink from "next/link";
 import Script from "next/script";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import Paper from "@mui/material/Paper";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import SavingsIcon from "@mui/icons-material/Savings";
+import Stack from "@mui/material/Stack";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
 import { APP_NAME, ROUTE_PATHS } from "@/lib/content/page-titles";
@@ -25,9 +28,25 @@ const HOME_FEATURE_ICONS = {
   reports: BarChartIcon,
   budget: AutoGraphIcon,
   fire: LocalFireDepartmentIcon,
-  goals: SavingsIcon,
   progress: TrendingUpIcon,
 } as const;
+type HomeFeatureId = keyof typeof HOME_FEATURE_ICONS;
+const HOME_FEATURE_ENTRY_COPY: Record<HomeFeatureId, string> = {
+  transactions: "Manual-first tracking for everyday spending.",
+  reports: "Clear comparisons for months, categories, and trends.",
+  budget: "Thoughtful planning for flexible budget categories.",
+  fire: "Long-range modeling for financial independence goals.",
+  progress: "Ongoing visibility into savings and long-term progress.",
+};
+const HOME_FEATURE_ACCENT = "#2D7DD2";
+const HOME_FEATURE_ICON_BACKGROUND = alpha(HOME_FEATURE_ACCENT, 0.14);
+const HOME_FEATURE_ICON_BORDER = alpha(HOME_FEATURE_ACCENT, 0.24);
+const HOME_FEATURE_ICON_SHADOW = `0 10px 30px ${alpha(
+  HOME_FEATURE_ACCENT,
+  0.16,
+)}`;
+const HOME_FEATURE_CARD_BORDER = alpha(HOME_FEATURE_ACCENT, 0.35);
+const HOME_FEATURE_CARD_SHADOW = `0 12px 32px ${alpha("#000000", 0.35)}`;
 
 const HOME_PAGE_DESCRIPTION =
   "Track expenses, compare months, plan budgets, and review long-term progress with a manual-first personal budgeting app built for clarity and reflection.";
@@ -148,6 +167,31 @@ export default function Home() {
           >
             {hero.summary}
           </Typography>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Button
+              component={NextLink}
+              href={ROUTE_PATHS.login}
+              variant="contained"
+              size="large"
+              sx={{ minWidth: { sm: 180 } }}
+            >
+              Try Demo
+            </Button>
+            <Button
+              component={NextLink}
+              href={ROUTE_PATHS.login}
+              variant="outlined"
+              size="large"
+              sx={{ minWidth: { sm: 180 } }}
+            >
+              Sign In
+            </Button>
+          </Stack>
         </Box>
 
         <Box component="section" aria-labelledby="home-features-title">
@@ -167,6 +211,8 @@ export default function Home() {
             {features.map((feature) => {
               const Icon = HOME_FEATURE_ICONS[feature.id];
               const titleId = `home-feature-${feature.id}-title`;
+              const descriptionId = `home-feature-${feature.id}-description`;
+              const supportingCopyId = `home-feature-${feature.id}-supporting-copy`;
 
               return (
                 <Grid key={feature.id} item xs={12} md={6}>
@@ -174,50 +220,89 @@ export default function Home() {
                     component="article"
                     variant="outlined"
                     aria-labelledby={titleId}
+                    aria-describedby={`${descriptionId} ${supportingCopyId}`}
                     sx={{
-                      p: { xs: 4, md: 4.5 },
                       minHeight: { xs: 240, md: 280 },
                       height: "100%",
-                      transition:
-                        "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-                      },
+                      overflow: "hidden",
+                      boxShadow: HOME_FEATURE_CARD_SHADOW,
+                      borderColor: HOME_FEATURE_CARD_BORDER,
                     }}
                   >
                     <Box
                       sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        mb: 2.5,
+                        height: "100%",
                       }}
                     >
-                      <Icon
-                        aria-hidden="true"
-                        color="primary"
-                        sx={{ fontSize: 52 }}
-                      />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          height: "100%",
+                          p: { xs: 4, md: 4.5 },
+                          textAlign: "center",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: 84,
+                            height: 84,
+                            borderRadius: "50%",
+                            mb: 2.5,
+                            backgroundColor: HOME_FEATURE_ICON_BACKGROUND,
+                            border: `1px solid ${HOME_FEATURE_ICON_BORDER}`,
+                            boxShadow: HOME_FEATURE_ICON_SHADOW,
+                          }}
+                        >
+                          <Icon
+                            aria-hidden="true"
+                            color="primary"
+                            sx={{ fontSize: 44 }}
+                          />
+                        </Box>
+                        <Typography
+                          id={titleId}
+                          component="h3"
+                          variant="h5"
+                          fontWeight={700}
+                          gutterBottom
+                        >
+                          {feature.title}
+                        </Typography>
+                        <Typography
+                          id={descriptionId}
+                          variant="body1"
+                          color="text.secondary"
+                          sx={{ lineHeight: 1.8 }}
+                        >
+                          {feature.description}
+                        </Typography>
+                        <Box
+                          sx={{
+                            mt: "auto",
+                            pt: 3,
+                            width: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Typography
+                            id={supportingCopyId}
+                            variant="body2"
+                            color="primary.light"
+                            fontWeight={600}
+                            align="center"
+                          >
+                            {HOME_FEATURE_ENTRY_COPY[feature.id]}
+                          </Typography>
+                        </Box>
+                      </Box>
                     </Box>
-                    <Typography
-                      id={titleId}
-                      component="h3"
-                      variant="h5"
-                      align="center"
-                      fontWeight={700}
-                      gutterBottom
-                    >
-                      {feature.title}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="text.secondary"
-                      align="center"
-                      sx={{ lineHeight: 1.8 }}
-                    >
-                      {feature.description}
-                    </Typography>
                   </Paper>
                 </Grid>
               );

@@ -4,10 +4,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tab from "@mui/material/Tab";
@@ -19,13 +26,22 @@ import { usePathname } from "next/navigation";
 
 import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
+  AUTHENTICATED_PAGE_TITLE_KEYS,
   PAGE_TITLE_KEYS,
   PUBLIC_INFO_PAGE_TITLE_KEYS,
   ROUTE_PATHS,
   getPageTitleEntry,
+  normalizeAppPathname,
 } from "@/lib/content/page-titles";
 
 type InfoPageKey = (typeof PUBLIC_INFO_PAGE_TITLE_KEYS)[number];
+type AuthPageKey = Extract<
+  (typeof AUTHENTICATED_PAGE_TITLE_KEYS)[number],
+  | typeof PAGE_TITLE_KEYS.REPORTS
+  | typeof PAGE_TITLE_KEYS.PROGRESS
+  | typeof PAGE_TITLE_KEYS.SANKEY
+  | typeof PAGE_TITLE_KEYS.FIRE
+>;
 
 const INFO_MENU_LABELS: Record<InfoPageKey, string> = {
   [PAGE_TITLE_KEYS.ABOUT]: "About",
@@ -44,12 +60,43 @@ const INFO_MENU_ITEMS = PUBLIC_INFO_PAGE_TITLE_KEYS.map((pageKey) => {
   };
 });
 
-const AUTH_TABS = [
-  { label: "Reports", value: "reports", href: ROUTE_PATHS.reports },
-  { label: "Progress", value: "progress", href: ROUTE_PATHS.progress },
-  { label: "Budget", value: "sankey", href: ROUTE_PATHS.sankey },
-  { label: "FIRE", value: "fire", href: ROUTE_PATHS.fire },
-] as const;
+const AUTH_TAB_PAGE_KEYS = [
+  PAGE_TITLE_KEYS.REPORTS,
+  PAGE_TITLE_KEYS.PROGRESS,
+  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.FIRE,
+] as const satisfies readonly AuthPageKey[];
+
+const AUTH_TAB_LABELS: Record<AuthPageKey, string> = {
+  [PAGE_TITLE_KEYS.REPORTS]: "Reports",
+  [PAGE_TITLE_KEYS.PROGRESS]: "Progress",
+  [PAGE_TITLE_KEYS.SANKEY]: "Budget",
+  [PAGE_TITLE_KEYS.FIRE]: "FIRE",
+};
+
+const AUTH_TABS = AUTH_TAB_PAGE_KEYS.map((pageKey) => {
+  const page = getPageTitleEntry(pageKey);
+  return {
+    key: pageKey,
+    label: AUTH_TAB_LABELS[pageKey],
+    value: pageKey,
+    href: page.route,
+  };
+});
+
+const MOBILE_DRAWER_WIDTH = 320;
+
+const mobileNavItemSx = {
+  borderRadius: 2,
+  px: 1.5,
+  py: 0.75,
+  "&.Mui-selected": {
+    bgcolor: "rgba(45, 125, 210, 0.16)",
+  },
+  "&.Mui-selected:hover": {
+    bgcolor: "rgba(45, 125, 210, 0.24)",
+  },
+} as const;
 
 function isRouteSelected(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -64,16 +111,10 @@ export function AppNav() {
   // Note 3: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").
   // The helper below treats nested routes like `/reports/monthly` as belonging
   // to the same top-level nav item, which keeps highlighting stable.
-  const pathname = usePathname();
-  const value: string | false = isRouteSelected(pathname, ROUTE_PATHS.sankey)
-    ? "sankey"
-    : isRouteSelected(pathname, ROUTE_PATHS.reports)
-      ? "reports"
-      : isRouteSelected(pathname, ROUTE_PATHS.progress)
-        ? "progress"
-        : isRouteSelected(pathname, ROUTE_PATHS.fire)
-          ? "fire"
-          : false;
+  const pathname = normalizeAppPathname(usePathname());
+  const value: AuthPageKey | false =
+    AUTH_TABS.find((tab) => isRouteSelected(pathname, tab.href))?.value ??
+    false;
   const isInfoRoute = INFO_MENU_ITEMS.some(({ href }) =>
     isRouteSelected(pathname, href),
   );
@@ -89,6 +130,7 @@ export function AppNav() {
   const [shouldAutoFocusInfoMenu, setShouldAutoFocusInfoMenu] =
     useState<boolean>(false);
   const isInfoMenuOpen = Boolean(infoMenuAnchorEl);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     const checkToken = () => setLoggedIn(isAuthenticated());
@@ -105,6 +147,10 @@ export function AppNav() {
       window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     };
   }, [pathname]);
+
+  useEffect(() => {
+    setMobileDrawerOpen(false);
+  }, [pathname, loggedIn]);
 
   const openInfoMenu = (
     anchorEl: HTMLButtonElement,
@@ -131,11 +177,12 @@ export function AppNav() {
         bgcolor: "background.default",
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ gap: 1 }}>
         <Typography
           variant="h6"
           sx={{
-            mr: 4,
+            mr: { md: 4 },
+            flexGrow: { xs: 1, md: 0 },
             fontWeight: 700,
             textDecoration: "none",
             color: "inherit",
@@ -153,14 +200,14 @@ export function AppNav() {
         </Typography>
 
         {/* Note 7: The in-app pages only make sense for authenticated or demo users,
-            so signed-out visitors see a simpler header with just the brand and auth
-            actions instead of tabs that would immediately redirect them to login. */}
+             so signed-out visitors see a simpler header with just the brand and auth
+             actions instead of tabs that would immediately redirect them to login. */}
         {loggedIn ? (
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "block" } }}>
             <Tabs value={value} textColor="inherit" indicatorColor="primary">
               {AUTH_TABS.map((tab) => (
                 <Tab
-                  key={tab.value}
+                  key={tab.key}
                   label={tab.label}
                   value={tab.value}
                   component={NextLink}
@@ -174,9 +221,15 @@ export function AppNav() {
         )}
 
         {/* Note 8: `Info` stays visible for every visitor. Hover opens the menu
-            for pointer users, while click and keyboard handlers keep it usable on
-            touch devices and with assistive technology. */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+             for pointer users, while click and keyboard handlers keep it usable on
+             touch devices and with assistive technology. */}
+        <Box
+          sx={{
+            display: { xs: "none", md: "flex" },
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
           <Button
             id="app-nav-info-button"
             color="inherit"
@@ -240,13 +293,23 @@ export function AppNav() {
               <Button
                 component={NextLink}
                 href={ROUTE_PATHS.register}
-                color="inherit"
+                variant="contained"
               >
                 Register
               </Button>
             </Box>
           )}
         </Box>
+
+        <IconButton
+          color="inherit"
+          aria-label="Open navigation menu"
+          edge="end"
+          onClick={() => setMobileDrawerOpen(true)}
+          sx={{ display: { xs: "inline-flex", md: "none" } }}
+        >
+          <MenuRoundedIcon />
+        </IconButton>
 
         <Menu
           id="app-nav-info-menu"
@@ -299,6 +362,175 @@ export function AppNav() {
             );
           })}
         </Menu>
+
+        <Drawer
+          anchor="right"
+          open={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          slotProps={{
+            paper: {
+              sx: {
+                width: {
+                  xs: `min(${MOBILE_DRAWER_WIDTH}px, 100vw)`,
+                  sm: MOBILE_DRAWER_WIDTH,
+                },
+                bgcolor: "background.paper",
+                backgroundImage: "none",
+                borderLeft: "1px solid rgba(255, 255, 255, 0.06)",
+              },
+            },
+          }}
+        >
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 2,
+                px: 2,
+                py: 1.5,
+                borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+              }}
+            >
+              <Typography
+                variant="subtitle1"
+                component={NextLink}
+                href={ROUTE_PATHS.home}
+                onClick={() => setMobileDrawerOpen(false)}
+                sx={{
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                🥣 Porridge Budget
+              </Typography>
+
+              <IconButton
+                color="inherit"
+                aria-label="Close navigation menu"
+                onClick={() => setMobileDrawerOpen(false)}
+              >
+                <CloseRoundedIcon />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ flexGrow: 1, overflowY: "auto", px: 1.5, py: 2 }}>
+              {loggedIn ? (
+                <Box sx={{ mb: 2.5 }}>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      px: 1.5,
+                      color: "text.secondary",
+                      letterSpacing: 0.8,
+                    }}
+                  >
+                    Workspace
+                  </Typography>
+                  <List disablePadding sx={{ mt: 0.5 }}>
+                    {AUTH_TABS.map((tab) => {
+                      const isSelected = isRouteSelected(pathname, tab.href);
+                      return (
+                        <ListItemButton
+                          key={tab.key}
+                          component={NextLink}
+                          href={tab.href}
+                          onClick={() => setMobileDrawerOpen(false)}
+                          selected={isSelected}
+                          sx={mobileNavItemSx}
+                        >
+                          <ListItemText
+                            primary={tab.label}
+                            primaryTypographyProps={{ fontWeight: 600 }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Box>
+              ) : null}
+
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{ px: 1.5, color: "text.secondary", letterSpacing: 0.8 }}
+                >
+                  Info
+                </Typography>
+                <List disablePadding sx={{ mt: 0.5 }}>
+                  {INFO_MENU_ITEMS.map((item) => {
+                    const isSelected = isRouteSelected(pathname, item.href);
+                    return (
+                      <ListItemButton
+                        key={item.key}
+                        component={NextLink}
+                        href={item.href}
+                        onClick={() => setMobileDrawerOpen(false)}
+                        selected={isSelected}
+                        sx={mobileNavItemSx}
+                      >
+                        <ListItemText
+                          primary={item.label}
+                          primaryTypographyProps={{ fontWeight: 600 }}
+                        />
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                p: 2,
+                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+              }}
+            >
+              {loggedIn ? (
+                <Button
+                  component={NextLink}
+                  href={ROUTE_PATHS.signout}
+                  variant="outlined"
+                  color="inherit"
+                  fullWidth
+                  onClick={() => setMobileDrawerOpen(false)}
+                >
+                  Sign out
+                </Button>
+              ) : (
+                <Box sx={{ display: "grid", gap: 1 }}>
+                  <Button
+                    component={NextLink}
+                    href={ROUTE_PATHS.login}
+                    color="inherit"
+                    fullWidth
+                    onClick={() => setMobileDrawerOpen(false)}
+                  >
+                    Sign in
+                  </Button>
+                  <Button
+                    component={NextLink}
+                    href={ROUTE_PATHS.register}
+                    variant="contained"
+                    fullWidth
+                    onClick={() => setMobileDrawerOpen(false)}
+                  >
+                    Register
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Drawer>
       </Toolbar>
     </AppBar>
   );

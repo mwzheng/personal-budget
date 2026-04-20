@@ -9,20 +9,15 @@
 
 import { generateId } from "../utils/generateId";
 import type {
-  Goal as SavingsGoal,
   MilestoneEntry,
+  ProgressGoal,
   RetirementEntry,
   SalaryEntry,
   SavedBudget,
   Transaction,
 } from "../types/types";
 
-export interface DemoProgressGoal {
-  goalId: string;
-  targetAmount: number;
-}
-
-export interface DemoSavingsGoal extends SavingsGoal {
+export interface DemoProgressGoal extends ProgressGoal {
   goalId: string;
 }
 
@@ -32,7 +27,6 @@ export interface DemoStore {
   retirementEntries: RetirementEntry[];
   progressGoals: DemoProgressGoal[];
   milestones: MilestoneEntry[];
-  goals: DemoSavingsGoal[];
   budgets: SavedBudget[];
 }
 
@@ -40,6 +34,15 @@ const DEMO_STORE_KEY = "porridge-budget-demo-store";
 
 function cloneDemoStore(store: DemoStore): DemoStore {
   return JSON.parse(JSON.stringify(store)) as DemoStore;
+}
+
+function normalizeDemoProgressGoal(
+  goal: Partial<DemoProgressGoal> | undefined,
+): DemoProgressGoal {
+  return {
+    goalId: String(goal?.goalId || generateId("demo-progress-goal")),
+    targetAmount: Number(goal?.targetAmount || 0),
+  };
 }
 
 function createSeededBudgets(): SavedBudget[] {
@@ -303,24 +306,6 @@ export function createSeededDemoStore(): DemoStore {
         age: null,
       },
     ],
-    goals: [
-      {
-        goalId: "demo-goal-emergency",
-        name: "Emergency Fund",
-        targetAmount: 12000,
-        currentSaved: 4500,
-        monthlyContribution: 400,
-        expectedAnnualReturn: 0,
-      },
-      {
-        goalId: "demo-goal-travel",
-        name: "Japan Trip",
-        targetAmount: 6000,
-        currentSaved: 1800,
-        monthlyContribution: 250,
-        expectedAnnualReturn: 0.02,
-      },
-    ],
     budgets: createSeededBudgets(),
   };
 }
@@ -356,14 +341,13 @@ export function getDemoStore(): DemoStore {
         ? (parsed.retirementEntries as RetirementEntry[])
         : seeded.retirementEntries,
       progressGoals: Array.isArray(parsed.progressGoals)
-        ? (parsed.progressGoals as DemoProgressGoal[])
+        ? parsed.progressGoals.map((goal) =>
+            normalizeDemoProgressGoal(goal as Partial<DemoProgressGoal>),
+          )
         : seeded.progressGoals,
       milestones: Array.isArray(parsed.milestones)
         ? (parsed.milestones as MilestoneEntry[])
         : seeded.milestones,
-      goals: Array.isArray(parsed.goals)
-        ? (parsed.goals as DemoSavingsGoal[])
-        : seeded.goals,
       budgets: Array.isArray(parsed.budgets)
         ? (parsed.budgets as SavedBudget[])
         : seeded.budgets,

@@ -4,6 +4,8 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -22,6 +24,12 @@ import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import {
+  differenceInCalendarDays,
+  format as formatDate,
+  parseISO,
+  subDays,
+} from "date-fns";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -52,6 +60,7 @@ import {
   ReportsAggregates,
   Transaction,
 } from "@/lib/types/types";
+import { formatCurrency } from "@/lib/utils/format";
 
 // Note 2: All three chart components use `{ ssr: false }` because they depend
 // on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.
@@ -192,13 +201,18 @@ interface StatCardProps {
   value: string;
   color: string;
   loading: boolean;
+  trend?: {
+    direction: "up" | "down" | null;
+    text: string;
+    color: string;
+  } | null;
 }
 
 // Note 5: `StatCard` and `EmptyState` are defined as module-level functions
 // rather than in a separate file because they are small, single-use sub-components
 // with no state of their own. Co-locating them with their only consumer avoids
 // unnecessary file fragmentation.
-function StatCard({ label, value, color, loading }: StatCardProps) {
+function StatCard({ label, value, color, loading, trend }: StatCardProps) {
   return (
     <Card>
       <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
@@ -208,13 +222,137 @@ function StatCard({ label, value, color, loading }: StatCardProps) {
         {loading ? (
           <Skeleton width={90} height={32} />
         ) : (
-          <Typography variant="h6" fontWeight={700} sx={{ color }}>
-            {value}
-          </Typography>
+          <>
+            <Typography variant="h6" fontWeight={700} sx={{ color }}>
+              {value}
+            </Typography>
+            {trend ? (
+              <Box
+                sx={{
+                  mt: 0.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  minHeight: 18,
+                }}
+              >
+                {trend.direction === "up" ? (
+                  <ArrowUpwardIcon sx={{ fontSize: 14, color: trend.color }} />
+                ) : trend.direction === "down" ? (
+                  <ArrowDownwardIcon
+                    sx={{ fontSize: 14, color: trend.color }}
+                  />
+                ) : null}
+                <Typography
+                  variant="caption"
+                  sx={{ color: trend.color, lineHeight: 1.35 }}
+                >
+                  {trend.text}
+                </Typography>
+              </Box>
+            ) : null}
+          </>
         )}
       </CardContent>
     </Card>
   );
+}
+
+function buildComparablePeriodFilters(
+  filters: FilterParams,
+): FilterParams | null {
+  if (filters.startDate && filters.endDate) {
+    const startDate = parseISO(filters.startDate);
+    const endDate = parseISO(filters.endDate);
+
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime()) ||
+      endDate < startDate
+    ) {
+      return null;
+    }
+
+    const rangeDays = differenceInCalendarDays(endDate, startDate) + 1;
+    const previousEndDate = subDays(startDate, 1);
+    const previousStartDate = subDays(previousEndDate, rangeDays - 1);
+
+    return {
+      ...filters,
+      years: [],
+      startDate: formatDate(previousStartDate, "yyyy-MM-dd"),
+      endDate: formatDate(previousEndDate, "yyyy-MM-dd"),
+    };
+  }
+
+  if (filters.years.length === 0) {
+    return null;
+  }
+
+  const sortedYears = Array.from(
+    new Set(
+      filters.years
+        .map((year) => Number.parseInt(year, 10))
+        .filter((year) => Number.isInteger(year)),
+    ),
+  ).sort((a, b) => a - b);
+
+  if (sortedYears.length !== filters.years.length) {
+    return null;
+  }
+
+  for (let index = 1; index < sortedYears.length; index += 1) {
+    if (sortedYears[index] !== sortedYears[index - 1] + 1) {
+      return null;
+    }
+  }
+
+  const previousYears = Array.from({ length: sortedYears.length }, (_, index) =>
+    String(sortedYears[0] - sortedYears.length + index),
+  );
+
+  return {
+    ...filters,
+    years: previousYears,
+    startDate: null,
+    endDate: null,
+  };
+}
+
+function buildStatTrend(
+  currentValue: number,
+  previousValue: number,
+  positiveIsFavorable: boolean,
+) {
+  if (previousValue === 0) {
+    return {
+      direction: null,
+      text:
+        currentValue === 0
+          ? "No change vs previous period"
+          : "New vs previous period",
+      color: "text.secondary",
+    } as const;
+  }
+
+  const delta =
+    ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
+  if (delta === 0) {
+    return {
+      direction: null,
+      text: "No change vs previous period",
+      color: "text.secondary",
+    } as const;
+  }
+
+  const isIncrease = delta > 0;
+  const isFavorable = positiveIsFavorable ? isIncrease : !isIncrease;
+
+  return {
+    direction: isIncrease ? "up" : "down",
+    text: `${Math.abs(delta).toFixed(1)}% vs previous period`,
+    color: isFavorable ? "success.main" : "error.main",
+  } as const;
 }
 
 function EmptyState({
@@ -523,8 +661,26 @@ export default function ReportsPage() {
     [filtered],
   );
 
-  const fmt = (v: number) =>
-    v.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const comparableFilters = useMemo(
+    () => buildComparablePeriodFilters(filters),
+    [filters],
+  );
+
+  const comparableTransactions = useMemo(
+    () =>
+      comparableFilters
+        ? filterTransactions(allTransactions, comparableFilters)
+        : [],
+    [allTransactions, comparableFilters],
+  );
+
+  const comparableAgg = useMemo(
+    () =>
+      comparableTransactions.length > 0
+        ? aggregateTransactions(comparableTransactions)
+        : null,
+    [comparableTransactions],
+  );
 
   const isEmpty = !loading && allTransactions.length === 0;
 
@@ -607,6 +763,24 @@ export default function ReportsPage() {
         />
       ) : (
         <>
+          <Box
+            role="toolbar"
+            aria-label="Report actions"
+            sx={{
+              display: { xs: "flex", md: "none" },
+              mb: 2,
+            }}
+          >
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleAddTransaction()}
+            >
+              Add Transaction
+            </Button>
+          </Box>
+
           {loading ? (
             <Skeleton
               variant="rectangular"
@@ -637,28 +811,63 @@ export default function ReportsPage() {
               [
                 {
                   label: "Total Income",
-                  value: fmt(agg.incomeAmount),
+                  value: formatCurrency(agg.incomeAmount),
                   color: "#26a69a",
+                  trend: comparableAgg
+                    ? buildStatTrend(
+                        agg.incomeAmount,
+                        comparableAgg.incomeAmount,
+                        true,
+                      )
+                    : null,
                 },
                 {
                   label: "Total Spending",
-                  value: fmt(agg.spendingAmount),
+                  value: formatCurrency(agg.spendingAmount),
                   color: "text.primary",
+                  trend: comparableAgg
+                    ? buildStatTrend(
+                        agg.spendingAmount,
+                        comparableAgg.spendingAmount,
+                        false,
+                      )
+                    : null,
                 },
                 {
                   label: "Needs",
-                  value: fmt(agg.totalByCategoryType.Need),
+                  value: formatCurrency(agg.totalByCategoryType.Need),
                   color: "#ef5350",
+                  trend: comparableAgg
+                    ? buildStatTrend(
+                        agg.totalByCategoryType.Need,
+                        comparableAgg.totalByCategoryType.Need,
+                        false,
+                      )
+                    : null,
                 },
                 {
                   label: "Wants",
-                  value: fmt(agg.totalByCategoryType.Want),
+                  value: formatCurrency(agg.totalByCategoryType.Want),
                   color: "#42a5f5",
+                  trend: comparableAgg
+                    ? buildStatTrend(
+                        agg.totalByCategoryType.Want,
+                        comparableAgg.totalByCategoryType.Want,
+                        false,
+                      )
+                    : null,
                 },
                 {
                   label: "Savings",
-                  value: fmt(agg.totalByCategoryType.Saving),
+                  value: formatCurrency(agg.totalByCategoryType.Saving),
                   color: "#66bb6a",
+                  trend: comparableAgg
+                    ? buildStatTrend(
+                        agg.totalByCategoryType.Saving,
+                        comparableAgg.totalByCategoryType.Saving,
+                        true,
+                      )
+                    : null,
                 },
               ] as const
             ).map((s) => (
@@ -856,7 +1065,12 @@ export default function ReportsPage() {
         <Fab
           color="primary"
           aria-label="Add transaction"
-          sx={{ position: "fixed", bottom: 32, right: 32 }}
+          sx={{
+            position: "fixed",
+            bottom: 32,
+            right: 32,
+            display: { xs: "none", md: "inline-flex" },
+          }}
           onClick={() => handleAddTransaction()}
         >
           <AddIcon />
