@@ -19,6 +19,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
   type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
@@ -38,6 +39,9 @@ interface Props {
   retirementEntries: RetirementEntry[];
   loading?: boolean;
   error?: string | null;
+  /** When set, draws a dashed reference line on the retirement chart so the
+   *  user can see how far current savings are from the goal. */
+  goalTargetAmount?: number | null;
 }
 
 type ProgressTooltipProps = TooltipProps<number, string>;
@@ -53,9 +57,18 @@ export default function ProgressCharts({
   retirementEntries,
   loading = false,
   error = null,
+  goalTargetAmount = null,
 }: Props) {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState(TAB_RETIREMENT);
+
+  // Note 3: Compact Y-axis labels keep tick text short on small viewports.
+  // Recharts passes the raw numeric value; we convert to $K or $M notation.
+  const formatYAxis = (value: number): string => {
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
+  };
 
   const retirementData = useMemo(() => {
     return [...retirementEntries]
@@ -158,9 +171,33 @@ export default function ProgressCharts({
                 <LineChart data={retirementData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="year" />
-                  <YAxis />
+                  <YAxis
+                    type="number"
+                    tickFormatter={formatYAxis}
+                    domain={[
+                      0,
+                      (dataMax: number) =>
+                        Math.ceil(
+                          Math.max(dataMax, goalTargetAmount ?? dataMax) * 1.1,
+                        ),
+                    ]}
+                    width={60}
+                  />
                   <Tooltip content={tooltipContent} />
                   <Legend />
+                  {goalTargetAmount != null && (
+                    <ReferenceLine
+                      y={goalTargetAmount}
+                      stroke={theme.palette.success.main}
+                      strokeDasharray="6 3"
+                      label={{
+                        value: "Goal",
+                        position: "insideTopRight",
+                        fill: theme.palette.success.main,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
                   <Line
                     type="monotone"
                     dataKey="retirement"

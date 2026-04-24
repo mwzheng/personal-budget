@@ -6,12 +6,11 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import GoalEditor from "@/components/progress/GoalEditor";
+import HistoryTabs from "@/components/progress/HistoryTabs";
 import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
 import ProgressSummaryStats from "@/components/progress/ProgressSummaryStats";
 import PageHeader from "@/components/ui/PageHeader";
-import RetirementList from "@/components/ui/RetirementList";
-import SalaryList from "@/components/ui/SalaryList";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
@@ -36,6 +35,12 @@ export default function Page() {
   // GoalEditor saves without introducing an additional API call at page level.
   const [goalTargetAmount, setGoalTargetAmount] = useState<number | null>(null);
   const [goalLatestEnd, setGoalLatestEnd] = useState<number | null>(null);
+
+  // Note 3: goalRefreshTrigger increments after any entry mutation so GoalEditor
+  // re-fetches its latestEnd (computed server-side from retirement data). This
+  // prevents the progress bar and summary stats from showing a stale value after
+  // the user adds or edits a retirement entry.
+  const [goalRefreshTrigger, setGoalRefreshTrigger] = useState(0);
 
   const handleGoalData = useCallback(
     (targetAmount: number | null, latestEnd: number | null) => {
@@ -82,6 +87,15 @@ export default function Page() {
     }
   }, []);
 
+  // Note 4: handleEntriesChanged is separate from refreshChartData so that
+  // mutations (add/edit/delete retirement entries) also trigger GoalEditor to
+  // re-fetch the server-computed latestEnd. refreshChartData on its own is
+  // still used for the initial page load where the trigger should not fire.
+  const handleEntriesChanged = useCallback(async () => {
+    await refreshChartData();
+    setGoalRefreshTrigger((t) => t + 1);
+  }, [refreshChartData]);
+
   useEffect(() => {
     void refreshChartData();
   }, [refreshChartData]);
@@ -93,7 +107,7 @@ export default function Page() {
         description="Review salary history, retirement contributions, and milestones from one long-term progress workspace."
       />
 
-      {/* Note 3: Summary stats strip — derives metrics from already-fetched page
+      {/* Note 5: Summary stats strip — derives metrics from already-fetched page
           state. Renders above the goal paper so it reads as a dashboard overview. */}
       <Box sx={{ mt: 3 }}>
         <ProgressSummaryStats
@@ -106,7 +120,10 @@ export default function Page() {
 
       <Stack spacing={3} sx={{ mt: 3 }}>
         <Paper sx={{ p: 3 }} elevation={1}>
-          <GoalEditor onGoalData={handleGoalData} />
+          <GoalEditor
+            onGoalData={handleGoalData}
+            refreshTrigger={goalRefreshTrigger}
+          />
         </Paper>
 
         <Paper sx={{ p: 3 }} elevation={1}>
@@ -115,19 +132,19 @@ export default function Page() {
             retirementEntries={retirementEntries}
             loading={chartLoading}
             error={chartError}
+            goalTargetAmount={goalTargetAmount}
           />
         </Paper>
 
+        {/* Note 6: HistoryTabs consolidates RetirementList and SalaryList into
+            one tabbed Paper to reduce vertical page length. Both panels stay
+            mounted (display:none on inactive) so CRUD state survives tab switches. */}
         <Paper sx={{ p: 3 }} elevation={1}>
-          <RetirementList onEntriesChanged={refreshChartData} />
+          <HistoryTabs onEntriesChanged={handleEntriesChanged} />
         </Paper>
 
         <Paper sx={{ p: 3 }} elevation={1}>
           <MilestonesList />
-        </Paper>
-
-        <Paper sx={{ p: 3 }} elevation={1}>
-          <SalaryList onEntriesChanged={refreshChartData} />
         </Paper>
       </Stack>
     </Container>

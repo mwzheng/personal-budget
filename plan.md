@@ -1,9 +1,13 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-04-20)
+## Status: Active follow-up plan (updated 2026-05-28)
 
 Latest completed work:
 
+- Completed Progress page UX polish: added HistoryTabs (tabbed RetirementList /
+  SalaryList panel with persistent mount), fixed GoalEditor staleness via
+  refreshTrigger, added dashed goal ReferenceLine + compact YAxis formatter to
+  charts, and replaced flat icon backgrounds with alpha-tinted circles.
 - Removed the home-page feature card links so the cards stay informative and
   visually polished without behaving like login CTAs.
 - Added a custom App Router 404 page with clear not-found copy, a manual route

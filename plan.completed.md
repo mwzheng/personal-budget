@@ -8,6 +8,92 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Progress page UX polish — HistoryTabs, chart enhancements, alpha stat icons
+
+Date: 2026-05-28
+
+Summary
+
+Four remaining items from the Progress page redesign were implemented and
+validated (lint + 279 tests + full build all green).
+
+Completed items
+
+- Created `HistoryTabs.tsx`: tabbed RetirementList / SalaryList panel; both
+  panels stay mounted (hidden via `display:none`) to preserve CRUD dialog state
+  across tab switches; forwards `onEntriesChanged` to both children.
+- Fixed GoalEditor data staleness: added `refreshTrigger?: number` prop; page
+  increments it in `handleEntriesChanged` (post-mutation) so `/api/progress/goal`
+  (`latestEnd`) re-fetches automatically after retirement-entry changes.
+- ProgressCharts enhancements: added dashed green goal `ReferenceLine`; added
+  compact `formatYAxis` helper (`$K` / `$M` notation); upgraded `<YAxis>` with
+  dynamic `domain` so the goal line is never clipped.
+- ProgressSummaryStats: replaced flat `action.hover` icon backgrounds with
+  alpha-tinted per-color circles (primary / success / warning at 0.15 opacity).
+
+Files changed
+
+- components/progress/HistoryTabs.tsx (new)
+- app/progress/page.tsx
+- components/progress/GoalEditor.tsx
+- components/progress/ProgressCharts.tsx
+- components/progress/ProgressSummaryStats.tsx
+
+Commit reference
+
+feat(progress): add HistoryTabs, fix goal staleness, add chart reference line and alpha stat icons
+
+Notes
+
+- ProgressCharts keeps conditional rendering for its two tab panels (unlike
+  HistoryTabs) to avoid Recharts stale-size issues inside hidden containers.
+- Goal ReferenceLine domain: ceiling is 110% of max(dataMax, goalTargetAmount)
+  so the reference line is always fully visible.
+
+---
+
+# Completed: Progress page UX polish — HistoryTabs, chart enhancements, alpha stat icons
+
+Date: 2026-05-28
+
+Summary
+
+Four remaining items from the Progress page redesign were implemented and
+validated (lint + 279 tests + full build all green).
+
+Completed items
+
+- Created `HistoryTabs.tsx`: tabbed RetirementList / SalaryList panel; both
+  panels stay mounted (hidden via `display:none`) to preserve CRUD dialog state
+  across tab switches; forwards `onEntriesChanged` to both children.
+- Fixed GoalEditor data staleness: added `refreshTrigger?: number` prop; page
+  increments it in `handleEntriesChanged` (post-mutation) so `/api/progress/goal`
+  (`latestEnd`) re-fetches automatically after retirement-entry changes.
+- ProgressCharts enhancements: added dashed green goal `ReferenceLine`; added
+  compact `formatYAxis` helper (`$K` / `$M` notation); upgraded `<YAxis>` with
+  dynamic `domain` so the goal line is never clipped.
+- ProgressSummaryStats: replaced flat `action.hover` icon backgrounds with
+  alpha-tinted per-color circles (primary / success / warning at 0.15 opacity).
+
+Files changed
+
+- components/progress/HistoryTabs.tsx (new)
+- app/progress/page.tsx
+- components/progress/GoalEditor.tsx
+- components/progress/ProgressCharts.tsx
+- components/progress/ProgressSummaryStats.tsx
+
+Commit reference
+
+feat(progress): add HistoryTabs, fix goal staleness, add chart reference line and alpha stat icons
+
+Notes
+
+- ProgressCharts keeps conditional rendering for its two tab panels (unlike
+  HistoryTabs) to avoid Recharts stale-size issues inside hidden containers.
+- Goal ReferenceLine domain: ceiling is 110% of max(dataMax, goalTargetAmount)
+  so the reference line is always fully visible.
+
 # Completed: Progress Tracker redesign + home auth-gate
 
 Date: 2026-04-24

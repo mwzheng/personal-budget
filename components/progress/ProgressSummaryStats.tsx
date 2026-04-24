@@ -6,6 +6,7 @@
 
 import React from "react";
 import { Box, Card, CardContent, Typography } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
 import TrackChangesOutlinedIcon from "@mui/icons-material/TrackChangesOutlined";
@@ -30,9 +31,17 @@ interface StatCardProps {
   label: string;
   value: string;
   iconColor?: string;
+  /** Alpha-tinted background for the icon circle; falls back to action.hover. */
+  iconBgColor?: string;
 }
 
-function StatCard({ icon, label, value, iconColor }: StatCardProps) {
+function StatCard({
+  icon,
+  label,
+  value,
+  iconColor,
+  iconBgColor,
+}: StatCardProps) {
   return (
     <Card
       sx={{
@@ -60,7 +69,7 @@ function StatCard({ icon, label, value, iconColor }: StatCardProps) {
             width: 48,
             height: 48,
             borderRadius: "50%",
-            bgcolor: "action.hover",
+            bgcolor: iconBgColor ?? "action.hover",
             color: iconColor ?? "primary.main",
             flexShrink: 0,
             "& svg": { fontSize: 26 },
@@ -94,12 +103,15 @@ function formatPercent(pct: number | null): string {
   return `${pct}%`;
 }
 
+// Note: useTheme is used here (not inside StatCard) so StatCard stays a pure
+// presentational component that can be used outside of a MUI theme context.
 export default function ProgressSummaryStats({
   retirementEntries,
   salaryEntries,
   goalTargetAmount,
   latestEnd,
 }: Props) {
+  const theme = useTheme();
   // Note 2: The total-saved stat uses the latestEnd supplied by the goal API
   // (authoritative server value) with a fallback to the highest year in the
   // local retirement entries array so the card can populate even without a goal.
@@ -123,18 +135,21 @@ export default function ProgressSummaryStats({
         label="Progress to Goal"
         value={formatPercent(rawPct)}
         iconColor="primary.main"
+        iconBgColor={alpha(theme.palette.primary.main, 0.15)}
       />
       <StatCard
         icon={<SavingsOutlinedIcon />}
         label="Total Saved"
         value={formatCurrency(totalSaved)}
         iconColor="success.main"
+        iconBgColor={alpha(theme.palette.success.main, 0.15)}
       />
       <StatCard
         icon={<TrendingUpOutlinedIcon />}
         label="Latest Salary"
         value={formatCurrency(latestSalary)}
         iconColor="warning.main"
+        iconBgColor={alpha(theme.palette.warning.main, 0.15)}
       />
     </Box>
   );

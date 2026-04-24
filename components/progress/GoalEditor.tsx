@@ -37,9 +37,14 @@ interface GoalApiResponse {
 interface Props {
   /** Called after goal data is fetched or saved so parent can derive summary metrics. */
   onGoalData?: (targetAmount: number | null, latestEnd: number | null) => void;
+  /**
+   * Increment this value to force a re-fetch of goal data. Used by the page
+   * after retirement entry mutations so latestEnd stays current.
+   */
+  refreshTrigger?: number;
 }
 
-export default function GoalEditor({ onGoalData }: Props) {
+export default function GoalEditor({ onGoalData, refreshTrigger }: Props) {
   const [goal, setGoal] = useState<ProgressGoal | null>(null);
   const [target, setTarget] = useState("");
   const [latestEnd, setLatestEnd] = useState<number | null>(null);
@@ -67,9 +72,11 @@ export default function GoalEditor({ onGoalData }: Props) {
     }
   }, [onGoalData]);
 
+  // Note: refreshTrigger in deps causes a re-fetch when retirement entries
+  // change, keeping latestEnd in sync with server-computed values.
   useEffect(() => {
     void fetchGoal();
-  }, [fetchGoal]);
+  }, [fetchGoal, refreshTrigger]);
 
   // Note 4: save() is unchanged from the original implementation —
   // POST for new goals, PUT for existing ones.
