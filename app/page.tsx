@@ -4,22 +4,20 @@
  */
 
 import type { Metadata } from "next";
-import NextLink from "next/link";
 import Script from "next/script";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import Paper from "@mui/material/Paper";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import Stack from "@mui/material/Stack";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 
+import HomeHeroActions from "@/components/home/HomeHeroActions";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
 import { APP_NAME, ROUTE_PATHS } from "@/lib/content/page-titles";
 
@@ -167,31 +165,7 @@ export default function Home() {
           >
             {hero.summary}
           </Typography>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Button
-              component={NextLink}
-              href={ROUTE_PATHS.login}
-              variant="contained"
-              size="large"
-              sx={{ minWidth: { sm: 180 } }}
-            >
-              Try Demo
-            </Button>
-            <Button
-              component={NextLink}
-              href={ROUTE_PATHS.login}
-              variant="outlined"
-              size="large"
-              sx={{ minWidth: { sm: 180 } }}
-            >
-              Sign In
-            </Button>
-          </Stack>
+          <HomeHeroActions />
         </Box>
 
         <Box component="section" aria-labelledby="home-features-title">
