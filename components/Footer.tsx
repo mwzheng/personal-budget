@@ -35,20 +35,21 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
         href={link.href}
         target="_blank"
         rel="noreferrer"
-        underline="hover"
-        color="inherit"
+        underline="none"
+        color="text.secondary"
         sx={{
           alignItems: "center",
           display: "inline-flex",
-          fontWeight: 600,
+          fontWeight: 500,
+          fontSize: "0.875rem",
           gap: 0.5,
           width: "fit-content",
-          transition: "color 0.2s ease",
-          "&:hover": { color: "primary.main" },
+          transition: "color 0.15s ease-in-out",
+          "&:hover": { color: "primary.light" },
         }}
       >
         {link.label}
-        <LaunchIcon sx={{ fontSize: 14 }} aria-hidden="true" />
+        <LaunchIcon sx={{ fontSize: 13 }} aria-hidden="true" />
       </Link>
     );
   }
@@ -57,13 +58,14 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
     <Link
       component={NextLink}
       href={link.href}
-      underline="hover"
-      color="inherit"
+      underline="none"
+      color="text.secondary"
       sx={{
-        fontWeight: 600,
+        fontWeight: 500,
+        fontSize: "0.875rem",
         width: "fit-content",
-        transition: "color 0.2s ease",
-        "&:hover": { color: "primary.main" },
+        transition: "color 0.15s ease-in-out",
+        "&:hover": { color: "primary.light" },
       }}
     >
       {link.label}
@@ -81,8 +83,8 @@ function FooterNavigationGroup({ group }: { group: FooterLinkGroup }) {
       <Typography
         id={groupHeadingId}
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: 1.2 }}
+        color="text.disabled"
+        sx={{ letterSpacing: "0.08em", fontSize: "0.7rem", fontWeight: 600 }}
       >
         {group.title}
       </Typography>
@@ -107,8 +109,8 @@ function FooterSocialGroup({
       <Typography
         id="footer-social"
         variant="overline"
-        color="text.secondary"
-        sx={{ letterSpacing: 1.2 }}
+        color="text.disabled"
+        sx={{ letterSpacing: "0.08em", fontSize: "0.7rem", fontWeight: 600 }}
       >
         Social
       </Typography>
@@ -129,21 +131,22 @@ function FooterSocialGroup({
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                underline="hover"
-                color="inherit"
+                underline="none"
+                color="text.secondary"
                 sx={{
                   alignItems: "center",
                   display: "inline-flex",
                   gap: 0.75,
-                  transition: "color 0.2s ease",
-                  "&:hover": { color: "primary.main" },
+                  fontSize: "0.875rem",
+                  transition: "color 0.15s ease-in-out",
+                  "&:hover": { color: "primary.light" },
                 }}
               >
-                <Icon sx={{ fontSize: 18 }} aria-hidden="true" />
-                <Typography component="span" variant="body2" fontWeight={600}>
+                <Icon sx={{ fontSize: 17 }} aria-hidden="true" />
+                <Typography component="span" variant="body2" fontWeight={500}>
                   {link.label}
                 </Typography>
-                <LaunchIcon sx={{ fontSize: 14 }} aria-hidden="true" />
+                <LaunchIcon sx={{ fontSize: 13 }} aria-hidden="true" />
               </Link>
             </Box>
           );
@@ -163,11 +166,11 @@ export function Footer() {
       component="footer"
       sx={{
         mt: "auto",
-        bgcolor: "background.paper",
+        bgcolor: "background.default",
         borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 3 } }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
         <Box
           sx={{
             display: "grid",
@@ -178,15 +181,20 @@ export function Footer() {
             },
           }}
         >
-          <Stack spacing={0.5}>
+          <Stack spacing={0.75}>
             <Link
               component={NextLink}
               href={homeHref}
               color="inherit"
               underline="none"
-              sx={{ display: "inline-flex", width: "fit-content" }}
+              sx={{
+                display: "inline-flex",
+                width: "fit-content",
+                transition: "color 0.15s ease-in-out",
+                "&:hover": { color: "primary.light" },
+              }}
             >
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant="subtitle1" fontWeight={700}>
                 🥣 {brandName}
               </Typography>
             </Link>
@@ -194,7 +202,7 @@ export function Footer() {
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ mt: 0.25 }}
+                sx={{ maxWidth: 280, lineHeight: 1.6 }}
               >
                 {tagline}
               </Typography>
@@ -221,15 +229,15 @@ export function Footer() {
         <Divider
           sx={{
             borderColor: SERVER_THEME_TOKENS.border.subtle,
-            my: { xs: 2, md: 2.5 },
+            my: { xs: 2.5, md: 3 },
           }}
         />
 
         <Typography
-          variant="body2"
-          color="text.secondary"
+          variant="caption"
+          color="text.disabled"
           align="center"
-          sx={{ pt: 1.25 }}
+          display="block"
         >
           © {currentYear} {brandName}
         </Typography>

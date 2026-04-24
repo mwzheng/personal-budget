@@ -10,6 +10,7 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -33,6 +34,7 @@ import {
   getPageTitleEntry,
   normalizeAppPathname,
 } from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 type InfoPageKey = (typeof PUBLIC_INFO_PAGE_TITLE_KEYS)[number];
 type AuthPageKey = Extract<
@@ -84,17 +86,25 @@ const AUTH_TABS = AUTH_TAB_PAGE_KEYS.map((pageKey) => {
   };
 });
 
+// Salary page entry for mobile drawer discovery.
+const SALARY_NAV_ITEM = {
+  key: PAGE_TITLE_KEYS.SALARY,
+  label: "Salary History",
+  href: getPageTitleEntry(PAGE_TITLE_KEYS.SALARY).route,
+};
+
 const MOBILE_DRAWER_WIDTH = 320;
 
 const mobileNavItemSx = {
   borderRadius: 2,
   px: 1.5,
-  py: 0.75,
+  py: 0.875,
   "&.Mui-selected": {
-    bgcolor: "rgba(45, 125, 210, 0.16)",
+    bgcolor: SERVER_THEME_TOKENS.surface.selected,
+    color: "primary.light",
   },
   "&.Mui-selected:hover": {
-    bgcolor: "rgba(45, 125, 210, 0.24)",
+    bgcolor: SERVER_THEME_TOKENS.surface.selectedHover,
   },
 } as const;
 
@@ -106,6 +116,9 @@ function isRouteSelected(pathname: string, href: string) {
  * Note 2: `AppNav` keeps authenticated workspace tabs and public info routes in
  * the same header so signed-out visitors can still reach About, FAQ, and
  * Contact without losing the existing signed-in workflow navigation.
+ *
+ * The desktop nav shows at `lg` and above (not `md`) to prevent header crowding
+ * as tabs are listed alongside auth and Info controls in a single toolbar row.
  */
 export function AppNav() {
   // Note 3: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").
@@ -167,44 +180,44 @@ export function AppNav() {
 
   return (
     // Note 6: `elevation={0}` removes the default MUI shadow from the AppBar.
-    // The border is added manually via `sx` to create a clean separation line
-    // without a blurry shadow that could look heavy on a dark background.
+    // The border is added via the MuiAppBar theme override; no local sx needed.
     <AppBar
       position="static"
       elevation={0}
-      sx={{
-        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-        bgcolor: "background.default",
-      }}
+      sx={{ bgcolor: "background.default" }}
     >
-      <Toolbar sx={{ gap: 1 }}>
+      <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
+        {/* Brand */}
         <Typography
-          variant="h6"
-          sx={{
-            mr: { md: 4 },
-            flexGrow: { xs: 1, md: 0 },
-            fontWeight: 700,
-            textDecoration: "none",
-            color: "inherit",
-            "&:hover, &:focus": {
-              cursor: "pointer",
-              textDecoration: "none",
-              color: "primary.main",
-            },
-          }}
+          variant="subtitle1"
           component={NextLink}
           href={ROUTE_PATHS.home}
           aria-label="Porridge Budget home"
+          sx={{
+            mr: { lg: 3 },
+            flexGrow: { xs: 1, lg: 0 },
+            fontWeight: 700,
+            fontSize: "1rem",
+            textDecoration: "none",
+            color: "text.primary",
+            letterSpacing: "-0.01em",
+            transition: "color 0.15s ease-in-out",
+            "&:hover": { color: "primary.light" },
+          }}
         >
           🥣 Porridge Budget
         </Typography>
 
-        {/* Note 7: The in-app pages only make sense for authenticated or demo users,
-             so signed-out visitors see a simpler header with just the brand and auth
-             actions instead of tabs that would immediately redirect them to login. */}
+        {/* Note 7: Workspace tabs — only shown when logged in, and only at lg+
+             to avoid overflow at medium viewport widths. */}
         {loggedIn ? (
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "block" } }}>
-            <Tabs value={value} textColor="inherit" indicatorColor="primary">
+          <Box sx={{ flexGrow: 1, display: { xs: "none", lg: "block" } }}>
+            <Tabs
+              value={value}
+              textColor="inherit"
+              indicatorColor="primary"
+              sx={{ "& .MuiTab-root": { px: 2, py: 2 } }}
+            >
               {AUTH_TABS.map((tab) => (
                 <Tab
                   key={tab.key}
@@ -220,16 +233,17 @@ export function AppNav() {
           <Box sx={{ flexGrow: 1 }} />
         )}
 
-        {/* Note 8: `Info` stays visible for every visitor. Hover opens the menu
-             for pointer users, while click and keyboard handlers keep it usable on
-             touch devices and with assistive technology. */}
+        {/* Desktop: Info + auth actions — hidden below lg */}
         <Box
           sx={{
-            display: { xs: "none", md: "flex" },
+            display: { xs: "none", lg: "flex" },
             alignItems: "center",
-            gap: 1,
+            gap: 0.5,
           }}
         >
+          {/* Note 8: `Info` stays visible for every visitor. Hover opens the menu
+               for pointer users, while click and keyboard handlers keep it usable on
+               touch devices and with assistive technology. */}
           <Button
             id="app-nav-info-button"
             color="inherit"
@@ -239,6 +253,7 @@ export function AppNav() {
             endIcon={
               <KeyboardArrowDownRoundedIcon
                 sx={{
+                  fontSize: "1.1rem",
                   transition: "transform 150ms ease",
                   transform: isInfoMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
                 }}
@@ -249,7 +264,6 @@ export function AppNav() {
                 closeInfoMenu();
                 return;
               }
-
               openInfoMenu(event.currentTarget);
             }}
             onKeyDown={(event) => {
@@ -265,28 +279,52 @@ export function AppNav() {
             sx={{
               minWidth: 0,
               px: 1.5,
-              color: isInfoMenuOpen || isInfoRoute ? "primary.main" : "inherit",
-              "&:hover": { bgcolor: "action.hover" },
+              fontWeight: 500,
+              color:
+                isInfoMenuOpen || isInfoRoute
+                  ? "primary.light"
+                  : "text.secondary",
+              "&:hover": { color: "text.primary" },
             }}
           >
             Info
           </Button>
 
-          {/* Auth buttons: show Sign out when logged in, otherwise Sign in and Register */}
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              mx: 0.5,
+              my: 1.5,
+              borderColor: SERVER_THEME_TOKENS.border.subtle,
+            }}
+          />
+
+          {/* Auth buttons */}
           {loggedIn ? (
             <Button
               component={NextLink}
               href={ROUTE_PATHS.signout}
-              color="inherit"
+              size="small"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 500,
+                "&:hover": { color: "text.primary" },
+              }}
             >
               Sign out
             </Button>
           ) : (
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <Button
                 component={NextLink}
                 href={ROUTE_PATHS.login}
-                color="inherit"
+                size="small"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 500,
+                  "&:hover": { color: "text.primary" },
+                }}
               >
                 Sign in
               </Button>
@@ -294,23 +332,26 @@ export function AppNav() {
                 component={NextLink}
                 href={ROUTE_PATHS.register}
                 variant="contained"
+                size="small"
               >
-                Register
+                Get started
               </Button>
             </Box>
           )}
         </Box>
 
+        {/* Mobile hamburger — visible below lg */}
         <IconButton
           color="inherit"
           aria-label="Open navigation menu"
           edge="end"
           onClick={() => setMobileDrawerOpen(true)}
-          sx={{ display: { xs: "inline-flex", md: "none" } }}
+          sx={{ display: { xs: "inline-flex", lg: "none" } }}
         >
           <MenuRoundedIcon />
         </IconButton>
 
+        {/* Info dropdown menu */}
         <Menu
           id="app-nav-info-menu"
           anchorEl={infoMenuAnchorEl}
@@ -323,15 +364,15 @@ export function AppNav() {
           transformOrigin={{ vertical: "top", horizontal: "left" }}
           MenuListProps={{
             "aria-labelledby": "app-nav-info-button",
+            dense: true,
           }}
           slotProps={{
             paper: {
+              elevation: 2,
               sx: {
                 mt: 1,
-                minWidth: 160,
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                bgcolor: "background.paper",
-                backgroundImage: "none",
+                minWidth: 176,
+                py: 0.5,
               },
             },
           }}
@@ -345,17 +386,8 @@ export function AppNav() {
                 href={item.href}
                 onClick={closeInfoMenu}
                 selected={isSelected}
-                sx={{
-                  py: 1,
-                  "&.Mui-selected": {
-                    bgcolor: "rgba(45, 125, 210, 0.16)",
-                  },
-                  "&.Mui-selected:hover": {
-                    bgcolor: "rgba(45, 125, 210, 0.24)",
-                  },
-                }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                <Typography variant="body2" fontWeight={600}>
                   {item.label}
                 </Typography>
               </MenuItem>
@@ -363,6 +395,7 @@ export function AppNav() {
           })}
         </Menu>
 
+        {/* Mobile / tablet navigation drawer */}
         <Drawer
           anchor="right"
           open={mobileDrawerOpen}
@@ -375,20 +408,17 @@ export function AppNav() {
                   xs: `min(${MOBILE_DRAWER_WIDTH}px, 100vw)`,
                   sm: MOBILE_DRAWER_WIDTH,
                 },
-                bgcolor: "background.paper",
+                bgcolor: "background.default",
                 backgroundImage: "none",
-                borderLeft: "1px solid rgba(255, 255, 255, 0.06)",
+                borderLeft: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
               },
             },
           }}
         >
           <Box
-            sx={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
           >
+            {/* Drawer header */}
             <Box
               sx={{
                 display: "flex",
@@ -397,7 +427,7 @@ export function AppNav() {
                 gap: 2,
                 px: 2,
                 py: 1.5,
-                borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
               }}
             >
               <Typography
@@ -408,53 +438,72 @@ export function AppNav() {
                 sx={{
                   fontWeight: 700,
                   textDecoration: "none",
-                  color: "inherit",
+                  color: "text.primary",
                 }}
               >
                 🥣 Porridge Budget
               </Typography>
-
               <IconButton
                 color="inherit"
                 aria-label="Close navigation menu"
                 onClick={() => setMobileDrawerOpen(false)}
+                size="small"
               >
                 <CloseRoundedIcon />
               </IconButton>
             </Box>
 
+            {/* Drawer body */}
             <Box sx={{ flexGrow: 1, overflowY: "auto", px: 1.5, py: 2 }}>
               {loggedIn ? (
-                <Box sx={{ mb: 2.5 }}>
+                <Box sx={{ mb: 3 }}>
                   <Typography
                     variant="overline"
                     sx={{
                       px: 1.5,
-                      color: "text.secondary",
-                      letterSpacing: 0.8,
+                      color: "text.disabled",
+                      letterSpacing: "0.08em",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
                     }}
                   >
                     Workspace
                   </Typography>
                   <List disablePadding sx={{ mt: 0.5 }}>
-                    {AUTH_TABS.map((tab) => {
-                      const isSelected = isRouteSelected(pathname, tab.href);
-                      return (
-                        <ListItemButton
-                          key={tab.key}
-                          component={NextLink}
-                          href={tab.href}
-                          onClick={() => setMobileDrawerOpen(false)}
-                          selected={isSelected}
-                          sx={mobileNavItemSx}
-                        >
-                          <ListItemText
-                            primary={tab.label}
-                            primaryTypographyProps={{ fontWeight: 600 }}
-                          />
-                        </ListItemButton>
-                      );
-                    })}
+                    {AUTH_TABS.map((tab) => (
+                      <ListItemButton
+                        key={tab.key}
+                        component={NextLink}
+                        href={tab.href}
+                        onClick={() => setMobileDrawerOpen(false)}
+                        selected={isRouteSelected(pathname, tab.href)}
+                        sx={mobileNavItemSx}
+                      >
+                        <ListItemText
+                          primary={tab.label}
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            variant: "body2",
+                          }}
+                        />
+                      </ListItemButton>
+                    ))}
+                    {/* Salary is always accessible from the mobile drawer */}
+                    <ListItemButton
+                      component={NextLink}
+                      href={SALARY_NAV_ITEM.href}
+                      onClick={() => setMobileDrawerOpen(false)}
+                      selected={isRouteSelected(pathname, SALARY_NAV_ITEM.href)}
+                      sx={mobileNavItemSx}
+                    >
+                      <ListItemText
+                        primary={SALARY_NAV_ITEM.label}
+                        primaryTypographyProps={{
+                          fontWeight: 600,
+                          variant: "body2",
+                        }}
+                      />
+                    </ListItemButton>
                   </List>
                 </Box>
               ) : null}
@@ -462,37 +511,44 @@ export function AppNav() {
               <Box>
                 <Typography
                   variant="overline"
-                  sx={{ px: 1.5, color: "text.secondary", letterSpacing: 0.8 }}
+                  sx={{
+                    px: 1.5,
+                    color: "text.disabled",
+                    letterSpacing: "0.08em",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                  }}
                 >
                   Info
                 </Typography>
                 <List disablePadding sx={{ mt: 0.5 }}>
-                  {INFO_MENU_ITEMS.map((item) => {
-                    const isSelected = isRouteSelected(pathname, item.href);
-                    return (
-                      <ListItemButton
-                        key={item.key}
-                        component={NextLink}
-                        href={item.href}
-                        onClick={() => setMobileDrawerOpen(false)}
-                        selected={isSelected}
-                        sx={mobileNavItemSx}
-                      >
-                        <ListItemText
-                          primary={item.label}
-                          primaryTypographyProps={{ fontWeight: 600 }}
-                        />
-                      </ListItemButton>
-                    );
-                  })}
+                  {INFO_MENU_ITEMS.map((item) => (
+                    <ListItemButton
+                      key={item.key}
+                      component={NextLink}
+                      href={item.href}
+                      onClick={() => setMobileDrawerOpen(false)}
+                      selected={isRouteSelected(pathname, item.href)}
+                      sx={mobileNavItemSx}
+                    >
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontWeight: 600,
+                          variant: "body2",
+                        }}
+                      />
+                    </ListItemButton>
+                  ))}
                 </List>
               </Box>
             </Box>
 
+            {/* Drawer footer — auth actions */}
             <Box
               sx={{
                 p: 2,
-                borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
               }}
             >
               {loggedIn ? (
@@ -503,20 +559,12 @@ export function AppNav() {
                   color="inherit"
                   fullWidth
                   onClick={() => setMobileDrawerOpen(false)}
+                  sx={{ borderColor: SERVER_THEME_TOKENS.border.strong }}
                 >
                   Sign out
                 </Button>
               ) : (
-                <Box sx={{ display: "grid", gap: 1 }}>
-                  <Button
-                    component={NextLink}
-                    href={ROUTE_PATHS.login}
-                    color="inherit"
-                    fullWidth
-                    onClick={() => setMobileDrawerOpen(false)}
-                  >
-                    Sign in
-                  </Button>
+                <Box sx={{ display: "grid", gap: 1.5 }}>
                   <Button
                     component={NextLink}
                     href={ROUTE_PATHS.register}
@@ -524,7 +572,18 @@ export function AppNav() {
                     fullWidth
                     onClick={() => setMobileDrawerOpen(false)}
                   >
-                    Register
+                    Get started
+                  </Button>
+                  <Button
+                    component={NextLink}
+                    href={ROUTE_PATHS.login}
+                    variant="outlined"
+                    color="inherit"
+                    fullWidth
+                    onClick={() => setMobileDrawerOpen(false)}
+                    sx={{ borderColor: SERVER_THEME_TOKENS.border.standard }}
+                  >
+                    Sign in
                   </Button>
                 </Box>
               )}

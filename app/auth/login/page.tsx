@@ -3,9 +3,9 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
@@ -51,55 +51,83 @@ export default function LoginPage() {
   // Note 2: Keep login copy provider-neutral so the choice stays focused on
   // saved-account access versus demo mode, not on Cognito-specific branding.
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Card>
-        <CardContent sx={{ p: 4 }}>
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="h4" fontWeight={700} gutterBottom>
-                Sign In
-              </Typography>
-              <Typography color="text.secondary">
-                Continue with your saved account to access your budget data.
-              </Typography>
+    <Container
+      maxWidth="sm"
+      sx={{
+        minHeight: "calc(100vh - 128px)",
+        display: "flex",
+        alignItems: "center",
+        py: 6,
+      }}
+    >
+      <Box sx={{ width: "100%" }}>
+        <Stack spacing={1} alignItems="center" sx={{ mb: 3 }}>
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            align="center"
+            sx={{ letterSpacing: "-0.02em" }}
+          >
+            Welcome back
+          </Typography>
+          <Typography variant="body1" color="text.secondary" align="center">
+            Sign in to access your budget data.
+          </Typography>
+        </Stack>
+
+        <Paper elevation={1} sx={{ overflow: "hidden" }}>
+          <Stack spacing={0} divider={<Divider />}>
+            {/* Primary sign-in option */}
+            <Box sx={{ p: 3 }}>
+              <Stack spacing={2}>
+                {!cognitoConfigured && (
+                  <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                    Hosted sign-in is not configured for this deployment. If you
+                    need an account, please contact the site owner.
+                  </Alert>
+                )}
+                <SignInButton
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  disabled={!cognitoConfigured}
+                >
+                  Sign in with account
+                </SignInButton>
+              </Stack>
             </Box>
 
-            {!cognitoConfigured && (
-              <Alert severity="warning">
-                Hosted sign-in is not configured for this deployment. If you
-                need an account, please contact the site owner.
-              </Alert>
-            )}
-
-            <Alert severity="info">
-              Demo Sign In loads seeded sample data in this browser only. Demo
-              changes are not saved.
-            </Alert>
-
-            {demoError ? <Alert severity="error">{demoError}</Alert> : null}
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <SignInButton
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={!cognitoConfigured}
-              >
-                Sign In
-              </SignInButton>
-              <Button
-                variant="outlined"
-                size="large"
-                fullWidth
-                onClick={demoSignIn}
-                disabled={demoBusy}
-              >
-                {demoBusy ? "Starting Demo…" : "Demo Sign In"}
-              </Button>
-            </Stack>
+            {/* Demo option */}
+            <Box sx={{ p: 3, bgcolor: "background.default" }}>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    Try the demo
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Explore with seeded sample data. No account needed. Changes
+                    are not saved.
+                  </Typography>
+                </Box>
+                {demoError ? (
+                  <Alert severity="error" sx={{ borderRadius: 2 }}>
+                    {demoError}
+                  </Alert>
+                ) : null}
+                <Button
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  onClick={demoSignIn}
+                  disabled={demoBusy}
+                >
+                  {demoBusy ? "Starting demo…" : "Continue with demo"}
+                </Button>
+              </Stack>
+            </Box>
           </Stack>
-        </CardContent>
-      </Card>
+        </Paper>
+      </Box>
     </Container>
   );
 }

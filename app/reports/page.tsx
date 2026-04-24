@@ -36,6 +36,7 @@ import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { FilterBar } from "@/components/ui/FilterBar";
+import PageHeader from "@/components/ui/PageHeader";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
 import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
@@ -692,63 +693,44 @@ export default function ReportsPage() {
       aria-describedby={PAGE_DESCRIPTION_ID}
       sx={{ py: 4 }}
     >
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={3}
-        flexWrap="wrap"
-        gap={2}
-      >
-        <Box>
-          <Typography
-            id={PAGE_TITLE_ID}
-            component="h1"
-            variant="h5"
-            fontWeight={700}
-          >
-            Income & Spending Reports
-          </Typography>
-          <Typography
-            id={PAGE_DESCRIPTION_ID}
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 0.5 }}
-          >
-            Filter transactions, compare spending with income, and manage CSV
-            imports from one reporting dashboard.
-          </Typography>
-        </Box>
-        {!isEmpty && (
-          <Stack direction="row" gap={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<CompareArrowsIcon />}
-              onClick={() => setCompareOpen(true)}
-            >
-              Compare
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<FileUploadOutlinedIcon />}
-              onClick={() => setImportOpen(true)}
-            >
-              Import CSV
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<FileDownloadOutlinedIcon />}
-              onClick={handleExport}
-              disabled={filtered.length === 0}
-            >
-              Export CSV
-            </Button>
-          </Stack>
-        )}
-      </Box>
+      <PageHeader
+        title="Income & Spending Reports"
+        description="Filter transactions, compare spending with income, and manage CSV imports from one reporting dashboard."
+        headingId={PAGE_TITLE_ID}
+        descriptionId={PAGE_DESCRIPTION_ID}
+        sx={{ mb: 3 }}
+        action={
+          !isEmpty ? (
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<CompareArrowsIcon />}
+                onClick={() => setCompareOpen(true)}
+              >
+                Compare
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FileUploadOutlinedIcon />}
+                onClick={() => setImportOpen(true)}
+              >
+                Import CSV
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FileDownloadOutlinedIcon />}
+                onClick={handleExport}
+                disabled={filtered.length === 0}
+              >
+                Export CSV
+              </Button>
+            </Stack>
+          ) : undefined
+        }
+      />
 
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>

@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import GoalEditor from "@/components/progress/GoalEditor";
 import HistoryTabs from "@/components/progress/HistoryTabs";
@@ -11,6 +9,7 @@ import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
 import ProgressSummaryStats from "@/components/progress/ProgressSummaryStats";
 import PageHeader from "@/components/ui/PageHeader";
+import SectionCard from "@/components/ui/SectionCard";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
@@ -101,32 +100,39 @@ export default function Page() {
   }, [refreshChartData]);
 
   return (
-    <Container component="main" maxWidth="xl" sx={{ py: 4 }}>
+    <Container component="main" maxWidth="xl" sx={{ py: { xs: 4, md: 5 } }}>
       <PageHeader
         title="Progress Tracker"
         description="Review salary history, retirement contributions, and milestones from one long-term progress workspace."
+        sx={{ mb: 3 }}
       />
 
-      {/* Note 5: Summary stats strip — derives metrics from already-fetched page
+      {/* Summary stats strip — derives metrics from already-fetched page
           state. Renders above the goal paper so it reads as a dashboard overview. */}
-      <Box sx={{ mt: 3 }}>
-        <ProgressSummaryStats
-          retirementEntries={retirementEntries}
-          salaryEntries={salaryEntries}
-          goalTargetAmount={goalTargetAmount}
-          latestEnd={goalLatestEnd}
-        />
-      </Box>
+      <ProgressSummaryStats
+        retirementEntries={retirementEntries}
+        salaryEntries={salaryEntries}
+        goalTargetAmount={goalTargetAmount}
+        latestEnd={goalLatestEnd}
+      />
 
       <Stack spacing={3} sx={{ mt: 3 }}>
-        <Paper sx={{ p: 3 }} elevation={1}>
+        <SectionCard
+          title="Savings Goal"
+          headingId="progress-goal-heading"
+          elevation={1}
+        >
           <GoalEditor
             onGoalData={handleGoalData}
             refreshTrigger={goalRefreshTrigger}
           />
-        </Paper>
+        </SectionCard>
 
-        <Paper sx={{ p: 3 }} elevation={1}>
+        <SectionCard
+          title="Charts"
+          headingId="progress-charts-heading"
+          elevation={1}
+        >
           <ProgressCharts
             salaryEntries={salaryEntries}
             retirementEntries={retirementEntries}
@@ -134,18 +140,26 @@ export default function Page() {
             error={chartError}
             goalTargetAmount={goalTargetAmount}
           />
-        </Paper>
+        </SectionCard>
 
-        {/* Note 6: HistoryTabs consolidates RetirementList and SalaryList into
-            one tabbed Paper to reduce vertical page length. Both panels stay
+        {/* HistoryTabs consolidates RetirementList and SalaryList into
+            one tabbed section to reduce vertical page length. Both panels stay
             mounted (display:none on inactive) so CRUD state survives tab switches. */}
-        <Paper sx={{ p: 3 }} elevation={1}>
+        <SectionCard
+          title="History"
+          headingId="progress-history-heading"
+          elevation={1}
+        >
           <HistoryTabs onEntriesChanged={handleEntriesChanged} />
-        </Paper>
+        </SectionCard>
 
-        <Paper sx={{ p: 3 }} elevation={1}>
+        <SectionCard
+          title="Milestones"
+          headingId="progress-milestones-heading"
+          elevation={1}
+        >
           <MilestonesList />
-        </Paper>
+        </SectionCard>
       </Stack>
     </Container>
   );

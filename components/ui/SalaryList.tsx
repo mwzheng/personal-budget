@@ -36,13 +36,19 @@ interface SalaryApiResponse {
 
 interface Props {
   onEntriesChanged?: () => void | Promise<void>;
+  /** Set to false when SalaryList is used as a full standalone page and a
+   *  PageHeader is rendered above it by the parent page route. */
+  showSectionHeader?: boolean;
 }
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export default function SalaryList({ onEntriesChanged }: Props) {
+export default function SalaryList({
+  onEntriesChanged,
+  showSectionHeader = true,
+}: Props) {
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   // Note 2: `editing` holds the full salary object being edited, or `null` when
@@ -116,21 +122,23 @@ export default function SalaryList({ onEntriesChanged }: Props) {
 
   return (
     <Box>
-      <SectionHeader
-        title="Salary History"
-        sx={{ mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            Add Entry
-          </Button>
-        }
-      />
+      {showSectionHeader && (
+        <SectionHeader
+          title="Salary History"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              variant="contained"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              Add Entry
+            </Button>
+          }
+        />
+      )}
 
       {dialogOpen ? (
         <ProgressEntryDialog

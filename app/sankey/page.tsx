@@ -36,6 +36,7 @@ import { useRouter } from "next/navigation";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { BudgetList } from "@/components/budget/BudgetList";
 import { BudgetPieChart } from "@/components/charts/BudgetPieChart";
+import PageHeader from "@/components/ui/PageHeader";
 import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   buildBudgetInsights,
@@ -219,24 +220,13 @@ export default function SankeyPage() {
       aria-describedby={PAGE_DESCRIPTION_ID}
       sx={{ py: 4 }}
     >
-      <Typography
-        id={PAGE_TITLE_ID}
-        component="h1"
-        variant="h5"
-        fontWeight={700}
-        mb={1}
-      >
-        Budget Planner
-      </Typography>
-      <Typography
-        id={PAGE_DESCRIPTION_ID}
-        variant="body2"
-        color="text.secondary"
-        mb={4}
-      >
-        Plan monthly expenses, see each line item in the pie chart, and follow
-        the grouped Sankey flow below.
-      </Typography>
+      <PageHeader
+        title="Budget Planner"
+        description="Plan monthly expenses, see each line item in the pie chart, and follow the grouped Sankey flow below."
+        headingId={PAGE_TITLE_ID}
+        descriptionId={PAGE_DESCRIPTION_ID}
+        sx={{ mb: 4 }}
+      />
 
       <Grid container spacing={3}>
         <Grid item xs={12}>
