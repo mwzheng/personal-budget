@@ -1,9 +1,12 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-05-28)
+## Status: Active follow-up plan (updated 2026-04-24)
 
 Latest completed work:
 
+- Centralized public marketing copy across Home, About, and FAQ pages by deriving
+  page metadata descriptions from shared content sources (page-titles, home hero)
+  instead of duplicating strings locally, reducing maintenance drift.
 - Completed Progress page UX polish: added HistoryTabs (tabbed RetirementList /
   SalaryList panel with persistent mount), fixed GoalEditor staleness via
   refreshTrigger, added dashed goal ReferenceLine + compact YAxis formatter to

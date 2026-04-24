@@ -11,38 +11,43 @@ export const HOME_PAGE_CONTENT = {
     eyebrow: "Manual-First Budgeting",
     title: APP_NAME,
     summary:
-      "Track income, plan budgets, and review spending with deliberate tools that stay close to the data instead of hiding it behind automation.",
+      "Track spending, plan budgets, and review financial progress without losing sight of the details.",
   },
   features: [
     {
       id: "transactions",
       title: "Transactions",
       description:
-        "Import and review transaction history so spending reports stay grounded in the details that matter.",
+        "Import CSVs or enter expenses manually. Review transactions with filters, tags, and search.",
+      supportingCopy: "Manual-first tracking for everyday spending.",
     },
     {
       id: "reports",
       title: "Reports & Comparison",
       description:
-        "Explore spending over time, by category, and by tag with interactive charts and side-by-side month comparisons.",
+        "View spending trends by category, compare months side-by-side, and drill into tagged expenses.",
+      supportingCopy: "Clear comparisons for months, categories, and trends.",
     },
     {
       id: "budget",
       title: "Budgets & Sankey",
       description:
-        "Create named budgets with expense rows, preview a pie chart, and inspect grouped Sankey flows before you commit to a plan.",
+        "Build named budgets with flexible categories. Preview pie charts and Sankey flows before saving.",
+      supportingCopy: "Thoughtful planning for flexible budget categories.",
     },
     {
       id: "fire",
       title: "FIRE Calculator",
       description:
-        "Calculate your Financial Independence number, project investment growth, and compare retirement scenarios with interactive charts.",
+        "Project investment growth, estimate time to financial independence, and compare multiple scenarios.",
+      supportingCopy: "Long-range modeling for financial independence goals.",
     },
     {
       id: "progress",
       title: "Progress Tracker",
       description:
-        "Follow salary history, retirement contributions, and milestones from one long-term financial progress workspace.",
+        "Track salary history, retirement contributions, and financial milestones in one workspace.",
+      supportingCopy: "Ongoing visibility into savings and long-term progress.",
     },
   ],
 } satisfies HomePageContent;

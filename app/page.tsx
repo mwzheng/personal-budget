@@ -19,7 +19,12 @@ import { alpha } from "@mui/material/styles";
 
 import HomeHeroActions from "@/components/home/HomeHeroActions";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
-import { APP_NAME, ROUTE_PATHS } from "@/lib/content/page-titles";
+import {
+  APP_NAME,
+  PAGE_TITLE_KEYS,
+  ROUTE_PATHS,
+  getPageTitleEntry,
+} from "@/lib/content/page-titles";
 
 const HOME_FEATURE_ICONS = {
   transactions: ReceiptLongIcon,
@@ -28,14 +33,6 @@ const HOME_FEATURE_ICONS = {
   fire: LocalFireDepartmentIcon,
   progress: TrendingUpIcon,
 } as const;
-type HomeFeatureId = keyof typeof HOME_FEATURE_ICONS;
-const HOME_FEATURE_ENTRY_COPY: Record<HomeFeatureId, string> = {
-  transactions: "Manual-first tracking for everyday spending.",
-  reports: "Clear comparisons for months, categories, and trends.",
-  budget: "Thoughtful planning for flexible budget categories.",
-  fire: "Long-range modeling for financial independence goals.",
-  progress: "Ongoing visibility into savings and long-term progress.",
-};
 const HOME_FEATURE_ACCENT = "#2D7DD2";
 const HOME_FEATURE_ICON_BACKGROUND = alpha(HOME_FEATURE_ACCENT, 0.14);
 const HOME_FEATURE_ICON_BORDER = alpha(HOME_FEATURE_ACCENT, 0.24);
@@ -46,8 +43,9 @@ const HOME_FEATURE_ICON_SHADOW = `0 10px 30px ${alpha(
 const HOME_FEATURE_CARD_BORDER = alpha(HOME_FEATURE_ACCENT, 0.35);
 const HOME_FEATURE_CARD_SHADOW = `0 12px 32px ${alpha("#000000", 0.35)}`;
 
-const HOME_PAGE_DESCRIPTION =
-  "Track expenses, compare months, plan budgets, and review long-term progress with a manual-first personal budgeting app built for clarity and reflection.";
+const HOME_PAGE_DESCRIPTION = getPageTitleEntry(
+  PAGE_TITLE_KEYS.HOME,
+).description;
 const VISUALLY_HIDDEN_SX = {
   border: 0,
   clip: "rect(0 0 0 0)",
@@ -272,7 +270,7 @@ export default function Home() {
                             fontWeight={600}
                             align="center"
                           >
-                            {HOME_FEATURE_ENTRY_COPY[feature.id]}
+                            {feature.supportingCopy}
                           </Typography>
                         </Box>
                       </Box>

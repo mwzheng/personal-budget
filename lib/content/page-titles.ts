@@ -9,7 +9,7 @@ import type { PageTitleEntry } from "../types/content";
 export const APP_NAME = "Porridge Budget";
 
 export const APP_DEFAULT_DESCRIPTION =
-  "Combine manual Excel and Notion budgeting into one focused app built for mindful entry and clearer reviews.";
+  "Track expenses, plan budgets, and review financial progress with a manual-first budgeting app.";
 
 // Note 2: Route constants are intentionally exported so future page, nav, and
 // footer code can share one typed list of paths instead of hand-typed strings.
@@ -59,13 +59,13 @@ export const PAGE_TITLES = {
     route: ROUTE_PATHS.about,
     title: `About - ${APP_NAME}`,
     description:
-      "Learn why Porridge Budget combines manual Excel and Notion tracking into one calmer workflow.",
+      "Learn why Porridge Budget was built, who maintains it, and the philosophy behind manual-first budgeting.",
   },
   [PAGE_TITLE_KEYS.FAQ]: {
     route: ROUTE_PATHS.faq,
     title: `FAQ - ${APP_NAME}`,
     description:
-      "Read quick answers about the app, its creator, and the manual-first budgeting philosophy.",
+      "Common questions about Porridge Budget, the manual-first workflow, and core features.",
   },
   [PAGE_TITLE_KEYS.CONTACT]: {
     route: ROUTE_PATHS.contact,

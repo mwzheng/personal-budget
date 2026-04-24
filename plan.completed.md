@@ -8,6 +8,62 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Public marketing copy refresh — centralized metadata descriptions
+
+Date: 2026-04-24
+
+Summary
+
+Eliminated duplicate hardcoded metadata description strings across public routes
+by deriving them from the shared page-titles content source, which reduces
+maintenance drift and ensures consistency across metadata, navigation, and
+structured data.
+
+Completed items
+
+- In `app/page.tsx`, derived `HOME_PAGE_DESCRIPTION` from
+  `getPageTitleEntry(PAGE_TITLE_KEYS.HOME).description` instead of maintaining a
+  separate hardcoded string.
+- In `app/about/page.tsx`, replaced local `ABOUT_PAGE_DESCRIPTION` constant with
+  `ABOUT_PAGE_ENTRY.description` in metadata, openGraph, and twitter fields.
+- In `app/faq/page.tsx`, replaced local `FAQ_PAGE_DESCRIPTION` constant with
+  `FAQ_PAGE_ENTRY.description` in metadata, openGraph, and twitter fields.
+- Refreshed public content data in `lib/content/about.ts`, `lib/content/faq.ts`,
+  and `lib/content/home.ts` to reflect current feature set and creator profile.
+- Updated shared page-titles and types in `lib/content/page-titles.ts` and
+  `lib/types/content.ts` for the new content structure.
+- Added tests for content data structure in `test/lib/content-data.test.ts`.
+
+Files changed
+
+- app/page.tsx
+- app/about/page.tsx
+- app/faq/page.tsx
+- lib/content/about.ts
+- lib/content/faq.ts
+- lib/content/home.ts
+- lib/content/page-titles.ts
+- lib/types/content.ts
+- test/lib/content-data.test.ts
+- plan.md
+- plan.completed.md
+
+Commit reference
+
+refactor(content): derive page metadata descriptions from shared page-titles source
+
+Notes
+
+- All metadata, openGraph, and twitter card descriptions now source from one
+  location (`PAGE_TITLES` in page-titles.ts) which acts as the single source of
+  truth for page copy.
+- This pattern makes future copy updates easier: edit the page-titles entry once
+  and all consumers (metadata, nav, structured data) automatically stay in sync.
+- Formatting, linting, and full test suite (all tests passed) validated before
+  commit.
+
+---
+
 # Completed: Progress page UX polish — HistoryTabs, chart enhancements, alpha stat icons
 
 Date: 2026-05-28

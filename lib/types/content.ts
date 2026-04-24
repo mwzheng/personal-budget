@@ -83,6 +83,10 @@ export interface FaqItem {
 
 export interface FaqPageContent {
   hero: ContentHero;
+  intro: {
+    heading: string;
+    description: string;
+  };
   items: readonly FaqItem[];
 }
 
@@ -134,6 +138,7 @@ export interface HomeFeatureCardContent {
   id: "transactions" | "reports" | "budget" | "fire" | "progress";
   title: string;
   description: string;
+  supportingCopy: string;
 }
 
 export interface HomePageContent {
