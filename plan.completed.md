@@ -8,6 +8,69 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Progress Tracker redesign + home auth-gate
+
+Date: 2026-04-24
+
+Summary
+
+- Hid the "Try Demo" and "Sign In" CTAs on the home page for signed-in users.
+- Fully redesigned the Progress Tracker page: added a dashboard summary strip,
+  consolidated charts into a tabbed panel, converted milestones to a vertical
+  timeline, strengthened the goal progress bar, and added left-accent section
+  headers throughout.
+
+Completed items
+
+- Added `components/home/HomeHeroActions.tsx` — tri-state auth client component
+  that hides the CTA row when a user is signed in; no hydration flash.
+- Updated `app/page.tsx` to render `<HomeHeroActions />` instead of inline buttons.
+- Added `lib/progress/progress-summary.ts` — pure helpers: `getLatestRetirementTotal`,
+  `getLatestSalary`, `computeGoalProgress`; all covered by Vitest tests.
+- Added `test/lib/progress-summary.test.ts` — 16 tests (empty arrays, latest-year
+  selection, percent clamping above 100%, division-by-zero guard).
+- Added `components/progress/ProgressSummaryStats.tsx` — responsive three-card
+  dashboard strip (progress %, total saved, latest salary) driven by page-owned state.
+- Updated `components/progress/SectionHeader.tsx` — primary.main left accent border.
+- Updated `components/progress/GoalEditor.tsx` — `onGoalData` callback for parent
+  sync; LinearProgress height increased 8→14px.
+- Refactored `components/progress/ProgressCharts.tsx` — two-tab panel (Retirement
+  Growth / Salary Progression) with lazy panel mounting.
+- Updated `components/ui/SalaryList.tsx` — removed embedded SalaryChart (moved to
+  Salary Progression tab).
+- Refactored `components/progress/MilestonesList.tsx` — vertical timeline sorted
+  year DESC / age DESC (null last); renders note when present.
+- Refactored `app/progress/page.tsx` — flattened layout, added `goalData` state,
+  renders ProgressSummaryStats above GoalEditor.
+
+Files changed
+
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `components/home/HomeHeroActions.tsx` (new)
+- `components/progress/GoalEditor.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `components/progress/ProgressSummaryStats.tsx` (new)
+- `components/progress/SectionHeader.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/progress/progress-summary.ts` (new)
+- `test/lib/progress-summary.test.ts` (new)
+
+Commit references
+
+- `4c28c87` feat(home): hide CTA buttons for signed-in users
+- `8ad5021` feat(progress): redesign Progress Tracker page
+
+Notes
+
+- All 279 tests pass, lint clean, build successful.
+- Milestone API still supports create + delete only (no edit); design respects this.
+- Summary stats use the `latestEnd` value returned by the goal API as the
+  authoritative total-saved figure, with a local retirement-entry fallback.
+
+---
+
 # Completed: Home card cleanup and custom 404 redirect
 
 Date: 2026-04-19

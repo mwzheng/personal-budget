@@ -69,7 +69,7 @@ Current active follow-ups:
 ## Current application snapshot
 
 - **Public pages:** `/`, `/about`, `/faq`, `/contact`, and auth entry/sign-out
-  routes.
+  routes. Home hero CTAs ("Try Demo" / "Sign In") are hidden for signed-in users.
 - **Authenticated pages:** `/reports`, `/sankey`, `/progress`, `/salary`, and
   `/fire`.
 - **Core capabilities:** transaction CRUD, CSV import/export, month comparison,
