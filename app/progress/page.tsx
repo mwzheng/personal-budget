@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import GoalEditor from "@/components/progress/GoalEditor";
 import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
+import ProgressSummaryStats from "@/components/progress/ProgressSummaryStats";
 import PageHeader from "@/components/ui/PageHeader";
 import RetirementList from "@/components/ui/RetirementList";
 import SalaryList from "@/components/ui/SalaryList";
@@ -30,6 +31,19 @@ export default function Page() {
   );
   const [chartLoading, setChartLoading] = useState(true);
   const [chartError, setChartError] = useState<string | null>(null);
+
+  // Note 2: goalData is lifted here so ProgressSummaryStats stays in sync with
+  // GoalEditor saves without introducing an additional API call at page level.
+  const [goalTargetAmount, setGoalTargetAmount] = useState<number | null>(null);
+  const [goalLatestEnd, setGoalLatestEnd] = useState<number | null>(null);
+
+  const handleGoalData = useCallback(
+    (targetAmount: number | null, latestEnd: number | null) => {
+      setGoalTargetAmount(targetAmount);
+      setGoalLatestEnd(latestEnd);
+    },
+    [],
+  );
 
   const refreshChartData = useCallback(async () => {
     setChartLoading(true);
@@ -79,9 +93,20 @@ export default function Page() {
         description="Review salary history, retirement contributions, and milestones from one long-term progress workspace."
       />
 
+      {/* Note 3: Summary stats strip — derives metrics from already-fetched page
+          state. Renders above the goal paper so it reads as a dashboard overview. */}
+      <Box sx={{ mt: 3 }}>
+        <ProgressSummaryStats
+          retirementEntries={retirementEntries}
+          salaryEntries={salaryEntries}
+          goalTargetAmount={goalTargetAmount}
+          latestEnd={goalLatestEnd}
+        />
+      </Box>
+
       <Stack spacing={3} sx={{ mt: 3 }}>
         <Paper sx={{ p: 3 }} elevation={1}>
-          <GoalEditor />
+          <GoalEditor onGoalData={handleGoalData} />
         </Paper>
 
         <Paper sx={{ p: 3 }} elevation={1}>
@@ -93,27 +118,13 @@ export default function Page() {
           />
         </Paper>
 
-        <Box
-          sx={{
-            display: "grid",
-            gap: 3,
-            gridTemplateColumns: {
-              xs: "minmax(0, 1fr)",
-              md: "repeat(2, minmax(0, 1fr))",
-            },
-          }}
-        >
-          <Box>
-            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
-              <RetirementList onEntriesChanged={refreshChartData} />
-            </Paper>
-          </Box>
-          <Box>
-            <Paper sx={{ p: 3, height: "100%" }} elevation={1}>
-              <MilestonesList />
-            </Paper>
-          </Box>
-        </Box>
+        <Paper sx={{ p: 3 }} elevation={1}>
+          <RetirementList onEntriesChanged={refreshChartData} />
+        </Paper>
+
+        <Paper sx={{ p: 3 }} elevation={1}>
+          <MilestonesList />
+        </Paper>
 
         <Paper sx={{ p: 3 }} elevation={1}>
           <SalaryList onEntriesChanged={refreshChartData} />

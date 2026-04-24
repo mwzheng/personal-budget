@@ -1,7 +1,7 @@
 // Note 1: SalaryList is the top-level orchestrator for the salary history page.
-// It manages the list of entries, the add/edit form visibility, and the
-// SalaryChart. Splitting into List, Form, and Chart sub-components keeps each
-// piece focused and independently testable.
+// It manages the list of entries, the add/edit form visibility. The chart has
+// been moved to the consolidated ProgressCharts tabbed panel so this component
+// is a pure CRUD/data section.
 "use client";
 
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
@@ -18,7 +18,6 @@ import {
   Typography,
   Stack,
 } from "@mui/material";
-import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
@@ -151,9 +150,7 @@ export default function SalaryList({ onEntriesChanged }: Props) {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      <SalaryChart data={entries} loading={loading} />
-
-      {/* Note 5: Responsive card grid — single column on mobile (xs),
+      {/* Note 2: Responsive card grid — single column on mobile (xs),
           two columns on sm+. Each card surfaces year, salary amount, and
           the computed YoY change with a colour-coded Chip for quick scanning. */}
       <Box

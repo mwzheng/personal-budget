@@ -16,6 +16,9 @@ interface Props {
  * Note 1: SectionHeader centralizes the typography and action-button alignment
  * for progress-page sections. Using one component keeps header sizing/style
  * consistent even when individual sections have different controls.
+ *
+ * Note 2: The left accent border provides a consistent visual anchor across all
+ * progress-page sections without requiring per-section custom styling.
  */
 export function SectionHeader({ title, action, sx }: Props) {
   return (
@@ -24,7 +27,14 @@ export function SectionHeader({ title, action, sx }: Props) {
       spacing={1.5}
       justifyContent="space-between"
       alignItems={{ xs: "flex-start", sm: "center" }}
-      sx={sx}
+      sx={[
+        {
+          borderLeft: "3px solid",
+          borderColor: "primary.main",
+          pl: 1.5,
+        },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       <Typography variant="h6" fontWeight={600}>
         {title}
