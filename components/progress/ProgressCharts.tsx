@@ -1,10 +1,15 @@
 // Note 1: ProgressCharts is now a pure view over parent-owned salary and
 // retirement data. Lifting the fetch up keeps refresh behavior explicit and lets
 // the same year filter drive multiple charts consistently.
+//
+// Note 2: Two tabs consolidate chart content in one panel — Retirement Growth
+// shows end-of-year retirement totals and Salary Progression delegates to the
+// reusable SalaryChart. Only the active tab panel is mounted to avoid Recharts
+// stale-size issues inside hidden containers.
 "use client";
 
-import React, { useMemo } from "react";
-import { Box, Typography, useTheme } from "@mui/material";
+import React, { useMemo, useState } from "react";
+import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import {
   ResponsiveContainer,
   LineChart,
@@ -14,18 +19,19 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
   type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
+import SalaryChart from "@/components/charts/SalaryChart";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
-interface ProgressChartRow {
+interface RetirementChartRow {
   year: string;
   retirement: number | null;
-  salary: number | null;
 }
 
 interface Props {
@@ -33,6 +39,9 @@ interface Props {
   retirementEntries: RetirementEntry[];
   loading?: boolean;
   error?: string | null;
+  /** When set, draws a dashed reference line on the retirement chart so the
+   *  user can see how far current savings are from the goal. */
+  goalTargetAmount?: number | null;
 }
 
 type ProgressTooltipProps = TooltipProps<number, string>;
@@ -40,38 +49,37 @@ type ProgressTooltipEntry = NonNullable<
   ProgressTooltipProps["payload"]
 >[number];
 
+const TAB_RETIREMENT = 0;
+const TAB_SALARY = 1;
+
 export default function ProgressCharts({
   salaryEntries,
   retirementEntries,
   loading = false,
   error = null,
+  goalTargetAmount = null,
 }: Props) {
   const theme = useTheme();
-  const data = useMemo(() => {
-    // Note 2: Build maps by year first so the merge stays linear instead of
-    // repeatedly searching the arrays for matching years.
-    const retirementByYear = new Map<number, number>();
-    for (const entry of retirementEntries) {
-      retirementByYear.set(entry.year, entry.endAmount);
-    }
+  const [activeTab, setActiveTab] = useState(TAB_RETIREMENT);
 
-    const salaryByYear = new Map<number, number>();
-    for (const entry of salaryEntries) {
-      salaryByYear.set(entry.year, entry.amount);
-    }
+  // Note 3: Compact Y-axis labels keep tick text short on small viewports.
+  // Recharts passes the raw numeric value; we convert to $K or $M notation.
+  const formatYAxis = (value: number): string => {
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
+  };
 
-    const years = Array.from(
-      new Set([...retirementByYear.keys(), ...salaryByYear.keys()]),
-    ).sort((left, right) => left - right);
-
-    return years.map(
-      (year): ProgressChartRow => ({
-        year: String(year),
-        retirement: retirementByYear.get(year) ?? null,
-        salary: salaryByYear.get(year) ?? null,
-      }),
-    );
-  }, [retirementEntries, salaryEntries]);
+  const retirementData = useMemo(() => {
+    return [...retirementEntries]
+      .sort((a, b) => a.year - b.year)
+      .map(
+        (entry): RetirementChartRow => ({
+          year: String(entry.year),
+          retirement: entry.endAmount,
+        }),
+      );
+  }, [retirementEntries]);
 
   const tooltipContent = ({ active, label, payload }: ProgressTooltipProps) => {
     if (!active || !payload?.length) return null;
@@ -102,76 +110,119 @@ export default function ProgressCharts({
     <Box>
       <SectionHeader title="Progress Over Time" sx={{ mb: 2 }} />
 
-      <Box sx={{ width: "100%", height: 320 }}>
-        {loading ? (
-          <ChartLoadingState height={320} showLegend={false} />
-        ) : error ? (
-          <Box
-            sx={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              px: 2,
-            }}
-          >
-            <Typography color="error.main">{error}</Typography>
-          </Box>
-        ) : data.length === 0 ? (
-          <Box
-            sx={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              px: 2,
-            }}
-          >
-            <Typography color="text.secondary">
-              Add salary or retirement history to see progress over time.
-            </Typography>
-          </Box>
-        ) : (
-          <ChartWrapper title="Progress Over Time">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis />
-                <Tooltip content={tooltipContent} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="retirement"
-                  name="Retirement End"
-                  stroke={theme.palette.primary.main}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  dot
-                  activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
-                  animationDuration={1500}
-                  animationEasing="ease-in-out"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="salary"
-                  name="Salary"
-                  stroke={theme.palette.success.main}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  dot
-                  activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
-                  animationDuration={1500}
-                  animationEasing="ease-in-out"
-                  animationBegin={200}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartWrapper>
-        )}
-      </Box>
+      <Tabs
+        value={activeTab}
+        onChange={(_, newValue: number) => setActiveTab(newValue)}
+        sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+      >
+        <Tab
+          label="Retirement Growth"
+          id="chart-tab-0"
+          aria-controls="chart-panel-0"
+        />
+        <Tab
+          label="Salary Progression"
+          id="chart-tab-1"
+          aria-controls="chart-panel-1"
+        />
+      </Tabs>
+
+      {/* Retirement Growth panel */}
+      {activeTab === TAB_RETIREMENT && (
+        <Box
+          role="tabpanel"
+          id="chart-panel-0"
+          aria-labelledby="chart-tab-0"
+          sx={{ width: "100%", height: 320 }}
+        >
+          {loading ? (
+            <ChartLoadingState height={320} showLegend={false} />
+          ) : error ? (
+            <Box
+              sx={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                px: 2,
+              }}
+            >
+              <Typography color="error.main">{error}</Typography>
+            </Box>
+          ) : retirementData.length === 0 ? (
+            <Box
+              sx={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                px: 2,
+              }}
+            >
+              <Typography color="text.secondary">
+                Add retirement history to see growth over time.
+              </Typography>
+            </Box>
+          ) : (
+            <ChartWrapper title="Retirement Growth">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={retirementData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis
+                    type="number"
+                    tickFormatter={formatYAxis}
+                    domain={[
+                      0,
+                      (dataMax: number) =>
+                        Math.ceil(
+                          Math.max(dataMax, goalTargetAmount ?? dataMax) * 1.1,
+                        ),
+                    ]}
+                    width={60}
+                  />
+                  <Tooltip content={tooltipContent} />
+                  <Legend />
+                  {goalTargetAmount != null && (
+                    <ReferenceLine
+                      y={goalTargetAmount}
+                      stroke={theme.palette.success.main}
+                      strokeDasharray="6 3"
+                      label={{
+                        value: "Goal",
+                        position: "insideTopRight",
+                        fill: theme.palette.success.main,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+                  <Line
+                    type="monotone"
+                    dataKey="retirement"
+                    name="Retirement End"
+                    stroke={theme.palette.primary.main}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    dot
+                    activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          )}
+        </Box>
+      )}
+
+      {/* Salary Progression panel — delegates to reusable SalaryChart */}
+      {activeTab === TAB_SALARY && (
+        <Box role="tabpanel" id="chart-panel-1" aria-labelledby="chart-tab-1">
+          <SalaryChart data={salaryEntries} loading={loading} />
+        </Box>
+      )}
     </Box>
   );
 }

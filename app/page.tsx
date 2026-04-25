@@ -4,7 +4,6 @@
  */
 
 import type { Metadata } from "next";
-import NextLink from "next/link";
 import Script from "next/script";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -19,9 +18,17 @@ import Stack from "@mui/material/Stack";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
+import NextLink from "next/link";
 
+import HomeHeroActions from "@/components/home/HomeHeroActions";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
-import { APP_NAME, ROUTE_PATHS } from "@/lib/content/page-titles";
+import {
+  APP_NAME,
+  PAGE_TITLE_KEYS,
+  ROUTE_PATHS,
+  getPageTitleEntry,
+} from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 const HOME_FEATURE_ICONS = {
   transactions: ReceiptLongIcon,
@@ -30,37 +37,10 @@ const HOME_FEATURE_ICONS = {
   fire: LocalFireDepartmentIcon,
   progress: TrendingUpIcon,
 } as const;
-type HomeFeatureId = keyof typeof HOME_FEATURE_ICONS;
-const HOME_FEATURE_ENTRY_COPY: Record<HomeFeatureId, string> = {
-  transactions: "Manual-first tracking for everyday spending.",
-  reports: "Clear comparisons for months, categories, and trends.",
-  budget: "Thoughtful planning for flexible budget categories.",
-  fire: "Long-range modeling for financial independence goals.",
-  progress: "Ongoing visibility into savings and long-term progress.",
-};
-const HOME_FEATURE_ACCENT = "#2D7DD2";
-const HOME_FEATURE_ICON_BACKGROUND = alpha(HOME_FEATURE_ACCENT, 0.14);
-const HOME_FEATURE_ICON_BORDER = alpha(HOME_FEATURE_ACCENT, 0.24);
-const HOME_FEATURE_ICON_SHADOW = `0 10px 30px ${alpha(
-  HOME_FEATURE_ACCENT,
-  0.16,
-)}`;
-const HOME_FEATURE_CARD_BORDER = alpha(HOME_FEATURE_ACCENT, 0.35);
-const HOME_FEATURE_CARD_SHADOW = `0 12px 32px ${alpha("#000000", 0.35)}`;
 
-const HOME_PAGE_DESCRIPTION =
-  "Track expenses, compare months, plan budgets, and review long-term progress with a manual-first personal budgeting app built for clarity and reflection.";
-const VISUALLY_HIDDEN_SX = {
-  border: 0,
-  clip: "rect(0 0 0 0)",
-  height: 1,
-  margin: -1,
-  overflow: "hidden",
-  padding: 0,
-  position: "absolute",
-  whiteSpace: "nowrap",
-  width: 1,
-} as const;
+const HOME_PAGE_DESCRIPTION = getPageTitleEntry(
+  PAGE_TITLE_KEYS.HOME,
+).description;
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
@@ -122,194 +102,184 @@ export default function Home() {
         {JSON.stringify(homeStructuredData)}
       </Script>
 
-      <Container component="main" maxWidth="xl" sx={{ py: { xs: 9, md: 12 } }}>
-        <Box
-          component="section"
-          aria-labelledby="home-hero-title"
-          sx={{
-            maxWidth: 860,
-            mx: "auto",
+      {/* Hero section */}
+      <Box
+        component="section"
+        aria-labelledby="home-hero-title"
+        sx={{
+          position: "relative",
+          overflow: "hidden",
+          py: { xs: 10, md: 14 },
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
             background:
-              "radial-gradient(ellipse at 50% 0%, rgba(45, 125, 210, 0.12) 0%, transparent 70%)",
-            pb: { xs: 5, md: 6 },
-          }}
-        >
-          <Typography
-            variant="overline"
-            color="primary.main"
-            align="center"
-            sx={{ display: "block", letterSpacing: 1.4, mb: 1.5 }}
-          >
-            {hero.eyebrow}
-          </Typography>
-          <Typography
-            id="home-hero-title"
-            variant="h2"
-            component="h1"
-            gutterBottom
-            align="center"
-            sx={{
-              fontSize: { xs: "2.75rem", md: "4.25rem" },
-              fontWeight: 700,
-              background: "linear-gradient(135deg, #ffffff 30%, #2D7DD2 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            {hero.title}
-          </Typography>
-          <Typography
-            variant="h5"
-            color="text.secondary"
-            paragraph
-            align="center"
-            sx={{ lineHeight: 1.7, mb: { xs: 5, md: 6 } }}
-          >
-            {hero.summary}
-          </Typography>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Button
-              component={NextLink}
-              href={ROUTE_PATHS.login}
-              variant="contained"
-              size="large"
-              sx={{ minWidth: { sm: 180 } }}
+              "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(45, 125, 210, 0.18) 0%, transparent 70%)",
+            pointerEvents: "none",
+          },
+        }}
+      >
+        <Container maxWidth="md">
+          <Stack spacing={3} alignItems="center" textAlign="center">
+            <Typography
+              variant="overline"
+              sx={{
+                color: "primary.light",
+                letterSpacing: "0.1em",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+              }}
             >
-              Try Demo
-            </Button>
-            <Button
-              component={NextLink}
-              href={ROUTE_PATHS.login}
-              variant="outlined"
-              size="large"
-              sx={{ minWidth: { sm: 180 } }}
-            >
-              Sign In
-            </Button>
-          </Stack>
-        </Box>
+              {hero.eyebrow}
+            </Typography>
 
-        <Box component="section" aria-labelledby="home-features-title">
+            <Typography
+              id="home-hero-title"
+              variant="h1"
+              component="h1"
+              sx={{
+                fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4.5rem" },
+                fontWeight: 800,
+                lineHeight: 1.1,
+                letterSpacing: "-0.03em",
+                background: `linear-gradient(135deg, #ffffff 40%, ${SERVER_THEME_TOKENS.palette.primaryLight} 100%)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              {hero.title}
+            </Typography>
+
+            <Typography
+              variant="h5"
+              component="p"
+              color="text.secondary"
+              sx={{
+                maxWidth: 560,
+                lineHeight: 1.7,
+                fontSize: { xs: "1rem", md: "1.2rem" },
+              }}
+            >
+              {hero.summary}
+            </Typography>
+
+            <HomeHeroActions />
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* Feature grid */}
+      <Box
+        component="section"
+        aria-labelledby="home-features-title"
+        sx={{ pb: { xs: 10, md: 14 } }}
+      >
+        <Container maxWidth="xl">
           <Typography
             id="home-features-title"
-            component="h2"
-            sx={VISUALLY_HIDDEN_SX}
+            variant="overline"
+            align="center"
+            display="block"
+            sx={{
+              color: "text.disabled",
+              letterSpacing: "0.08em",
+              fontWeight: 600,
+              fontSize: "0.7rem",
+              mb: 3,
+            }}
           >
-            Core budgeting features
+            What&rsquo;s included
           </Typography>
-          <Grid
-            container
-            spacing={3}
-            sx={{ pt: { xs: 1, md: 2 } }}
-            justifyContent="center"
-          >
+
+          <Grid container spacing={2.5} justifyContent="center">
             {features.map((feature) => {
               const Icon = HOME_FEATURE_ICONS[feature.id];
               const titleId = `home-feature-${feature.id}-title`;
-              const descriptionId = `home-feature-${feature.id}-description`;
-              const supportingCopyId = `home-feature-${feature.id}-supporting-copy`;
 
               return (
-                <Grid key={feature.id} item xs={12} md={6}>
+                <Grid key={feature.id} item xs={12} sm={6} lg={4}>
                   <Paper
                     component="article"
-                    variant="outlined"
                     aria-labelledby={titleId}
-                    aria-describedby={`${descriptionId} ${supportingCopyId}`}
                     sx={{
-                      minHeight: { xs: 240, md: 280 },
                       height: "100%",
-                      overflow: "hidden",
-                      boxShadow: HOME_FEATURE_CARD_SHADOW,
-                      borderColor: HOME_FEATURE_CARD_BORDER,
+                      p: { xs: 3, md: 3.5 },
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      transition:
+                        "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+                      "&:hover": {
+                        borderColor: alpha(
+                          SERVER_THEME_TOKENS.palette.primary,
+                          0.4,
+                        ),
+                        boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+                      },
                     }}
                   >
+                    {/* Icon badge */}
                     <Box
                       sx={{
-                        height: "100%",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 3,
+                        backgroundColor: alpha(
+                          SERVER_THEME_TOKENS.palette.primary,
+                          0.12,
+                        ),
+                        border: `1px solid ${alpha(SERVER_THEME_TOKENS.palette.primary, 0.22)}`,
+                        flexShrink: 0,
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          height: "100%",
-                          p: { xs: 4, md: 4.5 },
-                          textAlign: "center",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            width: 84,
-                            height: 84,
-                            borderRadius: "50%",
-                            mb: 2.5,
-                            backgroundColor: HOME_FEATURE_ICON_BACKGROUND,
-                            border: `1px solid ${HOME_FEATURE_ICON_BORDER}`,
-                            boxShadow: HOME_FEATURE_ICON_SHADOW,
-                          }}
-                        >
-                          <Icon
-                            aria-hidden="true"
-                            color="primary"
-                            sx={{ fontSize: 44 }}
-                          />
-                        </Box>
-                        <Typography
-                          id={titleId}
-                          component="h3"
-                          variant="h5"
-                          fontWeight={700}
-                          gutterBottom
-                        >
-                          {feature.title}
-                        </Typography>
-                        <Typography
-                          id={descriptionId}
-                          variant="body1"
-                          color="text.secondary"
-                          sx={{ lineHeight: 1.8 }}
-                        >
-                          {feature.description}
-                        </Typography>
-                        <Box
-                          sx={{
-                            mt: "auto",
-                            pt: 3,
-                            width: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Typography
-                            id={supportingCopyId}
-                            variant="body2"
-                            color="primary.light"
-                            fontWeight={600}
-                            align="center"
-                          >
-                            {HOME_FEATURE_ENTRY_COPY[feature.id]}
-                          </Typography>
-                        </Box>
-                      </Box>
+                      <Icon
+                        aria-hidden="true"
+                        sx={{ fontSize: 26, color: "primary.light" }}
+                      />
                     </Box>
+
+                    <Stack spacing={1} sx={{ flex: 1 }}>
+                      <Typography
+                        id={titleId}
+                        component="h3"
+                        variant="h6"
+                        fontWeight={700}
+                        sx={{ fontSize: "1rem" }}
+                      >
+                        {feature.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.75 }}
+                      >
+                        {feature.description}
+                      </Typography>
+                    </Stack>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "primary.light",
+                        fontWeight: 600,
+                        fontSize: "0.8rem",
+                        mt: "auto",
+                      }}
+                    >
+                      {feature.supportingCopy}
+                    </Typography>
                   </Paper>
                 </Grid>
               );
             })}
           </Grid>
-        </Box>
-      </Container>
+        </Container>
+      </Box>
     </>
   );
 }

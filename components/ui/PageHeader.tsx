@@ -13,6 +13,10 @@ export interface PageHeaderProps {
   action?: ReactNode;
   /** Optional layout overrides for page-specific spacing tweaks. */
   sx?: SxProps<Theme>;
+  /** ID applied to the h1 element for aria-labelledby on the page landmark. */
+  headingId?: string;
+  /** ID applied to the description element for aria-describedby. */
+  descriptionId?: string;
 }
 
 export default function PageHeader({
@@ -20,6 +24,8 @@ export default function PageHeader({
   description,
   action,
   sx,
+  headingId,
+  descriptionId,
 }: PageHeaderProps) {
   return (
     <Stack
@@ -31,11 +37,16 @@ export default function PageHeader({
       sx={sx}
     >
       <Box>
-        <Typography component="h1" variant="h5" fontWeight={700}>
+        <Typography id={headingId} component="h1" variant="h5" fontWeight={700}>
           {title}
         </Typography>
         {description ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            id={descriptionId}
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 0.5 }}
+          >
             {description}
           </Typography>
         ) : null}

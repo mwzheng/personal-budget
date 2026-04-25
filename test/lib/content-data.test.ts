@@ -142,7 +142,8 @@ describe("content data invariants", () => {
       HOME_PAGE_CONTENT.features.every(
         (feature) =>
           feature.title.trim().length > 0 &&
-          feature.description.trim().length > 0,
+          feature.description.trim().length > 0 &&
+          feature.supportingCopy.trim().length > 0,
       ),
     ).toBe(true);
   });

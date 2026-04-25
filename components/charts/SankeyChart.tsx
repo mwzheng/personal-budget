@@ -7,6 +7,8 @@
 
 import { ResponsiveSankey } from "@nivo/sankey";
 import { alpha, useTheme } from "@mui/material/styles";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -33,22 +35,23 @@ export function SankeyChart({ data }: Props) {
 
   if (!data.nodes.length || !data.links.length) {
     return (
-      <div
-        style={{
-          textAlign: "center",
-          padding: "72px 40px",
-          color: theme.palette.text.secondary,
-          height: 460,
-          display: "flex",
+      <Stack
+        sx={{
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: "column",
-          gap: 8,
+          textAlign: "center",
+          height: 460,
+          gap: 1,
+          p: { xs: 4, sm: 6 },
         }}
       >
-        <div style={{ fontSize: 32, fontWeight: 700 }}>[Flow]</div>
-        <div>Add expenses and optional Sankey paths to generate the flow.</div>
-      </div>
+        <Typography variant="h4" fontWeight={700} color="text.disabled">
+          [Flow]
+        </Typography>
+        <Typography color="text.secondary">
+          Add expenses and optional Sankey paths to generate the flow.
+        </Typography>
+      </Stack>
     );
   }
 

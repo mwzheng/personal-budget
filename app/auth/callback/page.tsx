@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
@@ -73,34 +74,39 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Stack spacing={3} alignItems="center" textAlign="center">
-        {error ? (
-          <>
-            <Typography variant="h4" fontWeight={700}>
-              Sign-In Failed
-            </Typography>
-            <Alert severity="error" sx={{ width: "100%" }}>
-              {error}
-            </Alert>
-            <Button variant="contained" href="/auth/login">
-              Back to Sign In
-            </Button>
-          </>
-        ) : (
-          <>
-            <Box>
-              <CircularProgress />
-            </Box>
-            <Typography variant="h5" fontWeight={700}>
-              Finishing Sign-In
-            </Typography>
-            <Typography color="text.secondary">
-              Completing your sign-in and preparing your session.
-            </Typography>
-          </>
-        )}
-      </Stack>
+    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+      <Paper
+        variant="outlined"
+        sx={{ p: { xs: 4, sm: 5 }, borderRadius: 3, textAlign: "center" }}
+      >
+        <Stack spacing={3} alignItems="center">
+          {error ? (
+            <>
+              <Typography variant="h4" fontWeight={700}>
+                Sign-In Failed
+              </Typography>
+              <Alert severity="error" sx={{ width: "100%", textAlign: "left" }}>
+                {error}
+              </Alert>
+              <Button variant="contained" href="/auth/login">
+                Back to Sign In
+              </Button>
+            </>
+          ) : (
+            <>
+              <Box>
+                <CircularProgress size={48} />
+              </Box>
+              <Typography variant="h5" fontWeight={700}>
+                Finishing Sign-In
+              </Typography>
+              <Typography color="text.secondary">
+                Completing your sign-in and preparing your session.
+              </Typography>
+            </>
+          )}
+        </Stack>
+      </Paper>
     </Container>
   );
 }

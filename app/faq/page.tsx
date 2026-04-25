@@ -28,8 +28,6 @@ import {
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 const FAQ_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.FAQ);
-const FAQ_PAGE_DESCRIPTION =
-  "Read common questions about Porridge Budget, including the creator, manual-first workflow, CSV support, and the product philosophy.";
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://porridge-budgeting.vercel.app"
 ).replace(/\/+$/, "");
@@ -49,21 +47,21 @@ const FAQ_ACCORDION_BACKGROUND = alpha(FAQ_PAPER, 0.94);
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: FAQ_PAGE_DESCRIPTION,
+  description: FAQ_PAGE_ENTRY.description,
   alternates: {
     canonical: ROUTE_PATHS.faq,
   },
   openGraph: {
     type: "website",
     title: FAQ_PAGE_ENTRY.title,
-    description: FAQ_PAGE_DESCRIPTION,
+    description: FAQ_PAGE_ENTRY.description,
     url: ROUTE_PATHS.faq,
     siteName: APP_NAME,
   },
   twitter: {
     card: "summary",
     title: FAQ_PAGE_ENTRY.title,
-    description: FAQ_PAGE_DESCRIPTION,
+    description: FAQ_PAGE_ENTRY.description,
   },
 };
 
@@ -75,7 +73,7 @@ function formatFaqCategoryLabel(category: string) {
 }
 
 export default function FaqPage() {
-  const { hero, items } = FAQ_PAGE_CONTENT;
+  const { hero, intro, items } = FAQ_PAGE_CONTENT;
   const categories = Array.from(new Set(items.map((item) => item.category)));
   const faqStructuredData = {
     "@context": "https://schema.org",
@@ -176,16 +174,14 @@ export default function FaqPage() {
             >
               <Box sx={{ maxWidth: 640 }}>
                 <Typography id="faq-list-heading" component="h2" variant="h5">
-                  Frequently asked questions
+                  {intro.heading}
                 </Typography>
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   sx={{ mt: 1.25, lineHeight: 1.75 }}
                 >
-                  Browse the most common questions about the app, the workflow,
-                  and why the product intentionally favors mindful budgeting
-                  over passive syncing.
+                  {intro.description}
                 </Typography>
               </Box>
 

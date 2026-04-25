@@ -2,9 +2,8 @@
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
@@ -32,41 +31,51 @@ export default function RegisterPage() {
   // Note 2: Keep registration copy provider-neutral so account setup can move
   // behind a different hosted provider later without changing this page's UX.
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Card>
-        <CardContent sx={{ p: 4 }}>
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="h4" fontWeight={700} gutterBottom>
-                Create Account
-              </Typography>
-              <Typography color="text.secondary">
-                Complete account setup in the secure account setup window, then
-                return here with an active session.
-              </Typography>
-            </Box>
+    <Container
+      maxWidth="sm"
+      sx={{
+        minHeight: "calc(100vh - 128px)",
+        display: "flex",
+        alignItems: "center",
+        py: 6,
+      }}
+    >
+      <Box sx={{ width: "100%" }}>
+        <Stack spacing={1} alignItems="center" sx={{ mb: 3 }}>
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            align="center"
+            sx={{ letterSpacing: "-0.02em" }}
+          >
+            Create an account
+          </Typography>
+          <Typography variant="body1" color="text.secondary" align="center">
+            Complete setup in the secure account window, then return here.
+          </Typography>
+        </Stack>
 
+        <Paper elevation={1} sx={{ p: 3 }}>
+          <Stack spacing={3}>
             {!cognitoConfigured && (
-              <Alert severity="warning">
+              <Alert severity="warning" sx={{ borderRadius: 2 }}>
                 Hosted account setup is not configured for this deployment. If
                 you need to create an account, please contact the site owner.
               </Alert>
             )}
 
-            <Stack spacing={2}>
-              <SignInButton
-                mode="signup"
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={!cognitoConfigured}
-              >
-                Create Account
-              </SignInButton>
-            </Stack>
+            <SignInButton
+              mode="signup"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={!cognitoConfigured}
+            >
+              Get started
+            </SignInButton>
           </Stack>
-        </CardContent>
-      </Card>
+        </Paper>
+      </Box>
     </Container>
   );
 }

@@ -42,10 +42,37 @@ export default function SignOutPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "60vh",
+        minHeight: "60vh",
+        py: 8,
       }}
     >
-      <Typography variant="h6">Signing Out…</Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+          p: { xs: 4, sm: 6 },
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 3,
+          textAlign: "center",
+          maxWidth: 360,
+          width: "100%",
+        }}
+      >
+        <Box sx={{ mb: 0.5 }}>
+          <span style={{ fontSize: 40 }} role="img" aria-label="waving hand">
+            👋
+          </span>
+        </Box>
+        <Typography variant="h5" fontWeight={700}>
+          Signing Out…
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          You&apos;ll be redirected in a moment.
+        </Typography>
+      </Box>
     </Box>
   );
 }

@@ -8,6 +8,324 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Full-application dark-theme UI/UX redesign (Phases 1–6)
+
+Date: 2026-04-25
+
+Summary
+
+End-to-end visual redesign of all application surfaces while preserving all
+existing routes, functionality, and the dark theme. The work was split across
+two commits and covered the design system foundation, app shell, all public/auth
+pages, all authenticated workspace pages, and all chart components.
+
+Completed items
+
+Phase 1 — Audit
+
+- Route-by-route inventory of all live pages and shared components
+
+Phase 2 — Design system
+
+- Expanded `lib/theme/server-theme-tokens.ts` with 9 semantic token groups:
+  palette, surface, border, text, chart (8-color accessible palette), shadow, focus, spacing
+- Added 20+ MUI component overrides in `app/providers.tsx`:
+  AppBar, Paper, Card, Button, Dialog, TextField, Tabs, TableCell, Chip,
+  Tooltip, Skeleton, and shared focusVisible ring
+- Created `components/ui/SectionCard.tsx` — shared workspace section container
+- Extended `components/ui/PageHeader.tsx` with headingId/descriptionId props
+
+Phase 3 — App shell
+
+- `components/AppNav.tsx`: breakpoint md→lg, Salary added to mobile drawer, Divider, token colors
+- `components/Footer.tsx`: background.default, maxWidth xl, link hover polish
+
+Phase 4 — Public/auth pages
+
+- `app/page.tsx`: full-bleed hero gradient, 3-column feature cards, CTA strip
+- `app/auth/login/page.tsx`: two-panel Paper (sign-in / demo), centered layout
+- `app/auth/register/page.tsx`: centered layout matching login
+- `app/auth/callback/page.tsx`: Paper card wrapper, larger CircularProgress
+- `app/auth/signout/page.tsx`: polished centered card with redirect messaging
+- `app/contact/page.tsx`: hero gradient Paper matching About/FAQ pages
+
+Phase 5 — Authenticated workspace pages
+
+- `app/reports/page.tsx`: PageHeader integration
+- `app/sankey/page.tsx`: PageHeader integration
+- `app/progress/page.tsx`: 4 sections converted to SectionCard
+- `components/fire/FireCalculator.tsx`: PageHeader added
+
+Phase 6 — Chart standardization
+
+- All 8 chart components now use `SERVER_THEME_TOKENS.chart.grid` and `.axis`
+  for axis/grid/label colors instead of hardcoded hex values
+- `components/charts/ProjectionChart.tsx`: complete overhaul — MUI empty state,
+  ChartTooltipCard, Y-axis formatter, chart.palette[0] line color
+- `components/fire/FireProjectionChart.tsx`: gradient fill and area stroke
+  aligned to chart.palette[0]; milestone reference line colors tokenized
+- `components/fire/FireCalculator.tsx`: legend swatch aligned to chart.palette[0]
+- `components/charts/SankeyChart.tsx`: raw div empty state → MUI Stack/Typography
+- `components/charts/SpendingPieChart.tsx`: MUI empty state
+- `components/charts/SpendingBarChart.tsx`: tokenized colors, MUI empty state,
+  Income bar aligned to chart.palette[4]
+- `components/charts/TagBarChart.tsx`: tokenized colors, MUI empty state
+- `components/charts/ComparisonBarChart.tsx`: tokenized grid/axis colors
+- `components/charts/SalaryChart.tsx`: tokenized axis, CartesianGrid stroke added
+
+Files changed (commit 445c3a9 — Phase 2–5)
+
+- lib/theme/server-theme-tokens.ts
+- app/providers.tsx
+- components/AppNav.tsx
+- components/Footer.tsx
+- app/page.tsx
+- app/auth/login/page.tsx
+- app/auth/register/page.tsx
+- app/reports/page.tsx
+- app/sankey/page.tsx
+- app/progress/page.tsx
+- components/fire/FireCalculator.tsx
+- components/ui/PageHeader.tsx
+- components/ui/SalaryList.tsx
+- components/ui/SectionCard.tsx (new)
+
+Files changed (commit 6823485 — Phase 6 + polish)
+
+- app/auth/callback/page.tsx
+- app/auth/signout/page.tsx
+- app/contact/page.tsx
+- components/charts/ComparisonBarChart.tsx
+- components/charts/ProjectionChart.tsx
+- components/charts/SalaryChart.tsx
+- components/charts/SankeyChart.tsx
+- components/charts/SpendingBarChart.tsx
+- components/charts/SpendingPieChart.tsx
+- components/charts/TagBarChart.tsx
+- components/fire/FireCalculator.tsx
+- components/fire/FireProjectionChart.tsx
+
+Commit references
+
+- feat(ui): full-application dark-theme redesign system, shell, pages (445c3a9)
+- feat(ui): standardize chart tokens and polish auth/contact pages (6823485)
+
+Notes
+
+- All chart category colors (Need/Want/Saving) intentionally use semantic
+  CATEGORY_HEX_COLORS, not the chart palette, for semantic meaning.
+- SalaryChart line colors (#4caf50 green, #ff9800 orange) kept as semantic.
+- FireProjectionChart line colors (red=FIRE target, green=real dollars,
+  orange=actual) kept as semantic; only the projected nominal blue was aligned.
+- All 279 tests pass; pnpm lint and pnpm build verified clean.
+
+---
+
+# Completed: Public marketing copy refresh — centralized metadata descriptions
+
+Date: 2026-04-24
+
+Summary
+
+Eliminated duplicate hardcoded metadata description strings across public routes
+by deriving them from the shared page-titles content source, which reduces
+maintenance drift and ensures consistency across metadata, navigation, and
+structured data.
+
+Completed items
+
+- In `app/page.tsx`, derived `HOME_PAGE_DESCRIPTION` from
+  `getPageTitleEntry(PAGE_TITLE_KEYS.HOME).description` instead of maintaining a
+  separate hardcoded string.
+- In `app/about/page.tsx`, replaced local `ABOUT_PAGE_DESCRIPTION` constant with
+  `ABOUT_PAGE_ENTRY.description` in metadata, openGraph, and twitter fields.
+- In `app/faq/page.tsx`, replaced local `FAQ_PAGE_DESCRIPTION` constant with
+  `FAQ_PAGE_ENTRY.description` in metadata, openGraph, and twitter fields.
+- Refreshed public content data in `lib/content/about.ts`, `lib/content/faq.ts`,
+  and `lib/content/home.ts` to reflect current feature set and creator profile.
+- Updated shared page-titles and types in `lib/content/page-titles.ts` and
+  `lib/types/content.ts` for the new content structure.
+- Added tests for content data structure in `test/lib/content-data.test.ts`.
+
+Files changed
+
+- app/page.tsx
+- app/about/page.tsx
+- app/faq/page.tsx
+- lib/content/about.ts
+- lib/content/faq.ts
+- lib/content/home.ts
+- lib/content/page-titles.ts
+- lib/types/content.ts
+- test/lib/content-data.test.ts
+- plan.md
+- plan.completed.md
+
+Commit reference
+
+refactor(content): derive page metadata descriptions from shared page-titles source
+
+Notes
+
+- All metadata, openGraph, and twitter card descriptions now source from one
+  location (`PAGE_TITLES` in page-titles.ts) which acts as the single source of
+  truth for page copy.
+- This pattern makes future copy updates easier: edit the page-titles entry once
+  and all consumers (metadata, nav, structured data) automatically stay in sync.
+- Formatting, linting, and full test suite (all tests passed) validated before
+  commit.
+
+---
+
+# Completed: Progress page UX polish — HistoryTabs, chart enhancements, alpha stat icons
+
+Date: 2026-05-28
+
+Summary
+
+Four remaining items from the Progress page redesign were implemented and
+validated (lint + 279 tests + full build all green).
+
+Completed items
+
+- Created `HistoryTabs.tsx`: tabbed RetirementList / SalaryList panel; both
+  panels stay mounted (hidden via `display:none`) to preserve CRUD dialog state
+  across tab switches; forwards `onEntriesChanged` to both children.
+- Fixed GoalEditor data staleness: added `refreshTrigger?: number` prop; page
+  increments it in `handleEntriesChanged` (post-mutation) so `/api/progress/goal`
+  (`latestEnd`) re-fetches automatically after retirement-entry changes.
+- ProgressCharts enhancements: added dashed green goal `ReferenceLine`; added
+  compact `formatYAxis` helper (`$K` / `$M` notation); upgraded `<YAxis>` with
+  dynamic `domain` so the goal line is never clipped.
+- ProgressSummaryStats: replaced flat `action.hover` icon backgrounds with
+  alpha-tinted per-color circles (primary / success / warning at 0.15 opacity).
+
+Files changed
+
+- components/progress/HistoryTabs.tsx (new)
+- app/progress/page.tsx
+- components/progress/GoalEditor.tsx
+- components/progress/ProgressCharts.tsx
+- components/progress/ProgressSummaryStats.tsx
+
+Commit reference
+
+feat(progress): add HistoryTabs, fix goal staleness, add chart reference line and alpha stat icons
+
+Notes
+
+- ProgressCharts keeps conditional rendering for its two tab panels (unlike
+  HistoryTabs) to avoid Recharts stale-size issues inside hidden containers.
+- Goal ReferenceLine domain: ceiling is 110% of max(dataMax, goalTargetAmount)
+  so the reference line is always fully visible.
+
+---
+
+# Completed: Progress page UX polish — HistoryTabs, chart enhancements, alpha stat icons
+
+Date: 2026-05-28
+
+Summary
+
+Four remaining items from the Progress page redesign were implemented and
+validated (lint + 279 tests + full build all green).
+
+Completed items
+
+- Created `HistoryTabs.tsx`: tabbed RetirementList / SalaryList panel; both
+  panels stay mounted (hidden via `display:none`) to preserve CRUD dialog state
+  across tab switches; forwards `onEntriesChanged` to both children.
+- Fixed GoalEditor data staleness: added `refreshTrigger?: number` prop; page
+  increments it in `handleEntriesChanged` (post-mutation) so `/api/progress/goal`
+  (`latestEnd`) re-fetches automatically after retirement-entry changes.
+- ProgressCharts enhancements: added dashed green goal `ReferenceLine`; added
+  compact `formatYAxis` helper (`$K` / `$M` notation); upgraded `<YAxis>` with
+  dynamic `domain` so the goal line is never clipped.
+- ProgressSummaryStats: replaced flat `action.hover` icon backgrounds with
+  alpha-tinted per-color circles (primary / success / warning at 0.15 opacity).
+
+Files changed
+
+- components/progress/HistoryTabs.tsx (new)
+- app/progress/page.tsx
+- components/progress/GoalEditor.tsx
+- components/progress/ProgressCharts.tsx
+- components/progress/ProgressSummaryStats.tsx
+
+Commit reference
+
+feat(progress): add HistoryTabs, fix goal staleness, add chart reference line and alpha stat icons
+
+Notes
+
+- ProgressCharts keeps conditional rendering for its two tab panels (unlike
+  HistoryTabs) to avoid Recharts stale-size issues inside hidden containers.
+- Goal ReferenceLine domain: ceiling is 110% of max(dataMax, goalTargetAmount)
+  so the reference line is always fully visible.
+
+# Completed: Progress Tracker redesign + home auth-gate
+
+Date: 2026-04-24
+
+Summary
+
+- Hid the "Try Demo" and "Sign In" CTAs on the home page for signed-in users.
+- Fully redesigned the Progress Tracker page: added a dashboard summary strip,
+  consolidated charts into a tabbed panel, converted milestones to a vertical
+  timeline, strengthened the goal progress bar, and added left-accent section
+  headers throughout.
+
+Completed items
+
+- Added `components/home/HomeHeroActions.tsx` — tri-state auth client component
+  that hides the CTA row when a user is signed in; no hydration flash.
+- Updated `app/page.tsx` to render `<HomeHeroActions />` instead of inline buttons.
+- Added `lib/progress/progress-summary.ts` — pure helpers: `getLatestRetirementTotal`,
+  `getLatestSalary`, `computeGoalProgress`; all covered by Vitest tests.
+- Added `test/lib/progress-summary.test.ts` — 16 tests (empty arrays, latest-year
+  selection, percent clamping above 100%, division-by-zero guard).
+- Added `components/progress/ProgressSummaryStats.tsx` — responsive three-card
+  dashboard strip (progress %, total saved, latest salary) driven by page-owned state.
+- Updated `components/progress/SectionHeader.tsx` — primary.main left accent border.
+- Updated `components/progress/GoalEditor.tsx` — `onGoalData` callback for parent
+  sync; LinearProgress height increased 8→14px.
+- Refactored `components/progress/ProgressCharts.tsx` — two-tab panel (Retirement
+  Growth / Salary Progression) with lazy panel mounting.
+- Updated `components/ui/SalaryList.tsx` — removed embedded SalaryChart (moved to
+  Salary Progression tab).
+- Refactored `components/progress/MilestonesList.tsx` — vertical timeline sorted
+  year DESC / age DESC (null last); renders note when present.
+- Refactored `app/progress/page.tsx` — flattened layout, added `goalData` state,
+  renders ProgressSummaryStats above GoalEditor.
+
+Files changed
+
+- `app/page.tsx`
+- `app/progress/page.tsx`
+- `components/home/HomeHeroActions.tsx` (new)
+- `components/progress/GoalEditor.tsx`
+- `components/progress/MilestonesList.tsx`
+- `components/progress/ProgressCharts.tsx`
+- `components/progress/ProgressSummaryStats.tsx` (new)
+- `components/progress/SectionHeader.tsx`
+- `components/ui/SalaryList.tsx`
+- `lib/progress/progress-summary.ts` (new)
+- `test/lib/progress-summary.test.ts` (new)
+
+Commit references
+
+- `4c28c87` feat(home): hide CTA buttons for signed-in users
+- `8ad5021` feat(progress): redesign Progress Tracker page
+
+Notes
+
+- All 279 tests pass, lint clean, build successful.
+- Milestone API still supports create + delete only (no edit); design respects this.
+- Summary stats use the `latestEnd` value returned by the goal API as the
+  authoritative total-saved figure, with a local retirement-entry fallback.
+
+---
+
 # Completed: Home card cleanup and custom 404 redirect
 
 Date: 2026-04-19

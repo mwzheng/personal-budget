@@ -15,6 +15,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import SaveIcon from "@mui/icons-material/Save";
+import PageHeader from "@/components/ui/PageHeader";
 import { apiFetch } from "@/lib/api/apiFetch";
 import { selectLatestFireScenario } from "@/lib/utils/fire-scenarios";
 import {
@@ -23,6 +24,7 @@ import {
   generateProjection,
 } from "@/lib/utils/fire";
 import type { FireScenario, RetirementEntry } from "@/lib/types/types";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import FireForm from "./FireForm";
 import FireProjectionChart, { FIRE_CHART_LABELS } from "./FireProjectionChart";
 import FireProjectionTable from "./FireProjectionTable";
@@ -221,14 +223,11 @@ export default function FireCalculator() {
 
   return (
     <Box>
-      <Typography component="h1" variant="h5" fontWeight={700} gutterBottom>
-        FIRE Calculator
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Calculate your Financial Independence number and project how long it
-        will take to reach your goal. Adjust the rate of return, monthly
-        contributions, and inflation to compare scenarios.
-      </Typography>
+      <PageHeader
+        title="FIRE Calculator"
+        description="Calculate your Financial Independence number and project how long it will take to reach your goal. Adjust the rate of return, monthly contributions, and inflation to compare scenarios."
+        sx={{ mb: 3 }}
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -306,7 +305,7 @@ export default function FireCalculator() {
                     sx={{
                       width: 16,
                       height: 3,
-                      bgcolor: "#3f51b5",
+                      bgcolor: SERVER_THEME_TOKENS.chart.palette[0],
                       borderRadius: 1,
                     }}
                   />

@@ -51,7 +51,11 @@ const darkTheme = createTheme({
     // Note 3: MUI palette colors follow the Material Design convention:
     // `main` is the primary color used for buttons, links, and highlights.
     // `primary` and `secondary` are used throughout MUI's default component styles.
-    primary: { main: SERVER_THEME_TOKENS.palette.primary },
+    primary: {
+      main: SERVER_THEME_TOKENS.palette.primary,
+      light: SERVER_THEME_TOKENS.palette.primaryLight,
+      dark: SERVER_THEME_TOKENS.palette.primaryDark,
+    },
     secondary: { main: SERVER_THEME_TOKENS.palette.secondary },
     background: {
       default: SERVER_THEME_TOKENS.palette.backgroundDefault,
@@ -64,17 +68,39 @@ const darkTheme = createTheme({
     // chain for the rare case the variable is absent (e.g., in Storybook).
     fontFamily:
       'var(--font-inter), "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { fontWeight: 700, letterSpacing: "-0.02em" },
+    h2: { fontWeight: 700, letterSpacing: "-0.01em" },
+    h3: { fontWeight: 700 },
+    h4: { fontWeight: 700 },
+    h5: { fontWeight: 600 },
+    h6: { fontWeight: 600 },
   },
   shape: {
     borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        // Note 3.2: Standardize focus-visible across all interactive elements so
+        // keyboard navigation is clearly visible without relying on browser defaults.
+        "*, *::before, *::after": {
+          "&:focus-visible": {
+            outline: `2px solid ${SERVER_THEME_TOKENS.border.focus}`,
+            outlineOffset: "2px",
+          },
+        },
+      },
+    },
     MuiCard: {
       // Note 4: MUI Cards in dark mode add a gradient `backgroundImage` by
       // default to simulate elevation via surface tints. Setting it to `none`
       // keeps the flat dark look consistent with the rest of the design.
       styleOverrides: {
-        root: { backgroundImage: "none" },
+        root: {
+          backgroundImage: "none",
+          transition:
+            "box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out",
+        },
       },
     },
     MuiPaper: {
@@ -87,6 +113,12 @@ const darkTheme = createTheme({
           transition:
             "box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out",
         },
+        elevation1: {
+          boxShadow: SERVER_THEME_TOKENS.shadow.low,
+        },
+        elevation2: {
+          boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+        },
       },
     },
     MuiButton: {
@@ -94,13 +126,63 @@ const darkTheme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: "none" as const,
-          fontWeight: 500,
+          fontWeight: 600,
+          letterSpacing: "0.01em",
           transition: "all 0.2s ease-in-out",
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
+          },
         },
         contained: {
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+          boxShadow: SERVER_THEME_TOKENS.shadow.low,
           "&:hover": {
-            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
+            boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+          },
+        },
+        outlined: {
+          borderColor: SERVER_THEME_TOKENS.border.strong,
+          "&:hover": {
+            borderColor: SERVER_THEME_TOKENS.palette.primary,
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+          },
+        },
+        text: {
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          transition: "all 0.15s ease-in-out",
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+          },
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
+          },
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none" as const,
+          fontWeight: 500,
+          borderColor: SERVER_THEME_TOKENS.border.standard,
+          "&.Mui-selected": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+            borderColor: SERVER_THEME_TOKENS.palette.primary,
+            color: SERVER_THEME_TOKENS.palette.primaryLight,
+            "&:hover": {
+              backgroundColor: SERVER_THEME_TOKENS.surface.selectedHover,
+            },
+          },
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
           },
         },
       },
@@ -110,8 +192,9 @@ const darkTheme = createTheme({
         paper: {
           borderRadius: 16,
           border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6)",
+          boxShadow: SERVER_THEME_TOKENS.shadow.dialog,
           backgroundImage: "none",
+          backgroundColor: SERVER_THEME_TOKENS.surface.card,
         },
       },
     },
@@ -120,6 +203,16 @@ const darkTheme = createTheme({
         root: {
           fontWeight: 600,
           fontSize: "1.125rem",
+          borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
+          paddingBottom: "16px",
+          marginBottom: "4px",
+        },
+      },
+    },
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: "20px 24px",
         },
       },
     },
@@ -127,6 +220,8 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           padding: "16px 24px",
+          borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
+          gap: "8px",
         },
       },
     },
@@ -158,8 +253,17 @@ const darkTheme = createTheme({
             borderRadius: 8,
             transition:
               "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+            "& fieldset": {
+              borderColor: SERVER_THEME_TOKENS.border.standard,
+            },
+            "&:hover fieldset": {
+              borderColor: SERVER_THEME_TOKENS.border.strong,
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: SERVER_THEME_TOKENS.palette.primary,
+            },
             "&.Mui-focused": {
-              boxShadow: "0 0 0 2px rgba(45, 125, 210, 0.2)",
+              boxShadow: SERVER_THEME_TOKENS.focus.ring,
             },
           },
         },
@@ -170,6 +274,13 @@ const darkTheme = createTheme({
         root: {
           borderRadius: 8,
           fontWeight: 500,
+          transition: "all 0.15s ease-in-out",
+          "&.MuiChip-clickable:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.raised,
+          },
+        },
+        outlined: {
+          borderColor: SERVER_THEME_TOKENS.border.standard,
         },
       },
     },
@@ -179,14 +290,19 @@ const darkTheme = createTheme({
           textTransform: "none" as const,
           fontWeight: 500,
           minWidth: "auto",
+          letterSpacing: "0.01em",
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
+            borderRadius: 4,
+          },
         },
       },
     },
     MuiTabs: {
       styleOverrides: {
         indicator: {
-          height: 3,
-          borderRadius: "3px 3px 0 0",
+          height: 2,
+          borderRadius: "2px 2px 0 0",
         },
       },
     },
@@ -194,6 +310,24 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           borderColor: SERVER_THEME_TOKENS.border.subtle,
+        },
+        head: {
+          fontWeight: 600,
+          fontSize: "0.75rem",
+          letterSpacing: "0.05em",
+          textTransform: "uppercase" as const,
+          color: SERVER_THEME_TOKENS.text.secondary,
+          backgroundColor: SERVER_THEME_TOKENS.surface.card,
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          transition: "background-color 0.15s ease-in-out",
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.raised,
+          },
         },
       },
     },
@@ -209,6 +343,104 @@ const darkTheme = createTheme({
         root: {
           backgroundImage: "none",
           borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
+        },
+      },
+    },
+    MuiTooltip: {
+      defaultProps: {
+        arrow: true,
+        enterDelay: 400,
+      },
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
+          border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
+          borderRadius: 6,
+          boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+          fontSize: "0.8125rem",
+          fontWeight: 500,
+          padding: "6px 10px",
+        },
+        arrow: {
+          color: SERVER_THEME_TOKENS.surface.overlay,
+        },
+      },
+    },
+    MuiSkeleton: {
+      styleOverrides: {
+        root: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.raised,
+        },
+        wave: {
+          "&::after": {
+            background: `linear-gradient(90deg, transparent, ${SERVER_THEME_TOKENS.surface.overlay}, transparent)`,
+          },
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          transition: "background-color 0.15s ease-in-out",
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.raised,
+          },
+          "&.Mui-selected": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+            "&:hover": {
+              backgroundColor: SERVER_THEME_TOKENS.surface.selectedHover,
+            },
+          },
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
+          },
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          margin: "2px 4px",
+          padding: "8px 12px",
+          transition: "background-color 0.15s ease-in-out",
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.raised,
+          },
+          "&.Mui-selected": {
+            backgroundColor: SERVER_THEME_TOKENS.surface.selected,
+            "&:hover": {
+              backgroundColor: SERVER_THEME_TOKENS.surface.selectedHover,
+            },
+          },
+          "&:focus-visible": {
+            boxShadow: SERVER_THEME_TOKENS.focus.ring,
+          },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiAccordion: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          "&:before": { display: "none" },
+        },
+      },
+    },
+    MuiFab: {
+      styleOverrides: {
+        root: {
+          "&:focus-visible": {
+            boxShadow: `${SERVER_THEME_TOKENS.focus.ring}, ${SERVER_THEME_TOKENS.shadow.medium}`,
+          },
         },
       },
     },

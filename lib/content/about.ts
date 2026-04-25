@@ -40,11 +40,11 @@ export const CREATOR_PROFILE = {
   name: "Mickey",
   role: "Full Stack Software Engineer",
   experienceSummary:
-    "5+ years of experience, currently working full time, and a huge advocate for saving and budgeting wisely.",
+    "5+ years of experience, currently working full time, and passionate about building tools that help people budget smarter.",
   bio: [
     "I'm a full stack software engineer who likes building practical tools around real workflows.",
 
-    `${APP_NAME} is a hobby project that turns a manual Excel and Notion budgeting habit into one focused app.`,
+    `${APP_NAME} started as a hobby project to simplify my budgeting process. I was managing everything across spreadsheets and notes, and wanted something that kept the intentionality without the context switching.`,
   ],
   links: CREATOR_SOCIAL_LINK_LIST,
 } satisfies CreatorProfile;
@@ -52,21 +52,21 @@ export const CREATOR_PROFILE = {
 // Note 2: These principles are intentionally short because they are likely to
 // be reused in hero cards, a future footer blurb, or lightweight marketing UI.
 export const APP_PHILOSOPHY_PRINCIPLES = [
-  "Keep the budgeting loop close enough that each entry still feels intentional.",
-  "Combine the best parts of manual Excel and Notion tracking in one calmer workflow.",
-  "Favor clarity and reflection over maximum automation.",
+  "Keep each budget entry intentional instead of passively synced.",
+  "Build tools that support reflection, not just automation.",
+  "Maintain clarity across daily spending and long-term goals.",
 ] as const;
 
 export const ABOUT_PAGE_CONTENT = {
   hero: {
     eyebrow: "About",
     title: `Why ${APP_NAME} Exists`,
-    summary: `I built ${APP_NAME} to bring my manual Excel and Notion budgeting workflow into one focused app.`,
+    summary: `I built ${APP_NAME} to turn a scattered budgeting workflow into one focused app.`,
   },
   creator: CREATOR_PROFILE,
   summary: [
-    `I started ${APP_NAME} as a side project to reduce the friction of managing money across an Excel sheet and a Notion setup.`,
-    "I was not trying to build the loudest finance dashboard. I wanted one place that still feels deliberate, understandable, and worth opening regularly.",
+    `I started ${APP_NAME} as a side project to simplify how I tracked spending. Managing budgets across multiple tools was working, but it felt fragmented.`,
+    "I wanted one place that preserved the clarity of manual tracking without requiring constant tool-switching.",
   ],
   sectionTitles: {
     creator: "About The Creator",
@@ -107,28 +107,28 @@ export const ABOUT_PAGE_CONTENT = {
       id: "origin-story",
       heading: "Origin Story",
       paragraphs: [
-        "Before this app existed, I was already tracking money manually in Excel and Notion.",
-        "That setup worked, but it split the same habit across multiple tools. I also did not like the limitations of Notion's free tier, which made the workflow feel even more fragmented. I built Porridge Budget to keep that workflow in one place without pretending the manual parts were a mistake.",
+        "I was already tracking spending manually before building this. Spreadsheets for transactions, notes for planning, and a growing sense that switching between them was slowing me down.",
+        "I built Porridge Budget to consolidate that workflow without losing the intentionality. The goal was one app that kept manual tracking deliberate, not buried under automatic syncing.",
       ],
     },
     {
       id: "manual-entry",
       heading: "Mindful Manual Entry",
       paragraphs: [
-        "Many budgeting tools optimize for bank aggregation first. I take a different stance: manual entry is useful because it creates a short pause and keeps spending decisions visible.",
-        "That is why the product language centers on mindful entry, review, and reflection instead of passive syncing.",
+        "Most budgeting tools prioritize bank aggregation. This one prioritizes manual entry because it creates a moment of review and keeps spending visible.",
+        "CSV imports are supported for convenience, but the product still assumes you want to stay close to your data.",
       ],
       highlights: [
         "Manual entry is a feature, not a fallback.",
-        "One app should replace tab switching, not awareness.",
+        "Consolidation should reduce tab-switching, not awareness.",
       ],
     },
     {
       id: "product-direction",
       heading: "Product Direction",
       paragraphs: [
-        "I want the app to feel like a personal tool, not a financial firehose. Reports, budgets, and progress views should support deliberate planning rather than endless configuration.",
-        "If a future feature makes the workflow faster, it still needs to preserve the sense of ownership that came from my original Excel and Notion habit.",
+        "I want the app to feel personal and focused. Reports, budgets, and progress views should support deliberate planning, not endless configuration.",
+        "New features should make the workflow more efficient without removing the sense of ownership that comes from staying involved in the process.",
       ],
     },
   ],

@@ -11,8 +11,10 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 
 import { ContactForm } from "@/components/contact/ContactForm";
 import { CONTACT_PAGE_CONTENT } from "@/lib/content/contact";
@@ -22,7 +24,13 @@ import {
   PAGE_TITLES,
   ROUTE_PATHS,
 } from "@/lib/content/page-titles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import type { ContentNotice } from "@/lib/types/content";
+
+const CONTACT_PRIMARY = SERVER_THEME_TOKENS.palette.primary;
+const CONTACT_PAPER = SERVER_THEME_TOKENS.palette.backgroundPaper;
+const CONTACT_BORDER = SERVER_THEME_TOKENS.border.standard;
+const CONTACT_HERO_BACKGROUND = `linear-gradient(140deg, ${alpha(CONTACT_PRIMARY, 0.18)}, ${alpha(CONTACT_PAPER, 0.96)})`;
 
 const contactPageTitle = PAGE_TITLES[PAGE_TITLE_KEYS.CONTACT];
 const CONTACT_PAGE_DESCRIPTION =
@@ -87,29 +95,50 @@ export default function ContactPage() {
   return (
     <Container component="main" maxWidth="xl" sx={{ py: { xs: 6, md: 8 } }}>
       <Stack spacing={{ xs: 4, md: 6 }}>
-        <Stack component="section" spacing={2} sx={{ maxWidth: 760 }}>
-          <Typography
-            variant="overline"
-            color="primary.main"
-            sx={{ letterSpacing: 1.2 }}
-          >
-            {hero.eyebrow}
-          </Typography>
-          <Typography component="h1" variant="h3" fontWeight={700}>
-            {hero.title}
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            {hero.summary}
-          </Typography>
-          {summary.map((paragraph) => (
-            <Typography key={paragraph} variant="body1" color="text.secondary">
-              {paragraph}
+        <Paper
+          component="section"
+          aria-labelledby="contact-hero-title"
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 4 },
+            border: `1px solid ${CONTACT_BORDER}`,
+            background: CONTACT_HERO_BACKGROUND,
+          }}
+        >
+          <Stack spacing={2} sx={{ maxWidth: 760 }}>
+            <Typography
+              variant="overline"
+              color="primary.main"
+              sx={{ letterSpacing: 1.2 }}
+            >
+              {hero.eyebrow}
             </Typography>
-          ))}
+            <Typography
+              id="contact-hero-title"
+              component="h1"
+              variant="h3"
+              fontWeight={700}
+            >
+              {hero.title}
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              {hero.summary}
+            </Typography>
+            {summary.map((paragraph) => (
+              <Typography
+                key={paragraph}
+                variant="body1"
+                color="text.secondary"
+              >
+                {paragraph}
+              </Typography>
+            ))}
+          </Stack>
           <Box
             sx={{
               display: "grid",
               gap: 2,
+              mt: 3,
               gridTemplateColumns: {
                 xs: "1fr",
                 md: "repeat(2, minmax(0, 1fr))",
@@ -120,7 +149,7 @@ export default function ContactPage() {
               <ContactNoticeCard key={notice.title} notice={notice} />
             ))}
           </Box>
-        </Stack>
+        </Paper>
 
         <Box
           component="section"

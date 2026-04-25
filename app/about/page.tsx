@@ -33,26 +33,24 @@ import type {
 } from "@/lib/types/content";
 
 const ABOUT_PAGE_ENTRY = getPageTitleEntry(PAGE_TITLE_KEYS.ABOUT);
-const ABOUT_PAGE_DESCRIPTION =
-  "Learn why Porridge Budget was built, the manual-first budgeting philosophy behind it, and who maintains the project.";
 
 export const metadata: Metadata = {
   title: "About",
-  description: ABOUT_PAGE_DESCRIPTION,
+  description: ABOUT_PAGE_ENTRY.description,
   alternates: {
     canonical: ROUTE_PATHS.about,
   },
   openGraph: {
     type: "article",
     title: ABOUT_PAGE_ENTRY.title,
-    description: ABOUT_PAGE_DESCRIPTION,
+    description: ABOUT_PAGE_ENTRY.description,
     url: ROUTE_PATHS.about,
     siteName: APP_NAME,
   },
   twitter: {
     card: "summary",
     title: ABOUT_PAGE_ENTRY.title,
-    description: ABOUT_PAGE_DESCRIPTION,
+    description: ABOUT_PAGE_ENTRY.description,
   },
 };
 

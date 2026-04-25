@@ -12,77 +12,77 @@ export const FAQ_ITEMS = [
     category: "creator",
     question: `Who built ${APP_NAME}?`,
     answer:
-      "Porridge Budget was developed and is maintained by a software engineer with over five years of professional experience. It is a personal project maintained alongside full-time work.",
+      "I'm a software engineer with 5+ years of experience. This is a personal project I maintain alongside full-time work.",
   },
   {
     id: "why-it-exists",
     category: "philosophy",
-    question: `Why build ${APP_NAME} in the first place?`,
+    question: `Why build ${APP_NAME}?`,
     answer:
-      "I started the project as a hobby build because I was already tracking money manually in Excel and Notion. Porridge Budget brings that workflow into one place without losing the clarity of a hands-on habit.",
+      "I was already tracking spending manually across multiple tools. I built this to consolidate that workflow without losing the clarity that comes from staying close to your data.",
   },
   {
     id: "why-no-auto-imports",
     category: "philosophy",
     question: "Why not connect banks and import everything automatically?",
     answer:
-      "Automatic imports can be convenient, but they can also make it easy to stop paying attention. This app intentionally leans toward mindful manual entry so each expense still gets a moment of review.",
+      "Automatic imports make it easy to stop paying attention. This app prioritizes manual entry so each expense gets a moment of review, keeping spending decisions visible.",
   },
   {
     id: "bank-credentials",
     category: "data",
     question: "Do I need to give the app my bank credentials?",
     answer:
-      "No. The workflow is built around manual entry and CSV handling rather than live bank connections, which keeps the product simpler and keeps the budgeting loop deliberate.",
+      "No. The app is built around manual entry and CSV imports, not live bank connections.",
   },
   {
     id: "manual-vs-csv",
     category: "workflow",
-    question: "Is everything manual, or can I still use CSV files?",
+    question: "Is everything manual, or can I use CSV files?",
     answer:
-      "Manual entry is the preferred habit, but the app also supports CSV workflows so you do not need to key every row by hand. The point is still to stay close to the data instead of hiding it behind a sync.",
+      "Manual entry is preferred, but CSV imports are supported for convenience. Either way, the goal is to stay close to the data.",
   },
   {
     id: "what-can-i-track",
     category: "features",
-    question: "What can I track today?",
+    question: "What can I track?",
     answer:
-      "The current app focuses on transactions, reports with month comparison, budgets, FIRE scenarios, salary history, and longer-term progress views. It is meant to help with both day-to-day spending review and slower-moving financial momentum.",
+      "Transactions, spending reports, month comparisons, budgets, FIRE scenarios, salary history, and long-term progress.",
   },
   {
     id: "demo-mode",
     category: "features",
     question: "Can I try it before creating an account?",
     answer:
-      "Yes. The app already supports a demo flow so people can explore the experience before treating it like a real habit, which makes it easier to evaluate the workflow first.",
+      "Yes. Demo mode lets you explore the workflow before committing to a real account.",
   },
   {
     id: "export-data",
     category: "data",
-    question: "Can I export my data again later?",
+    question: "Can I export my data?",
     answer:
-      "Yes. Export matters because the project is supposed to support ownership, not lock-in. Keeping data portable is consistent with the spreadsheet-and-Notion roots of the app.",
+      "Yes. Data portability matters. You can export your data at any time.",
   },
   {
     id: "fire-calculator",
     category: "features",
     question: "What is the FIRE calculator?",
     answer:
-      "FIRE stands for Financial Independence, Retire Early. The calculator lets you project investment growth under different assumptions, compare multiple scenarios, and estimate how long it could take to reach your target number.",
+      "FIRE stands for Financial Independence, Retire Early. The calculator projects investment growth, compares scenarios, and estimates time to reach your independence number.",
   },
   {
     id: "month-comparison",
     category: "features",
     question: "Can I compare spending between months?",
     answer:
-      "Yes. The reports page includes a Compare button that opens a side-by-side month view with summary cards, percentage changes, a grouped bar chart, and top-tag comparisons.",
+      "Yes. Reports include side-by-side month comparisons with summary cards, percentage changes, charts, and top-tag breakdowns.",
   },
   {
     id: "progress-tracking",
     category: "features",
     question: "What does the progress page track?",
     answer:
-      "The progress page combines salary history, retirement contributions, and financial milestones into one long-term workspace with charts and year-aware views.",
+      "Salary history, retirement contributions, and financial milestones in one workspace with charts and year-aware views.",
   },
 ] as const satisfies readonly FaqItem[];
 
@@ -91,7 +91,12 @@ export const FAQ_PAGE_CONTENT = {
     eyebrow: "FAQ",
     title: `Questions about ${APP_NAME}`,
     summary:
-      "Short answers about the creator, the workflow, core features, and why the product favors manual budgeting over passive automation.",
+      "Common questions about the app, the manual-first workflow, and core features.",
+  },
+  intro: {
+    heading: "Frequently asked questions",
+    description:
+      "Browse the most common questions about how the app works, why it prioritizes manual entry, and what you can track.",
   },
   items: FAQ_ITEMS,
 } satisfies FaqPageContent;

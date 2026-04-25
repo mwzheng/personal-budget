@@ -34,7 +34,17 @@ interface GoalApiResponse {
   error?: string;
 }
 
-export default function GoalEditor() {
+interface Props {
+  /** Called after goal data is fetched or saved so parent can derive summary metrics. */
+  onGoalData?: (targetAmount: number | null, latestEnd: number | null) => void;
+  /**
+   * Increment this value to force a re-fetch of goal data. Used by the page
+   * after retirement entry mutations so latestEnd stays current.
+   */
+  refreshTrigger?: number;
+}
+
+export default function GoalEditor({ onGoalData, refreshTrigger }: Props) {
   const [goal, setGoal] = useState<ProgressGoal | null>(null);
   const [target, setTarget] = useState("");
   const [latestEnd, setLatestEnd] = useState<number | null>(null);
@@ -50,18 +60,23 @@ export default function GoalEditor() {
       const data = (await res.json()) as GoalApiResponse;
       if (data.ok) {
         const primaryGoal = data.goals?.[0] ?? null;
+        const resolvedLatestEnd = data.latestEnd ?? null;
         setGoal(primaryGoal);
-        setLatestEnd(data.latestEnd ?? null);
+        setLatestEnd(resolvedLatestEnd);
         setTarget(String(primaryGoal?.targetAmount ?? ""));
+        // Note 3: Notify parent so summary cards can update without re-fetching.
+        onGoalData?.(primaryGoal?.targetAmount ?? null, resolvedLatestEnd);
       }
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [onGoalData]);
 
+  // Note: refreshTrigger in deps causes a re-fetch when retirement entries
+  // change, keeping latestEnd in sync with server-computed values.
   useEffect(() => {
     void fetchGoal();
-  }, [fetchGoal]);
+  }, [fetchGoal, refreshTrigger]);
 
   // Note 4: save() is unchanged from the original implementation —
   // POST for new goals, PUT for existing ones.
@@ -81,6 +96,7 @@ export default function GoalEditor() {
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Save failed");
+      // fetchGoal will call onGoalData after re-fetching updated values.
       await fetchGoal();
       setDialogOpen(false);
     } catch (error) {
@@ -166,7 +182,7 @@ export default function GoalEditor() {
               variant="determinate"
               value={clampedPct}
               sx={{
-                height: 8,
+                height: 14,
                 borderRadius: 4,
               }}
             />

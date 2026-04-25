@@ -1,7 +1,7 @@
 // Note 1: SalaryList is the top-level orchestrator for the salary history page.
-// It manages the list of entries, the add/edit form visibility, and the
-// SalaryChart. Splitting into List, Form, and Chart sub-components keeps each
-// piece focused and independently testable.
+// It manages the list of entries, the add/edit form visibility. The chart has
+// been moved to the consolidated ProgressCharts tabbed panel so this component
+// is a pure CRUD/data section.
 "use client";
 
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
@@ -18,7 +18,6 @@ import {
   Typography,
   Stack,
 } from "@mui/material";
-import SalaryChart from "@/components/charts/SalaryChart";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
@@ -37,13 +36,19 @@ interface SalaryApiResponse {
 
 interface Props {
   onEntriesChanged?: () => void | Promise<void>;
+  /** Set to false when SalaryList is used as a full standalone page and a
+   *  PageHeader is rendered above it by the parent page route. */
+  showSectionHeader?: boolean;
 }
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export default function SalaryList({ onEntriesChanged }: Props) {
+export default function SalaryList({
+  onEntriesChanged,
+  showSectionHeader = true,
+}: Props) {
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   // Note 2: `editing` holds the full salary object being edited, or `null` when
@@ -117,21 +122,23 @@ export default function SalaryList({ onEntriesChanged }: Props) {
 
   return (
     <Box>
-      <SectionHeader
-        title="Salary History"
-        sx={{ mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            Add Entry
-          </Button>
-        }
-      />
+      {showSectionHeader && (
+        <SectionHeader
+          title="Salary History"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              variant="contained"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              Add Entry
+            </Button>
+          }
+        />
+      )}
 
       {dialogOpen ? (
         <ProgressEntryDialog
@@ -151,9 +158,7 @@ export default function SalaryList({ onEntriesChanged }: Props) {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      <SalaryChart data={entries} loading={loading} />
-
-      {/* Note 5: Responsive card grid — single column on mobile (xs),
+      {/* Note 2: Responsive card grid — single column on mobile (xs),
           two columns on sm+. Each card surfaces year, salary amount, and
           the computed YoY change with a colour-coded Chip for quick scanning. */}
       <Box
