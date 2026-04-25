@@ -278,28 +278,6 @@ export default function Home() {
               );
             })}
           </Grid>
-
-          {/* Bottom CTA strip */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-            sx={{ mt: { xs: 6, md: 8 } }}
-          >
-            <Typography variant="body1" color="text.secondary">
-              Free, open source, runs in your browser.
-            </Typography>
-            <Button
-              component={NextLink}
-              href={ROUTE_PATHS.register}
-              variant="contained"
-              size="large"
-              sx={{ minWidth: 160 }}
-            >
-              Get started free
-            </Button>
-          </Stack>
         </Container>
       </Box>
     </>
