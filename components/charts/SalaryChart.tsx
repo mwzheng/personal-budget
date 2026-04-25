@@ -23,6 +23,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { SalaryEntry } from "@/lib/types/types";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 type SalaryTooltipProps = TooltipProps<number, string>;
 type SalaryTooltipEntry = NonNullable<SalaryTooltipProps["payload"]>[number];
@@ -113,20 +114,26 @@ export default function SalaryChart({
             data={chartData}
             margin={{ top: 10, right: 40, left: 40, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fill: "#aaa" }} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={SERVER_THEME_TOKENS.chart.grid}
+            />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
+            />
             <YAxis
               yAxisId={0}
               tickFormatter={(value: number) =>
                 value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value}`
               }
-              tick={{ fill: "#aaa" }}
+              tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
             />
             <YAxis
               yAxisId={1}
               orientation="right"
               tickFormatter={(value: number) => `${value}%`}
-              tick={{ fill: "#aaa" }}
+              tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
             />
             <Tooltip content={tooltipContent} />
             <Line

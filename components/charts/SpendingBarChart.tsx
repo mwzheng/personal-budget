@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -65,7 +66,7 @@ function renderBarTotalLabel(
     <text
       x={x}
       y={y}
-      fill="#ccc"
+      fill={SERVER_THEME_TOKENS.chart.axis}
       fontSize={fontSize}
       textAnchor="middle"
       transform={angle === 0 ? undefined : `rotate(${angle} ${x} ${y})`}
@@ -82,11 +83,20 @@ interface Props {
 export function SpendingBarChart({ data }: Props) {
   if (data.length === 0) {
     return (
-      <div
-        style={{ textAlign: "center", padding: 40, color: "#666", height: 300 }}
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 5,
+          px: 2,
+          height: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "text.secondary",
+        }}
       >
         No data for selected filters
-      </div>
+      </Box>
     );
   }
 
@@ -105,7 +115,7 @@ export function SpendingBarChart({ data }: Props) {
   const legendPayload = [
     { value: "Needs", color: CATEGORY_HEX_COLORS.Need },
     { value: "Wants", color: CATEGORY_HEX_COLORS.Want },
-    { value: "Income", color: "#26a69a" },
+    { value: "Income", color: SERVER_THEME_TOKENS.chart.palette[4] }, // cyan
     { value: "Savings", color: CATEGORY_HEX_COLORS.Saving },
   ] as const;
 
@@ -118,19 +128,22 @@ export function SpendingBarChart({ data }: Props) {
               data={chartData}
               margin={{ top: chartTopMargin, right: 20, bottom: 60, left: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={SERVER_THEME_TOKENS.chart.grid}
+              />
               {/* Note 5: `angle={-45}` rotates X-axis labels 45 degrees to prevent
                   overlapping when there are many months. `textAnchor="end"` aligns
                   the rotated text so its end point sits at the tick mark. */}
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11, fill: "#aaa" }}
+                tick={{ fontSize: 11, fill: SERVER_THEME_TOKENS.chart.axis }}
                 angle={-45}
                 textAnchor="end"
                 interval={0}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#aaa" }}
+                tick={{ fontSize: 11, fill: SERVER_THEME_TOKENS.chart.axis }}
                 tickFormatter={formatDollar}
               />
               <Tooltip
@@ -215,7 +228,7 @@ export function SpendingBarChart({ data }: Props) {
               />
               <Bar
                 dataKey="incomeAmount"
-                fill="#26a69a"
+                fill={SERVER_THEME_TOKENS.chart.palette[4]}
                 name="Income"
                 animationDuration={1200}
                 animationEasing="ease-out"

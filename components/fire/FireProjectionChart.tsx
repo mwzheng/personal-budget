@@ -21,6 +21,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 export const FIRE_CHART_LABELS = {
   projectedNominal: "Projected balance (future dollars)",
@@ -189,13 +190,31 @@ export default function FireProjectionChart({
           >
             <defs>
               <linearGradient id="fireBalanceFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3f51b5" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3f51b5" stopOpacity={0.02} />
+                <stop
+                  offset="5%"
+                  stopColor={SERVER_THEME_TOKENS.chart.palette[0]}
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={SERVER_THEME_TOKENS.chart.palette[0]}
+                  stopOpacity={0.02}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fill: "#aaa" }} minTickGap={30} />
-            <YAxis tickFormatter={formatAxis} tick={{ fill: "#aaa" }} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={SERVER_THEME_TOKENS.chart.grid}
+            />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
+              minTickGap={30}
+            />
+            <YAxis
+              tickFormatter={formatAxis}
+              tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
+            />
             <Tooltip content={tooltipContent} />
 
             {/* $1M milestone reference lines */}
@@ -203,13 +222,13 @@ export default function FireProjectionChart({
               <ReferenceLine
                 key={`ms-${m}`}
                 y={m}
-                stroke="#616161"
-                strokeWidth={0.5}
+                stroke={SERVER_THEME_TOKENS.chart.grid}
+                strokeWidth={0.75}
                 strokeDasharray="8 4"
                 label={{
                   value: formatAxis(m),
                   position: "right",
-                  fill: "#9e9e9e",
+                  fill: SERVER_THEME_TOKENS.chart.axis,
                   fontSize: 12,
                   fontWeight: 600,
                 }}
@@ -220,7 +239,7 @@ export default function FireProjectionChart({
             <Area
               type="monotone"
               dataKey="balance"
-              stroke="#3f51b5"
+              stroke={SERVER_THEME_TOKENS.chart.palette[0]}
               strokeWidth={2}
               strokeLinecap="round"
               fill="url(#fireBalanceFill)"

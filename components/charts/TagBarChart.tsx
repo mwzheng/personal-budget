@@ -18,6 +18,8 @@ import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { TAG_CHART_PALETTE } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import { TagDataPoint } from "@/lib/types/types";
+import Box from "@mui/material/Box";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 interface Props {
   data: TagDataPoint[];
@@ -30,9 +32,19 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
 
   if (visibleData.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 5,
+          px: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "text.secondary",
+        }}
+      >
         No tag data for selected filters
-      </div>
+      </Box>
     );
   }
 
@@ -57,12 +69,12 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#333"
+            stroke={SERVER_THEME_TOKENS.chart.grid}
             horizontal={false}
           />
           <XAxis
             type="number"
-            tick={{ fontSize: 11, fill: "#aaa" }}
+            tick={{ fontSize: 11, fill: SERVER_THEME_TOKENS.chart.axis }}
             tickFormatter={(v: number) =>
               v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${v.toFixed(0)}`
             }
@@ -70,7 +82,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fontSize: 12, fill: "#ddd" }}
+            tick={{ fontSize: 12, fill: SERVER_THEME_TOKENS.chart.axis }}
             width={92}
           />
           <Tooltip

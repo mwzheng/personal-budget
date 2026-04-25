@@ -32,11 +32,20 @@ export function SpendingPieChart({ data }: Props) {
 
   if (chartData.length === 0) {
     return (
-      <div
-        style={{ textAlign: "center", padding: 40, color: "#666", height: 280 }}
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 5,
+          px: 2,
+          height: 280,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "text.secondary",
+        }}
       >
         No data for selected filters
-      </div>
+      </Box>
     );
   }
 

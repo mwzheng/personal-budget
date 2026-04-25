@@ -24,6 +24,7 @@ import {
   generateProjection,
 } from "@/lib/utils/fire";
 import type { FireScenario, RetirementEntry } from "@/lib/types/types";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import FireForm from "./FireForm";
 import FireProjectionChart, { FIRE_CHART_LABELS } from "./FireProjectionChart";
 import FireProjectionTable from "./FireProjectionTable";
@@ -304,7 +305,7 @@ export default function FireCalculator() {
                     sx={{
                       width: 16,
                       height: 3,
-                      bgcolor: "#3f51b5",
+                      bgcolor: SERVER_THEME_TOKENS.chart.palette[0],
                       borderRadius: 1,
                     }}
                   />

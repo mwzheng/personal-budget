@@ -18,6 +18,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import type { MonthSummary } from "@/lib/types/types";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 function formatMonth(period: string): string {
   try {
@@ -92,14 +93,17 @@ export function ComparisonBarChart({ monthA, monthB }: Props) {
             data={chartData}
             margin={{ top: 16, right: 20, bottom: 8, left: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={SERVER_THEME_TOKENS.chart.grid}
+            />
             <XAxis
               dataKey="category"
-              tick={{ fontSize: 12, fill: "#aaa" }}
+              tick={{ fontSize: 12, fill: SERVER_THEME_TOKENS.chart.axis }}
               interval={0}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#aaa" }}
+              tick={{ fontSize: 11, fill: SERVER_THEME_TOKENS.chart.axis }}
               tickFormatter={formatDollar}
             />
             <Tooltip
