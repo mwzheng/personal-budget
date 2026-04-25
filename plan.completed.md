@@ -8,6 +8,119 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: Full-application dark-theme UI/UX redesign (Phases 1–6)
+
+Date: 2026-04-25
+
+Summary
+
+End-to-end visual redesign of all application surfaces while preserving all
+existing routes, functionality, and the dark theme. The work was split across
+two commits and covered the design system foundation, app shell, all public/auth
+pages, all authenticated workspace pages, and all chart components.
+
+Completed items
+
+Phase 1 — Audit
+
+- Route-by-route inventory of all live pages and shared components
+
+Phase 2 — Design system
+
+- Expanded `lib/theme/server-theme-tokens.ts` with 9 semantic token groups:
+  palette, surface, border, text, chart (8-color accessible palette), shadow, focus, spacing
+- Added 20+ MUI component overrides in `app/providers.tsx`:
+  AppBar, Paper, Card, Button, Dialog, TextField, Tabs, TableCell, Chip,
+  Tooltip, Skeleton, and shared focusVisible ring
+- Created `components/ui/SectionCard.tsx` — shared workspace section container
+- Extended `components/ui/PageHeader.tsx` with headingId/descriptionId props
+
+Phase 3 — App shell
+
+- `components/AppNav.tsx`: breakpoint md→lg, Salary added to mobile drawer, Divider, token colors
+- `components/Footer.tsx`: background.default, maxWidth xl, link hover polish
+
+Phase 4 — Public/auth pages
+
+- `app/page.tsx`: full-bleed hero gradient, 3-column feature cards, CTA strip
+- `app/auth/login/page.tsx`: two-panel Paper (sign-in / demo), centered layout
+- `app/auth/register/page.tsx`: centered layout matching login
+- `app/auth/callback/page.tsx`: Paper card wrapper, larger CircularProgress
+- `app/auth/signout/page.tsx`: polished centered card with redirect messaging
+- `app/contact/page.tsx`: hero gradient Paper matching About/FAQ pages
+
+Phase 5 — Authenticated workspace pages
+
+- `app/reports/page.tsx`: PageHeader integration
+- `app/sankey/page.tsx`: PageHeader integration
+- `app/progress/page.tsx`: 4 sections converted to SectionCard
+- `components/fire/FireCalculator.tsx`: PageHeader added
+
+Phase 6 — Chart standardization
+
+- All 8 chart components now use `SERVER_THEME_TOKENS.chart.grid` and `.axis`
+  for axis/grid/label colors instead of hardcoded hex values
+- `components/charts/ProjectionChart.tsx`: complete overhaul — MUI empty state,
+  ChartTooltipCard, Y-axis formatter, chart.palette[0] line color
+- `components/fire/FireProjectionChart.tsx`: gradient fill and area stroke
+  aligned to chart.palette[0]; milestone reference line colors tokenized
+- `components/fire/FireCalculator.tsx`: legend swatch aligned to chart.palette[0]
+- `components/charts/SankeyChart.tsx`: raw div empty state → MUI Stack/Typography
+- `components/charts/SpendingPieChart.tsx`: MUI empty state
+- `components/charts/SpendingBarChart.tsx`: tokenized colors, MUI empty state,
+  Income bar aligned to chart.palette[4]
+- `components/charts/TagBarChart.tsx`: tokenized colors, MUI empty state
+- `components/charts/ComparisonBarChart.tsx`: tokenized grid/axis colors
+- `components/charts/SalaryChart.tsx`: tokenized axis, CartesianGrid stroke added
+
+Files changed (commit 445c3a9 — Phase 2–5)
+
+- lib/theme/server-theme-tokens.ts
+- app/providers.tsx
+- components/AppNav.tsx
+- components/Footer.tsx
+- app/page.tsx
+- app/auth/login/page.tsx
+- app/auth/register/page.tsx
+- app/reports/page.tsx
+- app/sankey/page.tsx
+- app/progress/page.tsx
+- components/fire/FireCalculator.tsx
+- components/ui/PageHeader.tsx
+- components/ui/SalaryList.tsx
+- components/ui/SectionCard.tsx (new)
+
+Files changed (commit 6823485 — Phase 6 + polish)
+
+- app/auth/callback/page.tsx
+- app/auth/signout/page.tsx
+- app/contact/page.tsx
+- components/charts/ComparisonBarChart.tsx
+- components/charts/ProjectionChart.tsx
+- components/charts/SalaryChart.tsx
+- components/charts/SankeyChart.tsx
+- components/charts/SpendingBarChart.tsx
+- components/charts/SpendingPieChart.tsx
+- components/charts/TagBarChart.tsx
+- components/fire/FireCalculator.tsx
+- components/fire/FireProjectionChart.tsx
+
+Commit references
+
+- feat(ui): full-application dark-theme redesign system, shell, pages (445c3a9)
+- feat(ui): standardize chart tokens and polish auth/contact pages (6823485)
+
+Notes
+
+- All chart category colors (Need/Want/Saving) intentionally use semantic
+  CATEGORY_HEX_COLORS, not the chart palette, for semantic meaning.
+- SalaryChart line colors (#4caf50 green, #ff9800 orange) kept as semantic.
+- FireProjectionChart line colors (red=FIRE target, green=real dollars,
+  orange=actual) kept as semantic; only the projected nominal blue was aligned.
+- All 279 tests pass; pnpm lint and pnpm build verified clean.
+
+---
+
 # Completed: Public marketing copy refresh — centralized metadata descriptions
 
 Date: 2026-04-24

@@ -1,66 +1,16 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-04-24)
+## Status: Active follow-up plan (updated 2026-04-25)
 
 Latest completed work:
 
-- Centralized public marketing copy across Home, About, and FAQ pages by deriving
-  page metadata descriptions from shared content sources (page-titles, home hero)
-  instead of duplicating strings locally, reducing maintenance drift.
-- Completed Progress page UX polish: added HistoryTabs (tabbed RetirementList /
-  SalaryList panel with persistent mount), fixed GoalEditor staleness via
-  refreshTrigger, added dashed goal ReferenceLine + compact YAxis formatter to
-  charts, and replaced flat icon backgrounds with alpha-tinted circles.
-- Removed the home-page feature card links so the cards stay informative and
-  visually polished without behaving like login CTAs.
-- Added a custom App Router 404 page with clear not-found copy, a manual route
-  back home, and an automatic redirect to the home page after a short delay.
-- Aligned the Progress Goal editor, shared types, demo handlers, and route tests
-  around the current unnamed single-target goal model so the post-review state is
-  internally consistent.
-- Added a mobile-friendly AppNav drawer for smaller screens while keeping the
-  desktop tab layout, and made Register a distinct primary CTA.
-- Added home-page hero CTAs, polished feature icons with tinted circular
-  treatments, and made feature cards clickable with clearer sign-in/demo
-  affordances.
-- Added a reusable `PageHeader` component for page-level consistency, increased
-  footer breathing room, and extracted shared server-safe theme tokens for the
-  About and FAQ pages.
-- Added subtle previous-period trend indicators to the reports summary cards and
-  exposed a mobile toolbar action for adding transactions without relying on the
-  floating FAB alone.
-- Added consistent empty-state icons across the remaining list screens and
-  improved `ConfirmDialog` loading feedback with an in-button spinner and
-  accessible busy state.
-- Removed the standalone Savings Goals page/API/demo flow while preserving the
-  separate Progress Goal used by the Progress page.
-- Updated shared copy, route metadata, DynamoDB/demo helpers, and tests to
-  reflect the removed standalone goals feature.
-- Made the monthly chart totals adapt to density so labels rotate diagonally for
-  crowded month ranges and remain readable when many bars are shown.
-- Fixed the stacked spending total label in the monthly chart and tightened the
-  gap between that chart and its legend so the plot area uses more vertical
-  space.
-- Tightened the reports chart sizing so Top Spending Tags shows only the top 10
-  tags with less wasted left space, the spending breakdown chart is larger and
-  vertically centered, and the monthly bar chart is slightly taller.
-- Swapped the reports chart layout so Top Spending Tags appears in the upper
-  card slot and the monthly spending/income chart sits below with totals shown
-  above every major bar.
-- Expanded the reports monthly chart to show savings as its own bar alongside
-  the stacked Need/Want spending bar and the income bar.
-- Updated the reports spending-vs-income chart so monthly spending is broken
-  into stacked Need and Want segments while income remains a separate bar.
-- Fixed the reports month-comparison/card rendering warning and deferred
-  calendar month navigation to avoid the FullCalendar `flushSync` console error.
-- Added income-aware reporting so the reports page can import income CSVs,
-  filter income transactions, and chart monthly spending versus income.
-- Reviewed the full application for outdated copy and documentation.
-- Updated shared home/about/FAQ content to reflect the current feature set and
-  creator profile.
-- Refreshed `README.md` and `docs/aws-credentials.md` to match the current app.
-- Cleaned the plan files and added `docs/future-feature-ideas.md` as a dedicated
-  backlog for product ideas.
+- Full-application dark-theme UI/UX redesign (Phases 1–6):
+  - Expanded server-theme-tokens.ts with 9 semantic token groups
+  - 20+ MUI component overrides in providers.tsx
+  - AppNav, Footer, landing page, login, register, reports, sankey, progress, fire pages redesigned
+  - All 8 chart components standardized with token-based grid/axis/label colors
+  - Auth callback/signout pages polished with Paper card layouts
+  - Contact page hero given gradient Paper matching About/FAQ
 
 Current active follow-ups:
 
