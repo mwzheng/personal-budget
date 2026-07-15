@@ -27,16 +27,9 @@ interface MilestonesApiResponse {
   error?: string;
 }
 
-/** Sort milestones year DESC (null last), then age DESC within same year. */
+/** Sort milestones by amount ascending so the timeline makes sense as a savings progression. */
 function sortMilestones(entries: MilestoneEntry[]): MilestoneEntry[] {
-  return [...entries].sort((a, b) => {
-    const aYear = a.year ?? -Infinity;
-    const bYear = b.year ?? -Infinity;
-    if (bYear !== aYear) return bYear - aYear;
-    const aAge = a.age ?? -Infinity;
-    const bAge = b.age ?? -Infinity;
-    return bAge - aAge;
-  });
+  return [...entries].sort((a, b) => (a.amount ?? 0) - (b.amount ?? 0));
 }
 
 export default function MilestonesList() {
