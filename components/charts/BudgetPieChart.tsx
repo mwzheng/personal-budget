@@ -67,6 +67,10 @@ export function BudgetPieChart({
       ? theme.palette.warning.light
       : theme.palette.success.light;
 
+  // Compute the total upfront so percentages in tooltips are accurate and
+  // don't rely on Recharts' internal payload typing quirks.
+  const totalValue = data.reduce((sum, item) => sum + Number(item.value), 0);
+
   return (
     <ChartWrapper title="Budget Allocation">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -98,8 +102,7 @@ export function BudgetPieChart({
                   position="center"
                   content={({ viewBox }) => {
                     const box = viewBox as
-                      | { cx?: number; cy?: number }
-                      | undefined;
+                      { cx?: number; cy?: number } | undefined;
                     const cx = box?.cx ?? 0;
                     const cy = box?.cy ?? 0;
 
@@ -157,6 +160,13 @@ export function BudgetPieChart({
                           label: "Amount",
                           value: formatCurrencyWhole(Number(entry.value ?? 0)),
                           color: source?.color,
+                        },
+                        {
+                          label: "Percentage",
+                          value:
+                            totalValue > 0
+                              ? `${((Number(entry.value) / totalValue) * 100).toFixed(1)}%`
+                              : "0.0%",
                         },
                         {
                           label: "Category",

@@ -207,6 +207,9 @@ export function BudgetForm({
               <TableCell width="32%">Expense</TableCell>
               <TableCell width="18%">Amount</TableCell>
               <TableCell width="14%">Category</TableCell>
+              <TableCell align="right" width="14%">
+                Percentage
+              </TableCell>
               <TableCell width="24%">Sankey Path</TableCell>
               <TableCell align="right" width="12%">
                 Actions
@@ -219,6 +222,14 @@ export function BudgetForm({
                 expense.group,
                 expense.name,
               );
+              const percentage =
+                value.monthlyIncome > 0
+                  ? Math.min(
+                      (Number(expense.amount) / Number(value.monthlyIncome)) *
+                        100,
+                      999,
+                    )
+                  : 0;
               const rowHasError =
                 hasBudgetRowContent(expense) &&
                 (!expense.name.trim() || Number(expense.amount) <= 0);
@@ -307,6 +318,11 @@ export function BudgetForm({
                         </MenuItem>
                       ))}
                     </TextField>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" color="text.secondary">
+                      {percentage.toFixed(1)}%
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <TextField
