@@ -8,22 +8,30 @@
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { apiFetch } from "@/lib/api/apiFetch";
+import {
+  downloadBudgetCsv,
+  downloadBudgetJson,
+} from "@/lib/utils/budgetExport";
 import {
   normalizeBudgetForEditor,
   sortSavedBudgets,
@@ -129,6 +137,38 @@ export function BudgetList({
     // without forcing this component to know why the list changed.
   }, [loadBudgets, reloadKey]);
 
+  // ---------------------------------------------------------------------------
+  // Export menu state — tracked per-row via a ref keyed by budgetId to avoid
+  // needing to store it in the budgets array itself.
+  // ---------------------------------------------------------------------------
+  const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
+  const [currentExportBudget, setCurrentExportBudget] =
+    useState<SavedBudget | null>(null);
+  const exportMenuRef = useRef<HTMLUListElement | null>(null);
+
+  function openExportMenu(
+    event: React.MouseEvent<HTMLElement>,
+    budget: SavedBudget,
+  ) {
+    setExportAnchor(event.currentTarget);
+    setCurrentExportBudget(budget);
+  }
+
+  function handleExport(format: "json" | "csv") {
+    const budget = currentExportBudget ?? undefined;
+    if (!budget) return;
+
+    setExportAnchor(null);
+    setCurrentExportBudget(null);
+    if (format === "json") {
+      downloadBudgetJson(budget);
+    } else {
+      downloadBudgetCsv(budget);
+    }
+  }
+
+  const exportOpen = Boolean(exportAnchor);
+
   return (
     <div>
       {error ? (
@@ -200,6 +240,47 @@ export function BudgetList({
                         <EditOutlinedIcon fontSize="small" />
                       </ActionIconButton>
                     ) : null}
+
+                    {/* Export dropdown trigger */}
+                    <Box>
+                      <Tooltip title="Export budget" placement="top" arrow>
+                        <ActionIconButton
+                          tooltip="Export budget"
+                          ariaLabel={`Export budget ${budget.name}`}
+                          onClick={(event) => openExportMenu(event, budget)}
+                        >
+                          <FileDownloadOutlinedIcon fontSize="small" />
+                        </ActionIconButton>
+                      </Tooltip>
+
+                      <Menu
+                        id={`budget-export-menu-${budget.budgetId ?? budget.name}`}
+                        anchorEl={exportAnchor}
+                        open={exportOpen}
+                        onClose={() => setExportAnchor(null)}
+                        MenuListProps={{
+                          ref: exportMenuRef,
+                          "aria-labelledby": `budget-export-menu-${budget.budgetId ?? budget.name}`,
+                          onClick: (e) => e.stopPropagation(),
+                        }}
+                        transformOrigin={{
+                          horizontal: "right",
+                          vertical: "top",
+                        }}
+                        anchorOrigin={{
+                          horizontal: "right",
+                          vertical: "bottom",
+                        }}
+                      >
+                        <MenuItem onClick={() => handleExport("json")}>
+                          JSON (importable)
+                        </MenuItem>
+                        <MenuItem onClick={() => handleExport("csv")}>
+                          CSV (view in spreadsheet)
+                        </MenuItem>
+                      </Menu>
+                    </Box>
+
                     <ActionIconButton
                       tooltip="Delete"
                       ariaLabel={`Delete budget ${budget.name}`}
