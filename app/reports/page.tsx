@@ -1,11 +1,6 @@
-// Note 1: ReportsPage is the main data entry and analytics view. Real users read
-// and write through authenticated API routes, while demo sessions transparently
-// use the `apiFetch` demo shim so the rest of the screen can stay unchanged.
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -24,12 +19,6 @@ import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import {
-  differenceInCalendarDays,
-  format as formatDate,
-  parseISO,
-  subDays,
-} from "date-fns";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -56,17 +45,24 @@ import {
   getLastSelectedReportYears,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
-import {
-  FilterParams,
-  ReportsAggregates,
-  Transaction,
-} from "@/lib/types/types";
+import { Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
 
-// Note 2: All three chart components use `{ ssr: false }` because they depend
-// on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.
-// During server-side rendering that DOM element does not exist, causing errors.
-// The `loading` prop renders a Skeleton placeholder while the bundle downloads.
+import SpendingBreakdownLoadingState from "@/components/report/SpendingBreakdownLoadingState";
+import EmptyState from "@/components/report/EmptyState";
+import StatCard from "@/components/report/StatCard";
+import {
+  EMPTY_AGGREGATES,
+  EMPTY_FILTERS,
+  PAGE_TITLE_ID,
+  PAGE_DESCRIPTION_ID,
+  TransactionsViewMode,
+  buildYearFilters,
+  buildQuickTagFilters,
+  buildComparablePeriodFilters,
+  buildStatTrend,
+} from "@/lib/utils/reportUtils";
+
 const SpendingPieChart = dynamic(
   () =>
     import("@/components/charts/SpendingPieChart").then(
@@ -102,319 +98,17 @@ const MonthComparisonModal = dynamic(
   { ssr: false },
 );
 
-function SpendingBreakdownLoadingState() {
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-      }}
-    >
-      <Box
-        sx={{
-          width: "100%",
-          minHeight: 340,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Skeleton
-          variant="circular"
-          animation="wave"
-          width={220}
-          height={220}
-        />
-      </Box>
-      <Stack
-        direction="row"
-        justifyContent="center"
-        spacing={2.5}
-        useFlexGap
-        flexWrap="wrap"
-      >
-        {Array.from({ length: 3 }, (_, index) => (
-          <Box
-            key={`spending-breakdown-loading-${index}`}
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <Skeleton variant="circular" width={12} height={12} />
-            <Skeleton variant="text" width={72} />
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-  );
-}
-
-// Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
-// `ReportsAggregates` type contract when there are no transactions to aggregate.
-// Passing this to charts instead of `null` avoids null checks inside each chart
-// component, simplifying their props interface.
-const EMPTY_AGGREGATES: ReportsAggregates = {
-  totalAmount: 0,
-  spendingAmount: 0,
-  incomeAmount: 0,
-  totalByCategoryType: { Need: 0, Want: 0, Saving: 0 },
-  timeseries: [],
-  tagDiagramData: [],
-};
-
-const EMPTY_FILTERS: FilterParams = {
-  years: [],
-  startDate: null,
-  endDate: null,
-  categories: [],
-  tags: [],
-  search: "",
-};
-
-type TransactionsViewMode = "table" | "calendar";
-const PAGE_TITLE_ID = "reports-page-title";
-const PAGE_DESCRIPTION_ID = "reports-page-description";
-
-function buildYearFilters(years: string[]): FilterParams {
-  return {
-    ...EMPTY_FILTERS,
-    years,
-  };
-}
-
-function buildQuickTagFilters(
-  currentFilters: FilterParams,
-  tag: string,
-): FilterParams {
-  // Note 4: Quick-tag clicks act as a focused drill-down. Keeping the current
-  // date/search filters intact while swapping to a single selected tag makes the
-  // shortcut predictable and easy to toggle off by clicking the same tag again.
-  const nextTags =
-    currentFilters.tags.length === 1 && currentFilters.tags[0] === tag
-      ? []
-      : [tag];
-
-  return { ...currentFilters, tags: nextTags };
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  color: string;
-  loading: boolean;
-  trend?: {
-    direction: "up" | "down" | null;
-    text: string;
-    color: string;
-  } | null;
-}
-
-// Note 5: `StatCard` and `EmptyState` are defined as module-level functions
-// rather than in a separate file because they are small, single-use sub-components
-// with no state of their own. Co-locating them with their only consumer avoids
-// unnecessary file fragmentation.
-function StatCard({ label, value, color, loading, trend }: StatCardProps) {
-  return (
-    <Card>
-      <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-        {loading ? (
-          <Skeleton width={90} height={32} />
-        ) : (
-          <>
-            <Typography variant="h6" fontWeight={700} sx={{ color }}>
-              {value}
-            </Typography>
-            {trend ? (
-              <Box
-                sx={{
-                  mt: 0.5,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  minHeight: 18,
-                }}
-              >
-                {trend.direction === "up" ? (
-                  <ArrowUpwardIcon sx={{ fontSize: 14, color: trend.color }} />
-                ) : trend.direction === "down" ? (
-                  <ArrowDownwardIcon
-                    sx={{ fontSize: 14, color: trend.color }}
-                  />
-                ) : null}
-                <Typography
-                  variant="caption"
-                  sx={{ color: trend.color, lineHeight: 1.35 }}
-                >
-                  {trend.text}
-                </Typography>
-              </Box>
-            ) : null}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function buildComparablePeriodFilters(
-  filters: FilterParams,
-): FilterParams | null {
-  if (filters.startDate && filters.endDate) {
-    const startDate = parseISO(filters.startDate);
-    const endDate = parseISO(filters.endDate);
-
-    if (
-      Number.isNaN(startDate.getTime()) ||
-      Number.isNaN(endDate.getTime()) ||
-      endDate < startDate
-    ) {
-      return null;
-    }
-
-    const rangeDays = differenceInCalendarDays(endDate, startDate) + 1;
-    const previousEndDate = subDays(startDate, 1);
-    const previousStartDate = subDays(previousEndDate, rangeDays - 1);
-
-    return {
-      ...filters,
-      years: [],
-      startDate: formatDate(previousStartDate, "yyyy-MM-dd"),
-      endDate: formatDate(previousEndDate, "yyyy-MM-dd"),
-    };
-  }
-
-  if (filters.years.length === 0) {
-    return null;
-  }
-
-  const sortedYears = Array.from(
-    new Set(
-      filters.years
-        .map((year) => Number.parseInt(year, 10))
-        .filter((year) => Number.isInteger(year)),
-    ),
-  ).sort((a, b) => a - b);
-
-  if (sortedYears.length !== filters.years.length) {
-    return null;
-  }
-
-  for (let index = 1; index < sortedYears.length; index += 1) {
-    if (sortedYears[index] !== sortedYears[index - 1] + 1) {
-      return null;
-    }
-  }
-
-  const previousYears = Array.from({ length: sortedYears.length }, (_, index) =>
-    String(sortedYears[0] - sortedYears.length + index),
-  );
-
-  return {
-    ...filters,
-    years: previousYears,
-    startDate: null,
-    endDate: null,
-  };
-}
-
-function buildStatTrend(
-  currentValue: number,
-  previousValue: number,
-  positiveIsFavorable: boolean,
-) {
-  if (previousValue === 0) {
-    return {
-      direction: null,
-      text:
-        currentValue === 0
-          ? "No change vs previous period"
-          : "New vs previous period",
-      color: "text.secondary",
-    } as const;
-  }
-
-  const delta =
-    ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
-  if (delta === 0) {
-    return {
-      direction: null,
-      text: "No change vs previous period",
-      color: "text.secondary",
-    } as const;
-  }
-
-  const isIncrease = delta > 0;
-  const isFavorable = positiveIsFavorable ? isIncrease : !isIncrease;
-
-  return {
-    direction: isIncrease ? "up" : "down",
-    text: `${Math.abs(delta).toFixed(1)}% vs previous period`,
-    color: isFavorable ? "success.main" : "error.main",
-  } as const;
-}
-
-function EmptyState({
-  onAddClick,
-  onImportClick,
-}: {
-  onAddClick: () => void;
-  onImportClick: () => void;
-}) {
-  return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      py={10}
-      gap={2}
-    >
-      <Typography variant="h5" fontWeight={600} color="text.secondary">
-        No transactions yet
-      </Typography>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        textAlign="center"
-        maxWidth={400}
-      >
-        Add transactions manually or import either an expenses CSV or an income
-        CSV using the supported templates.
-      </Typography>
-      <Stack direction="row" gap={2} mt={1}>
-        <Button
-          variant="outlined"
-          startIcon={<FileUploadOutlinedIcon />}
-          onClick={onImportClick}
-        >
-          Import CSV
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={onAddClick}
-        >
-          Add Transaction
-        </Button>
-      </Stack>
-    </Box>
-  );
-}
-
 interface TransactionsApiResponse {
   ok?: boolean;
   error?: string;
   transactions?: Transaction[];
 }
 
-export default function ReportsPage() {
+const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterParams>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
@@ -422,9 +116,6 @@ export default function ReportsPage() {
   const [newTransactionDate, setNewTransactionDate] = useState<string | null>(
     null,
   );
-  // Note 6: The active view is UI-only state. Keeping it beside the filtered
-  // transaction data means the table and calendar stay perfectly in sync without
-  // triggering extra API calls or maintaining parallel copies of the same list.
   const [transactionsView, setTransactionsView] =
     useState<TransactionsViewMode>("table");
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
@@ -432,10 +123,10 @@ export default function ReportsPage() {
   const [compareOpen, setCompareOpen] = useState(false);
   const router = useRouter();
 
-  function applyTransactions(
+  const applyTransactions = (
     transactions: Transaction[],
     opts?: { resetFilters?: boolean },
-  ) {
+  ) => {
     setAllTransactions(transactions);
 
     if (opts?.resetFilters) {
@@ -445,9 +136,9 @@ export default function ReportsPage() {
       );
       setFilters(buildYearFilters(resolvedYears));
     }
-  }
+  };
 
-  async function loadTransactions(opts?: { resetFilters?: boolean }) {
+  const loadTransactions = async (opts?: { resetFilters?: boolean }) => {
     setLoading(true);
     setErrorMessage(null);
 
@@ -471,23 +162,17 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
-    // Note 7: `isAuthenticated()` now covers both real Cognito tokens and the
-    // dedicated demo-session flag, so protected pages accept demo mode without
-    // having to know how that browser-only session is implemented.
     if (!disableAuth && !isAuthenticated()) {
       router.replace("/auth/login");
       return;
     }
 
     void loadTransactions({ resetFilters: true });
-    // Note 8: The initial load should happen once on mount. `router` is stable
-    // enough for this redirect flow, and the inline async call avoids reading
-    // transaction data from browser storage before the auth-scoped API responds.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -495,7 +180,7 @@ export default function ReportsPage() {
     setTransactionsView(getLastSelectedReportTransactionsView());
   }, []);
 
-  async function handleSaveTransaction(t: Transaction) {
+  const handleSaveTransaction = async (t: Transaction) => {
     const wasEmpty = allTransactions.length === 0;
     setErrorMessage(null);
 
@@ -530,21 +215,21 @@ export default function ReportsPage() {
         error instanceof Error ? error.message : "Failed to save transaction",
       );
     }
-  }
+  };
 
-  function handleEditTransaction(t: Transaction) {
+  const handleEditTransaction = (t: Transaction) => {
     setNewTransactionDate(null);
     setEditTarget(t);
     setFormOpen(true);
-  }
+  };
 
-  function handleAddTransaction(date?: string) {
+  const handleAddTransaction = (date?: string) => {
     setEditTarget(undefined);
     setNewTransactionDate(date ?? null);
     setFormOpen(true);
-  }
+  };
 
-  async function handleDeleteTransaction(id: string) {
+  const handleDeleteTransaction = async (id: string) => {
     const transaction = allTransactions.find((item) => item.id === id);
     if (!transaction) return false;
 
@@ -578,15 +263,15 @@ export default function ReportsPage() {
       );
       return false;
     }
-  }
+  };
 
-  function handleFormClose() {
+  const handleFormClose = () => {
     setFormOpen(false);
     setEditTarget(undefined);
     setNewTransactionDate(null);
-  }
+  };
 
-  async function handleExport() {
+  const handleExport = async () => {
     setErrorMessage(null);
 
     try {
@@ -631,16 +316,12 @@ export default function ReportsPage() {
           : "Failed to export transactions",
       );
     }
-  }
+  };
 
-  function handleQuickTagFilter(tag: string) {
+  const handleQuickTagFilter = (tag: string) => {
     setFilters((currentFilters) => buildQuickTagFilters(currentFilters, tag));
-  }
+  };
 
-  // Note 9: `useMemo` caches the result of these expensive operations and only
-  // recomputes when their dependencies change. Without memoization, `getAllTags`,
-  // `filterTransactions`, and `aggregateTransactions` would run on every render
-  // (e.g., when a dialog opens), wasting CPU on unchanged data.
   const availableYears = useMemo(
     () => getAvailableReportYears(allTransactions),
     [allTransactions],
@@ -952,9 +633,6 @@ export default function ReportsPage() {
                 ({filtered.length} results)
               </Typography>
             </Box>
-            {/* Note 10: An exclusive toggle keeps the table as the familiar
-                default while letting users switch to the calendar without losing
-                the current filters or the shared edit/delete handlers. */}
             <ToggleButtonGroup
               exclusive
               size="small"
@@ -1039,10 +717,6 @@ export default function ReportsPage() {
         onClose={() => setCompareOpen(false)}
       />
 
-      {/* Note 11: The Floating Action Button (FAB) is a Material Design pattern
-           for the primary action on a page. Positioning it `fixed` at the bottom
-           right corner keeps it always accessible regardless of scroll position.
-           It is hidden on the empty state so the EmptyState CTA is the focal point. */}
       {!isEmpty && (
         <Fab
           color="primary"
@@ -1060,4 +734,6 @@ export default function ReportsPage() {
       )}
     </Container>
   );
-}
+};
+
+export default ReportsPageContent;
