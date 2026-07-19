@@ -4,14 +4,10 @@
  * rendering concerns.
  */
 
-export type SocialPlatform = "github" | "linkedin";
+export type SocialPlatform = "github" | "linkedin" | "projectGithub";
 
 export type FaqCategory =
-  | "creator"
-  | "philosophy"
-  | "workflow"
-  | "features"
-  | "data";
+  "creator" | "philosophy" | "workflow" | "features" | "data";
 
 // Note 2: The `Href` generic lets one link shape describe internal route unions
 // and external URLs without giving up autocomplete in consumers.

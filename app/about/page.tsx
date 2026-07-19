@@ -57,6 +57,7 @@ export const metadata: Metadata = {
 const SOCIAL_ICON_BY_PLATFORM = {
   github: GitHubIcon,
   linkedin: LinkedInIcon,
+  projectGithub: GitHubIcon,
 } as const;
 // Note 1.1: Server Components still need plain token values for `sx`, so these
 // route styles derive from one shared server-safe palette instead of duplicating
