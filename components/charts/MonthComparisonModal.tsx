@@ -41,7 +41,6 @@ function formatMonthLabel(period: string): string {
 
 interface ChangeIndicatorProps {
   value: number | null;
-  /** When true, a positive change is favorable (green). Default: false (spending). */
   positiveIsFavorable?: boolean;
 }
 
@@ -106,8 +105,8 @@ function ChangeIndicator({
 
 interface SummaryCardProps {
   label: string;
-  monthA: number;
-  monthB: number;
+  prevMonth: number;
+  currMonth: number;
   change: number | null;
   color?: string;
   formatter?: (value: number) => string;
@@ -118,8 +117,8 @@ type SummaryCardDefinition = SummaryCardProps & { key: string };
 
 function SummaryCard({
   label,
-  monthA,
-  monthB,
+  prevMonth,
+  currMonth,
   change,
   color = "text.primary",
   formatter = formatCurrency,
@@ -145,9 +144,11 @@ function SummaryCard({
         </Box>
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            columnGap: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Box sx={{ minWidth: 0 }}>
@@ -157,7 +158,7 @@ function SummaryCard({
               fontSize="0.7rem"
               mb={0.5}
             >
-              Month A
+              Previous Month
             </Typography>
             <Typography
               variant="subtitle1"
@@ -170,7 +171,7 @@ function SummaryCard({
                 textOverflow: "ellipsis",
               }}
             >
-              {formatter(monthA)}
+              {formatter(prevMonth)}
             </Typography>
           </Box>
           <Box sx={{ minWidth: 0 }}>
@@ -180,7 +181,7 @@ function SummaryCard({
               fontSize="0.7rem"
               mb={0.5}
             >
-              Month B
+              Current Month
             </Typography>
             <Typography
               variant="subtitle1"
@@ -193,7 +194,7 @@ function SummaryCard({
                 textOverflow: "ellipsis",
               }}
             >
-              {formatter(monthB)}
+              {formatter(currMonth)}
             </Typography>
           </Box>
         </Box>
@@ -203,18 +204,22 @@ function SummaryCard({
 }
 
 function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
-  const { monthA, monthB } = comparison;
+  const { prevMonth, currMonth } = comparison;
   const allTagNames = useMemo(() => {
     const set = new Set<string>();
-    for (const t of monthA.topTags) set.add(t.name);
-    for (const t of monthB.topTags) set.add(t.name);
+    for (const t of prevMonth.topTags) set.add(t.name);
+    for (const t of currMonth.topTags) set.add(t.name);
     return Array.from(set).sort();
-  }, [monthA.topTags, monthB.topTags]);
+  }, [prevMonth.topTags, currMonth.topTags]);
 
   if (allTagNames.length === 0) return null;
 
-  const aMap = Object.fromEntries(monthA.topTags.map((t) => [t.name, t.value]));
-  const bMap = Object.fromEntries(monthB.topTags.map((t) => [t.name, t.value]));
+  const aMap = Object.fromEntries(
+    prevMonth.topTags.map((t) => [t.name, t.value]),
+  );
+  const bMap = Object.fromEntries(
+    currMonth.topTags.map((t) => [t.name, t.value]),
+  );
 
   return (
     <Box>
@@ -242,7 +247,7 @@ function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
           fontWeight={600}
           textAlign="right"
         >
-          Month A
+          Previous Month
         </Typography>
         <Typography
           variant="caption"
@@ -250,7 +255,7 @@ function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
           fontWeight={600}
           textAlign="right"
         >
-          Month B
+          Current Month
         </Typography>
         <Typography
           variant="caption"
@@ -345,35 +350,36 @@ export function MonthComparisonModal({
   );
 
   const [defaults] = useState(() => getDefaultComparisonMonths(transactions));
-  const [periodA, setPeriodA] = useState(defaults[0]);
-  const [periodB, setPeriodB] = useState(defaults[1]);
+  const [previousMonth, setPreviousMonth] = useState(defaults[0]);
+  const [currentMonth, setCurrentMonth] = useState(defaults[1]);
 
   // Reset periods when the modal opens with new transaction data
   useEffect(() => {
     if (open) {
       const [a, b] = getDefaultComparisonMonths(transactions);
-      setPeriodA(a);
-      setPeriodB(b);
+      setPreviousMonth(a);
+      setCurrentMonth(b);
     }
   }, [open, transactions]);
 
   const comparison = useMemo(
-    () => buildMonthComparison(transactions, periodA, periodB),
-    [transactions, periodA, periodB],
+    () => buildMonthComparison(transactions, previousMonth, currentMonth),
+    [transactions, previousMonth, currentMonth],
   );
+
   const summaryCards: SummaryCardDefinition[] = [
     {
       key: "total",
       label: "Total Activity",
-      monthA: comparison.monthA.totalAmount,
-      monthB: comparison.monthB.totalAmount,
+      prevMonth: comparison.prevMonth.totalAmount,
+      currMonth: comparison.currMonth.totalAmount,
       change: comparison.changes.totalAmount,
     },
     {
       key: "income",
       label: "Income",
-      monthA: comparison.monthA.incomeAmount,
-      monthB: comparison.monthB.incomeAmount,
+      prevMonth: comparison.prevMonth.incomeAmount,
+      currMonth: comparison.currMonth.incomeAmount,
       change: comparison.changes.incomeAmount,
       color: "#26a69a",
       positiveIsFavorable: true,
@@ -381,31 +387,31 @@ export function MonthComparisonModal({
     {
       key: "spending",
       label: "Spending",
-      monthA: comparison.monthA.spendingAmount,
-      monthB: comparison.monthB.spendingAmount,
+      prevMonth: comparison.prevMonth.spendingAmount,
+      currMonth: comparison.currMonth.spendingAmount,
       change: comparison.changes.spendingAmount,
     },
     {
       key: "need",
       label: "Needs",
-      monthA: comparison.monthA.totalByCategoryType.Need,
-      monthB: comparison.monthB.totalByCategoryType.Need,
+      prevMonth: comparison.prevMonth.totalByCategoryType.Need,
+      currMonth: comparison.currMonth.totalByCategoryType.Need,
       change: comparison.changes.Need,
       color: CATEGORY_HEX_COLORS.Need,
     },
     {
       key: "want",
       label: "Wants",
-      monthA: comparison.monthA.totalByCategoryType.Want,
-      monthB: comparison.monthB.totalByCategoryType.Want,
+      prevMonth: comparison.prevMonth.totalByCategoryType.Want,
+      currMonth: comparison.currMonth.totalByCategoryType.Want,
       change: comparison.changes.Want,
       color: CATEGORY_HEX_COLORS.Want,
     },
     {
       key: "saving",
       label: "Savings",
-      monthA: comparison.monthA.totalByCategoryType.Saving,
-      monthB: comparison.monthB.totalByCategoryType.Saving,
+      prevMonth: comparison.prevMonth.totalByCategoryType.Saving,
+      currMonth: comparison.currMonth.totalByCategoryType.Saving,
       change: comparison.changes.Saving,
       color: CATEGORY_HEX_COLORS.Saving,
       positiveIsFavorable: true,
@@ -413,8 +419,8 @@ export function MonthComparisonModal({
     {
       key: "transactions",
       label: "Transactions",
-      monthA: comparison.monthA.transactionCount,
-      monthB: comparison.monthB.transactionCount,
+      prevMonth: comparison.prevMonth.transactionCount,
+      currMonth: comparison.currMonth.transactionCount,
       change: comparison.changes.transactionCount,
       formatter: (value: number) => value.toString(),
     },
@@ -437,7 +443,12 @@ export function MonthComparisonModal({
           pb: 1,
         }}
       >
-        <Typography variant="h6" fontWeight={700} component="span">
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          component="span"
+          sx={{ margin: "auto" }}
+        >
           Monthly Comparison
         </Typography>
         <IconButton
@@ -450,11 +461,10 @@ export function MonthComparisonModal({
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 2.5, px: { xs: 2, sm: 3 } }}>
-        {/* Month selectors */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
+            flexDirection: { sm: "row" },
             justifyContent: "center",
             alignItems: "center",
             gap: { xs: 1.5, sm: 3 },
@@ -462,10 +472,10 @@ export function MonthComparisonModal({
           }}
         >
           <MonthSelector
-            label="Month A"
-            value={periodA}
+            label="Previous Month"
+            value={previousMonth}
             months={availableMonths}
-            onChange={setPeriodA}
+            onChange={setPreviousMonth}
           />
           <Typography
             variant="body2"
@@ -475,36 +485,30 @@ export function MonthComparisonModal({
             vs
           </Typography>
           <MonthSelector
-            label="Month B"
-            value={periodB}
+            label="Current Month"
+            value={currentMonth}
             months={availableMonths}
-            onChange={setPeriodB}
+            onChange={setCurrentMonth}
           />
         </Box>
-
-        {/* Summary cards */}
         <Grid container spacing={2} mb={3}>
           {summaryCards.map(({ key, ...card }) => (
-            <Grid key={key} item xs={12} sm={6} md={4}>
+            <Grid key={key} item xs={12} sm={6} md={6}>
               <SummaryCard {...card} />
             </Grid>
           ))}
         </Grid>
-
-        {/* Grouped bar chart */}
         <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent sx={{ p: 2 }}>
             <Typography variant="subtitle2" fontWeight={600} mb={1}>
               Expense Category Comparison
             </Typography>
             <ComparisonBarChart
-              monthA={comparison.monthA}
-              monthB={comparison.monthB}
+              prevMonth={comparison.prevMonth}
+              currMonth={comparison.currMonth}
             />
           </CardContent>
         </Card>
-
-        {/* Tags comparison */}
         <Card variant="outlined">
           <CardContent sx={{ p: 2 }}>
             <TagsComparison comparison={comparison} />

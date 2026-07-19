@@ -4,7 +4,6 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useRef, type ComponentProps } from "react";
@@ -31,11 +30,6 @@ function formatCalendarDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * Note 1: This component stays presentational: it renders the filtered
- * transactions as calendar events and reports clicks upward so ReportsPage keeps
- * ownership of dialog state and the existing edit/delete mutation handlers.
- */
 export function TransactionCalendar({
   transactions,
   onTransactionSelect,
@@ -65,8 +59,6 @@ export function TransactionCalendar({
       return;
     }
 
-    // Note 3: FullCalendar internally uses flushSync during gotoDate, so we
-    // defer the navigation until after React finishes the current render cycle.
     const timeoutId = window.setTimeout(() => {
       const nextCalendarApi = calendarRef.current?.getApi();
       if (!nextCalendarApi) return;
@@ -92,95 +84,88 @@ export function TransactionCalendar({
   };
 
   return (
-    <Paper sx={{ p: { xs: 1, sm: 2 } }}>
-      <Stack spacing={1.5}>
-        <Box
-          display="flex"
-          alignItems="baseline"
-          justifyContent="space-between"
-          flexWrap="wrap"
-          gap={1}
-        >
+    <Stack spacing={1.5}>
+      <Box
+        display="flex"
+        alignItems="baseline"
+        justifyContent="space-between"
+        flexWrap="wrap"
+        gap={1}
+      >
+        {transactions.length === 0 && (
           <Typography variant="body2" color="text.secondary">
-            Click a calendar entry to review it, or click an empty day to add a
-            transaction for that date.
-          </Typography>
-          {transactions.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              No transactions match the current filters.
-            </Typography>
-          )}
-        </Box>
-        {invalidDateCount > 0 && (
-          <Typography variant="body2" color="warning.main">
-            {invalidDateCount} transaction
-            {invalidDateCount === 1 ? " has" : "s have"} an invalid date and
-            could not be shown on the calendar.
+            No transactions match the current filters.
           </Typography>
         )}
+      </Box>
+      {invalidDateCount > 0 && (
+        <Typography variant="body2" color="warning.main">
+          {invalidDateCount} transaction
+          {invalidDateCount === 1 ? " has" : "s have"} an invalid date and could
+          not be shown on the calendar.
+        </Typography>
+      )}
+      <Box className="transaction-calendar">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          initialDate={calendarAnchorDate}
+          headerToolbar={{ left: "title", right: "prev,next today" }}
+          height="auto"
+          fixedWeekCount={false}
+          dayMaxEventRows={5}
+          eventDisplay="block"
+          eventInteractive
+          events={events}
+          dateClick={(clickInfo) => onDaySelect(clickInfo.dateStr)}
+          eventClick={handleEventClick}
+          eventContent={(eventInfo) => {
+            const details = eventInfo.event
+              .extendedProps as TransactionCalendarEventDetails;
 
-        <Box className="transaction-calendar">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            initialDate={calendarAnchorDate}
-            headerToolbar={{ left: "title", right: "prev,next today" }}
-            height="auto"
-            fixedWeekCount={false}
-            dayMaxEventRows={5}
-            eventDisplay="block"
-            eventInteractive
-            events={events}
-            dateClick={(clickInfo) => onDaySelect(clickInfo.dateStr)}
-            eventClick={handleEventClick}
-            // Note 2: Rendering the event body ourselves lets each tile show the
-            // amount and category at a glance instead of relying on a generic title
-            // string that would truncate the context users care about most.
-            eventContent={(eventInfo) => {
-              const details = eventInfo.event
-                .extendedProps as TransactionCalendarEventDetails;
-
-              return (
-                <Box className="transaction-calendar__event-content">
+            return (
+              <Box className="transaction-calendar__event-content">
+                <Box
+                  component="span"
+                  className="transaction-calendar__event-meta"
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", lg: "row" },
+                    alignItems: "flex-start",
+                    gap: 0.5,
+                  }}
+                >
                   <Box
                     component="span"
-                    className="transaction-calendar__event-meta"
+                    className="transaction-calendar__event-amount"
                   >
-                    <Box
-                      component="span"
-                      className="transaction-calendar__event-amount"
-                    >
-                      {details.amountLabel}
-                    </Box>
-                    <Box
-                      component="span"
-                      className="transaction-calendar__event-category"
-                    >
-                      {details.categoryLabel}
-                    </Box>
+                    {details.amountLabel}
                   </Box>
                   <Box
                     component="span"
-                    className="transaction-calendar__event-name"
+                    className="transaction-calendar__event-category"
                   >
-                    {details.transactionName}
+                    {details.categoryLabel}
                   </Box>
                 </Box>
-              );
-            }}
-            eventDidMount={(mountInfo) => {
-              const details = mountInfo.event
-                .extendedProps as TransactionCalendarEventDetails;
-              mountInfo.el.setAttribute(
-                "aria-label",
-                details.accessibilityLabel,
-              );
-              mountInfo.el.setAttribute("title", details.accessibilityLabel);
-            }}
-          />
-        </Box>
-      </Stack>
-    </Paper>
+                <Box
+                  component="span"
+                  className="transaction-calendar__event-name"
+                >
+                  {details.transactionName}
+                </Box>
+              </Box>
+            );
+          }}
+          eventDidMount={(mountInfo) => {
+            const details = mountInfo.event
+              .extendedProps as TransactionCalendarEventDetails;
+            mountInfo.el.setAttribute("aria-label", details.accessibilityLabel);
+            mountInfo.el.setAttribute("title", details.accessibilityLabel);
+          }}
+        />
+      </Box>
+    </Stack>
   );
 }

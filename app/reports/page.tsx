@@ -4,28 +4,25 @@ import AddIcon from "@mui/icons-material/Add";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
 import Container from "@mui/material/Container";
-import Divider from "@mui/material/Divider";
 import Fab from "@mui/material/Fab";
-import Grid from "@mui/material/Grid";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
-import { FilterBar } from "@/components/ui/FilterBar";
+import { FilterBar } from "@/components/report/FilterBar";
 import PageHeader from "@/components/ui/PageHeader";
+import SectionCard from "@/components/ui/SectionCard";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
 import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
@@ -62,41 +59,10 @@ import {
   buildComparablePeriodFilters,
   buildStatTrend,
 } from "@/lib/utils/reportUtils";
-
-const SpendingPieChart = dynamic(
-  () =>
-    import("@/components/charts/SpendingPieChart").then(
-      (m) => m.SpendingPieChart,
-    ),
-  {
-    ssr: false,
-    loading: () => <SpendingBreakdownLoadingState />,
-  },
-);
-const SpendingBarChart = dynamic(
-  () =>
-    import("@/components/charts/SpendingBarChart").then(
-      (m) => m.SpendingBarChart,
-    ),
-  {
-    ssr: false,
-    loading: () => <ChartLoadingState height={300} legendItems={3} />,
-  },
-);
-const TagBarChart = dynamic(
-  () => import("@/components/charts/TagBarChart").then((m) => m.TagBarChart),
-  {
-    ssr: false,
-    loading: () => <ChartLoadingState height={400} showLegend={false} />,
-  },
-);
-const MonthComparisonModal = dynamic(
-  () =>
-    import("@/components/charts/MonthComparisonModal").then(
-      (m) => m.MonthComparisonModal,
-    ),
-  { ssr: false },
-);
+import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
+import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
+import { TagBarChart } from "@/components/charts/TagBarChart";
+import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
 
 interface TransactionsApiResponse {
   ok?: boolean;
@@ -144,12 +110,14 @@ const ReportsPageContent = () => {
 
     try {
       const res = await apiFetch("/api/transactions");
+
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
         return;
       }
 
       const data = (await res.json()) as TransactionsApiResponse;
+
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "Failed to load transactions");
       }
@@ -192,10 +160,8 @@ const ReportsPageContent = () => {
           editTarget ? { ...t, originalDate: editTarget.date } : t,
         ),
       });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
+
+      const data = (await res.json()) as { ok?: boolean; error?: string };
 
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
@@ -241,10 +207,7 @@ const ReportsPageContent = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, date: transaction.date }),
       });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
+      const data = (await res.json()) as { ok?: boolean; error?: string };
 
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
@@ -280,9 +243,8 @@ const ReportsPageContent = () => {
         params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
-      if (filters.categories.length > 0) {
+      if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
-      }
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
       if (filters.search) params.set("search", filters.search);
 
@@ -372,11 +334,11 @@ const ReportsPageContent = () => {
       maxWidth="xl"
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
-      sx={{ py: 4 }}
+      sx={{ py: { xs: 3, md: 4 } }}
     >
       <PageHeader
-        title="Income & Spending Reports"
-        description="Filter transactions, compare spending with income, and manage CSV imports from one reporting dashboard."
+        title="Reports"
+        description="Track spending, compare income, and manage transactions."
         headingId={PAGE_TITLE_ID}
         descriptionId={PAGE_DESCRIPTION_ID}
         sx={{ mb: 3 }}
@@ -384,7 +346,7 @@ const ReportsPageContent = () => {
           !isEmpty ? (
             <Stack direction="row" gap={1} flexWrap="wrap">
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<CompareArrowsIcon />}
                 onClick={() => setCompareOpen(true)}
@@ -392,33 +354,31 @@ const ReportsPageContent = () => {
                 Compare
               </Button>
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<FileUploadOutlinedIcon />}
                 onClick={() => setImportOpen(true)}
               >
-                Import CSV
+                Import
               </Button>
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<FileDownloadOutlinedIcon />}
                 onClick={handleExport}
                 disabled={filtered.length === 0}
               >
-                Export CSV
+                Export
               </Button>
             </Stack>
           ) : undefined
         }
       />
-
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMessage}
         </Alert>
       )}
-
       {isEmpty ? (
         <EmptyState
           onAddClick={() => handleAddTransaction()}
@@ -429,10 +389,7 @@ const ReportsPageContent = () => {
           <Box
             role="toolbar"
             aria-label="Report actions"
-            sx={{
-              display: { xs: "flex", md: "none" },
-              mb: 2,
-            }}
+            sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
           >
             <Button
               fullWidth
@@ -443,11 +400,113 @@ const ReportsPageContent = () => {
               Add Transaction
             </Button>
           </Box>
-
+          {loading ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  sm: "repeat(3, 1fr)",
+                  md: "repeat(5, 1fr)",
+                },
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              {Array.from({ length: 5 }, (_, i) => (
+                <Skeleton
+                  key={`stat-skeleton-${i}`}
+                  variant="rounded"
+                  height={72}
+                  sx={{ borderRadius: 1 }}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  sm: "repeat(3, 1fr)",
+                  md: "repeat(5, 1fr)",
+                },
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              {(
+                [
+                  {
+                    label: "Income",
+                    value: formatCurrency(agg.incomeAmount),
+                    color: "#26a69a",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.incomeAmount,
+                          comparableAgg.incomeAmount,
+                          true,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Spending",
+                    value: formatCurrency(agg.spendingAmount),
+                    color: "text.primary",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.spendingAmount,
+                          comparableAgg.spendingAmount,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Needs",
+                    value: formatCurrency(agg.totalByCategoryType.Need),
+                    color: "#ef5350",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Need,
+                          comparableAgg.totalByCategoryType.Need,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Wants",
+                    value: formatCurrency(agg.totalByCategoryType.Want),
+                    color: "#42a5f5",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Want,
+                          comparableAgg.totalByCategoryType.Want,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Savings",
+                    value: formatCurrency(agg.totalByCategoryType.Saving),
+                    color: "#66bb6a",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Saving,
+                          comparableAgg.totalByCategoryType.Saving,
+                          true,
+                        )
+                      : null,
+                  },
+                ] as const
+              ).map((s) => (
+                <StatCard key={s.label} {...s} loading={loading} />
+              ))}
+            </Box>
+          )}
           {loading ? (
             <Skeleton
-              variant="rectangular"
-              height={100}
+              variant="rounded"
+              height={48}
               sx={{ mb: 3, borderRadius: 1 }}
             />
           ) : (
@@ -458,232 +517,120 @@ const ReportsPageContent = () => {
               onChange={setFilters}
             />
           )}
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(2, minmax(0, 1fr))",
-                md: "repeat(5, minmax(0, 1fr))",
-              },
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            {(
-              [
-                {
-                  label: "Total Income",
-                  value: formatCurrency(agg.incomeAmount),
-                  color: "#26a69a",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.incomeAmount,
-                        comparableAgg.incomeAmount,
-                        true,
-                      )
-                    : null,
-                },
-                {
-                  label: "Total Spending",
-                  value: formatCurrency(agg.spendingAmount),
-                  color: "text.primary",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.spendingAmount,
-                        comparableAgg.spendingAmount,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Needs",
-                  value: formatCurrency(agg.totalByCategoryType.Need),
-                  color: "#ef5350",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Need,
-                        comparableAgg.totalByCategoryType.Need,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Wants",
-                  value: formatCurrency(agg.totalByCategoryType.Want),
-                  color: "#42a5f5",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Want,
-                        comparableAgg.totalByCategoryType.Want,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Savings",
-                  value: formatCurrency(agg.totalByCategoryType.Saving),
-                  color: "#66bb6a",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Saving,
-                        comparableAgg.totalByCategoryType.Saving,
-                        true,
-                      )
-                    : null,
-                },
-              ] as const
-            ).map((s) => (
-              <StatCard key={s.label} {...s} loading={loading} />
-            ))}
-          </Box>
-
-          <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} md={5}>
-              <Card
-                sx={{
-                  height: "100%",
+          <Stack spacing={3} mb={3}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+                gap: 3,
+              }}
+            >
+              <SectionCard
+                title="Breakdown"
+                headingId="reports-breakdown-heading"
+                elevation={1}
+                sx={{ display: "flex", flexDirection: "column" }}
+                contentSx={{
+                  flex: 1,
                   display: "flex",
                   flexDirection: "column",
                 }}
               >
-                <CardHeader
-                  title="Spending Breakdown"
-                  titleTypographyProps={{
-                    variant: "subtitle1",
-                    fontWeight: 600,
-                  }}
-                />
-                <Divider />
-                <CardContent
-                  sx={{
-                    p: 3,
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {loading ? (
-                    <SpendingBreakdownLoadingState />
-                  ) : (
+                {loading ? (
+                  <SpendingBreakdownLoadingState />
+                ) : (
+                  <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
                     <SpendingPieChart data={agg.totalByCategoryType} />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={7}>
-              <Card
-                sx={{
-                  height: "100%",
+                  </Box>
+                )}
+              </SectionCard>
+              <SectionCard
+                title="Top Tags"
+                headingId="reports-tags-heading"
+                elevation={1}
+                sx={{ display: "flex", flexDirection: "column" }}
+                contentSx={{
+                  flex: 1,
                   display: "flex",
                   flexDirection: "column",
                 }}
               >
-                <CardHeader
-                  title="Top Spending Tags"
-                  titleTypographyProps={{
-                    variant: "subtitle1",
-                    fontWeight: 600,
-                  }}
-                />
-                <Divider />
-                <CardContent sx={{ p: 3, flex: 1 }}>
-                  {loading ? (
-                    <ChartLoadingState height={400} showLegend={false} />
-                  ) : (
-                    <TagBarChart
-                      data={agg.tagDiagramData}
-                      activeTags={filters.tags}
-                      onTagClick={handleQuickTagFilter}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              title="Spending vs Income"
-              titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
-            />
-            <Divider />
-            <CardContent sx={{ p: 3 }}>
+                {loading ? (
+                  <ChartLoadingState height={400} showLegend={false} />
+                ) : (
+                  <TagBarChart
+                    data={agg.tagDiagramData}
+                    activeTags={filters.tags}
+                    onTagClick={handleQuickTagFilter}
+                  />
+                )}
+              </SectionCard>
+            </Box>
+            <SectionCard
+              title="Monthly Overview"
+              headingId="reports-monthly-heading"
+              elevation={1}
+            >
               {loading ? (
                 <ChartLoadingState height={360} legendItems={4} />
               ) : (
                 <SpendingBarChart data={agg.timeseries} />
               )}
-            </CardContent>
-          </Card>
-
-          <Box
-            mb={1.5}
-            display="flex"
-            alignItems={{ xs: "stretch", sm: "center" }}
-            justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2}
+            </SectionCard>
+          </Stack>
+          <SectionCard
+            title="Transactions"
+            headingId="reports-transactions-heading"
+            elevation={1}
+            action={
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={transactionsView}
+                onChange={(_event, nextView) => {
+                  if (nextView !== null) {
+                    const resolvedView = nextView as TransactionsViewMode;
+                    setTransactionsView(resolvedView);
+                    setLastSelectedReportTransactionsView(resolvedView);
+                  }
+                }}
+                aria-label="Choose the transaction results view"
+                sx={{
+                  "& .MuiToggleButtonGroup-grouped": {
+                    px: 1.5,
+                    textTransform: "none",
+                  },
+                }}
+              >
+                <ToggleButton value="table" aria-label="Table view">
+                  <ViewListIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                  Table
+                </ToggleButton>
+                <ToggleButton value="calendar" aria-label="Calendar view">
+                  <CalendarMonthIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                  Calendar
+                </ToggleButton>
+              </ToggleButtonGroup>
+            }
           >
-            <Box display="flex" alignItems="baseline" gap={1}>
-              <Typography variant="h6" fontWeight={600}>
-                Transactions
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                ({filtered.length} results)
-              </Typography>
-            </Box>
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={transactionsView}
-              onChange={(_event, nextView) => {
-                if (nextView !== null) {
-                  const resolvedView = nextView as TransactionsViewMode;
-                  setTransactionsView(resolvedView);
-                  setLastSelectedReportTransactionsView(resolvedView);
-                }
-              }}
-              aria-label="Choose the transaction results view"
-              sx={{
-                "& .MuiToggleButtonGroup-grouped": {
-                  px: 1.5,
-                  textTransform: "none",
-                },
-              }}
-            >
-              <ToggleButton
-                value="table"
-                aria-label="Show transactions in the table view"
-              >
-                Table
-              </ToggleButton>
-              <ToggleButton
-                value="calendar"
-                aria-label="Show transactions in the calendar view"
-              >
-                Calendar
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          {transactionsView === "table" ? (
-            <TransactionsTable
-              transactions={filtered}
-              activeTags={filters.tags}
-              onEdit={handleEditTransaction}
-              onDelete={handleDeleteTransaction}
-              onTagClick={handleQuickTagFilter}
-            />
-          ) : (
-            <TransactionCalendar
-              transactions={filtered}
-              onDaySelect={handleAddTransaction}
-              onTransactionSelect={setDetailTarget}
-            />
-          )}
+            {transactionsView === "table" ? (
+              <TransactionsTable
+                transactions={filtered}
+                activeTags={filters.tags}
+                onEdit={handleEditTransaction}
+                onDelete={handleDeleteTransaction}
+                onTagClick={handleQuickTagFilter}
+              />
+            ) : (
+              <TransactionCalendar
+                transactions={filtered}
+                onDaySelect={handleAddTransaction}
+                onTransactionSelect={setDetailTarget}
+              />
+            )}
+          </SectionCard>
         </>
       )}
-
       <TransactionDetailDialog
         open={Boolean(detailTarget)}
         transaction={detailTarget}
@@ -694,7 +641,6 @@ const ReportsPageContent = () => {
         }}
         onDelete={handleDeleteTransaction}
       />
-
       <TransactionForm
         open={formOpen}
         initialDate={newTransactionDate}
@@ -702,7 +648,6 @@ const ReportsPageContent = () => {
         onSave={handleSaveTransaction}
         onClose={handleFormClose}
       />
-
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
@@ -710,13 +655,11 @@ const ReportsPageContent = () => {
           void loadTransactions({ resetFilters: allTransactions.length === 0 });
         }}
       />
-
       <MonthComparisonModal
         open={compareOpen}
         transactions={allTransactions}
         onClose={() => setCompareOpen(false)}
       />
-
       {!isEmpty && (
         <Fab
           color="primary"

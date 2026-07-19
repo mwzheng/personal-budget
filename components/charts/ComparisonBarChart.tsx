@@ -34,13 +34,13 @@ function formatDollar(value: number): string {
 }
 
 interface Props {
-  monthA: MonthSummary;
-  monthB: MonthSummary;
+  prevMonth: MonthSummary;
+  currMonth: MonthSummary;
 }
 
 const CATEGORIES = ["Need", "Want", "Saving"] as const;
-const MONTH_A_KEY = "monthA";
-const MONTH_B_KEY = "monthB";
+const MONTH_A_KEY = "prevMonth";
+const MONTH_B_KEY = "currMonth";
 
 // Lighter variants for Month B bars to distinguish them from Month A
 const MONTH_B_COLORS: Record<string, string> = {
@@ -49,20 +49,20 @@ const MONTH_B_COLORS: Record<string, string> = {
   Saving: "#a5d6a7",
 };
 
-export function ComparisonBarChart({ monthA, monthB }: Props) {
-  const labelA = formatMonth(monthA.period);
-  const labelB = formatMonth(monthB.period);
+export function ComparisonBarChart({ prevMonth, currMonth }: Props) {
+  const labelA = formatMonth(prevMonth.period);
+  const labelB = formatMonth(currMonth.period);
 
   const chartData = CATEGORIES.map((cat) => ({
     category: cat,
-    [MONTH_A_KEY]: monthA.totalByCategoryType[cat],
-    [MONTH_B_KEY]: monthB.totalByCategoryType[cat],
+    [MONTH_A_KEY]: prevMonth.totalByCategoryType[cat],
+    [MONTH_B_KEY]: currMonth.totalByCategoryType[cat],
   }));
 
   const hasData = CATEGORIES.some(
     (cat) =>
-      monthA.totalByCategoryType[cat] > 0 ||
-      monthB.totalByCategoryType[cat] > 0,
+      prevMonth.totalByCategoryType[cat] > 0 ||
+      currMonth.totalByCategoryType[cat] > 0,
   );
 
   if (!hasData) {

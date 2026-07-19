@@ -153,8 +153,8 @@ export interface MonthSummary {
 // pre-computed percentage changes between them. Storing the deltas here avoids
 // every UI consumer re-deriving the same arithmetic.
 export interface MonthComparisonData {
-  monthA: MonthSummary;
-  monthB: MonthSummary;
+  prevMonth: MonthSummary;
+  currMonth: MonthSummary;
   changes: {
     totalAmount: number | null;
     spendingAmount: number | null;

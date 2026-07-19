@@ -44,11 +44,6 @@ function DetailRow({ label, children }: DetailRowProps) {
   );
 }
 
-/**
- * Note 1: The dialog shows a stable read-only snapshot of a transaction so
- * users can verify the exact record they clicked before branching into edit or
- * delete actions. Keeping confirmation in the same dialog preserves that context.
- */
 export function TransactionDetailDialog({
   open,
   transaction,
@@ -85,10 +80,24 @@ export function TransactionDetailDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {transaction
-          ? `Transaction Details: ${transaction.name}`
-          : "Transaction Details"}
+      <DialogTitle
+        gap={1}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        {transaction && (
+          <>
+            <Typography variant="h6" fontWeight={600}>
+              {transaction.name}
+            </Typography>
+            <Chip
+              label={transaction.category}
+              size="small"
+              color={TRANSACTION_CATEGORY_CHIP_COLORS[transaction.category]}
+            />
+          </>
+        )}
       </DialogTitle>
       <DialogContent dividers>
         {transaction ? (
@@ -98,12 +107,8 @@ export function TransactionDetailDialog({
               spacing={1}
               alignItems={{ xs: "flex-start", sm: "center" }}
               flexWrap="wrap"
+              justifyContent="space-between"
             >
-              <Chip
-                label={transaction.category}
-                size="small"
-                color={TRANSACTION_CATEGORY_CHIP_COLORS[transaction.category]}
-              />
               <Typography variant="h5" fontWeight={700}>
                 {formatTransactionAmount(transaction.amount)}
               </Typography>
@@ -111,14 +116,8 @@ export function TransactionDetailDialog({
                 {formatTransactionLongDate(transaction.date)}
               </Typography>
             </Stack>
-
             <Divider />
-
             <Stack spacing={2}>
-              <DetailRow label="Transaction name">
-                <Typography>{transaction.name}</Typography>
-              </DetailRow>
-
               <DetailRow label="Payment method">
                 <Typography
                   color={
@@ -130,7 +129,6 @@ export function TransactionDetailDialog({
                   {transaction.paymentMethod || "Not recorded"}
                 </Typography>
               </DetailRow>
-
               <DetailRow label="Tags">
                 {transaction.tags.length > 0 ? (
                   <Box display="flex" flexWrap="wrap" gap={0.75}>
@@ -168,10 +166,6 @@ export function TransactionDetailDialog({
         ) : null}
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, flexWrap: "wrap", gap: 1 }}>
-        <Button onClick={onClose} aria-label="Close transaction details dialog">
-          Close
-        </Button>
-
         {confirmDelete ? (
           <>
             <Button
