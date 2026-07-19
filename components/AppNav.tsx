@@ -1,6 +1,3 @@
-// Note 1: "use client" makes AppNav a Client Component because it uses
-// client-only hooks and browser APIs (localStorage/sessionStorage, storage events, and an
-// interactive hover/click menu).
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -49,11 +46,8 @@ type AuthPageKey = Extract<
 const INFO_MENU_LABELS: Record<InfoPageKey, string> = {
   [PAGE_TITLE_KEYS.ABOUT]: "About",
   [PAGE_TITLE_KEYS.FAQ]: "FAQ",
-  [PAGE_TITLE_KEYS.CONTACT]: "Contact",
 };
 
-// Note 1.1: The info menu points at the current public route set so
-// signed-out visitors can move between About, FAQ, and Contact from one place.
 const INFO_MENU_ITEMS = PUBLIC_INFO_PAGE_TITLE_KEYS.map((pageKey) => {
   const page = getPageTitleEntry(pageKey);
   return {
@@ -87,7 +81,6 @@ const AUTH_TABS = AUTH_TAB_PAGE_KEYS.map((pageKey) => {
   };
 });
 
-// Salary page entry for mobile drawer discovery.
 const SALARY_NAV_ITEM = {
   key: PAGE_TITLE_KEYS.SALARY,
   label: "Salary History",
@@ -113,18 +106,7 @@ function isRouteSelected(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/**
- * Note 2: `AppNav` keeps authenticated workspace tabs and public info routes in
- * the same header so signed-out visitors can still reach About, FAQ, and
- * Contact without losing the existing signed-in workflow navigation.
- *
- * The desktop nav shows at `lg` and above (not `md`) to prevent header crowding
- * as tabs are listed alongside auth and Info controls in a single toolbar row.
- */
 export function AppNav() {
-  // Note 3: `usePathname` returns the current URL path (e.g. "/sankey" or "/reports").
-  // The helper below treats nested routes like `/reports/monthly` as belonging
-  // to the same top-level nav item, which keeps highlighting stable.
   const pathname = normalizeAppPathname(usePathname());
   const value: AuthPageKey | false =
     AUTH_TABS.find((tab) => isRouteSelected(pathname, tab.href))?.value ??
@@ -133,14 +115,10 @@ export function AppNav() {
     isRouteSelected(pathname, href),
   );
 
-  // Note 4: Client-side auth detection uses browser storage so real auth can
-  // survive browser restarts while demo sessions remain tab-scoped.
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [infoMenuAnchorEl, setInfoMenuAnchorEl] =
     useState<HTMLButtonElement | null>(null);
-  // Note 4.1: Hover should reveal the menu without yanking focus away from the
-  // current element, so only explicit keyboard-triggered opens move focus into
-  // the menu list for arrow-key navigation.
+
   const [shouldAutoFocusInfoMenu, setShouldAutoFocusInfoMenu] =
     useState<boolean>(false);
   const isInfoMenuOpen = Boolean(infoMenuAnchorEl);
@@ -180,8 +158,6 @@ export function AppNav() {
   };
 
   return (
-    // Note 6: `elevation={0}` removes the default MUI shadow from the AppBar.
-    // The border is added via the MuiAppBar theme override; no local sx needed.
     <AppBar
       position="static"
       elevation={0}
@@ -189,7 +165,6 @@ export function AppNav() {
     >
       <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 }, py: 0 }}>
         <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
-          {/* Brand */}
           <Typography
             variant="subtitle1"
             component={NextLink}
@@ -209,9 +184,6 @@ export function AppNav() {
           >
             🥣 Porridge Budget
           </Typography>
-
-          {/* Note 7: Workspace tabs — only shown when logged in, and only at lg+
-             to avoid overflow at medium viewport widths. */}
           {loggedIn ? (
             <Box sx={{ flexGrow: 1, display: { xs: "none", lg: "block" } }}>
               <Tabs
@@ -234,8 +206,6 @@ export function AppNav() {
           ) : (
             <Box sx={{ flexGrow: 1 }} />
           )}
-
-          {/* Desktop: Info + auth actions — hidden below lg */}
           <Box
             sx={{
               display: { xs: "none", lg: "flex" },
@@ -243,9 +213,6 @@ export function AppNav() {
               gap: 0.5,
             }}
           >
-            {/* Note 8: `Info` stays visible for every visitor. Hover opens the menu
-               for pointer users, while click and keyboard handlers keep it usable on
-               touch devices and with assistive technology. */}
             <Button
               id="app-nav-info-button"
               color="inherit"
@@ -293,7 +260,6 @@ export function AppNav() {
             >
               Info
             </Button>
-
             <Divider
               orientation="vertical"
               flexItem
@@ -303,8 +269,6 @@ export function AppNav() {
                 borderColor: SERVER_THEME_TOKENS.border.subtle,
               }}
             />
-
-            {/* Auth buttons */}
             {loggedIn ? (
               <Button
                 component={NextLink}
@@ -343,8 +307,6 @@ export function AppNav() {
               </Box>
             )}
           </Box>
-
-          {/* Mobile hamburger — visible below lg */}
           <IconButton
             color="inherit"
             aria-label="Open navigation menu"
@@ -354,8 +316,6 @@ export function AppNav() {
           >
             <MenuRoundedIcon />
           </IconButton>
-
-          {/* Info dropdown menu */}
           <Menu
             id="app-nav-info-menu"
             anchorEl={infoMenuAnchorEl}
@@ -398,8 +358,6 @@ export function AppNav() {
               );
             })}
           </Menu>
-
-          {/* Mobile / tablet navigation drawer */}
           <Drawer
             anchor="right"
             open={mobileDrawerOpen}
@@ -422,7 +380,6 @@ export function AppNav() {
             <Box
               sx={{ height: "100%", display: "flex", flexDirection: "column" }}
             >
-              {/* Drawer header */}
               <Box
                 sx={{
                   display: "flex",
@@ -456,8 +413,6 @@ export function AppNav() {
                   <CloseRoundedIcon />
                 </IconButton>
               </Box>
-
-              {/* Drawer body */}
               <Box sx={{ flexGrow: 1, overflowY: "auto", px: 1.5, py: 2 }}>
                 {loggedIn ? (
                   <Box sx={{ mb: 3 }}>
@@ -492,7 +447,6 @@ export function AppNav() {
                           />
                         </ListItemButton>
                       ))}
-                      {/* Salary is always accessible from the mobile drawer */}
                       <ListItemButton
                         component={NextLink}
                         href={SALARY_NAV_ITEM.href}
@@ -514,7 +468,6 @@ export function AppNav() {
                     </List>
                   </Box>
                 ) : null}
-
                 <Box>
                   <Typography
                     variant="overline"
@@ -550,8 +503,6 @@ export function AppNav() {
                   </List>
                 </Box>
               </Box>
-
-              {/* Drawer footer — auth actions */}
               <Box
                 sx={{
                   p: 2,

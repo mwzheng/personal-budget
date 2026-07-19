@@ -57,8 +57,8 @@ const CreatorCard = ({ creator, sectionTitle }: CreatorCardProps) => {
             </Box>
           </Stack>
           <Stack direction="row" spacing={0.5}>
-            {creator.links.map((link) => (
-              <CreatorLink key={link.platform} link={link} />
+            {creator.links.map((link, i) => (
+              <CreatorLink key={`${link.platform}-${i}`} link={link} />
             ))}
           </Stack>
         </Box>

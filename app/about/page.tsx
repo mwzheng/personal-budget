@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 
 import { ABOUT_PAGE_CONTENT } from "@/lib/content/about";
+import { CONTACT_SECTION_CONTENT } from "@/lib/content/contact";
 import {
   APP_NAME,
   PAGE_TITLE_KEYS,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/content/page-titles";
 import AboutCTA from "@/components/about/AboutCTA";
 import CreatorCard from "@/components/about/CreatorCard";
+import GetInTouchSection from "@/components/about/GetInTouchSection";
 import HeroSection from "@/components/about/HeroSection";
 import PhilosophyCard from "@/components/about/PhilosophyCard";
 import StoryGrid from "@/components/about/StoryGrid";
@@ -53,6 +55,7 @@ const AboutPage = () => {
             sectionTitle={sectionTitles.philosophy}
           />
           <CreatorCard creator={creator} sectionTitle={sectionTitles.creator} />
+          <GetInTouchSection content={CONTACT_SECTION_CONTENT} />
         </Stack>
       </Container>
       <AboutCTA />

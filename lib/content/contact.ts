@@ -1,9 +1,4 @@
-/**
- * Note 1: Contact details live in data form so the future contact page, footer,
- * and any call-to-action components can reuse the same public information.
- */
-
-import type { ContactMethod, ContactPageContent } from "../types/content";
+import type { ContactMethod, ContactSectionContent } from "../types/content";
 import { CREATOR_SOCIAL_LINKS } from "./about";
 import { APP_NAME } from "./page-titles";
 
@@ -28,19 +23,11 @@ export const CONTACT_METHODS = [
   },
 ] as const satisfies readonly ContactMethod[];
 
-// Note 2: The response note sets expectation early because this project is a
-// hobby build maintained around full-time work rather than a staffed product.
-export const CONTACT_PAGE_CONTENT = {
+export const CONTACT_SECTION_CONTENT = {
   hero: {
-    eyebrow: "Contact",
-    title: `Get In Touch About ${APP_NAME}`,
-    summary:
-      "Use the contact form below for a direct reply, or reach out through GitHub and LinkedIn when a public or professional channel fits better.",
+    title: "Get In Touch",
+    summary: `Questions, bug reports, and product ideas are all welcome. ${APP_NAME} is free and maintained alongside full-time work, so replies may take a moment.`,
   },
-  summary: [
-    `${APP_NAME} is free to use and something I maintain alongside my full-time software engineering work.`,
-    "Questions, thoughtful feedback, bug reports, and small product ideas are all welcome.",
-  ],
   form: {
     title: "Send A Message",
     description:
@@ -48,7 +35,7 @@ export const CONTACT_PAGE_CONTENT = {
     submitLabel: "Send message",
     submittingLabel: "Sending message…",
     privacyNote:
-      "Your email address is only used to deliver this message and make a reply possible.",
+      "Your email address is only used to deliver this message and make a reply possible. Please avoid sending passwords, account numbers, or other sensitive information through this form.",
     validationMessage: "Please review the highlighted fields and try again.",
     successMessage:
       "Thanks for reaching out. Your message has been sent successfully.",
@@ -77,29 +64,17 @@ export const CONTACT_PAGE_CONTENT = {
     },
   },
   sidebar: {
-    methodsTitle: "Other Ways To Connect",
-    methodsDescription:
-      "If a public thread or professional introduction makes more sense, these channels stay available too.",
+    title: "Other Ways To Connect",
     topicsTitle: "Good Reasons To Reach Out",
   },
-  notices: [
-    {
-      title: "Free To Use",
-      body: `${APP_NAME} is free to use, so support and replies happen around my full-time schedule.`,
-    },
-    {
-      title: "Keep It Safe",
-      body: "Please avoid sending passwords, account numbers, bank credentials, or other sensitive information through this form.",
-    },
-  ],
   methods: CONTACT_METHODS,
   topics: [
     "Feedback on the manual budgeting workflow",
     "Bug reports, rough edges, or missing content",
-    "Questions about the Excel-plus-Notion origin story",
-    "Thoughtful feature ideas that preserve the manual-first approach",
-    "General collaboration or professional conversation",
+    "Questions about the manual-first approach",
+    "Feature ideas that preserve the simple philosophy",
+    "General collaboration or conversation",
   ],
   availabilityNote:
     "I read these channels personally, but replies may be asynchronous because I maintain the project outside of full-time work.",
-} satisfies ContactPageContent;
+} satisfies ContactSectionContent;

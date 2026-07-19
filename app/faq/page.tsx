@@ -204,7 +204,7 @@ export default function FaqPage() {
               We&rsquo;re here to help. Reach out and we&rsquo;ll get back to
               you.
             </Typography>
-            <Button variant="contained" size="large" href={ROUTE_PATHS.contact}>
+            <Button variant="contained" size="large" href="/about">
               Contact Us
             </Button>
           </Stack>

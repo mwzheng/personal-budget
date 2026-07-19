@@ -1,9 +1,7 @@
-// Note 1: These assertions focus on shared content invariants so public-page copy
-// can evolve without silently dropping routes, footer links, or required form text.
 import { describe, expect, it } from "vitest";
 
 import { ABOUT_PAGE_CONTENT, CREATOR_SOCIAL_LINKS } from "@/lib/content/about";
-import { CONTACT_PAGE_CONTENT } from "@/lib/content/contact";
+import { CONTACT_SECTION_CONTENT } from "@/lib/content/contact";
 import { FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
 import { FAQ_ITEMS } from "@/lib/content/faq";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
@@ -26,11 +24,6 @@ const PUBLIC_PAGE_EXPECTATIONS = [
     route: ROUTE_PATHS.faq,
     label: "FAQ",
   },
-  {
-    key: PAGE_TITLE_KEYS.CONTACT,
-    route: ROUTE_PATHS.contact,
-    label: "Contact",
-  },
 ] as const;
 
 const REQUIRED_CONTACT_FIELDS = [
@@ -41,7 +34,7 @@ const REQUIRED_CONTACT_FIELDS = [
 ] as const;
 
 describe("content data invariants", () => {
-  it("keeps About, FAQ, and Contact registered as live public page titles", () => {
+  it("keeps About and FAQ registered as live public page titles", () => {
     expect(PUBLIC_INFO_PAGE_TITLE_KEYS).toEqual(
       expect.arrayContaining(PUBLIC_PAGE_EXPECTATIONS.map(({ key }) => key)),
     );
@@ -82,7 +75,7 @@ describe("content data invariants", () => {
   });
 
   it("defines contact form copy for every required field", () => {
-    const { form } = CONTACT_PAGE_CONTENT;
+    const { form } = CONTACT_SECTION_CONTENT;
 
     expect(form.title.trim().length).toBeGreaterThan(0);
     expect(form.description.trim().length).toBeGreaterThan(0);
@@ -119,15 +112,12 @@ describe("content data invariants", () => {
       CREATOR_SOCIAL_LINKS.github.description?.toLowerCase(),
     ).not.toContain("follow the code");
 
-    expect(CONTACT_PAGE_CONTENT.sidebar).toEqual({
-      methodsTitle: "Other Ways To Connect",
-      methodsDescription:
-        "If a public thread or professional introduction makes more sense, these channels stay available too.",
+    expect(CONTACT_SECTION_CONTENT.sidebar).toEqual({
+      title: "Other Ways To Connect",
       topicsTitle: "Good Reasons To Reach Out",
     });
-    expect(CONTACT_PAGE_CONTENT.notices).toHaveLength(2);
     expect(
-      CONTACT_PAGE_CONTENT.methods[0]?.description.toLowerCase(),
+      CONTACT_SECTION_CONTENT.methods[0]?.description.toLowerCase(),
     ).toContain("github profile");
 
     expect(HOME_PAGE_CONTENT.hero.title).toBe("Porridge Budget");
