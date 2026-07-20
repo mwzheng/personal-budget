@@ -239,7 +239,7 @@ export default function Home() {
         sx={{ pb: 10 }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={3} justifyContent="center">
+          <Grid container spacing={3} justifyContent="center" sx={{ px: 12 }}>
             {features.map((feature) => {
               return <FeatureCard key={feature.id} feature={feature} />;
             })}

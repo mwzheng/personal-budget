@@ -15,7 +15,7 @@ export const ROUTE_PATHS = {
   callback: "/auth/callback",
   signout: "/auth/signout",
   reports: "/reports",
-  sankey: "/sankey",
+  budget: "/budget",
   progress: "/progress",
   salary: "/salary",
   fire: "/fire",
@@ -31,7 +31,7 @@ export const PAGE_TITLE_KEYS = {
   CALLBACK: "callback",
   SIGNOUT: "signout",
   REPORTS: "reports",
-  SANKEY: "sankey",
+  BUDGET: "budget",
   PROGRESS: "progress",
   SALARY: "salary",
   FIRE: "fire",
@@ -96,11 +96,11 @@ export const PAGE_TITLES = {
       "Review transactions, charts, and category totals from one spending dashboard.",
     requiresAuth: true,
   },
-  [PAGE_TITLE_KEYS.SANKEY]: {
-    route: ROUTE_PATHS.sankey,
+  [PAGE_TITLE_KEYS.BUDGET]: {
+    route: ROUTE_PATHS.budget,
     title: `Budget - ${APP_NAME}`,
     description:
-      "Plan named expenses and visualize a monthly budget with pie and Sankey charts.",
+      "Plan monthly expenses and visualize your budget with pie charts and flow diagrams.",
     requiresAuth: true,
   },
   [PAGE_TITLE_KEYS.PROGRESS]: {
@@ -145,7 +145,7 @@ export const PLANNED_PUBLIC_PAGE_TITLE_KEYS = [] as const;
 
 export const AUTHENTICATED_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.REPORTS,
-  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.BUDGET,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,
@@ -160,7 +160,7 @@ export const LIVE_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.CALLBACK,
   PAGE_TITLE_KEYS.SIGNOUT,
   PAGE_TITLE_KEYS.REPORTS,
-  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.BUDGET,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,

@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/auth/",
           ROUTE_PATHS.reports,
-          ROUTE_PATHS.sankey,
+          ROUTE_PATHS.budget,
           ROUTE_PATHS.progress,
           ROUTE_PATHS.salary,
         ],

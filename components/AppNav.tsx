@@ -39,7 +39,7 @@ type AuthPageKey = Extract<
   (typeof AUTHENTICATED_PAGE_TITLE_KEYS)[number],
   | typeof PAGE_TITLE_KEYS.REPORTS
   | typeof PAGE_TITLE_KEYS.PROGRESS
-  | typeof PAGE_TITLE_KEYS.SANKEY
+  | typeof PAGE_TITLE_KEYS.BUDGET
   | typeof PAGE_TITLE_KEYS.FIRE
 >;
 
@@ -60,14 +60,14 @@ const INFO_MENU_ITEMS = PUBLIC_INFO_PAGE_TITLE_KEYS.map((pageKey) => {
 const AUTH_TAB_PAGE_KEYS = [
   PAGE_TITLE_KEYS.REPORTS,
   PAGE_TITLE_KEYS.PROGRESS,
-  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.BUDGET,
   PAGE_TITLE_KEYS.FIRE,
 ] as const satisfies readonly AuthPageKey[];
 
 const AUTH_TAB_LABELS: Record<AuthPageKey, string> = {
   [PAGE_TITLE_KEYS.REPORTS]: "Reports",
   [PAGE_TITLE_KEYS.PROGRESS]: "Progress",
-  [PAGE_TITLE_KEYS.SANKEY]: "Budget",
+  [PAGE_TITLE_KEYS.BUDGET]: "Budget",
   [PAGE_TITLE_KEYS.FIRE]: "FIRE",
 };
 

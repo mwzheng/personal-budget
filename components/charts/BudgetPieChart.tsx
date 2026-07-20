@@ -74,17 +74,17 @@ export function BudgetPieChart({
   return (
     <ChartWrapper title="Budget Allocation">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ width: "100%", height: 320 }}>
+        <Box sx={{ width: "100%", height: 280 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 16, right: 24, bottom: 16, left: 24 }}>
+            <PieChart margin={{ top: 12, right: 20, bottom: 12, left: 20 }}>
               <Pie
                 data={data}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={112}
-                innerRadius={72}
+                outerRadius={100}
+                innerRadius={64}
                 paddingAngle={2}
                 labelLine={false}
                 animationDuration={1200}
@@ -175,7 +175,7 @@ export function BudgetPieChart({
                         ...(source?.group
                           ? [
                               {
-                                label: "Sankey Path",
+                                label: "Flow Path",
                                 value: source.group,
                               },
                             ]

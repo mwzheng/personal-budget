@@ -28,7 +28,7 @@ import { parseSankeyPathSegments } from "./budget-normalizer";
 
 export const CATEGORY_COLORS: Record<CategoryType, string> = {
   Need: "#ef4444",
-  Want: "#38bdf8",
+  Want: "#f59e0b",
   Saving: "#22c55e",
 };
 
@@ -38,7 +38,7 @@ export const CATEGORY_COLORS: Record<CategoryType, string> = {
 
 const CATEGORY_SHADE_PALETTES: Record<CategoryType, string[]> = {
   Need: ["#fca5a5", "#fda4af", "#fecaca", "#fb7185"],
-  Want: ["#7dd3fc", "#93c5fd", "#bfdbfe", "#60a5fa"],
+  Want: ["#fde68a", "#fcd34d", "#fbbf24", "#f59e0b"],
   Saving: ["#86efac", "#6ee7b7", "#bbf7d0", "#4ade80"],
 };
 
