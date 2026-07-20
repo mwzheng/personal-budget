@@ -17,7 +17,7 @@ export const CREATOR_SOCIAL_LINKS = {
   },
   github: {
     platform: "github",
-    label: "My GitHub",
+    label: "GitHub",
     href: "https://github.com/mwzheng",
     handle: "mwzheng",
     external: true,

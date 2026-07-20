@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { ROUTE_PATHS } from "@/lib/content/page-titles";
 
 const AboutCTA = () => (
-  <Box sx={{ textAlign: "center", py: { xs: 6, md: 8 } }}>
+  <Box sx={{ textAlign: "center", pb: 12 }}>
     <Container maxWidth="sm">
       <Stack spacing={3} alignItems="center">
         <Typography variant="h4" fontWeight={700}>

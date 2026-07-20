@@ -50,8 +50,6 @@ export default function GetInTouchSection({ content }: GetInTouchSectionProps) {
                   <Box
                     key={method.href}
                     sx={{
-                      p: 2,
-                      border: "1px solid",
                       borderColor: "divider",
                       borderRadius: 2,
                     }}

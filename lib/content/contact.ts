@@ -26,16 +26,16 @@ export const CONTACT_METHODS = [
 export const CONTACT_SECTION_CONTENT = {
   hero: {
     title: "Get In Touch",
-    summary: `Questions, bug reports, and product ideas are all welcome. ${APP_NAME} is free and maintained alongside full-time work, so replies may take a moment.`,
+    summary: `Questions, bug reports, and product ideas are all welcome.`,
   },
   form: {
     title: "Send A Message",
     description:
-      "Use the form for direct questions about the product, workflow feedback, or a quick hello. Messages are delivered by email so I can reply without publishing a personal inbox on the page.",
+      "Direct questions about the product, workflow feedback, or a quick hello.",
     submitLabel: "Send message",
     submittingLabel: "Sending message…",
     privacyNote:
-      "Your email address is only used to deliver this message and make a reply possible. Please avoid sending passwords, account numbers, or other sensitive information through this form.",
+      "Your email address is only used to deliver this message and make a reply possible. Please avoid sending any sensitive information through this form.",
     validationMessage: "Please review the highlighted fields and try again.",
     successMessage:
       "Thanks for reaching out. Your message has been sent successfully.",
@@ -44,22 +44,17 @@ export const CONTACT_SECTION_CONTENT = {
     fields: {
       name: {
         label: "Name",
-        helperText: "How you'd like to be addressed in a reply.",
         autoComplete: "name",
       },
       email: {
         label: "Email",
-        helperText: "Used only for this reply.",
         autoComplete: "email",
       },
       subject: {
         label: "Subject",
-        helperText: "A short summary helps me triage messages quickly.",
       },
       message: {
         label: "Message",
-        helperText:
-          "Share the question, context, or feedback you have in mind.",
       },
     },
   },
@@ -70,11 +65,9 @@ export const CONTACT_SECTION_CONTENT = {
   methods: CONTACT_METHODS,
   topics: [
     "Feedback on the manual budgeting workflow",
-    "Bug reports, rough edges, or missing content",
-    "Questions about the manual-first approach",
-    "Feature ideas that preserve the simple philosophy",
+    "Bug reports, missing content, or feature requests",
     "General collaboration or conversation",
   ],
   availabilityNote:
-    "I read these channels personally, but replies may be asynchronous because I maintain the project outside of full-time work.",
+    "Replies may be asynchronous because I maintain the project outside of full-time work.",
 } satisfies ContactSectionContent;
