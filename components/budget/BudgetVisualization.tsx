@@ -55,13 +55,7 @@ export function BudgetVisualization({
         <Tab label="Flow" />
       </Tabs>
 
-      {tab === 0 && (
-        <BudgetSummary
-          insights={insights}
-          isLoading={isLoading}
-          compact={compact}
-        />
-      )}
+      {tab === 0 && <BudgetSummary insights={insights} isLoading={isLoading} />}
 
       {tab === 1 && (
         <Box sx={{ minHeight: 400 }}>

@@ -44,7 +44,7 @@ export function BudgetPieChart({
           textAlign: "center",
           padding: 40,
           color: theme.palette.text.secondary,
-          height: 320,
+          height: 360,
         }}
       >
         Add expense rows to populate the pie chart.
@@ -74,17 +74,17 @@ export function BudgetPieChart({
   return (
     <ChartWrapper title="Budget Allocation">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ width: "100%", height: 280 }}>
+        <Box sx={{ width: "100%", height: 380 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 12, right: 20, bottom: 12, left: 20 }}>
+            <PieChart margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
               <Pie
                 data={data}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
-                innerRadius={64}
+                outerRadius={140}
+                innerRadius={90}
                 paddingAngle={2}
                 labelLine={false}
                 animationDuration={1200}
@@ -113,7 +113,7 @@ export function BudgetPieChart({
                           y={cy - 18}
                           textAnchor="middle"
                           fill={theme.palette.text.secondary}
-                          fontSize="13"
+                          fontSize="14"
                           fontWeight="600"
                         >
                           Monthly Income
@@ -123,7 +123,7 @@ export function BudgetPieChart({
                           y={cy + 4}
                           textAnchor="middle"
                           fill={theme.palette.text.primary}
-                          fontSize="20"
+                          fontSize="22"
                           fontWeight="700"
                         >
                           {formatCurrencyWhole(monthlyIncome)}
@@ -133,7 +133,7 @@ export function BudgetPieChart({
                           y={cy + 24}
                           textAnchor="middle"
                           fill={statusColor}
-                          fontSize="12"
+                          fontSize="13"
                           fontWeight="700"
                         >
                           {statusLabel}

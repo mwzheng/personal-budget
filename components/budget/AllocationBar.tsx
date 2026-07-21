@@ -110,7 +110,12 @@ export function AllocationBar({
         ))}
       </Box>
 
-      <Stack direction="row" spacing={2} sx={{ mt: 1.25 }} useFlexGap>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{ mt: 1.25, flexWrap: "wrap", rowGap: 1 }}
+        useFlexGap
+      >
         {segments.map(({ category, amount, pct }) => (
           <Stack
             key={category}
@@ -120,20 +125,20 @@ export function AllocationBar({
           >
             <Box
               sx={{
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 borderRadius: "50%",
                 bgcolor: CATEGORY_COLORS[category],
                 flexShrink: 0,
               }}
             />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="body2" fontWeight={600}>
               {CATEGORY_LABELS[category]}:
             </Typography>
-            <Typography variant="caption" fontWeight={600}>
+            <Typography variant="body2" fontWeight={600}>
               {formatCurrencyWhole(amount)}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="body2" color="text.secondary">
               ({pct.toFixed(0)}%)
             </Typography>
           </Stack>
@@ -142,21 +147,21 @@ export function AllocationBar({
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Box
               sx={{
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 borderRadius: "50%",
                 bgcolor: CATEGORY_COLORS.Saving,
                 flexShrink: 0,
                 opacity: 0.6,
               }}
             />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="body2" fontWeight={600}>
               Unallocated:
             </Typography>
-            <Typography variant="caption" fontWeight={600}>
+            <Typography variant="body2" fontWeight={600}>
               {formatCurrencyWhole(leftoverSavings)}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="body2" color="text.secondary">
               ({savingsPct.toFixed(0)}%)
             </Typography>
           </Stack>

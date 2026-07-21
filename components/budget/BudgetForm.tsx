@@ -15,8 +15,10 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import UndoIcon from "@mui/icons-material/Undo";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { StatusAlert } from "@/components/ui/StatusAlert";
+import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -37,7 +39,7 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CATEGORY_COLORS,
@@ -49,7 +51,7 @@ import {
   parseSankeyPathSegments,
 } from "@/lib/utils/budget-planner";
 import { BudgetExpense, CategoryType } from "@/lib/types/types";
-import { formatCurrencyWhole } from "@/lib/utils/format";
+import { formatCurrency, formatCurrencyWhole } from "@/lib/utils/format";
 
 interface Props {
   value: BudgetDraft;
@@ -77,6 +79,46 @@ const SECONDARY_FORM_ACTION_BUTTON_SX = {
 };
 const HELP_TITLE_ID = "flow-path-help-title";
 const HELP_DESC_ID = "flow-path-help-description";
+
+const DEFAULT_FLOW_SUGGESTIONS = [
+  "Housing",
+  "Housing > Rent",
+  "Housing > Utilities",
+  "Food",
+  "Food > Groceries",
+  "Food > Dining Out",
+  "Transport",
+  "Transport > Gas",
+  "Transport > Public Transit",
+  "Transport > Car Payment",
+  "Utilities",
+  "Utilities > Electric",
+  "Utilities > Internet",
+  "Utilities > Phone",
+  "Entertainment",
+  "Entertainment > Streaming",
+  "Entertainment > Games",
+  "Healthcare",
+  "Healthcare > Insurance",
+  "Healthcare > Medications",
+  "Education",
+  "Subscriptions",
+  "Subscriptions > AI Tools",
+  "Subscriptions > Software",
+  "Personal",
+  "Personal > Clothing",
+  "Personal > Gym",
+  "Insurance",
+  "Insurance > Life",
+  "Insurance > Home",
+  "Debt",
+  "Debt > Student Loans",
+  "Debt > Credit Card",
+  "Savings",
+  "Savings > Emergency Fund",
+  "Savings > Retirement",
+  "Savings > Investment",
+];
 
 interface DeletedExpense {
   expense: BudgetExpense;
@@ -251,6 +293,20 @@ export function BudgetForm({
     !value.expenses.some(hasBudgetRowContent) &&
     !value.name.trim();
 
+  const flowPathSuggestions = useMemo(() => {
+    const existingPaths = new Set<string>();
+    for (const expense of value.expenses) {
+      const group = expense.group?.trim();
+      if (group) {
+        existingPaths.add(group);
+      }
+    }
+    const defaults = DEFAULT_FLOW_SUGGESTIONS.filter(
+      (s) => !existingPaths.has(s),
+    );
+    return [...Array.from(existingPaths), ...defaults].sort();
+  }, [value.expenses]);
+
   return (
     <Stack spacing={2.5}>
       <Stack
@@ -264,6 +320,14 @@ export function BudgetForm({
           onChange={(event) => updateDraft("name", event.target.value)}
           size="small"
           sx={{ flex: { xs: 1, sm: 1.5 } }}
+          slotProps={{
+            inputLabel: {
+              sx: {
+                color: "text.primary",
+                "&.Mui-focused": { color: "primary.main" },
+              },
+            },
+          }}
         />
         <TextField
           label="Monthly Income"
@@ -279,6 +343,12 @@ export function BudgetForm({
               startAdornment: (
                 <InputAdornment position="start">$</InputAdornment>
               ),
+            },
+            inputLabel: {
+              sx: {
+                color: "text.primary",
+                "&.Mui-focused": { color: "primary.main" },
+              },
             },
           }}
         />
@@ -385,7 +455,8 @@ export function BudgetForm({
                   <TableHead>
                     <TableRow>
                       <TableCell
-                        width="32%"
+                        align="center"
+                        width="26%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -395,7 +466,8 @@ export function BudgetForm({
                         Expense
                       </TableCell>
                       <TableCell
-                        width="20%"
+                        align="center"
+                        width="17%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -405,7 +477,19 @@ export function BudgetForm({
                         Amount
                       </TableCell>
                       <TableCell
-                        width="30%"
+                        align="center"
+                        width="15%"
+                        sx={{
+                          textTransform: "none",
+                          letterSpacing: 0,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Yearly
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        width="25%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -416,6 +500,7 @@ export function BudgetForm({
                           sx={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
                             gap: 0.75,
                           }}
                         >
@@ -457,8 +542,8 @@ export function BudgetForm({
                         </Box>
                       </TableCell>
                       <TableCell
-                        align="right"
-                        width="18%"
+                        align="center"
+                        width="17%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -600,25 +685,54 @@ export function BudgetForm({
                             </Box>
                           </TableCell>
                           <TableCell>
-                            <TextField
-                              placeholder="Optional"
-                              value={expense.group ?? ""}
-                              onChange={(event) =>
-                                updateExpenseRow(
-                                  expense.expenseId,
-                                  "group",
-                                  event.target.value,
-                                )
-                              }
-                              margin="dense"
-                              size="small"
-                              fullWidth
-                              inputProps={{
-                                title: parsedSegments.length
-                                  ? parsedSegments.join(" > ")
-                                  : (expense.group ?? ""),
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                textAlign: "center",
+                                fontWeight: 500,
+                                fontVariantNumeric: "tabular-nums",
                               }}
-                            />
+                            >
+                              {formatCurrency(Number(expense.amount) * 12)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Stack spacing={0.5}>
+                              <Autocomplete
+                                freeSolo
+                                options={flowPathSuggestions}
+                                inputValue={expense.group ?? ""}
+                                onInputChange={(_event, newValue) =>
+                                  updateExpenseRow(
+                                    expense.expenseId,
+                                    "group",
+                                    newValue,
+                                  )
+                                }
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    placeholder="e.g. Housing > Rent"
+                                    margin="dense"
+                                    size="small"
+                                  />
+                                )}
+                                renderTags={(value, getTagProps) =>
+                                  value.map((option, index) => (
+                                    <Chip
+                                      {...getTagProps({ index })}
+                                      key={option}
+                                      label={option}
+                                      size="small"
+                                      sx={{ height: 20 }}
+                                    />
+                                  ))
+                                }
+                                size="small"
+                                sx={{ flex: 1 }}
+                              />
+                            </Stack>
                           </TableCell>
                           <TableCell align="right">
                             <Stack
@@ -894,6 +1008,10 @@ export function BudgetForm({
               <Typography component="li" variant="body2" sx={{ mb: 1 }}>
                 Do not include the expense name in the path; the{" "}
                 <strong>Expense</strong> column is the final leaf.
+              </Typography>
+              <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                Start typing to see suggestions from your existing paths and
+                common categories.
               </Typography>
             </Box>
 

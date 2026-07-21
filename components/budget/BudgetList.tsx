@@ -11,7 +11,6 @@ import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
@@ -211,7 +210,14 @@ export function BudgetList({
           <Grid container spacing={2}>
             {Array.from({ length: 3 }, (_, i) => (
               <Grid item key={`card-skeleton-${i}`} xs={12} sm={6} md={4}>
-                <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    borderLeft: "3px solid",
+                    borderLeftColor: "action.hover",
+                  }}
+                >
                   <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
                     <Box
                       sx={{
@@ -353,38 +359,42 @@ export function BudgetList({
               >
                 <Card
                   variant="outlined"
+                  onClick={() => onLoad?.(budget)}
+                  aria-label={`Load budget ${budget.name}`}
                   sx={{
                     borderRadius: 2,
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
-                    transition: "all 0.2s ease-in-out",
+                    cursor: "pointer",
+                    borderLeft: "3px solid",
+                    borderLeftColor: "primary.main",
+                    transition: "all 0.15s ease-in-out",
                     "&:hover": {
                       borderColor: "primary.dark",
-                      boxShadow: 2,
+                      bgcolor: "action.hover",
                     },
                   }}
                 >
-                  <CardActionArea
-                    onClick={() => onLoad?.(budget)}
-                    aria-label={`Load budget ${budget.name}`}
+                  <CardContent
                     sx={{
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "stretch",
-                      p: 2,
+                      p: 2.5,
+                      "&:last-child": { pb: 2.5 },
                     }}
                   >
                     <Typography
-                      variant="subtitle2"
+                      variant="subtitle1"
                       fontWeight={600}
-                      sx={{ lineHeight: 1.3, mb: 1 }}
+                      sx={{ lineHeight: 1.3, mb: 1.5 }}
                     >
                       {budget.name}
                     </Typography>
 
-                    <Stack spacing={0.5} sx={{ mt: "auto" }}>
+                    <Stack spacing={0.75} sx={{ mt: "auto" }}>
                       <Typography variant="body2" fontWeight={700}>
                         {formatCurrencyWhole(normalized.monthlyIncome)}{" "}
                         <Typography
@@ -401,7 +411,7 @@ export function BudgetList({
                         {relativeTime ? ` · ${relativeTime}` : ""}
                       </Typography>
                     </Stack>
-                  </CardActionArea>
+                  </CardContent>
 
                   <Divider />
 
@@ -410,8 +420,8 @@ export function BudgetList({
                       display: "flex",
                       gap: 0.5,
                       justifyContent: "flex-end",
-                      px: 2,
-                      py: 1,
+                      px: 2.5,
+                      py: 1.5,
                     }}
                     onClick={(event) => event.stopPropagation()}
                   >

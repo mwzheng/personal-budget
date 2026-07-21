@@ -40,9 +40,9 @@ describe("getSankeyLayoutMetrics", () => {
     const largeMetrics = getSankeyLayoutMetrics(createBudgetFlow(100));
 
     expect(normalMetrics.nodeThickness).toBe(largeMetrics.nodeThickness);
-    expect(largeMetrics.nodeThickness).toBeLessThanOrEqual(18);
-    expect(largeMetrics.nodeSpacing).toBeLessThanOrEqual(18);
-    expect(largeMetrics.leftMargin).toBeGreaterThanOrEqual(56);
+    expect(largeMetrics.nodeThickness).toBeLessThanOrEqual(12);
+    expect(largeMetrics.nodeSpacing).toBeLessThanOrEqual(12);
+    expect(largeMetrics.leftMargin).toBeGreaterThanOrEqual(40);
     expect(largeMetrics.rightMargin).toBeGreaterThan(largeMetrics.leftMargin);
   });
 
@@ -64,11 +64,11 @@ describe("getSankeyLayoutMetrics", () => {
 
     const metrics = getSankeyLayoutMetrics(denseData);
 
-    expect(metrics.nodeSpacing).toBeLessThanOrEqual(14);
-    expect(metrics.height).toBeLessThan(1200);
-    expect(metrics.height).toBeGreaterThanOrEqual(540);
-    expect(metrics.chartMaxWidth).toBeGreaterThanOrEqual(900);
-    expect(metrics.chartMaxWidth).toBeLessThanOrEqual(1360);
+    expect(metrics.nodeSpacing).toBeLessThanOrEqual(12);
+    expect(metrics.height).toBeLessThan(600);
+    expect(metrics.height).toBeGreaterThanOrEqual(320);
+    expect(metrics.chartMaxWidth).toBeGreaterThanOrEqual(600);
+    expect(metrics.chartMaxWidth).toBeLessThanOrEqual(960);
   });
 
   it("keeps labels readable while preserving softer chart framing", () => {
@@ -92,8 +92,8 @@ describe("getSankeyLayoutMetrics", () => {
 
     const metrics = getSankeyLayoutMetrics(longLabelData);
 
-    expect(metrics.labelFontSize).toBe(11);
-    expect(metrics.leftMargin).toBeGreaterThanOrEqual(56);
-    expect(metrics.rightMargin).toBeLessThanOrEqual(320);
+    expect(metrics.labelFontSize).toBe(9);
+    expect(metrics.leftMargin).toBeGreaterThanOrEqual(40);
+    expect(metrics.rightMargin).toBeLessThanOrEqual(200);
   });
 });
