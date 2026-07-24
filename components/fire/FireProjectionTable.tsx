@@ -62,25 +62,25 @@ export default function FireProjectionTable({ rows }: Props) {
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Projected Start
+                Start
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Planned Contributions
+                Added
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Projected Growth
+                Growth
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Projected End (Future $)
+                End
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Projected End (Today&apos;s $)
+                Today&apos;s $
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                Actual End
+                Actual
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
-                FIRE Target (Future $)
+                Target
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 700 }}>
                 Status

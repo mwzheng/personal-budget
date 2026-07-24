@@ -101,6 +101,19 @@ describe("generateProjection", () => {
     expect(summary.fireNumber).toBe(500_000);
   });
 
+  it("does not mark a projection as FIREd when no target exists", () => {
+    const scenario = buildScenario({
+      annualExpenses: 40_000,
+      withdrawalRate: 0,
+      targetFireNumber: null,
+      projectionYears: 3,
+    });
+    const { rows, summary } = generateProjection(scenario);
+    expect(summary.fireNumber).toBe(0);
+    expect(summary.yearsToFire).toBeNull();
+    expect(rows.every((row) => !row.isFIREd)).toBe(true);
+  });
+
   it("marks isFIREd when balance exceeds FIRE number", () => {
     const scenario = buildScenario({
       currentBalance: 900_000,

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
 import InputAdornment from "@mui/material/InputAdornment";
 import Slider from "@mui/material/Slider";
 import Stack from "@mui/material/Stack";
@@ -90,6 +91,9 @@ export default function FireForm({
 
   return (
     <Stack spacing={2.5}>
+      <Typography variant="overline" color="text.secondary">
+        Core plan
+      </Typography>
       <TextField
         label="Scenario Name"
         value={values.name}
@@ -156,6 +160,10 @@ export default function FireForm({
         max={20}
       />
 
+      <Divider />
+      <Typography variant="overline" color="text.secondary">
+        Planning assumptions
+      </Typography>
       <RateSlider
         label="Annual Inflation Rate"
         value={values.annualInflationRate}
@@ -172,6 +180,10 @@ export default function FireForm({
         step={0.25}
       />
 
+      <Divider />
+      <Typography variant="overline" color="text.secondary">
+        Target
+      </Typography>
       <Box>
         <TextField
           label="Target FIRE Number (override)"

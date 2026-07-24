@@ -24,11 +24,11 @@ import type { FireProjectionRow } from "@/lib/types/types";
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 export const FIRE_CHART_LABELS = {
-  projectedNominal: "Projected balance (future dollars)",
-  projectedReal: "Projected balance (today's dollars)",
-  fireTarget: "FIRE target (future dollars)",
-  actualBalance: "Actual recorded balance",
-  actualMilestone: "Actual milestone reached",
+  projectedNominal: "Projected",
+  projectedReal: "Today’s $",
+  fireTarget: "Target",
+  actualBalance: "Actual",
+  actualMilestone: "Milestone",
 } as const;
 
 export interface ActualMilestone {
@@ -181,7 +181,7 @@ export default function FireProjectionChart({
       : null;
 
   return (
-    <ChartWrapper title="FIRE Projection">
+    <ChartWrapper title="Portfolio projection">
       <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
@@ -267,21 +267,23 @@ export default function FireProjectionChart({
             />
 
             {/* FIRE target line in future dollars — dashed red */}
-            <Line
-              type="monotone"
-              dataKey="fireTarget"
-              stroke="#ef5350"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeDasharray="4 4"
-              dot={false}
-              connectNulls={false}
-              name={FIRE_CHART_LABELS.fireTarget}
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
-              animationDuration={1500}
-              animationEasing="ease-in-out"
-              animationBegin={400}
-            />
+            {fireNumber > 0 && (
+              <Line
+                type="monotone"
+                dataKey="fireTarget"
+                stroke="#ef5350"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeDasharray="4 4"
+                dot={false}
+                connectNulls={false}
+                name={FIRE_CHART_LABELS.fireTarget}
+                activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                animationDuration={1500}
+                animationEasing="ease-in-out"
+                animationBegin={400}
+              />
+            )}
 
             {/* Actual recorded balances — solid orange */}
             {hasActualData && (
@@ -318,12 +320,14 @@ export default function FireProjectionChart({
             )}
 
             {/* Horizontal FIRE number line */}
-            <ReferenceLine
-              y={fireNumber}
-              stroke="#ef5350"
-              strokeWidth={1}
-              strokeDasharray="2 2"
-            />
+            {fireNumber > 0 && (
+              <ReferenceLine
+                y={fireNumber}
+                stroke="#ef5350"
+                strokeWidth={1}
+                strokeDasharray="2 2"
+              />
+            )}
 
             {/* Actual milestone markers (dots at $1M crossings) */}
             {actualMilestones.map((ms) => (

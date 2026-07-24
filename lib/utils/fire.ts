@@ -50,6 +50,7 @@ export function generateProjection(
     targetFireNumber != null && targetFireNumber > 0
       ? targetFireNumber
       : calculateFireNumber(annualExpenses, withdrawalRate);
+  const hasFireTarget = baseFireNumber > 0;
 
   const monthlyRate =
     annualReturnRate > 0 ? Math.pow(1 + annualReturnRate, 1 / 12) - 1 : 0;
@@ -75,7 +76,7 @@ export function generateProjection(
     const growth = balance - startBalance - yearContributions;
     const inflationFactor = Math.pow(1 + annualInflationRate, year);
     const fireNumber = baseFireNumber * inflationFactor;
-    const isFIREd = balance >= fireNumber;
+    const isFIREd = hasFireTarget && balance >= fireNumber;
 
     if (isFIREd && firstFireYear === null) {
       firstFireYear = year;
