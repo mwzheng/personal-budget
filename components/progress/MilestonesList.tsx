@@ -1,19 +1,13 @@
 "use client";
 
-// Note 1: MilestonesList has been redesigned from a two-column card grid into
-// a single-column vertical timeline. Entries are sorted year DESC (null last),
-// then age DESC within the same year. Only create and delete are supported;
-// the current API has no edit endpoint for milestones.
-
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
-import { Box, Button, Stack, Typography } from "@mui/material";
-import MilestoneForm from "@/components/forms/MilestoneForm";
-import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
-import { SectionHeader } from "@/components/progress/SectionHeader";
+import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
+import MilestoneTrack from "@/components/progress/MilestoneTrack";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
@@ -27,18 +21,35 @@ interface MilestonesApiResponse {
   error?: string;
 }
 
-/** Sort milestones by amount ascending so the timeline makes sense as a savings progression. */
+interface Props {
+  /** Milestones fetched by the parent page. */
+  milestones: MilestoneEntry[];
+  /** Loading state from the parent page. */
+  loading?: boolean;
+  /** Goal target amount — used by the horizontal track to define the scale. */
+  goalTargetAmount?: number | null;
+  /** Current saved amount — used to show reached/unreached state. */
+  currentAmount?: number | null;
+  /** Called after a milestone is deleted so the parent can refresh. */
+  onMilestonesChanged?: () => void;
+}
+
 function sortMilestones(entries: MilestoneEntry[]): MilestoneEntry[] {
   return [...entries].sort((a, b) => (a.amount ?? 0) - (b.amount ?? 0));
 }
 
-export default function MilestonesList() {
-  // Note 2: The dialog only owns form input state while the list keeps the
-  // fetched milestones. That way closing the popup never discards loaded data.
-  const [items, setItems] = useState<MilestoneEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+function fmt(n: number): string {
+  return `$${n.toLocaleString()}`;
+}
+
+export default function MilestonesList({
+  milestones,
+  loading = false,
+  goalTargetAmount = null,
+  currentAmount = null,
+  onMilestonesChanged,
+}: Props) {
   const [error, setError] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const {
     candidate: deleteCandidate,
     requestDelete,
@@ -64,7 +75,7 @@ export default function MilestonesList() {
         if (!data.ok) {
           throw new Error(data.error || "Delete failed");
         }
-        await fetchItems();
+        onMilestonesChanged?.();
       } catch (deleteError) {
         setError(
           deleteError instanceof Error
@@ -75,169 +86,183 @@ export default function MilestonesList() {
     },
   });
 
-  const fetchItems = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/api/progress/milestones");
-      const data = (await res.json()) as MilestonesApiResponse;
-      if (!data.ok) throw new Error(data.error || "Failed to load");
-      setItems(data.entries ?? []);
-    } catch (fetchError) {
-      setError(
-        fetchError instanceof Error ? fetchError.message : String(fetchError),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchItems();
-  }, []);
-
-  const handleSaved = async () => {
-    setDialogOpen(false);
-    await fetchItems();
-  };
-
-  const sorted = sortMilestones(items);
+  const sorted = sortMilestones(milestones);
 
   return (
     <Box>
-      <SectionHeader
-        title="Milestones"
-        sx={{ mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => setDialogOpen(true)}
-          >
-            Add Milestone
-          </Button>
-        }
-      />
+      {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
-      {dialogOpen ? (
-        <ProgressEntryDialog
-          open={dialogOpen}
-          title="Add Milestone"
-          onClose={() => setDialogOpen(false)}
-        >
-          <MilestoneForm
-            onSaved={handleSaved}
-            onCancel={() => setDialogOpen(false)}
+      {loading ? (
+        <Stack spacing={2}>
+          <Skeleton
+            variant="rectangular"
+            height={48}
+            sx={{ borderRadius: 1 }}
           />
-        </ProgressEntryDialog>
-      ) : null}
-
-      {error ? (
-        <StatusAlert message={error} onClose={() => setError(null)} />
-      ) : null}
-
-      {items.length === 0 && !loading ? (
+          <Skeleton
+            variant="rectangular"
+            height={48}
+            sx={{ borderRadius: 1 }}
+          />
+          <Skeleton
+            variant="rectangular"
+            height={48}
+            sx={{ borderRadius: 1 }}
+          />
+        </Stack>
+      ) : milestones.length === 0 ? (
         <EmptyState icon={<FlagOutlinedIcon />} message="No milestones yet." />
-      ) : null}
+      ) : (
+        <>
+          <Box sx={{ mb: 3 }}>
+            <MilestoneTrack
+              milestones={milestones}
+              currentAmount={currentAmount}
+              goalTargetAmount={goalTargetAmount}
+            />
+          </Box>
 
-      {/* Note 3: Vertical timeline — left rail (dot + connector line) + right content.
-          The connector line is hidden on the last item so the rail ends cleanly. */}
-      <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }}>
-        {sorted.map((item, index) => {
-          const isLast = index === sorted.length - 1;
-          return (
-            <Box
-              component="li"
-              key={item.milestoneId}
-              sx={{ display: "flex", gap: 2 }}
-            >
-              {/* Left rail: dot + connector */}
-              <Box
-                aria-hidden="true"
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  flexShrink: 0,
-                  pt: 0.25,
-                }}
-              >
-                <RadioButtonCheckedIcon
-                  sx={{ color: "primary.main", fontSize: 20 }}
-                />
-                {!isLast && (
-                  <Box
-                    sx={{
-                      width: 2,
-                      flexGrow: 1,
-                      minHeight: 24,
-                      bgcolor: "divider",
-                      mt: 0.5,
-                      mb: 0.5,
-                    }}
-                  />
-                )}
-              </Box>
-
-              {/* Right content */}
-              <Box sx={{ pb: isLast ? 0 : 2.5, flexGrow: 1, minWidth: 0 }}>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
+          <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {sorted.map((item, index) => {
+              const isLast = index === sorted.length - 1;
+              const reached =
+                currentAmount !== null && item.amount <= currentAmount;
+              const distance =
+                currentAmount !== null
+                  ? Math.abs(item.amount - currentAmount)
+                  : null;
+              return (
+                <Box
+                  component="li"
+                  key={item.milestoneId}
+                  sx={{ display: "flex", gap: 2 }}
                 >
-                  <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
-                    ${Number(item.amount).toLocaleString()}
-                  </Typography>
-                  <ActionIconButton
-                    tooltip="Delete"
-                    ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
-                    tone="danger"
-                    onClick={() =>
-                      requestDelete({
-                        milestoneId: item.milestoneId,
-                        year: item.year,
-                      })
-                    }
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      flexShrink: 0,
+                      pt: 0.25,
+                    }}
                   >
-                    <DeleteOutlineRoundedIcon fontSize="small" />
-                  </ActionIconButton>
-                </Stack>
+                    {reached ? (
+                      <CheckCircleOutlineIcon
+                        sx={{ color: "success.main", fontSize: 20 }}
+                      />
+                    ) : (
+                      <RadioButtonCheckedIcon
+                        sx={{ color: "primary.main", fontSize: 20 }}
+                      />
+                    )}
+                    {!isLast && (
+                      <Box
+                        sx={{
+                          width: 2,
+                          flexGrow: 1,
+                          minHeight: 24,
+                          bgcolor: "divider",
+                          mt: 0.5,
+                          mb: 0.5,
+                        }}
+                      />
+                    )}
+                  </Box>
 
-                {/* Secondary metadata: year and/or age */}
-                {item.year || item.age ? (
-                  <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
-                    {item.year ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Year {item.year}
-                      </Typography>
-                    ) : null}
-                    {item.age ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Age {item.age}
-                      </Typography>
-                    ) : null}
-                  </Stack>
-                ) : null}
+                  <Box sx={{ pb: isLast ? 0 : 2.5, flexGrow: 1, minWidth: 0 }}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="flex-start"
+                      spacing={1}
+                    >
+                      <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                        >
+                          <Typography
+                            variant="h6"
+                            fontWeight={700}
+                            lineHeight={1.2}
+                          >
+                            {fmt(item.amount)}
+                          </Typography>
+                          {reached ? (
+                            <Chip
+                              label="Reached"
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                              sx={{ height: 22, fontSize: "0.7rem" }}
+                            />
+                          ) : distance !== null ? (
+                            <Chip
+                              label={`${fmt(distance)} away`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ height: 22, fontSize: "0.7rem" }}
+                            />
+                          ) : null}
+                        </Stack>
 
-                {/* Optional note */}
-                {item.note ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 0.75, fontStyle: "italic" }}
-                  >
-                    {item.note}
-                  </Typography>
-                ) : null}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+                        {item.year || item.age ? (
+                          <Stack direction="row" spacing={1.5}>
+                            {item.year ? (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Year {item.year}
+                              </Typography>
+                            ) : null}
+                            {item.age ? (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Age {item.age}
+                              </Typography>
+                            ) : null}
+                          </Stack>
+                        ) : null}
 
-      {/* Note 4: Delete is a two-step flow; confirmDelete performs the API call
-          only after the user confirms in the ConfirmDialog. */}
+                        {item.note ? (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontStyle: "italic" }}
+                          >
+                            {item.note}
+                          </Typography>
+                        ) : null}
+                      </Stack>
+
+                      <ActionIconButton
+                        tooltip="Delete"
+                        ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
+                        tone="danger"
+                        onClick={() =>
+                          requestDelete({
+                            milestoneId: item.milestoneId,
+                            year: item.year,
+                          })
+                        }
+                      >
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                      </ActionIconButton>
+                    </Stack>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </>
+      )}
+
       <ConfirmDialog
         open={Boolean(deleteCandidate)}
         title="Delete Milestone"
