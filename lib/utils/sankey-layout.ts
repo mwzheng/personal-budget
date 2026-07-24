@@ -84,33 +84,25 @@ export function getSankeyLayoutMetrics(data: SankeyData): SankeyLayoutMetrics {
     ...labels.map((label) => String(label).length),
   );
 
-  const nodeThickness = maxDepth >= 5 ? 12 : maxDepth >= 4 ? 14 : 16;
+  const nodeThickness = maxDepth >= 5 ? 8 : maxDepth >= 4 ? 10 : 12;
   const nodeSpacing =
-    maxNodesInLayer >= 12 ? 10 : maxNodesInLayer >= 8 ? 14 : 18;
+    maxNodesInLayer >= 12 ? 8 : maxNodesInLayer >= 8 ? 10 : 12;
   const nodeInnerPadding = 0;
-  // Note 2: Increased height multiplier to make flow bands thicker and easier to hover over.
-  // Changed from 40 to 60 per node, and base from 180 to 240, allowing max height of 1200.
   const height = Math.min(
-    1200,
-    Math.max(540, 240 + maxNodesInLayer * 60 + Math.max(maxDepth - 3, 0) * 32),
+    600,
+    Math.max(320, 120 + maxNodesInLayer * 30 + Math.max(maxDepth - 3, 0) * 12),
   );
-  /**
-   * Note 3: Outside labels naturally pull the chart's visual weight to the
-   * right. We keep a healthy right margin for readable labels, but add a
-   * smaller balancing left margin and a centered max width so the graph still
-   * feels centered inside the card on wider viewports.
-   */
-  const rightMargin = Math.min(320, Math.max(132, 76 + maxLabelLength * 6));
+  const rightMargin = Math.min(240, Math.max(100, 60 + maxLabelLength * 5));
   const leftMargin = Math.min(
-    164,
-    Math.max(56, Math.round(rightMargin * (maxDepth >= 4 ? 0.5 : 0.42))),
+    120,
+    Math.max(50, Math.round(rightMargin * (maxDepth >= 4 ? 0.5 : 0.42))),
   );
   const chartMaxWidth = Math.min(
-    1360,
-    Math.max(900, 760 + maxDepth * 120 + maxLabelLength * 6),
+    1100,
+    Math.max(600, 500 + maxDepth * 80 + maxLabelLength * 5),
   );
   const labelFontSize =
-    maxLabelLength > 28 ? 11 : maxLabelLength > 20 ? 12 : 13;
+    maxLabelLength > 20 ? 10 : maxLabelLength > 14 ? 11 : 12;
 
   return {
     height,

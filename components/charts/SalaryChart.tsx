@@ -79,7 +79,7 @@ export default function SalaryChart({
 
   if (loading) {
     return (
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ height: "100%" }}>
         <ChartLoadingState height={320} legendItems={2} />
       </Box>
     );
@@ -90,8 +90,7 @@ export default function SalaryChart({
       <Box
         sx={{
           width: "100%",
-          minHeight: 220,
-          mb: 2,
+          minHeight: 320,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -108,7 +107,7 @@ export default function SalaryChart({
 
   return (
     <ChartWrapper title="Salary History">
-      <Box sx={{ width: "100%", height: 320, mb: 2, mx: "auto" }}>
+      <Box sx={{ width: "100%", height: "100%", minHeight: 320, mx: "auto" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -139,7 +138,7 @@ export default function SalaryChart({
             <Line
               type="monotone"
               dataKey="amount"
-              stroke="#4caf50"
+              stroke={SERVER_THEME_TOKENS.chart.palette[0]}
               strokeWidth={2}
               strokeLinecap="round"
               dot
@@ -150,7 +149,7 @@ export default function SalaryChart({
             <Line
               type="monotone"
               dataKey="yoy"
-              stroke="#ff9800"
+              stroke={SERVER_THEME_TOKENS.chart.palette[2]}
               strokeWidth={2}
               strokeLinecap="round"
               dot

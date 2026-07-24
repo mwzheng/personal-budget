@@ -1,8 +1,3 @@
-/**
- * Note 1: This helper keeps the transaction-to-calendar projection pure so the
- * reports page and future tests can assert labels, colors, and accessibility
- * text without having to mount FullCalendar or mock browser DOM APIs.
- */
 import { format, isValid, parseISO } from "date-fns";
 
 import type { Transaction, TransactionCategoryType } from "@/lib/types/types";
@@ -55,9 +50,6 @@ export function mapTransactionsToCalendarEvents(
   return transactions.flatMap((transaction) => {
     const parsedDate = parseISO(transaction.date);
 
-    // Note 2: Calendar rendering is stricter than the table view because each
-    // event must anchor to a real day. Invalid imported dates are skipped here so
-    // a single bad record does not crash the whole reports page.
     if (!isValid(parsedDate)) {
       return [];
     }

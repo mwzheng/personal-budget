@@ -28,7 +28,7 @@ import { parseSankeyPathSegments } from "./budget-normalizer";
 
 export const CATEGORY_COLORS: Record<CategoryType, string> = {
   Need: "#ef4444",
-  Want: "#38bdf8",
+  Want: "#f59e0b",
   Saving: "#22c55e",
 };
 
@@ -36,11 +36,20 @@ export const CATEGORY_COLORS: Record<CategoryType, string> = {
 // Private color palettes and constants
 // ---------------------------------------------------------------------------
 
-const CATEGORY_SHADE_PALETTES: Record<CategoryType, string[]> = {
-  Need: ["#fca5a5", "#fda4af", "#fecaca", "#fb7185"],
-  Want: ["#7dd3fc", "#93c5fd", "#bfdbfe", "#60a5fa"],
-  Saving: ["#86efac", "#6ee7b7", "#bbf7d0", "#4ade80"],
-};
+const DISTINCT_EXPENSE_COLORS = [
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#14b8a6",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#f43f5e",
+  "#a855f7",
+  "#84cc16",
+];
 
 // Note 2: Root-branch colors are assigned deterministically via hashString so
 // the same path always renders in the same hue across page reloads and across
@@ -100,9 +109,11 @@ function slugify(value: string): string {
   );
 }
 
-function getExpensePaletteColor(category: CategoryType, index: number): string {
-  const palette = CATEGORY_SHADE_PALETTES[category];
-  return palette[index % palette.length];
+function getExpensePaletteColor(
+  _category: CategoryType,
+  index: number,
+): string {
+  return DISTINCT_EXPENSE_COLORS[index % DISTINCT_EXPENSE_COLORS.length];
 }
 
 function hashString(value: string): number {

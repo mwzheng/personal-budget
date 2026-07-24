@@ -42,7 +42,7 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error("[/api/fire GET]", err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: "Unable to load FIRE scenarios" },
       { status: 401 },
     );
   }
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[/api/fire POST]", err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: "Unable to save FIRE scenario" },
       { status: 400 },
     );
   }
@@ -112,7 +112,7 @@ export async function PUT(request: Request) {
   } catch (err) {
     console.error("[/api/fire PUT]", err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: "Unable to update FIRE scenario" },
       { status: 400 },
     );
   }
@@ -143,7 +143,7 @@ export async function DELETE(request: Request) {
   } catch (err) {
     console.error("[/api/fire DELETE]", err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: "Unable to delete FIRE scenario" },
       { status: 400 },
     );
   }

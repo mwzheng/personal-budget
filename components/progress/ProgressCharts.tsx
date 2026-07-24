@@ -6,12 +6,17 @@
 // shows end-of-year retirement totals and Salary Progression delegates to the
 // reusable SalaryChart. Only the active tab panel is mounted to avoid Recharts
 // stale-size issues inside hidden containers.
+//
+// Note 3: Milestone markers can optionally be rendered on the retirement chart
+// when the milestones prop is provided. Each marker appears as a small diamond
+// on the data line at the year the milestone amount is closest to.
 "use client";
 
 import React, { useMemo, useState } from "react";
 import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import {
   ResponsiveContainer,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -20,14 +25,18 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  ReferenceDot,
   type TooltipProps,
 } from "recharts";
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import SalaryChart from "@/components/charts/SalaryChart";
-import { SectionHeader } from "@/components/progress/SectionHeader";
-import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
+import type {
+  MilestoneEntry,
+  RetirementEntry,
+  SalaryEntry,
+} from "@/lib/types/types";
 
 interface RetirementChartRow {
   year: string;
@@ -42,6 +51,8 @@ interface Props {
   /** When set, draws a dashed reference line on the retirement chart so the
    *  user can see how far current savings are from the goal. */
   goalTargetAmount?: number | null;
+  /** Optional milestones to render as diamond markers on the retirement chart. */
+  milestones?: MilestoneEntry[];
 }
 
 type ProgressTooltipProps = TooltipProps<number, string>;
@@ -51,6 +62,37 @@ type ProgressTooltipEntry = NonNullable<
 
 const TAB_RETIREMENT = 0;
 const TAB_SALARY = 1;
+const CHART_HEIGHT = 320;
+
+/** Map milestones to chart data points. For each milestone, find the retirement
+ *  entry with the closest endAmount and use that year's data point so the marker
+ *  sits on the line. */
+function buildMilestoneMarkers(
+  milestones: MilestoneEntry[],
+  retirementData: RetirementChartRow[],
+): { year: string; retirement: number }[] {
+  if (milestones.length === 0 || retirementData.length === 0) return [];
+  // Filter to rows with non-null retirement values for comparison.
+  const validRows = retirementData.filter(
+    (r): r is RetirementChartRow & { retirement: number } =>
+      r.retirement !== null,
+  );
+  if (validRows.length === 0) return [];
+  return milestones
+    .filter((m) => m.amount > 0)
+    .map((m) => {
+      let closest = validRows[0];
+      let minDiff = Math.abs(closest.retirement - m.amount);
+      for (const row of validRows) {
+        const diff = Math.abs(row.retirement - m.amount);
+        if (diff < minDiff) {
+          closest = row;
+          minDiff = diff;
+        }
+      }
+      return { year: closest.year, retirement: m.amount };
+    });
+}
 
 export default function ProgressCharts({
   salaryEntries,
@@ -58,6 +100,7 @@ export default function ProgressCharts({
   loading = false,
   error = null,
   goalTargetAmount = null,
+  milestones = [],
 }: Props) {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState(TAB_RETIREMENT);
@@ -73,13 +116,16 @@ export default function ProgressCharts({
   const retirementData = useMemo(() => {
     return [...retirementEntries]
       .sort((a, b) => a.year - b.year)
-      .map(
-        (entry): RetirementChartRow => ({
-          year: String(entry.year),
-          retirement: entry.endAmount,
-        }),
-      );
+      .map((entry): RetirementChartRow => ({
+        year: String(entry.year),
+        retirement: entry.endAmount,
+      }));
   }, [retirementEntries]);
+
+  const milestoneMarkers = useMemo(
+    () => buildMilestoneMarkers(milestones, retirementData),
+    [milestones, retirementData],
+  );
 
   const tooltipContent = ({ active, label, payload }: ProgressTooltipProps) => {
     if (!active || !payload?.length) return null;
@@ -107,24 +153,40 @@ export default function ProgressCharts({
   };
 
   return (
-    <Box>
-      <SectionHeader title="Progress Over Time" sx={{ mb: 2 }} />
-
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+      }}
+    >
       <Tabs
         value={activeTab}
         onChange={(_, newValue: number) => setActiveTab(newValue)}
-        sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{
+          mb: 2,
+          minHeight: 40,
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          p: 0.5,
+          "& .MuiTabs-indicator": { display: "none" },
+          "& .MuiTab-root": {
+            minHeight: 36,
+            borderRadius: 0.75,
+            textTransform: "none",
+            fontWeight: 500,
+            "&.Mui-selected": {
+              bgcolor: "action.selected",
+              color: "text.primary",
+            },
+          },
+        }}
       >
-        <Tab
-          label="Retirement Growth"
-          id="chart-tab-0"
-          aria-controls="chart-panel-0"
-        />
-        <Tab
-          label="Salary Progression"
-          id="chart-tab-1"
-          aria-controls="chart-panel-1"
-        />
+        <Tab label="Savings" id="chart-tab-0" aria-controls="chart-panel-0" />
+        <Tab label="Salary" id="chart-tab-1" aria-controls="chart-panel-1" />
       </Tabs>
 
       {/* Retirement Growth panel */}
@@ -133,10 +195,10 @@ export default function ProgressCharts({
           role="tabpanel"
           id="chart-panel-0"
           aria-labelledby="chart-tab-0"
-          sx={{ width: "100%", height: 320 }}
+          sx={{ width: "100%", flex: 1, minHeight: CHART_HEIGHT }}
         >
           {loading ? (
-            <ChartLoadingState height={320} showLegend={false} />
+            <ChartLoadingState height={CHART_HEIGHT} showLegend={false} />
           ) : error ? (
             <Box
               sx={{
@@ -166,7 +228,7 @@ export default function ProgressCharts({
               </Typography>
             </Box>
           ) : (
-            <ChartWrapper title="Retirement Growth">
+            <ChartWrapper title="Savings Progress">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={retirementData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -198,10 +260,20 @@ export default function ProgressCharts({
                       }}
                     />
                   )}
+                  <Area
+                    type="monotone"
+                    dataKey="retirement"
+                    name="Retirement balance area"
+                    legendType="none"
+                    stroke="none"
+                    fill={theme.palette.primary.main}
+                    fillOpacity={0.16}
+                    isAnimationActive={false}
+                  />
                   <Line
                     type="monotone"
                     dataKey="retirement"
-                    name="Retirement End"
+                    name="Retirement balance"
                     stroke={theme.palette.primary.main}
                     strokeWidth={2}
                     strokeLinecap="round"
@@ -210,6 +282,19 @@ export default function ProgressCharts({
                     animationDuration={1500}
                     animationEasing="ease-in-out"
                   />
+                  {/* Milestone markers — small diamonds on the line */}
+                  {milestoneMarkers.map((marker) => (
+                    <ReferenceDot
+                      key={`milestone-${marker.year}-${marker.retirement}`}
+                      x={marker.year}
+                      y={marker.retirement}
+                      r={5}
+                      fill={theme.palette.secondary.main}
+                      stroke={theme.palette.background.paper}
+                      strokeWidth={2}
+                      isFront
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </ChartWrapper>
@@ -219,7 +304,12 @@ export default function ProgressCharts({
 
       {/* Salary Progression panel — delegates to reusable SalaryChart */}
       {activeTab === TAB_SALARY && (
-        <Box role="tabpanel" id="chart-panel-1" aria-labelledby="chart-tab-1">
+        <Box
+          role="tabpanel"
+          id="chart-panel-1"
+          aria-labelledby="chart-tab-1"
+          sx={{ flex: 1, minHeight: CHART_HEIGHT }}
+        >
           <SalaryChart data={salaryEntries} loading={loading} />
         </Box>
       )}

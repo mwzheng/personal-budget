@@ -1,42 +1,27 @@
-// Note 1: ReportsPage is the main data entry and analytics view. Real users read
-// and write through authenticated API routes, while demo sessions transparently
-// use the `apiFetch` demo shim so the rest of the screen can stay unchanged.
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
 import Container from "@mui/material/Container";
-import Divider from "@mui/material/Divider";
 import Fab from "@mui/material/Fab";
-import Grid from "@mui/material/Grid";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
-import {
-  differenceInCalendarDays,
-  format as formatDate,
-  parseISO,
-  subDays,
-} from "date-fns";
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
-import { FilterBar } from "@/components/ui/FilterBar";
+import { FilterBar } from "@/components/report/FilterBar";
 import PageHeader from "@/components/ui/PageHeader";
+import SectionCard from "@/components/ui/SectionCard";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
 import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
@@ -56,353 +41,27 @@ import {
   getLastSelectedReportYears,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
-import {
-  FilterParams,
-  ReportsAggregates,
-  Transaction,
-} from "@/lib/types/types";
+import { Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
 
-// Note 2: All three chart components use `{ ssr: false }` because they depend
-// on Recharts' `ResponsiveContainer` which reads `offsetWidth` from a DOM element.
-// During server-side rendering that DOM element does not exist, causing errors.
-// The `loading` prop renders a Skeleton placeholder while the bundle downloads.
-const SpendingPieChart = dynamic(
-  () =>
-    import("@/components/charts/SpendingPieChart").then(
-      (m) => m.SpendingPieChart,
-    ),
-  {
-    ssr: false,
-    loading: () => <SpendingBreakdownLoadingState />,
-  },
-);
-const SpendingBarChart = dynamic(
-  () =>
-    import("@/components/charts/SpendingBarChart").then(
-      (m) => m.SpendingBarChart,
-    ),
-  {
-    ssr: false,
-    loading: () => <ChartLoadingState height={300} legendItems={3} />,
-  },
-);
-const TagBarChart = dynamic(
-  () => import("@/components/charts/TagBarChart").then((m) => m.TagBarChart),
-  {
-    ssr: false,
-    loading: () => <ChartLoadingState height={400} showLegend={false} />,
-  },
-);
-const MonthComparisonModal = dynamic(
-  () =>
-    import("@/components/charts/MonthComparisonModal").then(
-      (m) => m.MonthComparisonModal,
-    ),
-  { ssr: false },
-);
-
-function SpendingBreakdownLoadingState() {
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-      }}
-    >
-      <Box
-        sx={{
-          width: "100%",
-          minHeight: 340,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Skeleton
-          variant="circular"
-          animation="wave"
-          width={220}
-          height={220}
-        />
-      </Box>
-      <Stack
-        direction="row"
-        justifyContent="center"
-        spacing={2.5}
-        useFlexGap
-        flexWrap="wrap"
-      >
-        {Array.from({ length: 3 }, (_, index) => (
-          <Box
-            key={`spending-breakdown-loading-${index}`}
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <Skeleton variant="circular" width={12} height={12} />
-            <Skeleton variant="text" width={72} />
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-  );
-}
-
-// Note 3: `EMPTY_AGGREGATES` is a zero-value sentinel that satisfies the
-// `ReportsAggregates` type contract when there are no transactions to aggregate.
-// Passing this to charts instead of `null` avoids null checks inside each chart
-// component, simplifying their props interface.
-const EMPTY_AGGREGATES: ReportsAggregates = {
-  totalAmount: 0,
-  spendingAmount: 0,
-  incomeAmount: 0,
-  totalByCategoryType: { Need: 0, Want: 0, Saving: 0 },
-  timeseries: [],
-  tagDiagramData: [],
-};
-
-const EMPTY_FILTERS: FilterParams = {
-  years: [],
-  startDate: null,
-  endDate: null,
-  categories: [],
-  tags: [],
-  search: "",
-};
-
-type TransactionsViewMode = "table" | "calendar";
-const PAGE_TITLE_ID = "reports-page-title";
-const PAGE_DESCRIPTION_ID = "reports-page-description";
-
-function buildYearFilters(years: string[]): FilterParams {
-  return {
-    ...EMPTY_FILTERS,
-    years,
-  };
-}
-
-function buildQuickTagFilters(
-  currentFilters: FilterParams,
-  tag: string,
-): FilterParams {
-  // Note 4: Quick-tag clicks act as a focused drill-down. Keeping the current
-  // date/search filters intact while swapping to a single selected tag makes the
-  // shortcut predictable and easy to toggle off by clicking the same tag again.
-  const nextTags =
-    currentFilters.tags.length === 1 && currentFilters.tags[0] === tag
-      ? []
-      : [tag];
-
-  return { ...currentFilters, tags: nextTags };
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  color: string;
-  loading: boolean;
-  trend?: {
-    direction: "up" | "down" | null;
-    text: string;
-    color: string;
-  } | null;
-}
-
-// Note 5: `StatCard` and `EmptyState` are defined as module-level functions
-// rather than in a separate file because they are small, single-use sub-components
-// with no state of their own. Co-locating them with their only consumer avoids
-// unnecessary file fragmentation.
-function StatCard({ label, value, color, loading, trend }: StatCardProps) {
-  return (
-    <Card>
-      <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-        {loading ? (
-          <Skeleton width={90} height={32} />
-        ) : (
-          <>
-            <Typography variant="h6" fontWeight={700} sx={{ color }}>
-              {value}
-            </Typography>
-            {trend ? (
-              <Box
-                sx={{
-                  mt: 0.5,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  minHeight: 18,
-                }}
-              >
-                {trend.direction === "up" ? (
-                  <ArrowUpwardIcon sx={{ fontSize: 14, color: trend.color }} />
-                ) : trend.direction === "down" ? (
-                  <ArrowDownwardIcon
-                    sx={{ fontSize: 14, color: trend.color }}
-                  />
-                ) : null}
-                <Typography
-                  variant="caption"
-                  sx={{ color: trend.color, lineHeight: 1.35 }}
-                >
-                  {trend.text}
-                </Typography>
-              </Box>
-            ) : null}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function buildComparablePeriodFilters(
-  filters: FilterParams,
-): FilterParams | null {
-  if (filters.startDate && filters.endDate) {
-    const startDate = parseISO(filters.startDate);
-    const endDate = parseISO(filters.endDate);
-
-    if (
-      Number.isNaN(startDate.getTime()) ||
-      Number.isNaN(endDate.getTime()) ||
-      endDate < startDate
-    ) {
-      return null;
-    }
-
-    const rangeDays = differenceInCalendarDays(endDate, startDate) + 1;
-    const previousEndDate = subDays(startDate, 1);
-    const previousStartDate = subDays(previousEndDate, rangeDays - 1);
-
-    return {
-      ...filters,
-      years: [],
-      startDate: formatDate(previousStartDate, "yyyy-MM-dd"),
-      endDate: formatDate(previousEndDate, "yyyy-MM-dd"),
-    };
-  }
-
-  if (filters.years.length === 0) {
-    return null;
-  }
-
-  const sortedYears = Array.from(
-    new Set(
-      filters.years
-        .map((year) => Number.parseInt(year, 10))
-        .filter((year) => Number.isInteger(year)),
-    ),
-  ).sort((a, b) => a - b);
-
-  if (sortedYears.length !== filters.years.length) {
-    return null;
-  }
-
-  for (let index = 1; index < sortedYears.length; index += 1) {
-    if (sortedYears[index] !== sortedYears[index - 1] + 1) {
-      return null;
-    }
-  }
-
-  const previousYears = Array.from({ length: sortedYears.length }, (_, index) =>
-    String(sortedYears[0] - sortedYears.length + index),
-  );
-
-  return {
-    ...filters,
-    years: previousYears,
-    startDate: null,
-    endDate: null,
-  };
-}
-
-function buildStatTrend(
-  currentValue: number,
-  previousValue: number,
-  positiveIsFavorable: boolean,
-) {
-  if (previousValue === 0) {
-    return {
-      direction: null,
-      text:
-        currentValue === 0
-          ? "No change vs previous period"
-          : "New vs previous period",
-      color: "text.secondary",
-    } as const;
-  }
-
-  const delta =
-    ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
-  if (delta === 0) {
-    return {
-      direction: null,
-      text: "No change vs previous period",
-      color: "text.secondary",
-    } as const;
-  }
-
-  const isIncrease = delta > 0;
-  const isFavorable = positiveIsFavorable ? isIncrease : !isIncrease;
-
-  return {
-    direction: isIncrease ? "up" : "down",
-    text: `${Math.abs(delta).toFixed(1)}% vs previous period`,
-    color: isFavorable ? "success.main" : "error.main",
-  } as const;
-}
-
-function EmptyState({
-  onAddClick,
-  onImportClick,
-}: {
-  onAddClick: () => void;
-  onImportClick: () => void;
-}) {
-  return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      py={10}
-      gap={2}
-    >
-      <Typography variant="h5" fontWeight={600} color="text.secondary">
-        No transactions yet
-      </Typography>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        textAlign="center"
-        maxWidth={400}
-      >
-        Add transactions manually or import either an expenses CSV or an income
-        CSV using the supported templates.
-      </Typography>
-      <Stack direction="row" gap={2} mt={1}>
-        <Button
-          variant="outlined"
-          startIcon={<FileUploadOutlinedIcon />}
-          onClick={onImportClick}
-        >
-          Import CSV
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={onAddClick}
-        >
-          Add Transaction
-        </Button>
-      </Stack>
-    </Box>
-  );
-}
+import SpendingBreakdownLoadingState from "@/components/report/SpendingBreakdownLoadingState";
+import EmptyState from "@/components/report/EmptyState";
+import StatCard from "@/components/report/StatCard";
+import {
+  EMPTY_AGGREGATES,
+  EMPTY_FILTERS,
+  PAGE_TITLE_ID,
+  PAGE_DESCRIPTION_ID,
+  TransactionsViewMode,
+  buildYearFilters,
+  buildQuickTagFilters,
+  buildComparablePeriodFilters,
+  buildStatTrend,
+} from "@/lib/utils/reportUtils";
+import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
+import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
+import { TagBarChart } from "@/components/charts/TagBarChart";
+import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
 
 interface TransactionsApiResponse {
   ok?: boolean;
@@ -410,11 +69,11 @@ interface TransactionsApiResponse {
   transactions?: Transaction[];
 }
 
-export default function ReportsPage() {
+const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterParams>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
@@ -422,9 +81,6 @@ export default function ReportsPage() {
   const [newTransactionDate, setNewTransactionDate] = useState<string | null>(
     null,
   );
-  // Note 6: The active view is UI-only state. Keeping it beside the filtered
-  // transaction data means the table and calendar stay perfectly in sync without
-  // triggering extra API calls or maintaining parallel copies of the same list.
   const [transactionsView, setTransactionsView] =
     useState<TransactionsViewMode>("table");
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
@@ -432,10 +88,10 @@ export default function ReportsPage() {
   const [compareOpen, setCompareOpen] = useState(false);
   const router = useRouter();
 
-  function applyTransactions(
+  const applyTransactions = (
     transactions: Transaction[],
     opts?: { resetFilters?: boolean },
-  ) {
+  ) => {
     setAllTransactions(transactions);
 
     if (opts?.resetFilters) {
@@ -445,20 +101,22 @@ export default function ReportsPage() {
       );
       setFilters(buildYearFilters(resolvedYears));
     }
-  }
+  };
 
-  async function loadTransactions(opts?: { resetFilters?: boolean }) {
+  const loadTransactions = async (opts?: { resetFilters?: boolean }) => {
     setLoading(true);
     setErrorMessage(null);
 
     try {
       const res = await apiFetch("/api/transactions");
+
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
         return;
       }
 
       const data = (await res.json()) as TransactionsApiResponse;
+
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "Failed to load transactions");
       }
@@ -471,23 +129,17 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
-    // Note 7: `isAuthenticated()` now covers both real Cognito tokens and the
-    // dedicated demo-session flag, so protected pages accept demo mode without
-    // having to know how that browser-only session is implemented.
     if (!disableAuth && !isAuthenticated()) {
       router.replace("/auth/login");
       return;
     }
 
     void loadTransactions({ resetFilters: true });
-    // Note 8: The initial load should happen once on mount. `router` is stable
-    // enough for this redirect flow, and the inline async call avoids reading
-    // transaction data from browser storage before the auth-scoped API responds.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -495,7 +147,7 @@ export default function ReportsPage() {
     setTransactionsView(getLastSelectedReportTransactionsView());
   }, []);
 
-  async function handleSaveTransaction(t: Transaction) {
+  const handleSaveTransaction = async (t: Transaction) => {
     const wasEmpty = allTransactions.length === 0;
     setErrorMessage(null);
 
@@ -507,10 +159,8 @@ export default function ReportsPage() {
           editTarget ? { ...t, originalDate: editTarget.date } : t,
         ),
       });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
+
+      const data = (await res.json()) as { ok?: boolean; error?: string };
 
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
@@ -530,21 +180,21 @@ export default function ReportsPage() {
         error instanceof Error ? error.message : "Failed to save transaction",
       );
     }
-  }
+  };
 
-  function handleEditTransaction(t: Transaction) {
+  const handleEditTransaction = (t: Transaction) => {
     setNewTransactionDate(null);
     setEditTarget(t);
     setFormOpen(true);
-  }
+  };
 
-  function handleAddTransaction(date?: string) {
+  const handleAddTransaction = (date?: string) => {
     setEditTarget(undefined);
     setNewTransactionDate(date ?? null);
     setFormOpen(true);
-  }
+  };
 
-  async function handleDeleteTransaction(id: string) {
+  const handleDeleteTransaction = async (id: string) => {
     const transaction = allTransactions.find((item) => item.id === id);
     if (!transaction) return false;
 
@@ -556,10 +206,7 @@ export default function ReportsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, date: transaction.date }),
       });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
+      const data = (await res.json()) as { ok?: boolean; error?: string };
 
       if (res.status === 401 || res.status === 403) {
         router.replace("/auth/login");
@@ -578,15 +225,15 @@ export default function ReportsPage() {
       );
       return false;
     }
-  }
+  };
 
-  function handleFormClose() {
+  const handleFormClose = () => {
     setFormOpen(false);
     setEditTarget(undefined);
     setNewTransactionDate(null);
-  }
+  };
 
-  async function handleExport() {
+  const handleExport = async () => {
     setErrorMessage(null);
 
     try {
@@ -595,9 +242,8 @@ export default function ReportsPage() {
         params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
-      if (filters.categories.length > 0) {
+      if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
-      }
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
       if (filters.search) params.set("search", filters.search);
 
@@ -631,16 +277,12 @@ export default function ReportsPage() {
           : "Failed to export transactions",
       );
     }
-  }
+  };
 
-  function handleQuickTagFilter(tag: string) {
+  const handleQuickTagFilter = (tag: string) => {
     setFilters((currentFilters) => buildQuickTagFilters(currentFilters, tag));
-  }
+  };
 
-  // Note 9: `useMemo` caches the result of these expensive operations and only
-  // recomputes when their dependencies change. Without memoization, `getAllTags`,
-  // `filterTransactions`, and `aggregateTransactions` would run on every render
-  // (e.g., when a dialog opens), wasting CPU on unchanged data.
   const availableYears = useMemo(
     () => getAvailableReportYears(allTransactions),
     [allTransactions],
@@ -691,11 +333,11 @@ export default function ReportsPage() {
       maxWidth="xl"
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
-      sx={{ py: 4 }}
+      sx={{ py: { xs: 3, md: 4 } }}
     >
       <PageHeader
-        title="Income & Spending Reports"
-        description="Filter transactions, compare spending with income, and manage CSV imports from one reporting dashboard."
+        title="Reports"
+        description="Track spending, compare income, and manage transactions."
         headingId={PAGE_TITLE_ID}
         descriptionId={PAGE_DESCRIPTION_ID}
         sx={{ mb: 3 }}
@@ -703,7 +345,7 @@ export default function ReportsPage() {
           !isEmpty ? (
             <Stack direction="row" gap={1} flexWrap="wrap">
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<CompareArrowsIcon />}
                 onClick={() => setCompareOpen(true)}
@@ -711,33 +353,31 @@ export default function ReportsPage() {
                 Compare
               </Button>
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<FileUploadOutlinedIcon />}
                 onClick={() => setImportOpen(true)}
               >
-                Import CSV
+                Import
               </Button>
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 startIcon={<FileDownloadOutlinedIcon />}
                 onClick={handleExport}
                 disabled={filtered.length === 0}
               >
-                Export CSV
+                Export
               </Button>
             </Stack>
           ) : undefined
         }
       />
-
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMessage}
         </Alert>
       )}
-
       {isEmpty ? (
         <EmptyState
           onAddClick={() => handleAddTransaction()}
@@ -748,10 +388,7 @@ export default function ReportsPage() {
           <Box
             role="toolbar"
             aria-label="Report actions"
-            sx={{
-              display: { xs: "flex", md: "none" },
-              mb: 2,
-            }}
+            sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
           >
             <Button
               fullWidth
@@ -762,11 +399,113 @@ export default function ReportsPage() {
               Add Transaction
             </Button>
           </Box>
-
+          {loading ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  sm: "repeat(3, 1fr)",
+                  md: "repeat(5, 1fr)",
+                },
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              {Array.from({ length: 5 }, (_, i) => (
+                <Skeleton
+                  key={`stat-skeleton-${i}`}
+                  variant="rounded"
+                  height={72}
+                  sx={{ borderRadius: 1 }}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  sm: "repeat(3, 1fr)",
+                  md: "repeat(5, 1fr)",
+                },
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              {(
+                [
+                  {
+                    label: "Income",
+                    value: formatCurrency(agg.incomeAmount),
+                    color: "#26a69a",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.incomeAmount,
+                          comparableAgg.incomeAmount,
+                          true,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Spending",
+                    value: formatCurrency(agg.spendingAmount),
+                    color: "text.primary",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.spendingAmount,
+                          comparableAgg.spendingAmount,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Needs",
+                    value: formatCurrency(agg.totalByCategoryType.Need),
+                    color: "#ef5350",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Need,
+                          comparableAgg.totalByCategoryType.Need,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Wants",
+                    value: formatCurrency(agg.totalByCategoryType.Want),
+                    color: "#42a5f5",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Want,
+                          comparableAgg.totalByCategoryType.Want,
+                          false,
+                        )
+                      : null,
+                  },
+                  {
+                    label: "Savings",
+                    value: formatCurrency(agg.totalByCategoryType.Saving),
+                    color: "#66bb6a",
+                    trend: comparableAgg
+                      ? buildStatTrend(
+                          agg.totalByCategoryType.Saving,
+                          comparableAgg.totalByCategoryType.Saving,
+                          true,
+                        )
+                      : null,
+                  },
+                ] as const
+              ).map((s) => (
+                <StatCard key={s.label} {...s} loading={loading} />
+              ))}
+            </Box>
+          )}
           {loading ? (
             <Skeleton
-              variant="rectangular"
-              height={100}
+              variant="rounded"
+              height={48}
               sx={{ mb: 3, borderRadius: 1 }}
             />
           ) : (
@@ -777,235 +516,120 @@ export default function ReportsPage() {
               onChange={setFilters}
             />
           )}
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(2, minmax(0, 1fr))",
-                md: "repeat(5, minmax(0, 1fr))",
-              },
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            {(
-              [
-                {
-                  label: "Total Income",
-                  value: formatCurrency(agg.incomeAmount),
-                  color: "#26a69a",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.incomeAmount,
-                        comparableAgg.incomeAmount,
-                        true,
-                      )
-                    : null,
-                },
-                {
-                  label: "Total Spending",
-                  value: formatCurrency(agg.spendingAmount),
-                  color: "text.primary",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.spendingAmount,
-                        comparableAgg.spendingAmount,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Needs",
-                  value: formatCurrency(agg.totalByCategoryType.Need),
-                  color: "#ef5350",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Need,
-                        comparableAgg.totalByCategoryType.Need,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Wants",
-                  value: formatCurrency(agg.totalByCategoryType.Want),
-                  color: "#42a5f5",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Want,
-                        comparableAgg.totalByCategoryType.Want,
-                        false,
-                      )
-                    : null,
-                },
-                {
-                  label: "Savings",
-                  value: formatCurrency(agg.totalByCategoryType.Saving),
-                  color: "#66bb6a",
-                  trend: comparableAgg
-                    ? buildStatTrend(
-                        agg.totalByCategoryType.Saving,
-                        comparableAgg.totalByCategoryType.Saving,
-                        true,
-                      )
-                    : null,
-                },
-              ] as const
-            ).map((s) => (
-              <StatCard key={s.label} {...s} loading={loading} />
-            ))}
-          </Box>
-
-          <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} md={5}>
-              <Card
-                sx={{
-                  height: "100%",
+          <Stack spacing={3} mb={3}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+                gap: 3,
+              }}
+            >
+              <SectionCard
+                title="Breakdown"
+                headingId="reports-breakdown-heading"
+                elevation={1}
+                sx={{ display: "flex", flexDirection: "column" }}
+                contentSx={{
+                  flex: 1,
                   display: "flex",
                   flexDirection: "column",
                 }}
               >
-                <CardHeader
-                  title="Spending Breakdown"
-                  titleTypographyProps={{
-                    variant: "subtitle1",
-                    fontWeight: 600,
-                  }}
-                />
-                <Divider />
-                <CardContent
-                  sx={{
-                    p: 3,
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {loading ? (
-                    <SpendingBreakdownLoadingState />
-                  ) : (
+                {loading ? (
+                  <SpendingBreakdownLoadingState />
+                ) : (
+                  <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
                     <SpendingPieChart data={agg.totalByCategoryType} />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={7}>
-              <Card
-                sx={{
-                  height: "100%",
+                  </Box>
+                )}
+              </SectionCard>
+              <SectionCard
+                title="Top Tags"
+                headingId="reports-tags-heading"
+                elevation={1}
+                sx={{ display: "flex", flexDirection: "column" }}
+                contentSx={{
+                  flex: 1,
                   display: "flex",
                   flexDirection: "column",
                 }}
               >
-                <CardHeader
-                  title="Top Spending Tags"
-                  titleTypographyProps={{
-                    variant: "subtitle1",
-                    fontWeight: 600,
-                  }}
-                />
-                <Divider />
-                <CardContent sx={{ p: 3, flex: 1 }}>
-                  {loading ? (
-                    <ChartLoadingState height={400} showLegend={false} />
-                  ) : (
-                    <TagBarChart
-                      data={agg.tagDiagramData}
-                      activeTags={filters.tags}
-                      onTagClick={handleQuickTagFilter}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              title="Spending vs Income"
-              titleTypographyProps={{ variant: "subtitle1", fontWeight: 600 }}
-            />
-            <Divider />
-            <CardContent sx={{ p: 3 }}>
+                {loading ? (
+                  <ChartLoadingState height={400} showLegend={false} />
+                ) : (
+                  <TagBarChart
+                    data={agg.tagDiagramData}
+                    activeTags={filters.tags}
+                    onTagClick={handleQuickTagFilter}
+                  />
+                )}
+              </SectionCard>
+            </Box>
+            <SectionCard
+              title="Monthly Overview"
+              headingId="reports-monthly-heading"
+              elevation={1}
+            >
               {loading ? (
                 <ChartLoadingState height={360} legendItems={4} />
               ) : (
                 <SpendingBarChart data={agg.timeseries} />
               )}
-            </CardContent>
-          </Card>
-
-          <Box
-            mb={1.5}
-            display="flex"
-            alignItems={{ xs: "stretch", sm: "center" }}
-            justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2}
+            </SectionCard>
+          </Stack>
+          <SectionCard
+            title="Transactions"
+            headingId="reports-transactions-heading"
+            elevation={1}
+            action={
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={transactionsView}
+                onChange={(_event, nextView) => {
+                  if (nextView !== null) {
+                    const resolvedView = nextView as TransactionsViewMode;
+                    setTransactionsView(resolvedView);
+                    setLastSelectedReportTransactionsView(resolvedView);
+                  }
+                }}
+                aria-label="Choose the transaction results view"
+                sx={{
+                  "& .MuiToggleButtonGroup-grouped": {
+                    px: 1.5,
+                    textTransform: "none",
+                  },
+                }}
+              >
+                <ToggleButton value="table" aria-label="Table view">
+                  <ViewListIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                  Table
+                </ToggleButton>
+                <ToggleButton value="calendar" aria-label="Calendar view">
+                  <CalendarMonthIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                  Calendar
+                </ToggleButton>
+              </ToggleButtonGroup>
+            }
           >
-            <Box display="flex" alignItems="baseline" gap={1}>
-              <Typography variant="h6" fontWeight={600}>
-                Transactions
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                ({filtered.length} results)
-              </Typography>
-            </Box>
-            {/* Note 10: An exclusive toggle keeps the table as the familiar
-                default while letting users switch to the calendar without losing
-                the current filters or the shared edit/delete handlers. */}
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={transactionsView}
-              onChange={(_event, nextView) => {
-                if (nextView !== null) {
-                  const resolvedView = nextView as TransactionsViewMode;
-                  setTransactionsView(resolvedView);
-                  setLastSelectedReportTransactionsView(resolvedView);
-                }
-              }}
-              aria-label="Choose the transaction results view"
-              sx={{
-                "& .MuiToggleButtonGroup-grouped": {
-                  px: 1.5,
-                  textTransform: "none",
-                },
-              }}
-            >
-              <ToggleButton
-                value="table"
-                aria-label="Show transactions in the table view"
-              >
-                Table
-              </ToggleButton>
-              <ToggleButton
-                value="calendar"
-                aria-label="Show transactions in the calendar view"
-              >
-                Calendar
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          {transactionsView === "table" ? (
-            <TransactionsTable
-              transactions={filtered}
-              activeTags={filters.tags}
-              onEdit={handleEditTransaction}
-              onDelete={handleDeleteTransaction}
-              onTagClick={handleQuickTagFilter}
-            />
-          ) : (
-            <TransactionCalendar
-              transactions={filtered}
-              onDaySelect={handleAddTransaction}
-              onTransactionSelect={setDetailTarget}
-            />
-          )}
+            {transactionsView === "table" ? (
+              <TransactionsTable
+                transactions={filtered}
+                activeTags={filters.tags}
+                onEdit={handleEditTransaction}
+                onDelete={handleDeleteTransaction}
+                onTagClick={handleQuickTagFilter}
+              />
+            ) : (
+              <TransactionCalendar
+                transactions={filtered}
+                onDaySelect={handleAddTransaction}
+                onTransactionSelect={setDetailTarget}
+              />
+            )}
+          </SectionCard>
         </>
       )}
-
       <TransactionDetailDialog
         open={Boolean(detailTarget)}
         transaction={detailTarget}
@@ -1016,7 +640,6 @@ export default function ReportsPage() {
         }}
         onDelete={handleDeleteTransaction}
       />
-
       <TransactionForm
         open={formOpen}
         initialDate={newTransactionDate}
@@ -1024,7 +647,6 @@ export default function ReportsPage() {
         onSave={handleSaveTransaction}
         onClose={handleFormClose}
       />
-
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
@@ -1032,17 +654,11 @@ export default function ReportsPage() {
           void loadTransactions({ resetFilters: allTransactions.length === 0 });
         }}
       />
-
       <MonthComparisonModal
         open={compareOpen}
         transactions={allTransactions}
         onClose={() => setCompareOpen(false)}
       />
-
-      {/* Note 11: The Floating Action Button (FAB) is a Material Design pattern
-           for the primary action on a page. Positioning it `fixed` at the bottom
-           right corner keeps it always accessible regardless of scroll position.
-           It is hidden on the empty state so the EmptyState CTA is the focal point. */}
       {!isEmpty && (
         <Fab
           color="primary"
@@ -1060,4 +676,6 @@ export default function ReportsPage() {
       )}
     </Container>
   );
-}
+};
+
+export default ReportsPageContent;

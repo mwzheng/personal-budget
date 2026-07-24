@@ -44,7 +44,7 @@ export function BudgetPieChart({
           textAlign: "center",
           padding: 40,
           color: theme.palette.text.secondary,
-          height: 320,
+          height: 360,
         }}
       >
         Add expense rows to populate the pie chart.
@@ -67,20 +67,24 @@ export function BudgetPieChart({
       ? theme.palette.warning.light
       : theme.palette.success.light;
 
+  // Compute the total upfront so percentages in tooltips are accurate and
+  // don't rely on Recharts' internal payload typing quirks.
+  const totalValue = data.reduce((sum, item) => sum + Number(item.value), 0);
+
   return (
     <ChartWrapper title="Budget Allocation">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ width: "100%", height: 320 }}>
+        <Box sx={{ width: "100%", height: 380 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 16, right: 24, bottom: 16, left: 24 }}>
+            <PieChart margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
               <Pie
                 data={data}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={112}
-                innerRadius={72}
+                outerRadius={140}
+                innerRadius={90}
                 paddingAngle={2}
                 labelLine={false}
                 animationDuration={1200}
@@ -98,8 +102,7 @@ export function BudgetPieChart({
                   position="center"
                   content={({ viewBox }) => {
                     const box = viewBox as
-                      | { cx?: number; cy?: number }
-                      | undefined;
+                      { cx?: number; cy?: number } | undefined;
                     const cx = box?.cx ?? 0;
                     const cy = box?.cy ?? 0;
 
@@ -110,7 +113,7 @@ export function BudgetPieChart({
                           y={cy - 18}
                           textAnchor="middle"
                           fill={theme.palette.text.secondary}
-                          fontSize="13"
+                          fontSize="14"
                           fontWeight="600"
                         >
                           Monthly Income
@@ -120,7 +123,7 @@ export function BudgetPieChart({
                           y={cy + 4}
                           textAnchor="middle"
                           fill={theme.palette.text.primary}
-                          fontSize="20"
+                          fontSize="22"
                           fontWeight="700"
                         >
                           {formatCurrencyWhole(monthlyIncome)}
@@ -130,7 +133,7 @@ export function BudgetPieChart({
                           y={cy + 24}
                           textAnchor="middle"
                           fill={statusColor}
-                          fontSize="12"
+                          fontSize="13"
                           fontWeight="700"
                         >
                           {statusLabel}
@@ -159,13 +162,20 @@ export function BudgetPieChart({
                           color: source?.color,
                         },
                         {
+                          label: "Percentage",
+                          value:
+                            totalValue > 0
+                              ? `${((Number(entry.value) / totalValue) * 100).toFixed(1)}%`
+                              : "0.0%",
+                        },
+                        {
                           label: "Category",
                           value: source?.category ?? "Need",
                         },
                         ...(source?.group
                           ? [
                               {
-                                label: "Sankey Path",
+                                label: "Flow Path",
                                 value: source.group,
                               },
                             ]

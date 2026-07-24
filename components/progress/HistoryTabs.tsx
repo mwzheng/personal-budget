@@ -25,15 +25,34 @@ export default function HistoryTabs({ onEntriesChanged }: Props) {
       <Tabs
         value={activeTab}
         onChange={(_, newValue: number) => setActiveTab(newValue)}
-        sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{
+          mb: 3,
+          minHeight: 40,
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          p: 0.5,
+          "& .MuiTabs-indicator": { display: "none" },
+          "& .MuiTab-root": {
+            minHeight: 36,
+            borderRadius: 0.75,
+            textTransform: "none",
+            fontWeight: 500,
+            "&.Mui-selected": {
+              bgcolor: "action.selected",
+              color: "text.primary",
+            },
+          },
+        }}
       >
         <Tab
-          label="Retirement Accounts"
+          label="Retirement"
           id="history-tab-0"
           aria-controls="history-panel-0"
         />
         <Tab
-          label="Salary History"
+          label="Salary"
           id="history-tab-1"
           aria-controls="history-panel-1"
         />

@@ -6,6 +6,8 @@ export const metadata: Metadata = {
     "Review transactions, charts, and category totals from one spending dashboard.",
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return children;
-}
+};
+
+export default Layout;

@@ -6,6 +6,7 @@
 
 import { generateId } from "./generateId";
 import type { Transaction } from "../types/types";
+import type { BudgetDraft } from "./budget-normalizer";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
 // works well for small datasets. For larger datasets, IndexedDB or a server-side
@@ -178,4 +179,53 @@ export function setLastSelectedReportTransactionsView(
 ): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(REPORT_TRANSACTIONS_VIEW_STORAGE_KEY, view);
+}
+
+// ---------------------------------------------------------------------------
+// Budget draft auto-save (persists in-progress edits across refreshes)
+// ---------------------------------------------------------------------------
+
+const BUDGET_DRAFT_KEY = "personal-budget-draft";
+
+interface StoredBudgetDraft {
+  draft: BudgetDraft;
+  editingBudgetId: string | null;
+  savedAt: number;
+}
+
+export function getBudgetDraft(): StoredBudgetDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BUDGET_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredBudgetDraft;
+    if (parsed?.draft && typeof parsed.draft === "object") {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function setBudgetDraft(
+  draft: BudgetDraft,
+  editingBudgetId: string | null,
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const payload: StoredBudgetDraft = {
+      draft,
+      editingBudgetId,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(BUDGET_DRAFT_KEY, JSON.stringify(payload));
+  } catch {
+    // Silently ignore write failures (quota exceeded, etc.)
+  }
+}
+
+export function clearBudgetDraft(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(BUDGET_DRAFT_KEY);
 }

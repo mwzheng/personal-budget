@@ -1,8 +1,3 @@
-/**
- * Note 1: Footer content is modeled as data because it will likely be reused by
- * the signed-out shell, public pages, and any future marketing layout.
- */
-
 import type {
   FooterContent,
   FooterLinkGroup,
@@ -34,15 +29,8 @@ export const FOOTER_PUBLIC_LINKS = [
     href: ROUTE_PATHS.faq,
     description: PAGE_TITLES[PAGE_TITLE_KEYS.FAQ].description,
   },
-  {
-    label: "Contact",
-    href: ROUTE_PATHS.contact,
-    description: PAGE_TITLES[PAGE_TITLE_KEYS.CONTACT].description,
-  },
 ] as const satisfies readonly LinkDefinition<AppRoute>[];
 
-// Note 1.1: An empty placeholder group is still exported so future public pages
-// can be staged in data without touching the footer component again.
 export const FOOTER_PLANNED_PUBLIC_LINKS: readonly LinkDefinition<AppRoute>[] =
   [];
 
@@ -59,8 +47,6 @@ export const FOOTER_ACCOUNT_LINKS = [
   },
 ] as const satisfies readonly LinkDefinition<AppRoute>[];
 
-// Note 2: Grouping links by intent keeps the data flexible for stacked mobile
-// footers, horizontal desktop footers, or sitemap-style rendering later.
 export const FOOTER_NAVIGATION_GROUPS = [
   {
     title: "Explore",

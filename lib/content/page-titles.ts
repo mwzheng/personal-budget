@@ -1,9 +1,3 @@
-/**
- * Note 1: This file centralizes route names and metadata before any page wiring
- * happens, which reduces string drift when layouts or nav components start
- * consuming public content later.
- */
-
 import type { PageTitleEntry } from "../types/content";
 
 export const APP_NAME = "Porridge Budget";
@@ -11,8 +5,6 @@ export const APP_NAME = "Porridge Budget";
 export const APP_DEFAULT_DESCRIPTION =
   "Track expenses, plan budgets, and review financial progress with a manual-first budgeting app.";
 
-// Note 2: Route constants are intentionally exported so future page, nav, and
-// footer code can share one typed list of paths instead of hand-typed strings.
 export const ROUTE_PATHS = {
   home: "/",
   about: "/about",
@@ -23,7 +15,7 @@ export const ROUTE_PATHS = {
   callback: "/auth/callback",
   signout: "/auth/signout",
   reports: "/reports",
-  sankey: "/sankey",
+  budget: "/budget",
   progress: "/progress",
   salary: "/salary",
   fire: "/fire",
@@ -39,7 +31,7 @@ export const PAGE_TITLE_KEYS = {
   CALLBACK: "callback",
   SIGNOUT: "signout",
   REPORTS: "reports",
-  SANKEY: "sankey",
+  BUDGET: "budget",
   PROGRESS: "progress",
   SALARY: "salary",
   FIRE: "fire",
@@ -104,11 +96,11 @@ export const PAGE_TITLES = {
       "Review transactions, charts, and category totals from one spending dashboard.",
     requiresAuth: true,
   },
-  [PAGE_TITLE_KEYS.SANKEY]: {
-    route: ROUTE_PATHS.sankey,
+  [PAGE_TITLE_KEYS.BUDGET]: {
+    route: ROUTE_PATHS.budget,
     title: `Budget - ${APP_NAME}`,
     description:
-      "Plan named expenses and visualize a monthly budget with pie and Sankey charts.",
+      "Plan monthly expenses and visualize your budget with pie charts and flow diagrams.",
     requiresAuth: true,
   },
   [PAGE_TITLE_KEYS.PROGRESS]: {
@@ -134,33 +126,26 @@ export const PAGE_TITLES = {
   },
 } satisfies Record<PageTitleKey, PageTitleEntry<AppRoute>>;
 
-// Note 3: These grouped route lists let navigation, analytics, and metadata
-// consumers share one source of truth while still distinguishing public versus
-// authenticated destinations.
 export const LIVE_SIGNED_OUT_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.HOME,
   PAGE_TITLE_KEYS.ABOUT,
   PAGE_TITLE_KEYS.FAQ,
-  PAGE_TITLE_KEYS.CONTACT,
   PAGE_TITLE_KEYS.LOGIN,
   PAGE_TITLE_KEYS.REGISTER,
   PAGE_TITLE_KEYS.CALLBACK,
   PAGE_TITLE_KEYS.SIGNOUT,
 ] as const;
 
-// Note 3.1: The info menu needs the full public route set so signed-out visitors
-// can move between all currently-published public pages from one place.
 export const PUBLIC_INFO_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.ABOUT,
   PAGE_TITLE_KEYS.FAQ,
-  PAGE_TITLE_KEYS.CONTACT,
 ] as const;
 
 export const PLANNED_PUBLIC_PAGE_TITLE_KEYS = [] as const;
 
 export const AUTHENTICATED_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.REPORTS,
-  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.BUDGET,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,
@@ -170,20 +155,17 @@ export const LIVE_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.HOME,
   PAGE_TITLE_KEYS.ABOUT,
   PAGE_TITLE_KEYS.FAQ,
-  PAGE_TITLE_KEYS.CONTACT,
   PAGE_TITLE_KEYS.LOGIN,
   PAGE_TITLE_KEYS.REGISTER,
   PAGE_TITLE_KEYS.CALLBACK,
   PAGE_TITLE_KEYS.SIGNOUT,
   PAGE_TITLE_KEYS.REPORTS,
-  PAGE_TITLE_KEYS.SANKEY,
+  PAGE_TITLE_KEYS.BUDGET,
   PAGE_TITLE_KEYS.PROGRESS,
   PAGE_TITLE_KEYS.SALARY,
   PAGE_TITLE_KEYS.FIRE,
 ] as const;
 
-// Note 4: A route-indexed lookup keeps client-side title resolution fast and
-// ensures new pages only need one more entry in `PAGE_TITLES` to participate.
 const PAGE_TITLES_BY_ROUTE = new Map(
   Object.values(PAGE_TITLES).map((entry) => [entry.route, entry] as const),
 );

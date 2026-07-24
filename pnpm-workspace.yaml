@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+  serverless: false
+  sharp: false
+  unrs-resolver: false

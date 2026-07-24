@@ -1,12 +1,5 @@
-/**
- * Note 1: Contact details live in data form so the future contact page, footer,
- * and any call-to-action components can reuse the same public information.
- */
-
-import type { ContactMethod, ContactPageContent } from "../types/content";
+import type { ContactMethod, ContactSectionContent } from "../types/content";
 import { CREATOR_SOCIAL_LINKS } from "./about";
-import { APP_NAME } from "./page-titles";
-
 export const CONTACT_METHODS = [
   {
     label: CREATOR_SOCIAL_LINKS.github.label,
@@ -28,27 +21,19 @@ export const CONTACT_METHODS = [
   },
 ] as const satisfies readonly ContactMethod[];
 
-// Note 2: The response note sets expectation early because this project is a
-// hobby build maintained around full-time work rather than a staffed product.
-export const CONTACT_PAGE_CONTENT = {
+export const CONTACT_SECTION_CONTENT = {
   hero: {
-    eyebrow: "Contact",
-    title: `Get In Touch About ${APP_NAME}`,
-    summary:
-      "Use the contact form below for a direct reply, or reach out through GitHub and LinkedIn when a public or professional channel fits better.",
+    title: "Get In Touch",
+    summary: `Questions, bug reports, and product ideas are all welcome.`,
   },
-  summary: [
-    `${APP_NAME} is free to use and something I maintain alongside my full-time software engineering work.`,
-    "Questions, thoughtful feedback, bug reports, and small product ideas are all welcome.",
-  ],
   form: {
     title: "Send A Message",
     description:
-      "Use the form for direct questions about the product, workflow feedback, or a quick hello. Messages are delivered by email so I can reply without publishing a personal inbox on the page.",
+      "Direct questions about the product, workflow feedback, or a quick hello.",
     submitLabel: "Send message",
     submittingLabel: "Sending message…",
     privacyNote:
-      "Your email address is only used to deliver this message and make a reply possible.",
+      "Your email address is only used to deliver this message and make a reply possible. Please avoid sending any sensitive information through this form.",
     validationMessage: "Please review the highlighted fields and try again.",
     successMessage:
       "Thanks for reaching out. Your message has been sent successfully.",
@@ -57,49 +42,34 @@ export const CONTACT_PAGE_CONTENT = {
     fields: {
       name: {
         label: "Name",
-        helperText: "How you'd like to be addressed in a reply.",
+        helperText: "Tell me who I’m hearing from.",
         autoComplete: "name",
       },
       email: {
         label: "Email",
-        helperText: "Used only for this reply.",
+        helperText: "I’ll use this address if a reply is needed.",
         autoComplete: "email",
       },
       subject: {
         label: "Subject",
-        helperText: "A short summary helps me triage messages quickly.",
+        helperText: "A short summary helps me understand the message.",
       },
       message: {
         label: "Message",
-        helperText:
-          "Share the question, context, or feedback you have in mind.",
+        helperText: "Share the question, idea, or issue you’d like to discuss.",
       },
     },
   },
   sidebar: {
-    methodsTitle: "Other Ways To Connect",
-    methodsDescription:
-      "If a public thread or professional introduction makes more sense, these channels stay available too.",
+    title: "Other Ways To Connect",
     topicsTitle: "Good Reasons To Reach Out",
   },
-  notices: [
-    {
-      title: "Free To Use",
-      body: `${APP_NAME} is free to use, so support and replies happen around my full-time schedule.`,
-    },
-    {
-      title: "Keep It Safe",
-      body: "Please avoid sending passwords, account numbers, bank credentials, or other sensitive information through this form.",
-    },
-  ],
   methods: CONTACT_METHODS,
   topics: [
     "Feedback on the manual budgeting workflow",
-    "Bug reports, rough edges, or missing content",
-    "Questions about the Excel-plus-Notion origin story",
-    "Thoughtful feature ideas that preserve the manual-first approach",
-    "General collaboration or professional conversation",
+    "Bug reports, missing content, or feature requests",
+    "General collaboration or conversation",
   ],
   availabilityNote:
-    "I read these channels personally, but replies may be asynchronous because I maintain the project outside of full-time work.",
-} satisfies ContactPageContent;
+    "Replies may be asynchronous because I maintain the project outside of full-time work.",
+} satisfies ContactSectionContent;

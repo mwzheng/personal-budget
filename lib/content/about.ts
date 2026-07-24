@@ -1,9 +1,3 @@
-/**
- * Note 1: This module keeps the about-page story in plain data so the eventual
- * page can stay presentation-only and reuse the same source in cards, metadata,
- * and tests.
- */
-
 import type {
   AboutPageContent,
   CreatorProfile,
@@ -13,14 +7,6 @@ import type {
 import { APP_NAME } from "./page-titles";
 
 export const CREATOR_SOCIAL_LINKS = {
-  github: {
-    platform: "github",
-    label: "GitHub",
-    href: "https://github.com/mwzheng",
-    handle: "mwzheng",
-    external: true,
-    description: "Visit my GitHub profile.",
-  },
   linkedin: {
     platform: "linkedin",
     label: "LinkedIn",
@@ -29,11 +15,28 @@ export const CREATOR_SOCIAL_LINKS = {
     external: true,
     description: "Connect with me in a professional context.",
   },
+  github: {
+    platform: "github",
+    label: "GitHub",
+    href: "https://github.com/mwzheng",
+    handle: "mwzheng",
+    external: true,
+    description: "Visit my GitHub profile.",
+  },
+  projectGithub: {
+    platform: "github",
+    label: "Project GitHub",
+    href: "https://github.com/mwzheng/personal-budget",
+    handle: "mwzheng/personal-budget",
+    external: true,
+    description: "Visit the GitHub repository for this project.",
+  },
 } as const satisfies Record<SocialPlatform, SocialLink>;
 
 export const CREATOR_SOCIAL_LINK_LIST = [
-  CREATOR_SOCIAL_LINKS.github,
   CREATOR_SOCIAL_LINKS.linkedin,
+  CREATOR_SOCIAL_LINKS.github,
+  CREATOR_SOCIAL_LINKS.projectGithub,
 ] as const satisfies readonly SocialLink[];
 
 export const CREATOR_PROFILE = {
@@ -49,8 +52,6 @@ export const CREATOR_PROFILE = {
   links: CREATOR_SOCIAL_LINK_LIST,
 } satisfies CreatorProfile;
 
-// Note 2: These principles are intentionally short because they are likely to
-// be reused in hero cards, a future footer blurb, or lightweight marketing UI.
 export const APP_PHILOSOPHY_PRINCIPLES = [
   "Keep each budget entry intentional instead of passively synced.",
   "Build tools that support reflection, not just automation.",

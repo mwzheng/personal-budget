@@ -1,8 +1,3 @@
-/**
- * Note 1: Home page marketing copy lives in shared data so future landing-page
- * tweaks can change messaging without editing the route component layout.
- */
-
 import type { HomePageContent } from "../types/content";
 import { APP_NAME } from "./page-titles";
 
@@ -18,7 +13,7 @@ export const HOME_PAGE_CONTENT = {
       id: "transactions",
       title: "Transactions",
       description:
-        "Import CSVs or enter expenses manually. Review transactions with filters, tags, and search.",
+        "Import data or enter expenses manually. Review transactions with filters, tags, and search.",
       supportingCopy: "Manual-first tracking for everyday spending.",
     },
     {
@@ -32,7 +27,7 @@ export const HOME_PAGE_CONTENT = {
       id: "budget",
       title: "Budgets & Sankey",
       description:
-        "Build named budgets with flexible categories. Preview pie charts and Sankey flows before saving.",
+        "Build and save budgets with flexible categories. Preview pie charts and Sankey graphs.",
       supportingCopy: "Thoughtful planning for flexible budget categories.",
     },
     {

@@ -140,8 +140,8 @@ describe("buildMonthComparison", () => {
 
     const comparison = buildMonthComparison(txns, "2025-01", "2025-02");
 
-    expect(comparison.monthA.period).toBe("2025-01");
-    expect(comparison.monthB.period).toBe("2025-02");
+    expect(comparison.prevMonth.period).toBe("2025-01");
+    expect(comparison.currMonth.period).toBe("2025-02");
     // Need: 100 → 200 = +100%
     expect(comparison.changes.Need).toBeCloseTo(100);
     // Want: 50 → 50 = 0%
@@ -169,8 +169,8 @@ describe("buildMonthComparison", () => {
     expect(comparison.changes.totalAmount).toBe(0);
     expect(comparison.changes.spendingAmount).toBe(0);
     expect(comparison.changes.incomeAmount).toBe(0);
-    expect(comparison.monthA.transactionCount).toBe(0);
-    expect(comparison.monthB.transactionCount).toBe(0);
+    expect(comparison.prevMonth.transactionCount).toBe(0);
+    expect(comparison.currMonth.transactionCount).toBe(0);
   });
 
   it("handles negative percentage change correctly", () => {

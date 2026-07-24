@@ -28,8 +28,29 @@ export default function HomeHeroActions() {
     };
   }, []);
 
-  if (loggedIn !== false) {
+  if (loggedIn === null) {
     return null;
+  }
+
+  if (loggedIn) {
+    return (
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Button
+          component={NextLink}
+          href={ROUTE_PATHS.reports}
+          variant="contained"
+          size="large"
+          sx={{ minWidth: { sm: 180 } }}
+        >
+          Go to Dashboard
+        </Button>
+      </Stack>
+    );
   }
 
   return (

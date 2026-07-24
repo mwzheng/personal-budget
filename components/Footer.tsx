@@ -1,8 +1,4 @@
-/**
- * Note 1: This footer is intentionally a Server Component because every string
- * comes from the content layer, so the shell can stay lightweight and render
- * the same way for signed-out users, crawlers, and future public pages.
- */
+"use client";
 
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LaunchIcon from "@mui/icons-material/Launch";
@@ -14,7 +10,9 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
+import { useEffect, useState } from "react";
 
+import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import { FOOTER_CONTENT, FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import type {
@@ -24,8 +22,9 @@ import type {
 } from "@/lib/types/content";
 
 const SOCIAL_ICON_BY_PLATFORM = {
-  github: GitHubIcon,
   linkedin: LinkedInIcon,
+  github: GitHubIcon,
+  projectGithub: GitHubIcon,
 } as const satisfies Record<SocialLink["platform"], typeof GitHubIcon>;
 
 function FooterNavigationLink({ link }: { link: LinkDefinition }) {
@@ -116,7 +115,7 @@ function FooterSocialGroup({
       </Typography>
       <Stack
         component="ul"
-        direction="row"
+        direction="column"
         spacing={1.5}
         useFlexGap
         flexWrap="wrap"
@@ -157,9 +156,14 @@ function FooterSocialGroup({
 }
 
 export function Footer() {
+  const [loggedIn, setLoggedIn] = useState(false);
   const currentYear = new Date().getFullYear();
   const homeHref = FOOTER_PUBLIC_LINKS[0]?.href ?? "/";
   const { brandName, tagline, navigationGroups, socialLinks } = FOOTER_CONTENT;
+
+  useEffect(() => {
+    setLoggedIn(isAuthenticated());
+  }, []);
 
   return (
     <Box
@@ -208,7 +212,6 @@ export function Footer() {
               </Typography>
             ) : null}
           </Stack>
-
           <Box
             sx={{
               display: "grid",
@@ -219,20 +222,22 @@ export function Footer() {
               },
             }}
           >
-            {navigationGroups.map((group) => (
-              <FooterNavigationGroup key={group.title} group={group} />
-            ))}
+            {navigationGroups.map((group) => {
+              if (group.title === "Account" && loggedIn) {
+                return null;
+              }
+
+              return <FooterNavigationGroup key={group.title} group={group} />;
+            })}
             <FooterSocialGroup socialLinks={socialLinks} />
           </Box>
         </Box>
-
         <Divider
           sx={{
             borderColor: SERVER_THEME_TOKENS.border.subtle,
             my: { xs: 2.5, md: 3 },
           }}
         />
-
         <Typography
           variant="caption"
           color="text.disabled"

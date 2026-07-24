@@ -1,20 +1,8 @@
-/**
- * Note 1: These interfaces keep page copy and metadata in plain TypeScript
- * objects so page components can stay focused on layout, accessibility, and
- * rendering concerns.
- */
-
-export type SocialPlatform = "github" | "linkedin";
+export type SocialPlatform = "github" | "linkedin" | "projectGithub";
 
 export type FaqCategory =
-  | "creator"
-  | "philosophy"
-  | "workflow"
-  | "features"
-  | "data";
+  "creator" | "philosophy" | "workflow" | "features" | "data";
 
-// Note 2: The `Href` generic lets one link shape describe internal route unions
-// and external URLs without giving up autocomplete in consumers.
 export interface LinkDefinition<Href extends string = string> {
   label: string;
   href: Href;
@@ -119,16 +107,13 @@ export interface ContactFormContent {
   };
 }
 
-export interface ContactPageContent {
+export interface ContactSectionContent {
   hero: ContentHero;
-  summary: readonly string[];
   form: ContactFormContent;
   sidebar: {
-    methodsTitle: string;
-    methodsDescription: string;
+    title: string;
     topicsTitle: string;
   };
-  notices: readonly ContentNotice[];
   methods: readonly ContactMethod[];
   topics: readonly string[];
   availabilityNote: string;
@@ -162,8 +147,6 @@ export interface FooterContent<Href extends string = string> {
   footnotes: readonly string[];
 }
 
-// Note 3: Route metadata is separated from actual page components so titles and
-// descriptions can be reused by layouts, tests, and future content-driven UI.
 export interface PageTitleEntry<Route extends string = string> {
   route: Route;
   title: string;

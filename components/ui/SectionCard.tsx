@@ -1,10 +1,3 @@
-/**
- * SectionCard is a shared Paper-based container for the major sections of
- * authenticated workspace pages. It standardizes padding, optional section-level
- * headers, and the action slot so every section across Reports, Progress,
- * Budget, and FIRE looks and behaves consistently.
- */
-
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -56,7 +49,10 @@ export default function SectionCard({
           }}
         >
           {title ? (
-            <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+            <Stack
+              spacing={0.5}
+              sx={{ minWidth: 0, margin: !action ? "auto" : undefined }}
+            >
               <Typography
                 id={headingId}
                 component="h2"

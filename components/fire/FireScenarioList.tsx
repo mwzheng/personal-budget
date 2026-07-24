@@ -22,7 +22,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EmptyState from "@/components/ui/EmptyState";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { formatCurrencyWhole } from "@/lib/utils/format";
-import { calculateFireNumber, generateProjection } from "@/lib/utils/fire";
+import { generateProjection } from "@/lib/utils/fire";
 import type { FireScenario } from "@/lib/types/types";
 
 interface Props {
@@ -75,10 +75,6 @@ export default function FireScenarioList({
       ) : (
         <Grid container spacing={1.5} sx={{ mb: 2 }}>
           {scenarios.map((s) => {
-            const fireNum = calculateFireNumber(
-              s.annualExpenses,
-              s.withdrawalRate,
-            );
             const { summary } = generateProjection(s);
             const isActive = s.scenarioId === activeScenarioId;
 
@@ -136,9 +132,18 @@ export default function FireScenarioList({
                           sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 0.5 }}
                         >
                           <Chip
-                            label={`FIRE: ${formatCurrencyWhole(fireNum)}`}
+                            label={
+                              summary.fireNumber > 0
+                                ? `FIRE: ${formatCurrencyWhole(summary.fireNumber)}`
+                                : "No target"
+                            }
                             size="small"
                             color="info"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={`Save: ${formatCurrencyWhole(s.monthlyContribution)}/mo`}
+                            size="small"
                             variant="outlined"
                           />
                           <Chip

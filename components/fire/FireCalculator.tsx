@@ -29,7 +29,10 @@ import FireForm from "./FireForm";
 import FireProjectionChart, { FIRE_CHART_LABELS } from "./FireProjectionChart";
 import FireProjectionTable from "./FireProjectionTable";
 import FireScenarioList from "./FireScenarioList";
-import FireSummaryCard from "./FireSummaryCard";
+import FireDashboardHero from "./FireDashboardHero";
+import FireMetricGrid from "./FireMetricGrid";
+import FireMilestonesCard from "./FireMilestonesCard";
+import FireNextMoveCard from "./FireNextMoveCard";
 
 const DEFAULT_SCENARIO: FireScenario = {
   name: "My FIRE Plan",
@@ -205,18 +208,24 @@ export default function FireCalculator() {
   const handleDelete = useCallback(
     async (scenario: FireScenario) => {
       if (!scenario.scenarioId) return;
-      const res = await apiFetch("/api/fire", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenarioId: scenario.scenarioId }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Delete failed");
+      try {
+        const res = await apiFetch("/api/fire", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scenarioId: scenario.scenarioId }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Delete failed");
 
-      if (current.scenarioId === scenario.scenarioId) {
-        setCurrent({ ...DEFAULT_SCENARIO });
+        if (current.scenarioId === scenario.scenarioId) {
+          setCurrent({ ...DEFAULT_SCENARIO });
+        }
+        await fetchScenarios();
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to delete scenario",
+        );
       }
-      await fetchScenarios();
     },
     [current.scenarioId, fetchScenarios],
   );
@@ -235,56 +244,22 @@ export default function FireCalculator() {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {/* Left column: Form + Scenarios */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2.5 }} elevation={1}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ mb: 2 }}
-            >
-              <Typography variant="subtitle1" fontWeight={700}>
-                Scenario Parameters
-              </Typography>
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving…" : current.scenarioId ? "Update" : "Save"}
-              </Button>
-            </Stack>
-
-            <FireForm
-              values={current}
-              onChange={handleFieldChange}
-              computedFireNumber={computedFireNumber}
+      <Grid container spacing={3} alignItems="flex-start">
+        <Grid item xs={12} md={8} sx={{ minWidth: 0 }}>
+          <Stack spacing={2} sx={{ minWidth: 0 }}>
+            <FireDashboardHero
+              scenario={current}
+              summary={projection.summary}
+              rows={projection.rows}
             />
-          </Paper>
-
-          <Paper sx={{ p: 2.5, mt: 2 }} elevation={1}>
-            <FireScenarioList
-              scenarios={scenarios}
-              activeScenarioId={current.scenarioId}
-              onSelect={handleSelectScenario}
-              onNew={handleNewScenario}
-              onDelete={handleDelete}
+            <FireMetricGrid
+              scenario={current}
+              summary={projection.summary}
+              rows={projection.rows}
             />
-          </Paper>
-        </Grid>
-
-        {/* Right column: Summary + Chart + Table */}
-        <Grid item xs={12} md={8}>
-          <Stack spacing={2}>
-            <FireSummaryCard summary={projection.summary} />
-
             <Paper sx={{ p: 2.5 }} elevation={1}>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                Projection Over Time
+                Portfolio projection
               </Typography>
               <FireProjectionChart
                 rows={chartRows}
@@ -329,22 +304,24 @@ export default function FireCalculator() {
                     {FIRE_CHART_LABELS.projectedReal}
                   </Typography>
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 3,
-                      bgcolor: "#ef5350",
-                      borderRadius: 1,
-                      borderStyle: "dashed",
-                      borderWidth: 1,
-                      borderColor: "#ef5350",
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    {FIRE_CHART_LABELS.fireTarget}
-                  </Typography>
-                </Stack>
+                {projection.summary.fireNumber > 0 && (
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 3,
+                        bgcolor: "#ef5350",
+                        borderRadius: 1,
+                        borderStyle: "dashed",
+                        borderWidth: 1,
+                        borderColor: "#ef5350",
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      {FIRE_CHART_LABELS.fireTarget}
+                    </Typography>
+                  </Stack>
+                )}
                 {actualMilestones.length > 0 && (
                   <>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -380,11 +357,86 @@ export default function FireCalculator() {
               </Stack>
             </Paper>
 
+            <Box
+              sx={{
+                width: "100%",
+                minWidth: 0,
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: 2,
+                alignItems: "stretch",
+              }}
+            >
+              <Box sx={{ display: "flex", minWidth: 0 }}>
+                <FireNextMoveCard
+                  scenario={current}
+                  summary={projection.summary}
+                />
+              </Box>
+              <Box sx={{ display: "flex", minWidth: 0 }}>
+                <FireMilestonesCard
+                  currentBalance={current.currentBalance}
+                  target={projection.summary.fireNumber}
+                />
+              </Box>
+            </Box>
+
             <Paper sx={{ p: 2.5 }} elevation={1}>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                Year-by-Year Breakdown
+                Projection details
               </Typography>
               <FireProjectionTable rows={breakdownRows} />
+            </Paper>
+          </Stack>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Stack
+            spacing={2}
+            sx={{ position: { md: "sticky" }, top: { md: 24 } }}
+          >
+            <Paper
+              id="fire-assumptions"
+              tabIndex={-1}
+              sx={{ p: 2.5, scrollMarginTop: 24 }}
+              elevation={1}
+            >
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
+              >
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Assumptions
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : current.scenarioId ? "Update" : "Save"}
+                </Button>
+              </Stack>
+              <FireForm
+                values={current}
+                onChange={handleFieldChange}
+                computedFireNumber={computedFireNumber}
+              />
+            </Paper>
+            <Paper sx={{ p: 2.5 }} elevation={1}>
+              <FireScenarioList
+                scenarios={scenarios}
+                activeScenarioId={current.scenarioId}
+                onSelect={handleSelectScenario}
+                onNew={handleNewScenario}
+                onDelete={handleDelete}
+              />
             </Paper>
           </Stack>
         </Grid>
