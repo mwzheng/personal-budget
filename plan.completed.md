@@ -8,6 +8,81 @@ When work is finished, move it from `plan.md` to this file in the same commit.
 
 ---
 
+# Completed: FIRE calculator dashboard redesign, alignment, and review fixes
+
+Date: 2026-07-24
+
+Summary
+
+Redesigned the FIRE calculator from a form-first calculator into a dashboard-first
+planning experience. The page now emphasizes the projected FIRE outcome, target
+portfolio, progress, milestones, saved scenarios, and a compact projection
+breakdown while preserving the existing FIRE calculation model and scenario CRUD.
+
+Completed items
+
+- Added a dashboard hero with projected FIRE timeline, target portfolio, current
+  invested balance, remaining amount, progress, withdrawal rate, and reachability
+  states.
+- Added metric cards for years to FIRE, monthly contribution, annual spending, and
+  projected balance at FIRE.
+- Added Next move and target-relative Milestones cards.
+- Reorganized assumptions and saved scenarios into a sticky side rail.
+- Matched the approved prototype hierarchy and responsive two-column hero layout.
+- Fixed nested-grid gutter and sizing issues so metrics, chart, lower cards, and
+  projection details share the same horizontal content edges.
+- Fixed the lower card sizing so Next move and Milestones fill their intended grid
+  columns evenly.
+- Simplified chart labels to `Projected`, `Today’s $`, `Target`, `Actual`, and
+  `Milestone`.
+- Simplified projection table headers to `Year`, `Start`, `Added`, `Growth`, `End`,
+  `Today’s $`, `Actual`, `Target`, and `Status`.
+- Added FIRE dashboard helper functions and focused regression tests.
+- Corrected no-target behavior so zero-target projections are not marked as FIRE’d,
+  show no measurable progress, omit target chart markers, and provide clear
+  no-target copy throughout the dashboard.
+- Added user-visible handling for scenario deletion failures.
+- Replaced raw FIRE API exception responses with client-safe error messages while
+  retaining server-side logging.
+- Completed an independent code review and fixed all blocking findings.
+
+Files changed
+
+- `app/api/fire/route.ts`
+- `components/fire/FireCalculator.tsx`
+- `components/fire/FireDashboardHero.tsx` (new)
+- `components/fire/FireForm.tsx`
+- `components/fire/FireMetricGrid.tsx` (new)
+- `components/fire/FireMilestonesCard.tsx` (new)
+- `components/fire/FireNextMoveCard.tsx` (new)
+- `components/fire/FireProjectionChart.tsx`
+- `components/fire/FireProjectionTable.tsx`
+- `components/fire/FireScenarioList.tsx`
+- `lib/utils/fire-dashboard.ts` (new)
+- `lib/utils/fire.ts`
+- `test/lib/fire-calc.test.ts`
+- `test/lib/fire-dashboard.test.ts` (new)
+
+Validation
+
+- Focused FIRE tests: 45 passed.
+- `pnpm lint`: passed with three unrelated existing warnings.
+- `pnpm build`: passed.
+- `git diff --check`: passed.
+- Full suite baseline remains 284 passed with three unrelated failures involving
+  the missing `sample-data/expenses.csv` fixture, contact content copy, and a
+  Sankey label-size expectation.
+
+Commit reference
+
+- `0fc306e feat(fire): redesign calculator dashboard`
+
+Notes
+
+- Changes were committed locally on `feature/updates`; nothing was pushed.
+
+---
+
 # Completed: Full-application dark-theme UI/UX redesign (Phases 1–6)
 
 Date: 2026-04-25
