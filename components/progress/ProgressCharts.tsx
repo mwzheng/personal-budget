@@ -16,6 +16,7 @@ import React, { useMemo, useState } from "react";
 import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import {
   ResponsiveContainer,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -61,7 +62,7 @@ type ProgressTooltipEntry = NonNullable<
 
 const TAB_RETIREMENT = 0;
 const TAB_SALARY = 1;
-const CHART_HEIGHT = 400;
+const CHART_HEIGHT = 320;
 
 /** Map milestones to chart data points. For each milestone, find the retirement
  *  entry with the closest endAmount and use that year's data point so the marker
@@ -152,22 +153,40 @@ export default function ProgressCharts({
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+      }}
+    >
       <Tabs
         value={activeTab}
         onChange={(_, newValue: number) => setActiveTab(newValue)}
-        sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{
+          mb: 2,
+          minHeight: 40,
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          p: 0.5,
+          "& .MuiTabs-indicator": { display: "none" },
+          "& .MuiTab-root": {
+            minHeight: 36,
+            borderRadius: 0.75,
+            textTransform: "none",
+            fontWeight: 500,
+            "&.Mui-selected": {
+              bgcolor: "action.selected",
+              color: "text.primary",
+            },
+          },
+        }}
       >
-        <Tab
-          label="Retirement Growth"
-          id="chart-tab-0"
-          aria-controls="chart-panel-0"
-        />
-        <Tab
-          label="Salary Progression"
-          id="chart-tab-1"
-          aria-controls="chart-panel-1"
-        />
+        <Tab label="Savings" id="chart-tab-0" aria-controls="chart-panel-0" />
+        <Tab label="Salary" id="chart-tab-1" aria-controls="chart-panel-1" />
       </Tabs>
 
       {/* Retirement Growth panel */}
@@ -176,7 +195,7 @@ export default function ProgressCharts({
           role="tabpanel"
           id="chart-panel-0"
           aria-labelledby="chart-tab-0"
-          sx={{ width: "100%", height: CHART_HEIGHT }}
+          sx={{ width: "100%", flex: 1, minHeight: CHART_HEIGHT }}
         >
           {loading ? (
             <ChartLoadingState height={CHART_HEIGHT} showLegend={false} />
@@ -209,7 +228,7 @@ export default function ProgressCharts({
               </Typography>
             </Box>
           ) : (
-            <ChartWrapper title="Retirement Growth">
+            <ChartWrapper title="Savings Progress">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={retirementData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -241,10 +260,20 @@ export default function ProgressCharts({
                       }}
                     />
                   )}
+                  <Area
+                    type="monotone"
+                    dataKey="retirement"
+                    name="Retirement balance area"
+                    legendType="none"
+                    stroke="none"
+                    fill={theme.palette.primary.main}
+                    fillOpacity={0.16}
+                    isAnimationActive={false}
+                  />
                   <Line
                     type="monotone"
                     dataKey="retirement"
-                    name="Retirement End"
+                    name="Retirement balance"
                     stroke={theme.palette.primary.main}
                     strokeWidth={2}
                     strokeLinecap="round"
@@ -275,7 +304,12 @@ export default function ProgressCharts({
 
       {/* Salary Progression panel — delegates to reusable SalaryChart */}
       {activeTab === TAB_SALARY && (
-        <Box role="tabpanel" id="chart-panel-1" aria-labelledby="chart-tab-1">
+        <Box
+          role="tabpanel"
+          id="chart-panel-1"
+          aria-labelledby="chart-tab-1"
+          sx={{ flex: 1, minHeight: CHART_HEIGHT }}
+        >
           <SalaryChart data={salaryEntries} loading={loading} />
         </Box>
       )}

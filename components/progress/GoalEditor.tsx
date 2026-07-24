@@ -22,7 +22,7 @@ interface Props {
    */
   refreshTrigger?: number;
   /** Called after a successful save. */
-  onSaved?: () => void;
+  onSaved?: () => void | Promise<void>;
 }
 
 export default function GoalEditor({

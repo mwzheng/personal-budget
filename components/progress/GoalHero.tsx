@@ -6,64 +6,72 @@ import {
   Button,
   Card,
   CardContent,
+  LinearProgress,
   Skeleton,
-  Stack,
   Typography,
   useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
-import GoalGauge from "@/components/progress/GoalGauge";
-import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import {
   getLatestRetirementTotal,
   getLatestSalary,
 } from "@/lib/progress/progress-summary";
-import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
+import type {
+  MilestoneEntry,
+  RetirementEntry,
+  SalaryEntry,
+} from "@/lib/types/types";
 
 interface Props {
   goalTargetAmount: number | null;
   latestEnd: number | null;
   salaryEntries: SalaryEntry[];
   retirementEntries: RetirementEntry[];
+  milestones: MilestoneEntry[];
   onEditGoal: () => void;
   loading?: boolean;
 }
 
-interface MiniStatProps {
+interface StatProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  iconColor: string;
-  iconBgColor: string;
+  color: string;
+  backgroundColor: string;
+  loading?: boolean;
 }
 
-function MiniStat({
+const EMPTY = "—";
+
+function formatAmount(value: number | null): string {
+  return value === null ? EMPTY : `$${value.toLocaleString()}`;
+}
+
+function Stat({
   icon,
   label,
   value,
-  iconColor,
-  iconBgColor,
-  loading,
-}: MiniStatProps & { loading?: boolean }) {
+  color,
+  backgroundColor,
+  loading = false,
+}: StatProps) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center">
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
       <Box
         aria-hidden="true"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
           width: 40,
           height: 40,
-          borderRadius: "50%",
-          bgcolor: iconBgColor,
-          color: iconColor,
           flexShrink: 0,
+          display: "grid",
+          placeItems: "center",
+          borderRadius: "50%",
+          color,
+          bgcolor: backgroundColor,
           "& svg": { fontSize: 22 },
         }}
       >
@@ -71,25 +79,18 @@ function MiniStat({
       </Box>
       <Box sx={{ minWidth: 0 }}>
         {loading ? (
-          <Skeleton width={80} height={24} />
+          <Skeleton width={82} height={28} />
         ) : (
           <Typography variant="h6" fontWeight={700} lineHeight={1.2} noWrap>
             {value}
           </Typography>
         )}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.15 }}>
+        <Typography variant="body2" color="text.secondary" noWrap>
           {label}
         </Typography>
       </Box>
-    </Stack>
+    </Box>
   );
-}
-
-const EMPTY = "—";
-
-function fmt(n: number | null): string {
-  if (n === null) return EMPTY;
-  return `$${n.toLocaleString()}`;
 }
 
 export default function GoalHero({
@@ -97,122 +98,229 @@ export default function GoalHero({
   latestEnd,
   salaryEntries,
   retirementEntries,
+  milestones,
   onEditGoal,
   loading = false,
 }: Props) {
   const theme = useTheme();
   const totalSaved = latestEnd ?? getLatestRetirementTotal(retirementEntries);
   const latestSalary = getLatestSalary(salaryEntries);
-
   const yearsTracked = retirementEntries.length;
   const remaining =
     goalTargetAmount !== null && totalSaved !== null
       ? Math.max(goalTargetAmount - totalSaved, 0)
       : null;
+  const nextMilestone = milestones
+    .filter((milestone) => totalSaved === null || milestone.amount > totalSaved)
+    .sort((left, right) => left.amount - right.amount)[0];
+  const percentage =
+    goalTargetAmount !== null && goalTargetAmount > 0 && totalSaved !== null
+      ? Math.min(Math.max((totalSaved / goalTargetAmount) * 100, 0), 100)
+      : null;
 
   return (
-    <Card elevation={1}>
-      <CardContent
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr",
+          md: "minmax(0, 1.25fr) minmax(300px, .75fr)",
+        },
+        gap: 2.25,
+      }}
+    >
+      <Card
+        elevation={1}
         sx={{
-          p: { xs: 2.5, sm: 3 },
-          "&:last-child": { pb: { xs: 2.5, sm: 3 } },
+          position: "relative",
+          overflow: "hidden",
+          bgcolor: "background.paper",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            width: 240,
+            height: 240,
+            right: -70,
+            top: -100,
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+            borderRadius: "50%",
+            pointerEvents: "none",
+          },
         }}
       >
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={4}
-          alignItems={{ xs: "center", md: "flex-start" }}
+        <CardContent
+          sx={{
+            p: { xs: 2.5, sm: 3 },
+            "&:last-child": { pb: { xs: 2.5, sm: 3 } },
+          }}
         >
-          {/* Left: Gauge + motivational text */}
-          <Box sx={{ flexShrink: 0, textAlign: "center" }}>
-            <Box sx={{ position: "relative" }}>
-              <GoalGauge current={latestEnd} target={goalTargetAmount} />
-              <ActionIconButton
-                tooltip="Edit goal"
-                ariaLabel="Edit goal"
-                onClick={onEditGoal}
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  right: -8,
-                  bgcolor: "background.paper",
-                  "&:hover": { bgcolor: "action.hover" },
-                }}
-              >
-                <EditOutlinedIcon fontSize="small" />
-              </ActionIconButton>
-            </Box>
+          <Typography
+            variant="overline"
+            color="primary.light"
+            fontWeight={700}
+            letterSpacing="0.1em"
+          >
+            Primary goal · Financial progress
+          </Typography>
+          <Typography
+            component="h2"
+            variant="h4"
+            fontWeight={700}
+            sx={{ mt: 0.5 }}
+          >
+            {goalTargetAmount !== null
+              ? `${formatAmount(goalTargetAmount)} savings target`
+              : "Set your financial goal"}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Keep building the habit. Your progress and history are tracked here.
+          </Typography>
 
-            {goalTargetAmount !== null && totalSaved !== null ? (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 1, maxWidth: 240, mx: "auto" }}
-              >
-                You&apos;ve saved <strong>{fmt(totalSaved)}</strong> toward your{" "}
-                <strong>{fmt(goalTargetAmount)}</strong> goal
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: 2,
+              mt: 4,
+              mb: 1,
+            }}
+          >
+            <Box>
+              <Typography variant="h3" fontWeight={800} lineHeight={1}>
+                {formatAmount(totalSaved)}
               </Typography>
-            ) : goalTargetAmount !== null ? (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Target: <strong>{fmt(goalTargetAmount)}</strong>
+              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                saved so far
               </Typography>
-            ) : (
-              <Button
-                variant="contained"
-                size="small"
-                onClick={onEditGoal}
-                sx={{ mt: 1.5 }}
-              >
-                Set Goal
-              </Button>
-            )}
+            </Box>
+            <Typography color="primary.light" fontWeight={700}>
+              {percentage !== null
+                ? `${percentage.toFixed(0)}% complete`
+                : "Not started"}
+            </Typography>
           </Box>
 
-          {/* Right: Mini stats grid */}
+          <LinearProgress
+            variant="determinate"
+            value={percentage ?? 0}
+            aria-label="Financial goal progress"
+            sx={{
+              height: 10,
+              borderRadius: 999,
+              bgcolor: alpha(theme.palette.primary.main, 0.14),
+              "& .MuiLinearProgress-bar": { borderRadius: 999 },
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: { xs: 2, sm: 3 },
+              mt: 2,
+            }}
+          >
+            <Box>
+              <Typography fontWeight={700}>
+                {formatAmount(remaining)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                remaining
+              </Typography>
+            </Box>
+            <Box>
+              <Typography fontWeight={700}>{yearsTracked || EMPTY}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                years tracked
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onEditGoal}
+              sx={{ ml: { sm: "auto" }, alignSelf: "center" }}
+            >
+              {goalTargetAmount === null ? "Set goal" : "Edit goal"}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <Card
+        elevation={1}
+        sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+      >
+        <CardContent
+          sx={{
+            p: { xs: 2.5, sm: 3 },
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            "&:last-child": { pb: { xs: 2.5, sm: 3 } },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2.5,
+            }}
+          >
+            <Typography component="h2" variant="h6" fontWeight={600}>
+              At a glance
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Overview
+            </Typography>
+          </Box>
           <Box
             sx={{
               flex: 1,
-              minWidth: 0,
               display: "grid",
               gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 3,
+              gridTemplateRows: { xs: "auto", sm: "repeat(2, minmax(0, 1fr))" },
+              alignItems: "center",
+              alignContent: "stretch",
+              gap: { xs: 2.5, sm: 3 },
             }}
           >
-            <MiniStat
+            <Stat
               icon={<SavingsOutlinedIcon />}
-              label="Total Saved"
-              value={fmt(totalSaved)}
-              iconColor={theme.palette.success.main}
-              iconBgColor={alpha(theme.palette.success.main, 0.15)}
+              label="Total saved"
+              value={formatAmount(totalSaved)}
+              color={theme.palette.primary.light}
+              backgroundColor={alpha(theme.palette.primary.main, 0.14)}
               loading={loading}
             />
-            <MiniStat
+            <Stat
               icon={<TrendingUpOutlinedIcon />}
-              label="Latest Salary"
-              value={fmt(latestSalary)}
-              iconColor={theme.palette.warning.main}
-              iconBgColor={alpha(theme.palette.warning.main, 0.15)}
+              label="Latest salary"
+              value={formatAmount(latestSalary)}
+              color={theme.palette.warning.main}
+              backgroundColor={alpha(theme.palette.warning.main, 0.14)}
               loading={loading}
             />
-            <MiniStat
+            <Stat
               icon={<CalendarMonthOutlinedIcon />}
-              label="Years Tracked"
-              value={yearsTracked > 0 ? String(yearsTracked) : EMPTY}
-              iconColor={theme.palette.info.main}
-              iconBgColor={alpha(theme.palette.info.main, 0.15)}
+              label="Years tracked"
+              value={yearsTracked ? String(yearsTracked) : EMPTY}
+              color={theme.palette.info.main}
+              backgroundColor={alpha(theme.palette.info.main, 0.14)}
               loading={loading}
             />
-            <MiniStat
+            <Stat
               icon={<FlagOutlinedIcon />}
-              label="Remaining"
-              value={remaining !== null ? fmt(remaining) : EMPTY}
-              iconColor={theme.palette.primary.main}
-              iconBgColor={alpha(theme.palette.primary.main, 0.15)}
+              label="Next milestone"
+              value={formatAmount(nextMilestone?.amount ?? null)}
+              color={theme.palette.secondary.main}
+              backgroundColor={alpha(theme.palette.secondary.main, 0.14)}
               loading={loading}
             />
           </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

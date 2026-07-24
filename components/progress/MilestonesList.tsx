@@ -7,7 +7,6 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
-import MilestoneTrack from "@/components/progress/MilestoneTrack";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
@@ -26,8 +25,6 @@ interface Props {
   milestones: MilestoneEntry[];
   /** Loading state from the parent page. */
   loading?: boolean;
-  /** Goal target amount — used by the horizontal track to define the scale. */
-  goalTargetAmount?: number | null;
   /** Current saved amount — used to show reached/unreached state. */
   currentAmount?: number | null;
   /** Called after a milestone is deleted so the parent can refresh. */
@@ -45,7 +42,6 @@ function fmt(n: number): string {
 export default function MilestonesList({
   milestones,
   loading = false,
-  goalTargetAmount = null,
   currentAmount = null,
   onMilestonesChanged,
 }: Props) {
@@ -87,6 +83,9 @@ export default function MilestonesList({
   });
 
   const sorted = sortMilestones(milestones);
+  const nextUnreachedId = sorted.find(
+    (milestone) => currentAmount === null || milestone.amount > currentAmount,
+  )?.milestoneId;
 
   return (
     <Box>
@@ -114,23 +113,11 @@ export default function MilestonesList({
         <EmptyState icon={<FlagOutlinedIcon />} message="No milestones yet." />
       ) : (
         <>
-          <Box sx={{ mb: 3 }}>
-            <MilestoneTrack
-              milestones={milestones}
-              currentAmount={currentAmount}
-              goalTargetAmount={goalTargetAmount}
-            />
-          </Box>
-
           <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }}>
             {sorted.map((item, index) => {
               const isLast = index === sorted.length - 1;
               const reached =
                 currentAmount !== null && item.amount <= currentAmount;
-              const distance =
-                currentAmount !== null
-                  ? Math.abs(item.amount - currentAmount)
-                  : null;
               return (
                 <Box
                   component="li"
@@ -199,14 +186,23 @@ export default function MilestonesList({
                               variant="outlined"
                               sx={{ height: 22, fontSize: "0.7rem" }}
                             />
-                          ) : distance !== null ? (
+                          ) : (
                             <Chip
-                              label={`${fmt(distance)} away`}
+                              label={
+                                item.milestoneId === nextUnreachedId
+                                  ? "Next"
+                                  : "Later"
+                              }
                               size="small"
                               variant="outlined"
+                              color={
+                                item.milestoneId === nextUnreachedId
+                                  ? "warning"
+                                  : "default"
+                              }
                               sx={{ height: 22, fontSize: "0.7rem" }}
                             />
-                          ) : null}
+                          )}
                         </Stack>
 
                         {item.year || item.age ? (

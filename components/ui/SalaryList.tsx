@@ -12,11 +12,15 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Typography,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import SalaryForm from "@/components/forms/SalaryForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
@@ -158,88 +162,84 @@ export default function SalaryList({
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      {/* Note 2: Responsive card grid — single column on mobile (xs),
-          two columns on sm+. Each card surfaces year, salary amount, and
-          the computed YoY change with a colour-coded Chip for quick scanning. */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 2,
-          gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
-            sm: "repeat(2, minmax(0, 1fr))",
-          },
-        }}
-      >
-        {entries.map((entry) => {
-          // Note 6: Chip colour is derived from the sign of the YoY value so
-          // the user gets an instant positive/negative visual signal.
-          const chipColor: "success" | "error" | "default" =
-            (entry.yoy ?? 0) > 0
-              ? "success"
-              : (entry.yoy ?? 0) < 0
-                ? "error"
-                : "default";
+      {/* Compact history table keeps the dashboard scan-friendly while the row
+          actions preserve the existing edit/delete workflows. */}
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 460 }} size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Year</TableCell>
+              <TableCell>Salary</TableCell>
+              <TableCell>Year-over-year</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {entries.map((entry) => {
+              const chipColor: "success" | "error" | "default" =
+                (entry.yoy ?? 0) > 0
+                  ? "success"
+                  : (entry.yoy ?? 0) < 0
+                    ? "error"
+                    : "default";
 
-          return (
-            <Card key={entry.entryId}>
-              <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                {/* ── Top row: year heading + action buttons ── */}
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ mb: 1.5 }}
-                >
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {entry.year}
-                  </Typography>
-                  <Stack direction="row" spacing={0.75}>
-                    <ActionIconButton
-                      tooltip="Edit"
-                      ariaLabel={`Edit salary entry for ${entry.year}`}
-                      onClick={() => {
-                        setEditing(entry);
-                        setDialogOpen(true);
-                      }}
+              return (
+                <TableRow key={entry.entryId} hover>
+                  <TableCell sx={{ fontWeight: 600 }}>{entry.year}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    ${Number(entry.amount).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {entry.yoy !== null && entry.yoy !== undefined ? (
+                      <Chip
+                        label={`${entry.yoy}%`}
+                        size="small"
+                        variant="outlined"
+                        color={chipColor}
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        —
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      justifyContent="flex-end"
                     >
-                      <EditOutlinedIcon fontSize="small" />
-                    </ActionIconButton>
-                    <ActionIconButton
-                      tooltip="Delete"
-                      ariaLabel={`Delete salary entry for ${entry.year}`}
-                      tone="danger"
-                      onClick={() =>
-                        requestDelete({
-                          entryId: entry.entryId,
-                          year: entry.year,
-                        })
-                      }
-                    >
-                      <DeleteOutlineRoundedIcon fontSize="small" />
-                    </ActionIconButton>
-                  </Stack>
-                </Stack>
-
-                {/* ── Middle: salary amount prominently displayed ── */}
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 1.5 }}>
-                  ${Number(entry.amount).toLocaleString()}
-                </Typography>
-
-                {/* ── Bottom: YoY percentage chip ── */}
-                {entry.yoy !== null && entry.yoy !== undefined ? (
-                  <Chip
-                    label={`${entry.yoy}%`}
-                    size="small"
-                    variant="outlined"
-                    color={chipColor}
-                  />
-                ) : null}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
+                      <ActionIconButton
+                        tooltip="Edit"
+                        ariaLabel={`Edit salary entry for ${entry.year}`}
+                        onClick={() => {
+                          setEditing(entry);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </ActionIconButton>
+                      <ActionIconButton
+                        tooltip="Delete"
+                        ariaLabel={`Delete salary entry for ${entry.year}`}
+                        tone="danger"
+                        onClick={() =>
+                          requestDelete({
+                            entryId: entry.entryId,
+                            year: entry.year,
+                          })
+                        }
+                      >
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                      </ActionIconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {entries.length === 0 && !loading ? (
         <EmptyState

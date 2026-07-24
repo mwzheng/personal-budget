@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Button, Container } from "@mui/material";
+import { Box, Button, Container } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import GoalHero from "@/components/progress/GoalHero";
 import GoalEditor from "@/components/progress/GoalEditor";
@@ -100,22 +100,60 @@ export default function Page() {
     }
   }, []);
 
+  const refreshGoalData = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/progress/goal");
+      const data = (await res.json()) as {
+        ok: boolean;
+        goals?: Array<{ targetAmount?: number; goalId?: string }>;
+        latestEnd?: number;
+      };
+      if (!data.ok) return;
+      setGoalTargetAmount(data.goals?.[0]?.targetAmount ?? null);
+      setGoalLatestEnd(data.latestEnd ?? null);
+    } catch {
+      // The hero retains its current values when goal data is unavailable.
+    }
+  }, []);
+
   const handleEntriesChanged = useCallback(async () => {
-    await refreshChartData();
-    await refreshMilestones();
+    await Promise.all([
+      refreshChartData(),
+      refreshMilestones(),
+      refreshGoalData(),
+    ]);
     setGoalRefreshTrigger((t) => t + 1);
-  }, [refreshChartData, refreshMilestones]);
+  }, [refreshChartData, refreshMilestones, refreshGoalData]);
 
   useEffect(() => {
     void refreshChartData();
     void refreshMilestones();
-  }, [refreshChartData, refreshMilestones]);
+    void refreshGoalData();
+  }, [refreshChartData, refreshMilestones, refreshGoalData]);
 
   return (
     <Container component="main" maxWidth="xl" sx={{ py: { xs: 4, md: 5 } }}>
       <PageHeader
-        title="Progress Tracker"
-        description="Review salary history, retirement contributions, and milestones from one long-term progress workspace."
+        title="Your path to financial freedom"
+        description="Track the goal, career, and milestones that shape your long-term progress."
+        action={
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setGoalDialogOpen(true)}
+            >
+              Edit goal
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => setMilestoneDialogOpen(true)}
+            >
+              Add milestone
+            </Button>
+          </Box>
+        }
         sx={{ mb: 3 }}
       />
 
@@ -125,6 +163,7 @@ export default function Page() {
         latestEnd={goalLatestEnd}
         salaryEntries={salaryEntries}
         retirementEntries={retirementEntries}
+        milestones={milestones}
         onEditGoal={() => setGoalDialogOpen(true)}
         loading={chartLoading}
       />
@@ -140,7 +179,10 @@ export default function Page() {
         <GoalEditor
           onGoalData={handleGoalData}
           refreshTrigger={goalRefreshTrigger}
-          onSaved={() => setGoalDialogOpen(false)}
+          onSaved={async () => {
+            await refreshGoalData();
+            setGoalDialogOpen(false);
+          }}
         />
       </ProgressEntryDialog>
 
@@ -161,12 +203,19 @@ export default function Page() {
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
         {/* Charts — wider on desktop */}
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} md={8}>
           <SectionCard
             title="Progress Over Time"
+            description="Savings and salary growth in one view"
             headingId="progress-charts-heading"
             elevation={1}
-            sx={{ height: "100%" }}
+            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+            contentSx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
           >
             <ProgressCharts
               salaryEntries={salaryEntries}
@@ -180,26 +229,17 @@ export default function Page() {
         </Grid>
 
         {/* Milestones — narrower on desktop */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={4}>
           <SectionCard
             title="Milestones"
+            description="Celebrate the next step"
             headingId="progress-milestones-heading"
             elevation={1}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => setMilestoneDialogOpen(true)}
-              >
-                Add Milestone
-              </Button>
-            }
             sx={{ height: "100%" }}
           >
             <MilestonesList
               milestones={milestones}
               loading={chartLoading}
-              goalTargetAmount={goalTargetAmount}
               currentAmount={goalLatestEnd}
               onMilestonesChanged={refreshMilestones}
             />
@@ -209,7 +249,8 @@ export default function Page() {
         {/* History — full width */}
         <Grid item xs={12}>
           <SectionCard
-            title="History"
+            title="Career & savings history"
+            description="Use your history to understand the story behind the progress."
             headingId="progress-history-heading"
             elevation={1}
           >

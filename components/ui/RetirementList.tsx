@@ -8,11 +8,15 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Typography,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
@@ -139,109 +143,89 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
-      {/* Note 3: Responsive card grid — single column on mobile (xs),
-          two columns on sm+. Each card surfaces year, start/end amounts,
-          and the computed change with a colour-coded Chip for quick scanning. */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 2,
-          gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
-            sm: "repeat(2, minmax(0, 1fr))",
-          },
-        }}
-      >
-        {entries.map((entry) => {
-          const change = Number(
-            entry.change ?? entry.endAmount - entry.startAmount,
-          );
-          const pct = entry.pct;
+      {/* Compact history table keeps the dashboard scan-friendly while the row
+          actions preserve the existing edit/delete workflows. */}
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 560 }} size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Year</TableCell>
+              <TableCell>Start</TableCell>
+              <TableCell>End</TableCell>
+              <TableCell>Change</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {entries.map((entry) => {
+              const change = Number(
+                entry.change ?? entry.endAmount - entry.startAmount,
+              );
+              const pct = entry.pct;
+              const chipColor: "success" | "error" | "default" =
+                change > 0 ? "success" : change < 0 ? "error" : "default";
 
-          // Note 4: Chip colour is derived from the sign of the change so the
-          // user gets an instant positive/negative visual signal.
-          const chipColor: "success" | "error" | "default" =
-            change > 0 ? "success" : change < 0 ? "error" : "default";
-
-          return (
-            <Card key={entry.entryId}>
-              <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                {/* ── Top row: year heading + action buttons ── */}
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ mb: 1.5 }}
-                >
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {entry.year}
-                  </Typography>
-                  <Stack direction="row" spacing={0.75}>
-                    <ActionIconButton
-                      tooltip="Edit"
-                      ariaLabel={`Edit retirement entry for ${entry.year}`}
-                      onClick={() => {
-                        setEditing(entry);
-                        setDialogOpen(true);
-                      }}
+              return (
+                <TableRow key={entry.entryId} hover>
+                  <TableCell sx={{ fontWeight: 600 }}>{entry.year}</TableCell>
+                  <TableCell>
+                    ${Number(entry.startAmount).toLocaleString()}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    ${Number(entry.endAmount).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body2">
+                        ${change.toLocaleString()}
+                      </Typography>
+                      {pct !== null && pct !== undefined ? (
+                        <Chip
+                          label={`${pct}%`}
+                          size="small"
+                          variant="outlined"
+                          color={chipColor}
+                        />
+                      ) : null}
+                    </Stack>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      justifyContent="flex-end"
                     >
-                      <EditOutlinedIcon fontSize="small" />
-                    </ActionIconButton>
-                    <ActionIconButton
-                      tooltip="Delete"
-                      ariaLabel={`Delete retirement entry for ${entry.year}`}
-                      tone="danger"
-                      onClick={() =>
-                        requestDelete({
-                          entryId: entry.entryId,
-                          year: entry.year,
-                        })
-                      }
-                    >
-                      <DeleteOutlineRoundedIcon fontSize="small" />
-                    </ActionIconButton>
-                  </Stack>
-                </Stack>
-
-                {/* ── Middle row: start / end amounts side-by-side ── */}
-                <Stack direction="row" spacing={3} sx={{ mb: 1.5 }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Start
-                    </Typography>
-                    <Typography variant="h6" fontWeight={600}>
-                      ${Number(entry.startAmount).toLocaleString()}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      End
-                    </Typography>
-                    <Typography variant="h6" fontWeight={600}>
-                      ${Number(entry.endAmount).toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                {/* ── Bottom row: change amount + percentage chip ── */}
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="body2" color="text.secondary">
-                    Change: ${change.toLocaleString()}
-                  </Typography>
-                  {pct !== null && pct !== undefined ? (
-                    <Chip
-                      label={`${pct}%`}
-                      size="small"
-                      variant="outlined"
-                      color={chipColor}
-                    />
-                  ) : null}
-                </Stack>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
+                      <ActionIconButton
+                        tooltip="Edit"
+                        ariaLabel={`Edit retirement entry for ${entry.year}`}
+                        onClick={() => {
+                          setEditing(entry);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </ActionIconButton>
+                      <ActionIconButton
+                        tooltip="Delete"
+                        ariaLabel={`Delete retirement entry for ${entry.year}`}
+                        tone="danger"
+                        onClick={() =>
+                          requestDelete({
+                            entryId: entry.entryId,
+                            year: entry.year,
+                          })
+                        }
+                      >
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                      </ActionIconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {entries.length === 0 && !loading ? (
         <EmptyState
