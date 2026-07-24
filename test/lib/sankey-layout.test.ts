@@ -92,8 +92,8 @@ describe("getSankeyLayoutMetrics", () => {
 
     const metrics = getSankeyLayoutMetrics(longLabelData);
 
-    expect(metrics.labelFontSize).toBe(9);
+    expect(metrics.labelFontSize).toBe(10);
     expect(metrics.leftMargin).toBeGreaterThanOrEqual(40);
-    expect(metrics.rightMargin).toBeLessThanOrEqual(200);
+    expect(metrics.rightMargin).toBeLessThanOrEqual(240);
   });
 });

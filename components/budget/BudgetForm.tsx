@@ -48,7 +48,6 @@ import {
   BudgetDraft,
   createBudgetExpense,
   hasBudgetRowContent,
-  parseSankeyPathSegments,
 } from "@/lib/utils/budget-planner";
 import { BudgetExpense, CategoryType } from "@/lib/types/types";
 import { formatCurrency, formatCurrencyWhole } from "@/lib/utils/format";
@@ -558,10 +557,6 @@ export function BudgetForm({
                     {expenses.map((expense) => {
                       const globalIndex = value.expenses.findIndex(
                         (e) => e.expenseId === expense.expenseId,
-                      );
-                      const parsedSegments = parseSankeyPathSegments(
-                        expense.group,
-                        expense.name,
                       );
                       const percentage =
                         value.monthlyIncome > 0

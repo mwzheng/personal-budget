@@ -6,6 +6,8 @@
 .DS_Store
 coverage
 
-/sample-data
+/sample-data/*
+!/sample-data/
+!/sample-data/expenses.csv
 /reference-images
 logs/

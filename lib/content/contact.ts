@@ -1,7 +1,5 @@
 import type { ContactMethod, ContactSectionContent } from "../types/content";
 import { CREATOR_SOCIAL_LINKS } from "./about";
-import { APP_NAME } from "./page-titles";
-
 export const CONTACT_METHODS = [
   {
     label: CREATOR_SOCIAL_LINKS.github.label,
@@ -44,17 +42,21 @@ export const CONTACT_SECTION_CONTENT = {
     fields: {
       name: {
         label: "Name",
+        helperText: "Tell me who I’m hearing from.",
         autoComplete: "name",
       },
       email: {
         label: "Email",
+        helperText: "I’ll use this address if a reply is needed.",
         autoComplete: "email",
       },
       subject: {
         label: "Subject",
+        helperText: "A short summary helps me understand the message.",
       },
       message: {
         label: "Message",
+        helperText: "Share the question, idea, or issue you’d like to discuss.",
       },
     },
   },
