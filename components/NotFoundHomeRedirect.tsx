@@ -35,7 +35,7 @@ export function NotFoundHomeRedirect() {
         width: "100%",
         maxWidth: 640,
         p: 2.25,
-        borderRadius: 3,
+        borderRadius: 1,
         border: `1px solid ${alpha(SERVER_THEME_TOKENS.palette.primary, 0.24)}`,
         bgcolor: alpha(SERVER_THEME_TOKENS.palette.primary, 0.08),
       }}
@@ -43,7 +43,7 @@ export function NotFoundHomeRedirect() {
       <Stack direction="row" spacing={1.5} alignItems="flex-start">
         <AccessTimeRoundedIcon
           aria-hidden="true"
-          sx={{ color: "primary.light", mt: 0.1 }}
+          sx={{ color: "primary.main", mt: 0.1 }}
         />
         <Stack spacing={0.75}>
           <Typography

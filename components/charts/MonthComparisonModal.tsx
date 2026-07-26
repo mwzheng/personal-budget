@@ -56,7 +56,7 @@ function ChangeIndicator({
         sx={{
           fontSize: "0.7rem",
           height: 22,
-          bgcolor: "rgba(255,255,255,0.08)",
+          bgcolor: "action.hover",
           color: "text.secondary",
         }}
       />
@@ -71,7 +71,7 @@ function ChangeIndicator({
         sx={{
           fontSize: "0.7rem",
           height: 22,
-          bgcolor: "rgba(255,255,255,0.08)",
+          bgcolor: "action.hover",
           color: "text.secondary",
         }}
       />
@@ -79,7 +79,9 @@ function ChangeIndicator({
   }
 
   const isFavorable = positiveIsFavorable ? value > 0 : value < 0;
-  const color = isFavorable ? "#66bb6a" : "#ef5350";
+  // Use contrast-safe semantic text colors on the light canvas; the brighter
+  // palette values remain available for decorative fills and chart accents.
+  const color = isFavorable ? "#15803D" : "#B91C1C";
   const icon =
     value > 0 ? (
       <ArrowUpwardIcon sx={{ fontSize: 14 }} />

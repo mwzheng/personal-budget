@@ -44,7 +44,7 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
           gap: 0.5,
           width: "fit-content",
           transition: "color 0.15s ease-in-out",
-          "&:hover": { color: "primary.light" },
+          "&:hover": { color: "primary.main" },
         }}
       >
         {link.label}
@@ -64,7 +64,7 @@ function FooterNavigationLink({ link }: { link: LinkDefinition }) {
         fontSize: "0.875rem",
         width: "fit-content",
         transition: "color 0.15s ease-in-out",
-        "&:hover": { color: "primary.light" },
+        "&:hover": { color: "primary.main" },
       }}
     >
       {link.label}
@@ -138,7 +138,7 @@ function FooterSocialGroup({
                   gap: 0.75,
                   fontSize: "0.875rem",
                   transition: "color 0.15s ease-in-out",
-                  "&:hover": { color: "primary.light" },
+                  "&:hover": { color: "primary.main" },
                 }}
               >
                 <Icon sx={{ fontSize: 17 }} aria-hidden="true" />
@@ -170,7 +170,7 @@ export function Footer() {
       component="footer"
       sx={{
         mt: "auto",
-        bgcolor: "background.default",
+        bgcolor: "background.paper",
         borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
       }}
     >

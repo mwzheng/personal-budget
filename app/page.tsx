@@ -77,11 +77,8 @@ const FeatureCard = ({
           p: 3,
           display: "flex",
           flexDirection: "column",
-          backgroundColor: alpha(
-            SERVER_THEME_TOKENS.palette.backgroundPaper,
-            0.6,
-          ),
-          border: `1px solid ${alpha(SERVER_THEME_TOKENS.border.subtle, 0.25)}`,
+          backgroundColor: SERVER_THEME_TOKENS.surface.card,
+          border: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
           height: "100%",
           gap: 1,
         }}
@@ -93,7 +90,7 @@ const FeatureCard = ({
             justifyContent: "center",
             width: 48,
             height: 48,
-            borderRadius: 3,
+            borderRadius: 1,
             backgroundColor: alpha(SERVER_THEME_TOKENS.palette.primary, 0.12),
             border: `1px solid ${alpha(SERVER_THEME_TOKENS.palette.primary, 0.42)}`,
             margin: "auto",
@@ -101,7 +98,7 @@ const FeatureCard = ({
         >
           <Icon
             aria-hidden="true"
-            sx={{ fontSize: 26, color: "primary.light" }}
+            sx={{ fontSize: 26, color: "primary.main" }}
           />
         </Box>
         <Stack spacing={1} sx={{ flex: 1 }}>
@@ -176,6 +173,7 @@ export default function Home() {
       <Box
         component="section"
         aria-labelledby="home-hero-title"
+        className="dither-surface"
         sx={{
           position: "relative",
           overflow: "hidden",
@@ -185,9 +183,11 @@ export default function Home() {
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(circle at 50% -20%, rgba(45, 125, 210, 0.12) 0%, transparent 50%), radial-gradient(circle at 50% 10%, rgba(45, 125, 210, 0.08) 0%, transparent 70%)",
+              "radial-gradient(circle at 50% -20%, rgba(54,217,197,0.12), transparent 55%), linear-gradient(180deg, rgba(6,17,27,0.2), rgba(6,17,27,0.7))",
             pointerEvents: "none",
+            zIndex: 0,
           },
+          "& > *": { position: "relative", zIndex: 1 },
         }}
       >
         <Container maxWidth="md">
@@ -211,7 +211,7 @@ export default function Home() {
               sx={{
                 fontSize: { xs: "2.75rem", sm: "3.5rem", md: "4.5rem" },
                 letterSpacing: "-0.05em",
-                color: "common.white",
+                color: "text.primary",
               }}
             >
               {hero.title}

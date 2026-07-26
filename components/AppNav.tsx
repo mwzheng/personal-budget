@@ -90,12 +90,12 @@ const SALARY_NAV_ITEM = {
 const MOBILE_DRAWER_WIDTH = 320;
 
 const mobileNavItemSx = {
-  borderRadius: 2,
+  borderRadius: 1,
   px: 1.5,
   py: 0.875,
   "&.Mui-selected": {
     bgcolor: SERVER_THEME_TOKENS.surface.selected,
-    color: "primary.light",
+    color: "primary.main",
   },
   "&.Mui-selected:hover": {
     bgcolor: SERVER_THEME_TOKENS.surface.selectedHover,
@@ -161,7 +161,10 @@ export function AppNav() {
     <AppBar
       position="static"
       elevation={0}
-      sx={{ bgcolor: "background.default" }}
+      sx={{
+        bgcolor: SERVER_THEME_TOKENS.surface.page,
+        borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
+      }}
     >
       <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 }, py: 0 }}>
         <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
@@ -250,12 +253,19 @@ export function AppNav() {
               sx={{
                 minWidth: 0,
                 px: 1.5,
+                minHeight: 44,
                 fontWeight: 500,
+                border: `1px solid ${isInfoMenuOpen || isInfoRoute ? SERVER_THEME_TOKENS.palette.primary : SERVER_THEME_TOKENS.border.standard}`,
+                borderRadius: 1,
                 color:
                   isInfoMenuOpen || isInfoRoute
-                    ? "primary.light"
+                    ? "primary.main"
                     : "text.secondary",
-                "&:hover": { color: "text.primary" },
+                "&:hover": {
+                  color: "primary.light",
+                  borderColor: "primary.main",
+                  bgcolor: SERVER_THEME_TOKENS.surface.selected,
+                },
               }}
             >
               Info
@@ -312,7 +322,19 @@ export function AppNav() {
             aria-label="Open navigation menu"
             edge="end"
             onClick={() => setMobileDrawerOpen(true)}
-            sx={{ display: { xs: "inline-flex", lg: "none" } }}
+            sx={{
+              display: { xs: "inline-flex", lg: "none" },
+              minWidth: 44,
+              minHeight: 44,
+              border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
+              borderRadius: 1,
+              color: "text.primary",
+              "&:hover": {
+                borderColor: "primary.main",
+                color: "primary.light",
+                bgcolor: SERVER_THEME_TOKENS.surface.selected,
+              },
+            }}
           >
             <MenuRoundedIcon />
           </IconButton>
@@ -337,6 +359,8 @@ export function AppNav() {
                   mt: 1,
                   minWidth: 176,
                   py: 0.5,
+                  backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
+                  border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
                 },
               },
             }}
