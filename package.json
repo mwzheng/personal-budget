@@ -54,8 +54,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx,css,scss,md,json}": [
-      "pnpm dlx prettier --write",
-      "git add"
+      "pnpm dlx prettier --write"
     ]
   }
 }
