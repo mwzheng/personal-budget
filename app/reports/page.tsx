@@ -463,7 +463,7 @@ const ReportsPageContent = () => {
                   {
                     label: "Needs",
                     value: formatCurrency(agg.totalByCategoryType.Need),
-                    color: "#ef5350",
+                    color: "#B91C1C",
                     trend: comparableAgg
                       ? buildStatTrend(
                           agg.totalByCategoryType.Need,
@@ -487,7 +487,7 @@ const ReportsPageContent = () => {
                   {
                     label: "Savings",
                     value: formatCurrency(agg.totalByCategoryType.Saving),
-                    color: "#66bb6a",
+                    color: "#15803D",
                     trend: comparableAgg
                       ? buildStatTrend(
                           agg.totalByCategoryType.Saving,

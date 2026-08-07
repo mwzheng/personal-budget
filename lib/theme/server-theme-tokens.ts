@@ -11,61 +11,63 @@ import { alpha } from "@mui/material/styles";
  */
 export const SERVER_THEME_TOKENS = {
   palette: {
-    primary: "#2D7DD2",
-    primaryLight: "#5B9FE0",
-    primaryDark: "#1A5FA8",
-    secondary: "#4caf50",
-    backgroundDefault: "#1a1a1a",
-    backgroundPaper: "#242424",
+    primary: "#36D9C5",
+    primaryLight: "#86FFF0",
+    primaryDark: "#159E98",
+    secondary: "#55C7E8",
+    success: "#55D68A",
+    warning: "#F2B35D",
+    danger: "#FF7B82",
+    backgroundDefault: "#06111B",
+    backgroundPaper: "#0B1B26",
   },
-  // Semantic surface layers for hierarchical dark-mode composition.
-  // Use page → card → raised → overlay as you go deeper in the z-stack.
+  // Semantic surface layers for the dark Dithered composition.
   surface: {
-    page: "#1a1a1a",
-    card: "#242424",
-    raised: "#2c2c2c",
-    overlay: "#353535",
-    selected: alpha("#2D7DD2", 0.14),
-    selectedHover: alpha("#2D7DD2", 0.22),
+    page: "#06111B",
+    card: "#0B1B26",
+    raised: "#102632",
+    overlay: "#142F3A",
+    selected: alpha("#36D9C5", 0.14),
+    selectedHover: alpha("#36D9C5", 0.22),
   },
   border: {
-    subtle: alpha("#ffffff", 0.06),
-    standard: alpha("#ffffff", 0.08),
-    strong: alpha("#ffffff", 0.18),
-    focus: "#2D7DD2",
+    subtle: "#17313B",
+    standard: "#24505A",
+    strong: "#3A6B72",
+    focus: "#86FFF0",
   },
   text: {
-    primary: alpha("#ffffff", 0.87),
-    secondary: alpha("#ffffff", 0.6),
-    disabled: alpha("#ffffff", 0.38),
-    hint: alpha("#ffffff", 0.5),
+    primary: "#E6F4F2",
+    secondary: "#A9C6C8",
+    disabled: "#6D8B91",
+    hint: "#A9C6C8",
   },
   // 8-color accessible palette for dark-mode data visualization.
   // Colors are ordered by perceptual distinctiveness for sequential series.
   chart: {
     palette: [
-      "#5B9FE0", // blue (primary family)
-      "#66BB6A", // green
-      "#FF8A65", // orange
-      "#AB47BC", // purple
-      "#26C6DA", // cyan
-      "#FFCA28", // amber
-      "#EF5350", // red
-      "#78909C", // blue-grey
+      "#36D9C5", // teal
+      "#55C7E8", // cyan
+      "#55D68A", // green
+      "#F2B35D", // amber
+      "#BBA7FF", // violet
+      "#FF9F70", // orange
+      "#FF7B82", // red
+      "#A9C6C8", // muted
     ] as readonly string[],
-    axis: alpha("#ffffff", 0.3),
-    grid: alpha("#ffffff", 0.08),
-    tooltip: "#2c2c2c",
+    axis: "#A9C6C8",
+    grid: "#17313B",
+    tooltip: "#142F3A",
   },
   shadow: {
-    low: `0 1px 4px ${alpha("#000000", 0.24)}`,
-    medium: `0 4px 12px ${alpha("#000000", 0.32)}`,
-    deep: `0 8px 24px ${alpha("#000000", 0.4)}`,
-    card: `0 2px 8px ${alpha("#000000", 0.28)}`,
-    dialog: `0 12px 40px ${alpha("#000000", 0.55)}`,
+    low: "0 2px 8px rgba(0, 0, 0, 0.18)",
+    medium: "0 8px 24px rgba(0, 0, 0, 0.28)",
+    deep: "0 16px 40px rgba(0, 0, 0, 0.36)",
+    card: "0 4px 16px rgba(0, 0, 0, 0.2)",
+    dialog: "0 20px 60px rgba(0, 0, 0, 0.45)",
   },
   focus: {
-    ring: `0 0 0 2px rgba(45, 125, 210, 0.35)`,
+    ring: "0 0 0 3px rgba(134, 255, 240, 0.34)",
   },
   // Consistent spacing constants for sections and page layout.
   spacing: {

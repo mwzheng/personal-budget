@@ -194,7 +194,7 @@ export default function GoalHero({
                 saved so far
               </Typography>
             </Box>
-            <Typography color="primary.light" fontWeight={700}>
+            <Typography color="primary.main" fontWeight={700}>
               {percentage !== null
                 ? `${percentage.toFixed(0)}% complete`
                 : "Not started"}

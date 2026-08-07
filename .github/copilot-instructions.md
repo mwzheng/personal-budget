@@ -46,10 +46,10 @@ If this top-level file conflicts with a per-topic instruction, the per-topic fil
 - Tech stack:
   - Frontend: Next.js + TypeScript (App Router preferred)
   - UI: Material-UI (MUI)
-  - Backend: AWS Lambda (TypeScript) with API route handlers
+  - Backend: Next.js App Router route handlers using the AWS SDK for DynamoDB/SES
   - Auth: AWS Cognito
   - Database: AWS DynamoDB
-  - Deployment: Serverless Lambdas (SAM/Serverless Framework) and static frontend hosting (Vercel/Netlify/S3)
+  - Deployment: Next.js hosting (the documented production URL is Vercel) plus AWS SAM-managed Cognito/DynamoDB infrastructure
 
 ## Development guidelines (high level)
 

@@ -24,7 +24,7 @@ const HeroSection = ({ hero, notices }: HeroSectionProps) => (
         position: "absolute",
         inset: 0,
         background:
-          "radial-gradient(circle at 50% -20%, rgba(45, 125, 210, 0.12) 0%, transparent 50%), radial-gradient(circle at 50% 10%, rgba(45, 125, 210, 0.08) 0%, transparent 70%)",
+          "radial-gradient(circle at 50% -20%, rgba(54, 217, 197, 0.14) 0%, transparent 50%), radial-gradient(circle at 50% 10%, rgba(85, 199, 232, 0.08) 0%, transparent 70%)",
         pointerEvents: "none",
       },
     }}
@@ -38,7 +38,7 @@ const HeroSection = ({ hero, notices }: HeroSectionProps) => (
           sx={{
             fontSize: { xs: "2.75rem", sm: "3.5rem", md: "4.5rem" },
             letterSpacing: "-0.05em",
-            color: "common.white",
+            color: "text.primary",
           }}
         >
           {hero.title}

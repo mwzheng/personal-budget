@@ -17,6 +17,8 @@ export interface PageHeaderProps {
   headingId?: string;
   /** ID applied to the description element for aria-describedby. */
   descriptionId?: string;
+  /** Optional decorative dither treatment for the header surface. */
+  texture?: "none" | "blue" | "violet";
 }
 
 export default function PageHeader({
@@ -26,6 +28,7 @@ export default function PageHeader({
   sx,
   headingId,
   descriptionId,
+  texture = "none",
 }: PageHeaderProps) {
   return (
     <Stack
@@ -34,7 +37,21 @@ export default function PageHeader({
       spacing={2}
       justifyContent="space-between"
       alignItems={{ xs: "flex-start", sm: "center" }}
-      sx={sx}
+      className={
+        texture === "blue"
+          ? "dither-surface"
+          : texture === "violet"
+            ? "dither-violet"
+            : undefined
+      }
+      sx={[
+        {
+          p: texture === "none" ? 0 : 2,
+          border: texture === "none" ? 0 : 1,
+          borderColor: "divider",
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     >
       <Box>
         <Typography id={headingId} component="h1" variant="h5" fontWeight={700}>

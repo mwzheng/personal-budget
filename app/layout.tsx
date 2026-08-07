@@ -3,7 +3,7 @@
 // Components (no "use client" directive) like this file are rendered on the
 // server and sent as HTML to the browser before JavaScript hydrates the page.
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { IBM_Plex_Mono, Open_Sans, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import Box from "@mui/material/Box";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
@@ -18,10 +18,23 @@ import "./globals.css";
 // time. This avoids a third-party Google Fonts request at runtime (privacy,
 // performance), and the generated CSS variable `--font-inter` is applied to
 // <body> so MUI's Inter font-stack resolves immediately without FOUT.
-const inter = Inter({
+const openSans = Open_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-open-sans",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space-grotesk",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-ibm-plex-mono",
+  weight: ["400", "500", "600", "700"],
 });
 
 // Note 1.5: Metadata URLs need a stable origin so canonical, Open Graph, and
@@ -97,7 +110,10 @@ export default function RootLayout({
         must avoid reformatting ordinary style attributes because even harmless
         whitespace changes count as hydration mutations.
       */}
-      <body className={inter.variable} suppressHydrationWarning>
+      <body
+        className={`${openSans.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable}`}
+        suppressHydrationWarning
+      >
         {/*
           Note 5: `AppRouterCacheProvider` is MUI's official App Router bridge for
           Emotion style collection during SSR. Wrapping the body contents here keeps

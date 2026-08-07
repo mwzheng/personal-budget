@@ -53,10 +53,7 @@ export default function GoalGauge({ current, target, size = 220 }: Props) {
   const fillEndAngle = 180 - clampedPct * 1.8; // 180° span mapped to 0–100%
   const fillPath = clampedPct > 0 ? describeArc(180, fillEndAngle) : "";
 
-  const trackColor =
-    theme.palette.mode === "dark"
-      ? "rgba(255,255,255,0.08)"
-      : "rgba(0,0,0,0.08)";
+  const trackColor = theme.palette.divider;
   const fillColor = theme.palette.primary.main;
 
   // Needle tip position

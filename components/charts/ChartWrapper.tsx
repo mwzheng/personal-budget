@@ -37,7 +37,7 @@ export function ChartWrapper({ title, children }: Props) {
 
     try {
       const dataUrl = await toPng(node, {
-        backgroundColor: "#121212",
+        backgroundColor: "#0B1B26",
         pixelRatio: 2,
         cacheBust: true,
         // MUI/next/font styles can trigger a font-face parsing bug in
@@ -84,10 +84,10 @@ export function ChartWrapper({ title, children }: Props) {
               opacity: exporting ? 1 : 0.4,
               transition: "opacity 0.2s",
               "&:hover": { opacity: 1 },
-              bgcolor: "rgba(0,0,0,0.3)",
+              bgcolor: "#142F3A",
               color: "text.secondary",
               "&:hover, &:focus-visible": {
-                bgcolor: "rgba(0,0,0,0.5)",
+                bgcolor: "#102632",
                 color: "text.primary",
               },
             }}

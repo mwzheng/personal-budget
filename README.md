@@ -18,7 +18,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
 - `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
-- `/sankey` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, and generate a grouped Sankey diagram with optional rollup branches.
+- `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, save/load budgets, and generate a Sankey diagram with optional nested path segments.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
 - `/fire` — FIRE calculator for projecting investment growth, comparing scenarios, and downloading the projection chart as PNG.
 - `/salary` — Dedicated salary history entry and comparison screen.
@@ -67,7 +67,7 @@ while localhost and preview hosts fall back to host-local cookies so realtime
 testing still works without invalid-domain cookie warnings. The layout
 bootstrap also sends the first `page_view` manually and App Router navigations
 queue their own `page_view` until GA is ready, which keeps authenticated
-destinations like `/reports`, `/progress`, and `/sankey` reporting their
+destinations like `/reports`, `/budget`, and `/progress` reporting their
 individual page titles instead of collapsing into the default app title.
 
 If you just want to explore the UI, the login and register screens also provide a
@@ -91,7 +91,7 @@ require a fresh login in the normal case.
    ```
 3. Visit the app in your browser:
    - Reports: http://localhost:3000/reports
-   - Sankey Budget: http://localhost:3000/sankey
+   - Budget Planner: http://localhost:3000/budget
    - Example API requests:
      - `GET http://localhost:3000/api/reports?pageSize=5`
      - `POST http://localhost:3000/api/sankey` (see `app/api/sankey/route.ts` for the allocation payload shape)

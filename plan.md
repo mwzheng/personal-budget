@@ -1,6 +1,6 @@
 # Porridge Budget Development Plan
 
-## Status: Active follow-up plan (updated 2026-04-25)
+## Status: Active follow-up plan (updated 2026-07-28)
 
 Latest completed work:
 
@@ -27,7 +27,7 @@ Current active follow-ups:
 
 - **Public pages:** `/`, `/about`, `/faq`, `/contact`, and auth entry/sign-out
   routes. Home hero CTAs ("Try Demo" / "Sign In") are hidden for signed-in users.
-- **Authenticated pages:** `/reports`, `/sankey`, `/progress`, `/salary`, and
+- **Authenticated pages:** `/reports`, `/budget`, `/progress`, `/salary`, and
   `/fire`.
 - **Core capabilities:** transaction CRUD, CSV import/export, month comparison,
   saved budgets with Sankey visualization, salary/progress tracking, FIRE

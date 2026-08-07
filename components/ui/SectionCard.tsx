@@ -14,6 +14,8 @@ export interface SectionCardProps {
   sx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
   headingId?: string;
+  /** Optional decorative texture applied to the card surface only. */
+  texture?: "none" | "blue" | "violet";
 }
 
 export default function SectionCard({
@@ -25,6 +27,7 @@ export default function SectionCard({
   sx,
   contentSx,
   headingId,
+  texture = "none",
 }: SectionCardProps) {
   const hasHeader = Boolean(title || action);
 
@@ -32,6 +35,13 @@ export default function SectionCard({
     <Paper
       elevation={elevation}
       aria-labelledby={headingId}
+      className={
+        texture === "blue"
+          ? "dither-surface"
+          : texture === "violet"
+            ? "dither-violet"
+            : undefined
+      }
       sx={[{ overflow: "hidden" }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
       {hasHeader && (

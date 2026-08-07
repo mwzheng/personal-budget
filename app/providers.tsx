@@ -52,14 +52,42 @@ const darkTheme = createTheme({
     // `main` is the primary color used for buttons, links, and highlights.
     // `primary` and `secondary` are used throughout MUI's default component styles.
     primary: {
+      // Keep the requested bright blue available for decorative fills, while
+      // using the darker semantic value for normal-sized text and controls.
       main: SERVER_THEME_TOKENS.palette.primary,
       light: SERVER_THEME_TOKENS.palette.primaryLight,
       dark: SERVER_THEME_TOKENS.palette.primaryDark,
     },
-    secondary: { main: SERVER_THEME_TOKENS.palette.secondary },
+    secondary: {
+      main: SERVER_THEME_TOKENS.palette.secondary,
+      light: SERVER_THEME_TOKENS.palette.secondary,
+      dark: SERVER_THEME_TOKENS.palette.primaryDark,
+    },
+    success: { main: SERVER_THEME_TOKENS.palette.success },
+    warning: { main: SERVER_THEME_TOKENS.palette.warning },
+    error: { main: SERVER_THEME_TOKENS.palette.danger },
+    info: { main: SERVER_THEME_TOKENS.palette.secondary },
+    text: {
+      primary: SERVER_THEME_TOKENS.text.primary,
+      secondary: SERVER_THEME_TOKENS.text.secondary,
+      disabled: SERVER_THEME_TOKENS.text.disabled,
+    },
     background: {
       default: SERVER_THEME_TOKENS.palette.backgroundDefault,
       paper: SERVER_THEME_TOKENS.palette.backgroundPaper,
+    },
+    divider: SERVER_THEME_TOKENS.border.subtle,
+    action: {
+      active: SERVER_THEME_TOKENS.text.primary,
+      hover: SERVER_THEME_TOKENS.surface.raised,
+      selected: SERVER_THEME_TOKENS.surface.selected,
+      selectedOpacity: 0.14,
+      focus: SERVER_THEME_TOKENS.surface.selected,
+      focusOpacity: 0.16,
+      hoverOpacity: 0.08,
+      activatedOpacity: 0.12,
+      disabled: SERVER_THEME_TOKENS.text.disabled,
+      disabledBackground: SERVER_THEME_TOKENS.surface.raised,
     },
   },
   typography: {
@@ -67,13 +95,33 @@ const darkTheme = createTheme({
     // font injected by the root layout. The remaining stack is a safe fallback
     // chain for the rare case the variable is absent (e.g., in Storybook).
     fontFamily:
-      'var(--font-inter), "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700, letterSpacing: "-0.02em" },
-    h2: { fontWeight: 700, letterSpacing: "-0.01em" },
-    h3: { fontWeight: 700 },
-    h4: { fontWeight: 700 },
-    h5: { fontWeight: 600 },
-    h6: { fontWeight: 600 },
+      'var(--font-open-sans), "Open Sans", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 700,
+      letterSpacing: "-0.03em",
+    },
+    h2: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 700,
+      letterSpacing: "-0.02em",
+    },
+    h3: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 700,
+    },
+    h4: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 700,
+    },
+    h5: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 600,
+    },
+    h6: {
+      fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+      fontWeight: 600,
+    },
   },
   shape: {
     borderRadius: 12,
@@ -134,8 +182,11 @@ const darkTheme = createTheme({
           },
         },
         contained: {
+          color: SERVER_THEME_TOKENS.palette.backgroundDefault,
+          backgroundColor: SERVER_THEME_TOKENS.palette.primary,
           boxShadow: SERVER_THEME_TOKENS.shadow.low,
           "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.palette.primaryLight,
             boxShadow: SERVER_THEME_TOKENS.shadow.medium,
           },
         },
@@ -176,7 +227,7 @@ const darkTheme = createTheme({
           "&.Mui-selected": {
             backgroundColor: SERVER_THEME_TOKENS.surface.selected,
             borderColor: SERVER_THEME_TOKENS.palette.primary,
-            color: SERVER_THEME_TOKENS.palette.primaryLight,
+            color: SERVER_THEME_TOKENS.palette.primaryDark,
             "&:hover": {
               backgroundColor: SERVER_THEME_TOKENS.surface.selectedHover,
             },
@@ -366,6 +417,34 @@ const darkTheme = createTheme({
         },
       },
     },
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
+          border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
+          boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+          backgroundImage: "none",
+        },
+      },
+    },
+    MuiPopover: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
+          border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
+          backgroundImage: "none",
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.page,
+          borderLeft: `1px solid ${SERVER_THEME_TOKENS.border.strong}`,
+          backgroundImage: "none",
+        },
+      },
+    },
     MuiSkeleton: {
       styleOverrides: {
         root: {
@@ -424,6 +503,34 @@ const darkTheme = createTheme({
       styleOverrides: {
         select: {
           borderRadius: 8,
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          color: SERVER_THEME_TOKENS.text.primary,
+          backgroundColor: SERVER_THEME_TOKENS.surface.card,
+        },
+        input: {
+          "&::placeholder": {
+            color: SERVER_THEME_TOKENS.text.disabled,
+            opacity: 1,
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          backgroundColor: SERVER_THEME_TOKENS.surface.card,
+          "& fieldset": { borderColor: SERVER_THEME_TOKENS.border.standard },
+          "&:hover fieldset": {
+            borderColor: SERVER_THEME_TOKENS.border.strong,
+          },
+          "&.Mui-focused fieldset": {
+            borderColor: SERVER_THEME_TOKENS.palette.primary,
+          },
         },
       },
     },

@@ -68,10 +68,7 @@ export default function MilestoneTrack({
           position: "relative",
           height: 8,
           borderRadius: 4,
-          bgcolor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.08)"
-              : "rgba(0,0,0,0.08)",
+          bgcolor: theme.palette.divider,
         }}
       >
         {/* Current progress fill */}
