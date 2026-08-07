@@ -6,6 +6,11 @@ completed items, files changed, commit reference, and notes.
 
 When work is finished, move it from `plan.md` to this file in the same commit.
 
+Entries below are historical records and intentionally preserve the routes,
+branch names, test results, and implementation details that were true when each
+entry was written. For the current application snapshot, use `README.md`,
+`plan.md`, and the project overview document.
+
 ---
 
 # Completed: FIRE calculator dashboard redesign, alignment, and review fixes
