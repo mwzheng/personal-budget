@@ -13,6 +13,7 @@ import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownR
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import UndoIcon from "@mui/icons-material/Undo";
+import { BudgetList } from "@/components/budget/BudgetList";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -49,7 +50,7 @@ import {
   createBudgetExpense,
   hasBudgetRowContent,
 } from "@/lib/utils/budget-planner";
-import { BudgetExpense, CategoryType } from "@/lib/types/types";
+import { BudgetExpense, CategoryType, SavedBudget } from "@/lib/types/types";
 import { formatCurrency, formatCurrencyWhole } from "@/lib/utils/format";
 
 interface Props {
@@ -57,9 +58,15 @@ interface Props {
   saving: boolean;
   saveError: string | null;
   isEditing: boolean;
+  activeBudgetId: string | null;
+  budgetsReloadKey: number;
   onChange: (next: BudgetDraft) => void;
   onSave: () => void;
   onStartFresh: () => void;
+  onEditBudget: (budget: SavedBudget) => void;
+  onBudgetsLoaded: (budgets: SavedBudget[]) => void;
+  onLoadingChange: (loading: boolean) => void;
+  onDeleteBudget: (budgetId: string) => void;
 }
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
@@ -129,9 +136,15 @@ export function BudgetForm({
   saving,
   saveError,
   isEditing,
+  activeBudgetId,
+  budgetsReloadKey,
   onChange,
   onSave,
   onStartFresh,
+  onEditBudget,
+  onBudgetsLoaded,
+  onLoadingChange,
+  onDeleteBudget,
 }: Props) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [rawAmounts, setRawAmounts] = useState<Record<string, string>>({});
@@ -352,6 +365,15 @@ export function BudgetForm({
           }}
         />
       </Stack>
+
+      <BudgetList
+        activeBudgetId={activeBudgetId}
+        reloadKey={budgetsReloadKey}
+        onEdit={onEditBudget}
+        onBudgetsLoaded={onBudgetsLoaded}
+        onLoadingChange={onLoadingChange}
+        onDeleted={onDeleteBudget}
+      />
 
       <Divider />
 

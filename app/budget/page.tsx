@@ -20,7 +20,6 @@ import { useRouter } from "next/navigation";
 
 import { AllocationBar } from "@/components/budget/AllocationBar";
 import { BudgetForm } from "@/components/budget/BudgetForm";
-import { BudgetList } from "@/components/budget/BudgetList";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
@@ -291,15 +290,6 @@ export default function BudgetPage() {
     }
   }
 
-  function loadBudget(budget: SavedBudget) {
-    setDraft({
-      ...normalizeBudgetForEditor(budget),
-      budgetId: undefined,
-    });
-    setEditingBudgetId(null);
-    setSaveError(null);
-  }
-
   function editBudget(budget: SavedBudget) {
     const normalized = normalizeBudgetForEditor(budget);
     setDraft(normalized);
@@ -312,6 +302,12 @@ export default function BudgetPage() {
     setEditingBudgetId(null);
     setSaveError(null);
     clearBudgetDraft();
+  }
+
+  function handleBudgetDeleted(budgetId: string) {
+    if (editingBudgetId === budgetId) {
+      startFresh();
+    }
   }
 
   const leftoverColor =
@@ -450,35 +446,22 @@ export default function BudgetPage() {
         </Grid>
 
         <Grid item xs={12}>
-          <Box sx={{ mb: 3 }}>
-            <SectionCard title="Saved Budgets">
-              <BudgetList
-                compact
-                reloadKey={budgetsReloadKey}
-                onLoad={loadBudget}
-                onEdit={editBudget}
-                onBudgetsLoaded={handleBudgetsLoaded}
-                onLoadingChange={setIsLoading}
-              />
-            </SectionCard>
-          </Box>
-        </Grid>
-
-        <Grid item xs={12}>
           <SectionCard title="Expenses">
-            {isLoading ? (
-              <Skeleton variant="rectangular" height={260} />
-            ) : (
-              <BudgetForm
-                value={draft}
-                saving={saving}
-                saveError={saveError}
-                isEditing={Boolean(editingBudgetId)}
-                onChange={setDraft}
-                onSave={saveBudget}
-                onStartFresh={startFresh}
-              />
-            )}
+            <BudgetForm
+              value={draft}
+              saving={saving}
+              saveError={saveError}
+              isEditing={Boolean(editingBudgetId)}
+              activeBudgetId={editingBudgetId}
+              budgetsReloadKey={budgetsReloadKey}
+              onChange={setDraft}
+              onSave={saveBudget}
+              onStartFresh={startFresh}
+              onEditBudget={editBudget}
+              onBudgetsLoaded={handleBudgetsLoaded}
+              onLoadingChange={setIsLoading}
+              onDeleteBudget={handleBudgetDeleted}
+            />
           </SectionCard>
         </Grid>
       </Grid>

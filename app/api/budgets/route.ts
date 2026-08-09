@@ -6,31 +6,44 @@ import { getUserIdFromRequest } from "@/lib/auth/auth";
 import { normalizeBudgetForStorage } from "@/lib/utils/budget-planner";
 import { getUserBudgets, putBudget } from "@/lib/api/dynamo";
 import { BudgetSchema } from "@/lib/schemas/schemas";
+import {
+  budgetRouteErrorResponse,
+  budgetRouteUnauthorizedResponse,
+} from "./error-response";
 
 // Note: Budget schema centralised in lib/schemas.ts to keep validation consistent across routes.
 // See lib/schemas.ts for the canonical BudgetSchema.
 
 export async function GET(request: Request) {
+  let userId: string;
   try {
-    const userId = await getUserIdFromRequest(request);
+    userId = await getUserIdFromRequest(request);
+  } catch (err) {
+    console.error("[/api/budgets GET]", err);
+    return budgetRouteUnauthorizedResponse();
+  }
+
+  try {
     const budgets = await getUserBudgets(userId);
     return NextResponse.json({ ok: true, budgets });
   } catch (err) {
     console.error("[/api/budgets GET]", err);
-    return NextResponse.json(
-      { ok: false, error: String(err) },
-      // Note 3: Status 401 (Unauthorized) is returned here because the most
-      // likely reason for an error is a missing or invalid auth token. If the
-      // token is valid but the user lacks access, 403 (Forbidden) would be more
-      // precise -- but that would also reveal the item exists.
-      { status: 401 },
-    );
+    // Note 3: Status 401 (Unauthorized) is retained for this route's existing
+    // error behavior, while the response body remains safe for clients.
+    return budgetRouteErrorResponse(err, 401, "Unable to load budgets");
   }
 }
 
 export async function POST(request: Request) {
+  let userId: string;
   try {
-    const userId = await getUserIdFromRequest(request);
+    userId = await getUserIdFromRequest(request);
+  } catch (err) {
+    console.error("[/api/budgets POST]", err);
+    return budgetRouteUnauthorizedResponse();
+  }
+
+  try {
     const body = await request.json();
     // Note 4: `safeParse` returns a `{ success, data, error }` discriminated
     // union instead of throwing. This makes the validation result explicit and
@@ -67,9 +80,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, created });
   } catch (err) {
     console.error("[/api/budgets POST]", err);
-    return NextResponse.json(
-      { ok: false, error: String(err) },
-      { status: 400 },
-    );
+    return budgetRouteErrorResponse(err, 400, "Unable to save budget");
   }
 }
