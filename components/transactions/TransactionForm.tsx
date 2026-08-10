@@ -17,25 +17,18 @@ import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import type { Transaction } from "@/lib/types/types";
-import { generateId } from "@/lib/utils/generateId";
 import { TRANSACTION_CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { TRANSACTION_CATEGORY_OPTIONS } from "@/lib/utils/transaction-categories";
+import {
+  buildTransactionFormSubmission,
+  transactionToFormValues,
+  type TransactionFormValues,
+} from "@/lib/utils/transaction-form";
 
 const PAYMENT_METHOD_OPTIONS = ["Credit Card", "Cash", "Bank"] as const;
-
-interface FormValues {
-  date: Date | null;
-  name: string;
-  amount: string;
-  category: string;
-  paymentMethod: string;
-  tagsInput: string;
-  tags: string[];
-  notes: string;
-}
 
 interface FormErrors {
   date?: string;
@@ -44,7 +37,7 @@ interface FormErrors {
   category?: string;
 }
 
-function getDefaultValues(initialDate?: string | null): FormValues {
+function getDefaultValues(initialDate?: string | null): TransactionFormValues {
   const parsedDate = initialDate ? parseISO(initialDate) : new Date();
   const date = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
@@ -60,20 +53,7 @@ function getDefaultValues(initialDate?: string | null): FormValues {
   };
 }
 
-function transactionToFormValues(t: Transaction): FormValues {
-  return {
-    date: parseISO(t.date),
-    name: t.name,
-    amount: String(t.amount),
-    category: t.category,
-    paymentMethod: t.paymentMethod ?? "",
-    tagsInput: "",
-    tags: [...t.tags],
-    notes: t.notes ?? "",
-  };
-}
-
-function validate(values: FormValues): FormErrors {
+function validate(values: TransactionFormValues): FormErrors {
   const errors: FormErrors = {};
   if (!values.date) errors.date = "Date is required";
   if (!values.name.trim()) errors.name = "Name is required";
@@ -87,6 +67,7 @@ function validate(values: FormValues): FormErrors {
 interface Props {
   open: boolean;
   transaction?: Transaction;
+  duplicateTransaction?: Transaction;
   initialDate?: string | null;
   onSave: (transaction: Transaction) => void;
   onClose: () => void;
@@ -95,11 +76,12 @@ interface Props {
 export function TransactionForm({
   open,
   transaction,
+  duplicateTransaction,
   initialDate,
   onSave,
   onClose,
 }: Props) {
-  const [values, setValues] = useState<FormValues>(() =>
+  const [values, setValues] = useState<TransactionFormValues>(() =>
     getDefaultValues(initialDate),
   );
   const [errors, setErrors] = useState<FormErrors>({});
@@ -107,21 +89,25 @@ export function TransactionForm({
 
   useEffect(() => {
     if (open) {
+      const prefillTransaction = transaction ?? duplicateTransaction;
       setValues(
-        transaction
-          ? transactionToFormValues(transaction)
+        prefillTransaction
+          ? transactionToFormValues(prefillTransaction)
           : getDefaultValues(initialDate),
       );
       setErrors({});
       setSubmitted(false);
     }
-  }, [initialDate, open, transaction]);
+  }, [duplicateTransaction, initialDate, open, transaction]);
 
   useEffect(() => {
     if (submitted) setErrors(validate(values));
   }, [submitted, values]);
 
-  function set<K extends keyof FormValues>(key: K, value: FormValues[K]) {
+  function set<K extends keyof TransactionFormValues>(
+    key: K,
+    value: TransactionFormValues[K],
+  ) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -154,26 +140,28 @@ export function TransactionForm({
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    const saved: Transaction = {
-      id: transaction?.id ?? generateId(),
-      name: values.name.trim(),
-      amount: parseFloat(values.amount),
-      category: values.category as Transaction["category"],
-      date: format(values.date!, "yyyy-MM-dd"),
-      notes: values.notes.trim(),
-      paymentMethod: values.paymentMethod,
-      tags: values.tags,
-    };
+    const saved = buildTransactionFormSubmission(values, {
+      editTransaction: transaction,
+    });
     onSave(saved);
   }
 
   const isEdit = Boolean(transaction);
+  const isDuplicate = !isEdit && Boolean(duplicateTransaction);
+  const title = isEdit
+    ? "Edit Transaction"
+    : isDuplicate
+      ? "Duplicate Transaction"
+      : "Add Transaction";
+  const submitLabel = isEdit
+    ? "Save Changes"
+    : isDuplicate
+      ? "Create Duplicate"
+      : "Add Transaction";
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle margin="auto">
-        {isEdit ? "Edit Transaction" : "Add Transaction"}
-      </DialogTitle>
+      <DialogTitle margin="auto">{title}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
           <Stack spacing={2} mt={1}>
@@ -301,7 +289,7 @@ export function TransactionForm({
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button variant="contained" type="submit">
-            {isEdit ? "Save Changes" : "Add Transaction"}
+            {submitLabel}
           </Button>
         </DialogActions>
       </Box>

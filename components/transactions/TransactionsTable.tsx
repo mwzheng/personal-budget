@@ -20,6 +20,7 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { Transaction } from "@/lib/types/types";
@@ -32,6 +33,7 @@ interface Props {
   transactions: Transaction[];
   activeTags?: string[];
   onEdit?: (transaction: Transaction) => void;
+  onDuplicate?: (transaction: Transaction) => void;
   onDelete?: (id: string) => void | Promise<boolean>;
   onTagClick?: (tag: string) => void;
 }
@@ -40,6 +42,7 @@ export function TransactionsTable({
   transactions,
   activeTags = [],
   onEdit,
+  onDuplicate,
   onDelete,
   onTagClick,
 }: Props) {
@@ -97,7 +100,7 @@ export function TransactionsTable({
     page * rowsPerPage + rowsPerPage,
   );
   const activeTagSet = new Set(activeTags);
-  const showActions = Boolean(onEdit || onDelete);
+  const showActions = Boolean(onEdit || onDuplicate || onDelete);
 
   useEffect(() => {
     setPage(0);
@@ -224,6 +227,15 @@ export function TransactionsTable({
                             onClick={() => onEdit(t)}
                           >
                             <EditOutlinedIcon fontSize="small" />
+                          </ActionIconButton>
+                        ) : null}
+                        {onDuplicate ? (
+                          <ActionIconButton
+                            tooltip="Duplicate"
+                            ariaLabel={`Duplicate transaction ${t.name}`}
+                            onClick={() => onDuplicate(t)}
+                          >
+                            <ContentCopyOutlinedIcon fontSize="small" />
                           </ActionIconButton>
                         ) : null}
                         {onDelete ? (
