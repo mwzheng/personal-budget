@@ -78,6 +78,9 @@ const ReportsPageContent = () => {
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
   );
+  const [duplicateTarget, setDuplicateTarget] = useState<
+    Transaction | undefined
+  >(undefined);
   const [newTransactionDate, setNewTransactionDate] = useState<string | null>(
     null,
   );
@@ -174,6 +177,7 @@ const ReportsPageContent = () => {
       await loadTransactions({ resetFilters: wasEmpty });
       setFormOpen(false);
       setEditTarget(undefined);
+      setDuplicateTarget(undefined);
       setNewTransactionDate(null);
     } catch (error) {
       setErrorMessage(
@@ -184,12 +188,22 @@ const ReportsPageContent = () => {
 
   const handleEditTransaction = (t: Transaction) => {
     setNewTransactionDate(null);
+    setDuplicateTarget(undefined);
     setEditTarget(t);
+    setFormOpen(true);
+  };
+
+  const handleDuplicateTransaction = (t: Transaction) => {
+    setDetailTarget(null);
+    setNewTransactionDate(null);
+    setEditTarget(undefined);
+    setDuplicateTarget(t);
     setFormOpen(true);
   };
 
   const handleAddTransaction = (date?: string) => {
     setEditTarget(undefined);
+    setDuplicateTarget(undefined);
     setNewTransactionDate(date ?? null);
     setFormOpen(true);
   };
@@ -230,6 +244,7 @@ const ReportsPageContent = () => {
   const handleFormClose = () => {
     setFormOpen(false);
     setEditTarget(undefined);
+    setDuplicateTarget(undefined);
     setNewTransactionDate(null);
   };
 
@@ -617,6 +632,7 @@ const ReportsPageContent = () => {
                 transactions={filtered}
                 activeTags={filters.tags}
                 onEdit={handleEditTransaction}
+                onDuplicate={handleDuplicateTransaction}
                 onDelete={handleDeleteTransaction}
                 onTagClick={handleQuickTagFilter}
               />
@@ -638,12 +654,14 @@ const ReportsPageContent = () => {
           setDetailTarget(null);
           handleEditTransaction(transaction);
         }}
+        onDuplicate={handleDuplicateTransaction}
         onDelete={handleDeleteTransaction}
       />
       <TransactionForm
         open={formOpen}
         initialDate={newTransactionDate}
         transaction={editTarget}
+        duplicateTransaction={duplicateTarget}
         onSave={handleSaveTransaction}
         onClose={handleFormClose}
       />

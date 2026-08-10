@@ -3,22 +3,30 @@ import { getUserIdFromRequest } from "@/lib/auth/auth";
 import { normalizeBudgetForStorage } from "@/lib/utils/budget-planner";
 import { deleteBudget, putBudget } from "@/lib/api/dynamo";
 import { BudgetSchema } from "@/lib/schemas/schemas";
+import {
+  budgetRouteErrorResponse,
+  budgetRouteUnauthorizedResponse,
+} from "../error-response";
 
 export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  let userId: string;
   try {
-    const userId = await getUserIdFromRequest(request);
+    userId = await getUserIdFromRequest(request);
+  } catch (err) {
+    console.error("[/api/budgets/:id DELETE]", err);
+    return budgetRouteUnauthorizedResponse();
+  }
+
+  try {
     const { id } = await context.params;
     await deleteBudget(userId, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[/api/budgets/:id DELETE]", err);
-    return NextResponse.json(
-      { ok: false, error: String(err) },
-      { status: 400 },
-    );
+    return budgetRouteErrorResponse(err, 400, "Unable to delete budget");
   }
 }
 
@@ -26,8 +34,15 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  let userId: string;
   try {
-    const userId = await getUserIdFromRequest(request);
+    userId = await getUserIdFromRequest(request);
+  } catch (err) {
+    console.error("[/api/budgets/:id PUT]", err);
+    return budgetRouteUnauthorizedResponse();
+  }
+
+  try {
     const { id } = await context.params;
     const body = await request.json();
 
@@ -59,9 +74,6 @@ export async function PUT(
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
     console.error("[/api/budgets/:id PUT]", err);
-    return NextResponse.json(
-      { ok: false, error: String(err) },
-      { status: 400 },
-    );
+    return budgetRouteErrorResponse(err, 400, "Unable to update budget");
   }
 }

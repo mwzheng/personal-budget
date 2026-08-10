@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
@@ -42,6 +43,7 @@ interface Props {
   transaction: Transaction | null;
   onClose: () => void;
   onEdit: (transaction: Transaction) => void;
+  onDuplicate: (transaction: Transaction) => void;
   onDelete: (id: string) => Promise<boolean> | boolean;
 }
 
@@ -61,6 +63,7 @@ export function TransactionDetailDialog({
   transaction,
   onClose,
   onEdit,
+  onDuplicate,
   onDelete,
 }: Props) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -196,6 +199,15 @@ export function TransactionDetailDialog({
             onClick={() => setConfirmDeleteOpen(true)}
           >
             <DeleteOutlineRoundedIcon fontSize="small" />
+          </ActionIconButton>
+          <ActionIconButton
+            tooltip="Duplicate transaction"
+            disabled={!transaction}
+            onClick={() => {
+              if (transaction) onDuplicate(transaction);
+            }}
+          >
+            <ContentCopyOutlinedIcon fontSize="small" />
           </ActionIconButton>
           <ActionIconButton
             tooltip="Edit transaction"

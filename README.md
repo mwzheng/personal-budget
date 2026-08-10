@@ -18,7 +18,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
 - `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
-- `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, save/load budgets, and generate a Sankey diagram with optional nested path segments.
+- `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, select saved budgets directly in the editor to update or delete them, export the active budget, and generate a Sankey diagram with optional nested path segments.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
 - `/fire` — FIRE calculator for projecting investment growth, comparing scenarios, and downloading the projection chart as PNG.
 - `/salary` — Dedicated salary history entry and comparison screen.

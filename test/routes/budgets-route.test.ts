@@ -212,7 +212,7 @@ describe("budgets api route", () => {
     expect(mockedPutBudget).not.toHaveBeenCalled();
   });
 
-  it("preserves the route's get auth failure response", async () => {
+  it("returns a safe auth failure response for get", async () => {
     mockedGetUserIdFromRequest.mockRejectedValue(
       new Error("Missing or invalid Authorization header"),
     );
@@ -223,7 +223,22 @@ describe("budgets api route", () => {
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       ok: false,
-      error: "Error: Missing or invalid Authorization header",
+      error: "Unauthorized",
+    });
+  });
+
+  it("does not expose internal get errors", async () => {
+    mockedGetUserIdFromRequest.mockResolvedValue("user-123");
+    mockedGetUserBudgets.mockRejectedValue(
+      new Error("DynamoDB endpoint leaked"),
+    );
+
+    const response = await GET(buildBudgetsRequest());
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Unable to load budgets",
     });
   });
 });
@@ -264,7 +279,7 @@ describe("budgets [id] api route", () => {
     await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
-  it("returns error response on auth failure for delete", async () => {
+  it("returns 401 with a safe error on auth failure for delete", async () => {
     mockedGetUserIdFromRequest.mockRejectedValue(
       new Error("Missing or invalid Authorization header"),
     );
@@ -276,10 +291,46 @@ describe("budgets [id] api route", () => {
     );
 
     expect(mockedDeleteBudget).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Unauthorized",
+    });
+  });
+
+  it("returns 401 with a safe error on auth failure for put", async () => {
+    mockedGetUserIdFromRequest.mockRejectedValue(
+      new Error("Missing or invalid Authorization header"),
+    );
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await PUT(
+      buildBudgetByIdRequest({ method: "PUT" }),
+      context,
+    );
+
+    expect(mockedPutBudget).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Unauthorized",
+    });
+  });
+
+  it("does not expose internal delete errors", async () => {
+    mockedGetUserIdFromRequest.mockResolvedValue("user-123");
+    mockedDeleteBudget.mockRejectedValue(new Error("DynamoDB endpoint leaked"));
+
+    const context = { params: Promise.resolve({ id: "budget-1" }) };
+    const response = await DELETE(
+      buildBudgetByIdRequest({ method: "DELETE" }),
+      context,
+    );
+
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
       ok: false,
-      error: "Error: Missing or invalid Authorization header",
+      error: "Unable to delete budget",
     });
   });
 
