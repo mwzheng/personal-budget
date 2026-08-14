@@ -415,6 +415,20 @@ const ReportsPageContent = () => {
             </Button>
           </Box>
           {loading ? (
+            <Skeleton
+              variant="rounded"
+              height={48}
+              sx={{ mb: 3, borderRadius: 1 }}
+            />
+          ) : (
+            <FilterBar
+              availableTags={availableTags}
+              availableYears={availableYears}
+              filters={filters}
+              onChange={setFilters}
+            />
+          )}
+          {loading ? (
             <Box
               sx={{
                 display: "grid",
@@ -516,20 +530,6 @@ const ReportsPageContent = () => {
                 <StatCard key={s.label} {...s} loading={loading} />
               ))}
             </Box>
-          )}
-          {loading ? (
-            <Skeleton
-              variant="rounded"
-              height={48}
-              sx={{ mb: 3, borderRadius: 1 }}
-            />
-          ) : (
-            <FilterBar
-              availableTags={availableTags}
-              availableYears={availableYears}
-              filters={filters}
-              onChange={setFilters}
-            />
           )}
           <Stack spacing={3} mb={3}>
             <Box

@@ -6,6 +6,7 @@ import {
   getAvailableMonths,
   getDefaultComparisonMonths,
   getMonthTransactions,
+  rankComparisonTags,
 } from "../../lib/utils/aggregations";
 import type { Transaction } from "../../lib/types/types";
 
@@ -124,6 +125,42 @@ describe("buildMonthSummary", () => {
     expect(summary.incomeAmount).toBe(0);
     expect(summary.transactionCount).toBe(0);
     expect(summary.topTags).toEqual([]);
+  });
+});
+
+describe("rankComparisonTags", () => {
+  it("orders tags by combined spend and keeps low-spend early names below the display limit", () => {
+    const rankedTags = rankComparisonTags(
+      [
+        { name: "zeta", value: 400 },
+        { name: "hotel", value: 300 },
+        { name: "foxtrot", value: 200 },
+        { name: "delta", value: 100 },
+        { name: "alpha", value: 1 },
+      ],
+      [
+        { name: "zeta", value: 500 },
+        { name: "india", value: 350 },
+        { name: "golf", value: 250 },
+        { name: "echo", value: 150 },
+        { name: "charlie", value: 100 },
+        { name: "bravo", value: 50 },
+      ],
+    );
+
+    expect(rankedTags).toEqual([
+      "zeta",
+      "india",
+      "hotel",
+      "golf",
+      "foxtrot",
+      "echo",
+      "charlie",
+      "delta",
+      "bravo",
+      "alpha",
+    ]);
+    expect(rankedTags.slice(0, 10)).toContain("alpha");
   });
 });
 

@@ -261,6 +261,29 @@ export function buildMonthSummary(
   };
 }
 
+/**
+ * Ranks tags shown in a month comparison by their combined spend.
+ */
+export function rankComparisonTags(
+  prevMonthTags: TagDataPoint[],
+  currMonthTags: TagDataPoint[],
+): string[] {
+  const combinedValues = new Map<string, number>();
+
+  for (const tag of [...prevMonthTags, ...currMonthTags]) {
+    combinedValues.set(
+      tag.name,
+      (combinedValues.get(tag.name) ?? 0) + tag.value,
+    );
+  }
+
+  return Array.from(combinedValues.entries())
+    .sort(([nameA, valueA], [nameB, valueB]) => {
+      return valueB - valueA || nameA.localeCompare(nameB);
+    })
+    .map(([name]) => name);
+}
+
 function pctChange(oldVal: number, newVal: number): number | null {
   if (oldVal === 0) return newVal === 0 ? 0 : null;
   return ((newVal - oldVal) / Math.abs(oldVal)) * 100;

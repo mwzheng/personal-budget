@@ -252,18 +252,31 @@ export function AppNav() {
               }}
               sx={{
                 minWidth: 0,
-                px: 1.5,
-                minHeight: 44,
+                minHeight: 64,
+                px: 2,
                 fontWeight: 500,
-                border: `1px solid ${isInfoMenuOpen || isInfoRoute ? SERVER_THEME_TOKENS.palette.primary : SERVER_THEME_TOKENS.border.standard}`,
-                borderRadius: 1,
+                borderRadius: 0,
                 color:
                   isInfoMenuOpen || isInfoRoute
                     ? "primary.main"
                     : "text.secondary",
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  right: 16,
+                  bottom: 0,
+                  left: 16,
+                  height: 2,
+                  borderRadius: "2px 2px 0 0",
+                  backgroundColor: "primary.main",
+                  opacity: isInfoMenuOpen || isInfoRoute ? 1 : 0,
+                  transform:
+                    isInfoMenuOpen || isInfoRoute ? "scaleX(1)" : "scaleX(0.6)",
+                  transition: "opacity 150ms ease, transform 150ms ease",
+                },
                 "&:hover": {
-                  color: "primary.light",
-                  borderColor: "primary.main",
+                  color: "primary.main",
                   bgcolor: SERVER_THEME_TOKENS.surface.selected,
                 },
               }}
@@ -356,11 +369,33 @@ export function AppNav() {
               paper: {
                 elevation: 2,
                 sx: {
-                  mt: 1,
-                  minWidth: 176,
-                  py: 0.5,
+                  mt: 0.75,
+                  minWidth: 168,
+                  p: 0.75,
+                  borderRadius: 1.5,
                   backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
                   border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
+                  boxShadow: SERVER_THEME_TOKENS.shadow.medium,
+                  "& .MuiMenuItem-root": {
+                    minHeight: 40,
+                    mx: 0,
+                    my: 0,
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1,
+                    color: "text.secondary",
+                    "&:hover": {
+                      bgcolor: SERVER_THEME_TOKENS.surface.raised,
+                      color: "text.primary",
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: SERVER_THEME_TOKENS.surface.selected,
+                      color: "primary.main",
+                      "&:hover": {
+                        bgcolor: SERVER_THEME_TOKENS.surface.selectedHover,
+                      },
+                    },
+                  },
                 },
               },
             }}
