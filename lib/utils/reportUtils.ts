@@ -5,7 +5,16 @@ import {
   subDays,
 } from "date-fns";
 
-import { FilterParams, ReportsAggregates } from "@/lib/types/types";
+import {
+  FilterParams,
+  ReportsAggregates,
+  Transaction,
+} from "@/lib/types/types";
+import {
+  getAllTags,
+  getAvailableReportYears,
+  resolveDefaultReportYears,
+} from "@/lib/utils/aggregations";
 
 export type TransactionsViewMode = "table" | "calendar";
 
@@ -35,6 +44,37 @@ export function buildYearFilters(years: string[]): FilterParams {
     ...EMPTY_FILTERS,
     years,
   };
+}
+
+/**
+ * Resolves report filters after transaction data is available. A valid complete
+ * preference (including an intentionally empty one) wins over the legacy year
+ * preference; only data-dependent years and tags are pruned.
+ */
+export function initializeReportFilters(
+  transactions: Transaction[],
+  storedFilters: FilterParams | null,
+  legacyYears: string[],
+): FilterParams {
+  if (storedFilters) {
+    const availableYears = new Set(getAvailableReportYears(transactions));
+    const availableTags = new Set(getAllTags(transactions));
+    const restoredYears = storedFilters.years.filter((year) =>
+      availableYears.has(year),
+    );
+    const years =
+      storedFilters.years.length > 0 && restoredYears.length === 0
+        ? resolveDefaultReportYears(transactions, [])
+        : restoredYears;
+
+    return {
+      ...storedFilters,
+      years,
+      tags: storedFilters.tags.filter((tag) => availableTags.has(tag)),
+    };
+  }
+
+  return buildYearFilters(resolveDefaultReportYears(transactions, legacyYears));
 }
 
 export function buildQuickTagFilters(

@@ -34,11 +34,12 @@ import {
   aggregateTransactions,
   getAllTags,
   getAvailableReportYears,
-  resolveDefaultReportYears,
 } from "@/lib/utils/aggregations";
 import {
+  getLastSelectedReportFilters,
   getLastSelectedReportTransactionsView,
   getLastSelectedReportYears,
+  setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
 import { Transaction } from "@/lib/types/types";
@@ -53,10 +54,10 @@ import {
   PAGE_TITLE_ID,
   PAGE_DESCRIPTION_ID,
   TransactionsViewMode,
-  buildYearFilters,
   buildQuickTagFilters,
   buildComparablePeriodFilters,
   buildStatTrend,
+  initializeReportFilters,
 } from "@/lib/utils/reportUtils";
 import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
@@ -72,8 +73,10 @@ interface TransactionsApiResponse {
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
@@ -91,22 +94,11 @@ const ReportsPageContent = () => {
   const [compareOpen, setCompareOpen] = useState(false);
   const router = useRouter();
 
-  const applyTransactions = (
-    transactions: Transaction[],
-    opts?: { resetFilters?: boolean },
-  ) => {
+  const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
-
-    if (opts?.resetFilters) {
-      const resolvedYears = resolveDefaultReportYears(
-        transactions,
-        getLastSelectedReportYears(),
-      );
-      setFilters(buildYearFilters(resolvedYears));
-    }
   };
 
-  const loadTransactions = async (opts?: { resetFilters?: boolean }) => {
+  const loadTransactions = async () => {
     setLoading(true);
     setErrorMessage(null);
 
@@ -124,7 +116,8 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to load transactions");
       }
 
-      applyTransactions(data.transactions ?? [], opts);
+      applyTransactions(data.transactions ?? []);
+      setTransactionsLoaded(true);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load transactions",
@@ -142,7 +135,7 @@ const ReportsPageContent = () => {
       return;
     }
 
-    void loadTransactions({ resetFilters: true });
+    void loadTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -150,8 +143,25 @@ const ReportsPageContent = () => {
     setTransactionsView(getLastSelectedReportTransactionsView());
   }, []);
 
+  useEffect(() => {
+    if (!transactionsLoaded || loading || filtersInitialized) return;
+
+    setFilters(
+      initializeReportFilters(
+        allTransactions,
+        getLastSelectedReportFilters(),
+        getLastSelectedReportYears(),
+      ),
+    );
+    setFiltersInitialized(true);
+  }, [allTransactions, filtersInitialized, loading, transactionsLoaded]);
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+    setLastSelectedReportFilters(filters);
+  }, [filters, filtersInitialized]);
+
   const handleSaveTransaction = async (t: Transaction) => {
-    const wasEmpty = allTransactions.length === 0;
     setErrorMessage(null);
 
     try {
@@ -174,7 +184,7 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to save transaction");
       }
 
-      await loadTransactions({ resetFilters: wasEmpty });
+      await loadTransactions();
       setFormOpen(false);
       setEditTarget(undefined);
       setDuplicateTarget(undefined);
@@ -669,7 +679,7 @@ const ReportsPageContent = () => {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImported={() => {
-          void loadTransactions({ resetFilters: allTransactions.length === 0 });
+          void loadTransactions();
         }}
       />
       <MonthComparisonModal

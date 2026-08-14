@@ -8,7 +8,84 @@ import {
   TagDataPoint,
   TimeseriesPoint,
 } from "../types/types";
+import {
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
+  format,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  subDays,
+  subMonths,
+  subQuarters,
+  subYears,
+} from "date-fns";
 import { normalizeTransactionCategory } from "./transaction-categories";
+
+export type ReportDateRangePreset =
+  | "this-month"
+  | "last-month"
+  | "this-quarter"
+  | "last-quarter"
+  | "this-year"
+  | "last-year"
+  | "last-90-days"
+  | "all-time"
+  | "custom";
+
+const DATE_FORMAT = "yyyy-MM-dd";
+
+function toFilterDateRange(startDate: Date, endDate: Date) {
+  return {
+    startDate: format(startDate, DATE_FORMAT),
+    endDate: format(endDate, DATE_FORMAT),
+  };
+}
+
+/** Returns local-calendar report ranges for the quick filter controls. */
+export function getReportDateRangePreset(
+  preset: ReportDateRangePreset,
+  referenceDate: Date = new Date(),
+): Pick<FilterParams, "startDate" | "endDate"> {
+  switch (preset) {
+    case "this-month":
+      return toFilterDateRange(
+        startOfMonth(referenceDate),
+        endOfMonth(referenceDate),
+      );
+    case "last-month": {
+      const lastMonth = subMonths(referenceDate, 1);
+      return toFilterDateRange(startOfMonth(lastMonth), endOfMonth(lastMonth));
+    }
+    case "this-quarter":
+      return toFilterDateRange(
+        startOfQuarter(referenceDate),
+        endOfQuarter(referenceDate),
+      );
+    case "last-quarter": {
+      const lastQuarter = subQuarters(referenceDate, 1);
+      return toFilterDateRange(
+        startOfQuarter(lastQuarter),
+        endOfQuarter(lastQuarter),
+      );
+    }
+    case "this-year":
+      return toFilterDateRange(
+        startOfYear(referenceDate),
+        endOfYear(referenceDate),
+      );
+    case "last-year": {
+      const lastYear = subYears(referenceDate, 1);
+      return toFilterDateRange(startOfYear(lastYear), endOfYear(lastYear));
+    }
+    case "last-90-days":
+      return toFilterDateRange(subDays(referenceDate, 89), referenceDate);
+    case "all-time":
+    case "custom":
+      return { startDate: null, endDate: null };
+  }
+}
 
 function createEmptyCategoryTotals(): ReportsCategoryTotals {
   return { Need: 0, Want: 0, Saving: 0 };

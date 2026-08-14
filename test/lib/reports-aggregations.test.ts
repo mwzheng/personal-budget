@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getReportDateRangePreset,
   aggregateTransactions,
   createYearDateRange,
   filterTransactions,
@@ -11,6 +12,7 @@ import {
   resolveDefaultReportYears,
 } from "../../lib/utils/aggregations";
 import type { Transaction } from "../../lib/types/types";
+import { initializeReportFilters } from "../../lib/utils/reportUtils";
 
 function buildTransaction(
   id: string,
@@ -217,5 +219,139 @@ describe("reports year helpers", () => {
     });
 
     expect(filtered).toHaveLength(transactions.length);
+  });
+});
+
+describe("report filter initialization", () => {
+  const transactions = [
+    buildTransaction("2024", "2024-01-15", { tags: ["groceries", "home"] }),
+    buildTransaction("2023", "2023-08-10", { tags: ["travel"] }),
+  ];
+
+  it("prefers a complete stored preference and reconciles stale years and tags", () => {
+    expect(
+      initializeReportFilters(
+        transactions,
+        {
+          years: ["2024", "2022"],
+          startDate: null,
+          endDate: null,
+          categories: ["Need"],
+          tags: ["groceries", "stale"],
+          search: "coffee",
+        },
+        ["2023"],
+      ),
+    ).toEqual({
+      years: ["2024"],
+      startDate: null,
+      endDate: null,
+      categories: ["Need"],
+      tags: ["groceries"],
+      search: "coffee",
+    });
+  });
+
+  it("preserves stored dates, categories, and search while reconciling tags", () => {
+    expect(
+      initializeReportFilters(
+        transactions,
+        {
+          years: [],
+          startDate: "2024-01-01",
+          endDate: "2024-03-31",
+          categories: ["Income"],
+          tags: ["missing"],
+          search: "paycheck",
+        },
+        ["2023"],
+      ),
+    ).toEqual({
+      years: [],
+      startDate: "2024-01-01",
+      endDate: "2024-03-31",
+      categories: ["Income"],
+      tags: [],
+      search: "paycheck",
+    });
+  });
+
+  it("uses legacy saved years then the default year only when no complete preference exists", () => {
+    expect(
+      initializeReportFilters(transactions, null, ["2023", "2022"]),
+    ).toEqual({
+      years: ["2023"],
+      startDate: null,
+      endDate: null,
+      categories: [],
+      tags: [],
+      search: "",
+    });
+  });
+
+  it("does not fall back to legacy years for a valid empty stored preference", () => {
+    expect(
+      initializeReportFilters(
+        transactions,
+        {
+          years: [],
+          startDate: null,
+          endDate: null,
+          categories: [],
+          tags: [],
+          search: "",
+        },
+        ["2023"],
+      ),
+    ).toEqual({
+      years: [],
+      startDate: null,
+      endDate: null,
+      categories: [],
+      tags: [],
+      search: "",
+    });
+  });
+
+  it("falls back to the newest available year when stored years are stale", () => {
+    expect(
+      initializeReportFilters(
+        transactions,
+        {
+          years: ["2022"],
+          startDate: null,
+          endDate: null,
+          categories: [],
+          tags: [],
+          search: "",
+        },
+        ["2023"],
+      ),
+    ).toEqual({
+      years: ["2024"],
+      startDate: null,
+      endDate: null,
+      categories: [],
+      tags: [],
+      search: "",
+    });
+  });
+});
+
+describe("report date-range presets", () => {
+  const referenceDate = new Date(2024, 2, 15, 12);
+
+  it.each([
+    ["this-month", { startDate: "2024-03-01", endDate: "2024-03-31" }],
+    ["last-month", { startDate: "2024-02-01", endDate: "2024-02-29" }],
+    ["this-quarter", { startDate: "2024-01-01", endDate: "2024-03-31" }],
+    ["last-quarter", { startDate: "2023-10-01", endDate: "2023-12-31" }],
+    ["this-year", { startDate: "2024-01-01", endDate: "2024-12-31" }],
+    ["last-year", { startDate: "2023-01-01", endDate: "2023-12-31" }],
+    ["last-90-days", { startDate: "2023-12-17", endDate: "2024-03-15" }],
+    ["all-time", { startDate: null, endDate: null }],
+    ["custom", { startDate: null, endDate: null }],
+  ] as const)("returns the %s local-calendar range", (preset, expected) => {
+    expect(getReportDateRangePreset(preset, referenceDate)).toEqual(expected);
   });
 });
