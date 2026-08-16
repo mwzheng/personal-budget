@@ -6,7 +6,10 @@
 
 import { generateId } from "./generateId";
 import type { Transaction } from "../types/types";
+import type { FilterParams, TransactionCategoryType } from "../types/types";
 import type { BudgetDraft } from "./budget-normalizer";
+import { isTransactionCategory } from "./transaction-categories";
+import { format, isValid, parseISO } from "date-fns";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
 // works well for small datasets. For larger datasets, IndexedDB or a server-side
@@ -14,10 +17,130 @@ import type { BudgetDraft } from "./budget-normalizer";
 // names that would silently create a second, disconnected data store.
 const STORAGE_KEY = "personal-budget-transactions";
 const REPORT_YEAR_STORAGE_KEY = "personal-budget-last-report-year";
+const REPORT_FILTERS_STORAGE_KEY = "personal-budget-report-filters";
+const REPORT_FILTERS_STORAGE_VERSION = 1;
 const REPORT_TRANSACTIONS_VIEW_STORAGE_KEY =
   "personal-budget-last-report-transactions-view";
 
 type ReportTransactionsViewPreference = "table" | "calendar";
+
+type StoredReportFilters = {
+  version: typeof REPORT_FILTERS_STORAGE_VERSION;
+  filters: FilterParams;
+};
+
+function normalizeUniqueStrings(
+  values: unknown,
+  validate: (value: string) => boolean,
+): string[] | null {
+  if (
+    !Array.isArray(values) ||
+    !values.every((value) => typeof value === "string")
+  ) {
+    return null;
+  }
+
+  const normalized = values.map((value) => value.trim());
+  if (!normalized.every(validate)) return null;
+  return [...new Set(normalized)];
+}
+
+function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = parseISO(value);
+  return isValid(parsed) && format(parsed, "yyyy-MM-dd") === value;
+}
+
+function normalizeReportFilters(value: unknown): FilterParams | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const filters = value as Record<string, unknown>;
+  if (
+    !("years" in filters) ||
+    !("startDate" in filters) ||
+    !("endDate" in filters) ||
+    !("categories" in filters) ||
+    !("tags" in filters) ||
+    !("search" in filters)
+  )
+    return null;
+
+  const years = normalizeUniqueStrings(filters.years, (year) =>
+    /^\d{4}$/.test(year),
+  );
+  const tags = normalizeUniqueStrings(filters.tags, (tag) => tag.length > 0);
+  const categories = normalizeUniqueStrings(
+    filters.categories,
+    isTransactionCategory,
+  ) as TransactionCategoryType[] | null;
+  const startDate = filters.startDate;
+  const endDate = filters.endDate;
+  if (
+    !years ||
+    !tags ||
+    !categories ||
+    typeof filters.search !== "string" ||
+    !(
+      startDate === null ||
+      (typeof startDate === "string" && isIsoDate(startDate))
+    ) ||
+    !(endDate === null || (typeof endDate === "string" && isIsoDate(endDate)))
+  )
+    return null;
+  if (years.length > 0 && (startDate !== null || endDate !== null)) return null;
+  if (startDate && endDate && startDate > endDate) return null;
+
+  return {
+    years,
+    startDate,
+    endDate,
+    categories,
+    tags,
+    search: filters.search.trim(),
+  };
+}
+
+/** Returns null only when no valid complete report-filter preference exists. */
+export function getLastSelectedReportFilters(): FilterParams | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(REPORT_FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      return null;
+    const stored = parsed as Partial<StoredReportFilters>;
+    if (stored.version !== REPORT_FILTERS_STORAGE_VERSION) return null;
+    return normalizeReportFilters(stored.filters);
+  } catch {
+    return null;
+  }
+}
+
+/** Persists a versioned complete preference. Invalid caller input is ignored. */
+export function setLastSelectedReportFilters(filters: FilterParams): void {
+  if (typeof window === "undefined") return;
+  const normalized = normalizeReportFilters(filters);
+  if (!normalized) return;
+  try {
+    const payload: StoredReportFilters = {
+      version: REPORT_FILTERS_STORAGE_VERSION,
+      filters: normalized,
+    };
+    localStorage.setItem(REPORT_FILTERS_STORAGE_KEY, JSON.stringify(payload));
+    localStorage.removeItem(REPORT_YEAR_STORAGE_KEY);
+  } catch {
+    // Ignore unavailable browser storage and quota failures.
+  }
+}
+
+export function clearLastSelectedReportFilters(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(REPORT_FILTERS_STORAGE_KEY);
+  } catch {
+    // Ignore unavailable browser storage.
+  }
+}
 
 // Note 3: `typeof window === "undefined"` is true during SSR in Next.js. Returning
 // an empty array instead of throwing keeps server-side rendering safe, even though

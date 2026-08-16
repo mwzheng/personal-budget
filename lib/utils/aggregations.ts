@@ -7,8 +7,87 @@ import {
   ReportsAggregates,
   TagDataPoint,
   TimeseriesPoint,
+  YearlyReport,
+  YearlyReportMonth,
 } from "../types/types";
+import {
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
+  format,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  subDays,
+  subMonths,
+  subQuarters,
+  subYears,
+} from "date-fns";
 import { normalizeTransactionCategory } from "./transaction-categories";
+
+export type ReportDateRangePreset =
+  | "this-month"
+  | "last-month"
+  | "this-quarter"
+  | "last-quarter"
+  | "this-year"
+  | "last-year"
+  | "last-90-days"
+  | "all-time"
+  | "custom";
+
+const DATE_FORMAT = "yyyy-MM-dd";
+
+function toFilterDateRange(startDate: Date, endDate: Date) {
+  return {
+    startDate: format(startDate, DATE_FORMAT),
+    endDate: format(endDate, DATE_FORMAT),
+  };
+}
+
+/** Returns local-calendar report ranges for the quick filter controls. */
+export function getReportDateRangePreset(
+  preset: ReportDateRangePreset,
+  referenceDate: Date = new Date(),
+): Pick<FilterParams, "startDate" | "endDate"> {
+  switch (preset) {
+    case "this-month":
+      return toFilterDateRange(
+        startOfMonth(referenceDate),
+        endOfMonth(referenceDate),
+      );
+    case "last-month": {
+      const lastMonth = subMonths(referenceDate, 1);
+      return toFilterDateRange(startOfMonth(lastMonth), endOfMonth(lastMonth));
+    }
+    case "this-quarter":
+      return toFilterDateRange(
+        startOfQuarter(referenceDate),
+        endOfQuarter(referenceDate),
+      );
+    case "last-quarter": {
+      const lastQuarter = subQuarters(referenceDate, 1);
+      return toFilterDateRange(
+        startOfQuarter(lastQuarter),
+        endOfQuarter(lastQuarter),
+      );
+    }
+    case "this-year":
+      return toFilterDateRange(
+        startOfYear(referenceDate),
+        endOfYear(referenceDate),
+      );
+    case "last-year": {
+      const lastYear = subYears(referenceDate, 1);
+      return toFilterDateRange(startOfYear(lastYear), endOfYear(lastYear));
+    }
+    case "last-90-days":
+      return toFilterDateRange(subDays(referenceDate, 89), referenceDate);
+    case "all-time":
+    case "custom":
+      return { startDate: null, endDate: null };
+  }
+}
 
 function createEmptyCategoryTotals(): ReportsCategoryTotals {
   return { Need: 0, Want: 0, Saving: 0 };
@@ -201,6 +280,111 @@ export function createYearDateRange(
   };
 }
 
+/**
+ * Builds the filter-independent report for a calendar year. Historical years
+ * always include all twelve months; the current year stops at referenceDate's
+ * month so future months are not mistaken for missing activity.
+ */
+export function buildYearlyReport(
+  transactions: Transaction[],
+  year: number,
+  referenceDate: Date = new Date(),
+): YearlyReport {
+  const monthCount =
+    year === referenceDate.getFullYear() ? referenceDate.getMonth() + 1 : 12;
+  const months: YearlyReportMonth[] = Array.from(
+    { length: monthCount },
+    (_, monthIndex) => ({
+      period: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
+      spendingAmount: 0,
+      incomeAmount: 0,
+      Need: 0,
+      Want: 0,
+      Saving: 0,
+      transactionCount: 0,
+      hasData: false,
+    }),
+  );
+  const monthByPeriod = new Map(months.map((month) => [month.period, month]));
+  const totalByCategoryType = createEmptyCategoryTotals();
+  const tagTotals = new Map<string, number>();
+  let incomeAmount = 0;
+  let transactionCount = 0;
+  let largestPurchase: Transaction | null = null;
+
+  const currentDate = format(referenceDate, DATE_FORMAT);
+
+  for (const transaction of transactions) {
+    if (Number(transaction.date.substring(0, 4)) !== year) continue;
+    if (
+      year === referenceDate.getFullYear() &&
+      transaction.date > currentDate
+    ) {
+      continue;
+    }
+
+    const period = transaction.date.substring(0, 7);
+    const month = monthByPeriod.get(period);
+    // A current-year transaction dated after the reference month is excluded.
+    if (!month) continue;
+
+    transactionCount += 1;
+    month.transactionCount += 1;
+    month.hasData = true;
+    const category = normalizeTransactionCategory(transaction.category);
+
+    if (category === "Income") {
+      incomeAmount += transaction.amount;
+      month.incomeAmount += transaction.amount;
+      continue;
+    }
+
+    totalByCategoryType[category] += transaction.amount;
+    month[category] += transaction.amount;
+    if (
+      (category === "Need" || category === "Want") &&
+      (!largestPurchase || transaction.amount > largestPurchase.amount)
+    ) {
+      largestPurchase = transaction;
+    }
+    if (category !== "Saving") {
+      month.spendingAmount += transaction.amount;
+    }
+
+    for (const tag of transaction.tags) {
+      tagTotals.set(tag, (tagTotals.get(tag) ?? 0) + transaction.amount);
+    }
+  }
+
+  const spendingAmount = totalByCategoryType.Need + totalByCategoryType.Want;
+  const highestSpendMonth = months.reduce<YearlyReportMonth | null>(
+    (highest, month) =>
+      month.spendingAmount > (highest?.spendingAmount ?? 0) ? month : highest,
+    null,
+  );
+  const topTags = Array.from(tagTotals, ([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+    .slice(0, 10);
+
+  return {
+    year,
+    months,
+    incomeAmount,
+    spendingAmount,
+    savingsAmount: totalByCategoryType.Saving,
+    totalByCategoryType,
+    transactionCount,
+    averageMonthlySpending: monthCount > 0 ? spendingAmount / monthCount : 0,
+    savingsRate:
+      incomeAmount > 0
+        ? (totalByCategoryType.Saving / incomeAmount) * 100
+        : null,
+    highestSpendMonth,
+    largestPurchase,
+    topTags,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Month comparison utilities
 // ---------------------------------------------------------------------------
@@ -259,6 +443,29 @@ export function buildMonthSummary(
     transactionCount: monthTxns.length,
     topTags,
   };
+}
+
+/**
+ * Ranks tags shown in a month comparison by their combined spend.
+ */
+export function rankComparisonTags(
+  prevMonthTags: TagDataPoint[],
+  currMonthTags: TagDataPoint[],
+): string[] {
+  const combinedValues = new Map<string, number>();
+
+  for (const tag of [...prevMonthTags, ...currMonthTags]) {
+    combinedValues.set(
+      tag.name,
+      (combinedValues.get(tag.name) ?? 0) + tag.value,
+    );
+  }
+
+  return Array.from(combinedValues.entries())
+    .sort(([nameA, valueA], [nameB, valueB]) => {
+      return valueB - valueA || nameA.localeCompare(nameB);
+    })
+    .map(([name]) => name);
 }
 
 function pctChange(oldVal: number, newVal: number): number | null {

@@ -62,8 +62,26 @@ describe("transactions api route", () => {
   it("returns the authenticated user's transactions", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-100");
     mockedGetUserTransactions.mockResolvedValue([
-      { id: "tx-1", amount: 50, date: "2026-01-15", category: "Food" },
-      { id: "tx-2", amount: 120, date: "2026-01-16", category: "Transport" },
+      {
+        id: "tx-1",
+        name: "Coffee",
+        amount: 50,
+        date: "2026-01-15",
+        category: "Want",
+        notes: "",
+        paymentMethod: "card",
+        tags: [],
+      },
+      {
+        id: "tx-2",
+        name: "Rent",
+        amount: 120,
+        date: "2026-01-16",
+        category: "Need",
+        notes: "",
+        paymentMethod: "bank",
+        tags: [],
+      },
     ]);
 
     const response = await GET(buildRequest());
@@ -74,8 +92,26 @@ describe("transactions api route", () => {
     await expect(response.json()).resolves.toEqual({
       ok: true,
       transactions: [
-        { id: "tx-1", amount: 50, date: "2026-01-15", category: "Food" },
-        { id: "tx-2", amount: 120, date: "2026-01-16", category: "Transport" },
+        {
+          id: "tx-1",
+          name: "Coffee",
+          amount: 50,
+          date: "2026-01-15",
+          category: "Want",
+          notes: "",
+          paymentMethod: "card",
+          tags: [],
+        },
+        {
+          id: "tx-2",
+          name: "Rent",
+          amount: 120,
+          date: "2026-01-16",
+          category: "Need",
+          notes: "",
+          paymentMethod: "bank",
+          tags: [],
+        },
       ],
     });
   });
@@ -175,9 +211,13 @@ describe("transactions api route", () => {
     mockedGetRequestUserId.mockResolvedValue("user-300");
     mockedUpdateTransaction.mockResolvedValue({
       id: "tx-update-1",
+      name: "Utilities",
       amount: 999,
       date: "2026-04-20",
-      category: "Utilities",
+      category: "Need",
+      notes: "",
+      paymentMethod: "bank",
+      tags: [],
     });
 
     const response = await PUT(
@@ -188,7 +228,7 @@ describe("transactions api route", () => {
           id: "tx-update-1",
           amount: 999,
           date: "2026-04-20",
-          category: "Utilities",
+          category: "Need",
         }),
       }),
     );
@@ -197,7 +237,7 @@ describe("transactions api route", () => {
       id: "tx-update-1",
       amount: 999,
       date: "2026-04-20",
-      category: "Utilities",
+      category: "Need",
     });
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -206,7 +246,7 @@ describe("transactions api route", () => {
         id: "tx-update-1",
         amount: 999,
         date: "2026-04-20",
-        category: "Utilities",
+        category: "Need",
       },
     });
   });

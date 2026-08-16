@@ -67,7 +67,7 @@ export interface MilestoneEntry {
   milestoneId: string;
   amount: number;
   year: number | null;
-  age: number | null;
+  age?: number | null;
   note?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -133,6 +133,30 @@ export interface ReportsAggregates {
   totalByCategoryType: ReportsCategoryTotals;
   timeseries: TimeseriesPoint[];
   tagDiagramData: TagDataPoint[];
+}
+
+/** A calendar month's contribution to a yearly spending report. */
+export interface YearlyReportMonth extends TimeseriesPoint {
+  transactionCount: number;
+  /** Distinguishes a zero-total month with activity from one with no records. */
+  hasData: boolean;
+}
+
+/** Pre-computed, filter-independent data for the yearly reports section. */
+export interface YearlyReport {
+  year: number;
+  months: YearlyReportMonth[];
+  incomeAmount: number;
+  spendingAmount: number;
+  savingsAmount: number;
+  totalByCategoryType: ReportsCategoryTotals;
+  transactionCount: number;
+  averageMonthlySpending: number;
+  /** Percentage of income saved, or null when there is no income. */
+  savingsRate: number | null;
+  highestSpendMonth: YearlyReportMonth | null;
+  largestPurchase: Transaction | null;
+  topTags: TagDataPoint[];
 }
 
 // Note 12b: MonthSummary captures a single month's financial snapshot for use in

@@ -245,6 +245,9 @@ input[type="number"] {
   }
 }
 @media print {
+  @page {
+    margin: 0.5in;
+  }
   body {
     background: #fff;
     color: #000;
@@ -256,8 +259,44 @@ input[type="number"] {
   .MuiAppBar-root,
   .MuiFab-root,
   button,
-  nav {
+  nav,
+  .MuiDialog-root:not(.yearly-report-dialog),
+  .reports-page > header,
+  .report-page__non-yearly,
+  .yearly-report__controls {
     display: none !important;
+  }
+  .yearly-report-dialog {
+    display: block !important;
+    position: static !important;
+  }
+  .yearly-report-dialog .MuiBackdrop-root {
+    display: none !important;
+  }
+  .yearly-report-dialog .MuiDialog-container {
+    display: block !important;
+    height: auto !important;
+  }
+  .yearly-report-dialog .MuiDialog-paper {
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+  }
+  .yearly-report,
+  .yearly-report * {
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+  .yearly-report .MuiPaper-root {
+    background: #fff !important;
+    border: 1px solid #bbb;
+    break-inside: avoid;
+  }
+  .yearly-report .MuiChip-root {
+    border: 1px solid #777;
+  }
+  .yearly-report .MuiTableCell-root {
+    border-color: #bbb;
   }
 }
 @media (max-width: 720px) {

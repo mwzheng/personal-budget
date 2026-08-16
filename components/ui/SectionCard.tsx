@@ -14,6 +14,8 @@ export interface SectionCardProps {
   sx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
   headingId?: string;
+  /** Controls the horizontal alignment of a title when no action is present. */
+  titleAlign?: "left" | "center";
   /** Optional decorative texture applied to the card surface only. */
   texture?: "none" | "blue" | "violet";
 }
@@ -27,6 +29,7 @@ export default function SectionCard({
   sx,
   contentSx,
   headingId,
+  titleAlign = "center",
   texture = "none",
 }: SectionCardProps) {
   const hasHeader = Boolean(title || action);
@@ -61,7 +64,10 @@ export default function SectionCard({
           {title ? (
             <Stack
               spacing={0.5}
-              sx={{ minWidth: 0, margin: !action ? "auto" : undefined }}
+              sx={{
+                minWidth: 0,
+                margin: !action && titleAlign === "center" ? "auto" : undefined,
+              }}
             >
               <Typography
                 id={headingId}

@@ -26,6 +26,7 @@ import {
   buildMonthComparison,
   getAvailableMonths,
   getDefaultComparisonMonths,
+  rankComparisonTags,
 } from "@/lib/utils/aggregations";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
@@ -208,10 +209,7 @@ function SummaryCard({
 function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
   const { prevMonth, currMonth } = comparison;
   const allTagNames = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of prevMonth.topTags) set.add(t.name);
-    for (const t of currMonth.topTags) set.add(t.name);
-    return Array.from(set).sort();
+    return rankComparisonTags(prevMonth.topTags, currMonth.topTags);
   }, [prevMonth.topTags, currMonth.topTags]);
 
   if (allTagNames.length === 0) return null;
@@ -267,7 +265,7 @@ function TagsComparison({ comparison }: { comparison: MonthComparisonData }) {
         >
           Change
         </Typography>
-        {allTagNames.slice(0, 8).map((tag) => {
+        {allTagNames.slice(0, 10).map((tag) => {
           const aVal = aMap[tag] ?? 0;
           const bVal = bMap[tag] ?? 0;
           const diff = aVal === 0 ? null : ((bVal - aVal) / aVal) * 100;

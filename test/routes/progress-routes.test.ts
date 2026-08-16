@@ -473,6 +473,7 @@ describe("progress api routes", () => {
       milestoneId: "milestone-2",
       amount: 250000,
       year: 2035,
+      age: null,
       note: "Coast FI",
     });
 
@@ -510,6 +511,7 @@ describe("progress api routes", () => {
         milestoneId: "milestone-2",
         amount: 250000,
         year: 2035,
+        age: null,
         note: "Coast FI",
       },
     });

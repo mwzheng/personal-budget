@@ -1,6 +1,7 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
+import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -10,6 +11,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
 import Fab from "@mui/material/Fab";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
@@ -20,6 +22,7 @@ import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { FilterBar } from "@/components/report/FilterBar";
+import { YearlyReport } from "@/components/report/YearlyReport";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
@@ -34,11 +37,13 @@ import {
   aggregateTransactions,
   getAllTags,
   getAvailableReportYears,
-  resolveDefaultReportYears,
+  buildYearlyReport,
 } from "@/lib/utils/aggregations";
 import {
+  getLastSelectedReportFilters,
   getLastSelectedReportTransactionsView,
   getLastSelectedReportYears,
+  setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
 import { Transaction } from "@/lib/types/types";
@@ -53,10 +58,10 @@ import {
   PAGE_TITLE_ID,
   PAGE_DESCRIPTION_ID,
   TransactionsViewMode,
-  buildYearFilters,
   buildQuickTagFilters,
   buildComparablePeriodFilters,
   buildStatTrend,
+  initializeReportFilters,
 } from "@/lib/utils/reportUtils";
 import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
@@ -72,8 +77,10 @@ interface TransactionsApiResponse {
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Transaction | undefined>(
     undefined,
@@ -89,24 +96,17 @@ const ReportsPageContent = () => {
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [yearlyReportOpen, setYearlyReportOpen] = useState(false);
+  const [selectedReportYear, setSelectedReportYear] = useState(() =>
+    new Date().getFullYear(),
+  );
   const router = useRouter();
 
-  const applyTransactions = (
-    transactions: Transaction[],
-    opts?: { resetFilters?: boolean },
-  ) => {
+  const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
-
-    if (opts?.resetFilters) {
-      const resolvedYears = resolveDefaultReportYears(
-        transactions,
-        getLastSelectedReportYears(),
-      );
-      setFilters(buildYearFilters(resolvedYears));
-    }
   };
 
-  const loadTransactions = async (opts?: { resetFilters?: boolean }) => {
+  const loadTransactions = async () => {
     setLoading(true);
     setErrorMessage(null);
 
@@ -124,7 +124,8 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to load transactions");
       }
 
-      applyTransactions(data.transactions ?? [], opts);
+      applyTransactions(data.transactions ?? []);
+      setTransactionsLoaded(true);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load transactions",
@@ -142,7 +143,7 @@ const ReportsPageContent = () => {
       return;
     }
 
-    void loadTransactions({ resetFilters: true });
+    void loadTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -150,8 +151,25 @@ const ReportsPageContent = () => {
     setTransactionsView(getLastSelectedReportTransactionsView());
   }, []);
 
+  useEffect(() => {
+    if (!transactionsLoaded || loading || filtersInitialized) return;
+
+    setFilters(
+      initializeReportFilters(
+        allTransactions,
+        getLastSelectedReportFilters(),
+        getLastSelectedReportYears(),
+      ),
+    );
+    setFiltersInitialized(true);
+  }, [allTransactions, filtersInitialized, loading, transactionsLoaded]);
+
+  useEffect(() => {
+    if (!filtersInitialized) return;
+    setLastSelectedReportFilters(filters);
+  }, [filters, filtersInitialized]);
+
   const handleSaveTransaction = async (t: Transaction) => {
-    const wasEmpty = allTransactions.length === 0;
     setErrorMessage(null);
 
     try {
@@ -174,7 +192,7 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to save transaction");
       }
 
-      await loadTransactions({ resetFilters: wasEmpty });
+      await loadTransactions();
       setFormOpen(false);
       setEditTarget(undefined);
       setDuplicateTarget(undefined);
@@ -308,6 +326,23 @@ const ReportsPageContent = () => {
     [allTransactions],
   );
 
+  const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    if (!transactionsLoaded) return;
+
+    setSelectedReportYear(
+      availableYears.includes(String(currentYear))
+        ? currentYear
+        : Number(availableYears[0] ?? currentYear),
+    );
+  }, [availableYears, currentYear, transactionsLoaded]);
+
+  const yearlyReport = useMemo(
+    () => buildYearlyReport(allTransactions, selectedReportYear),
+    [allTransactions, selectedReportYear],
+  );
+
   const filtered = useMemo(
     () => filterTransactions(allTransactions, filters),
     [allTransactions, filters],
@@ -348,6 +383,7 @@ const ReportsPageContent = () => {
       maxWidth="xl"
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
+      className="reports-page"
       sx={{ py: { xs: 3, md: 4 } }}
     >
       <PageHeader
@@ -359,6 +395,14 @@ const ReportsPageContent = () => {
         action={
           !isEmpty ? (
             <Stack direction="row" gap={1} flexWrap="wrap">
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<AssessmentOutlinedIcon />}
+                onClick={() => setYearlyReportOpen(true)}
+              >
+                Yearly Report
+              </Button>
               <Button
                 variant="text"
                 size="small"
@@ -388,262 +432,273 @@ const ReportsPageContent = () => {
           ) : undefined
         }
       />
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {errorMessage}
-        </Alert>
-      )}
       {isEmpty ? (
-        <EmptyState
-          onAddClick={() => handleAddTransaction()}
-          onImportClick={() => setImportOpen(true)}
-        />
+        <Box className="report-page__non-yearly">
+          {errorMessage && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {errorMessage}
+            </Alert>
+          )}
+          <EmptyState
+            onAddClick={() => handleAddTransaction()}
+            onImportClick={() => setImportOpen(true)}
+          />
+        </Box>
       ) : (
         <>
-          <Box
-            role="toolbar"
-            aria-label="Report actions"
-            sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
-          >
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleAddTransaction()}
-            >
-              Add Transaction
-            </Button>
-          </Box>
-          {loading ? (
+          <Box className="report-page__non-yearly">
+            {errorMessage && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {errorMessage}
+              </Alert>
+            )}
             <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "repeat(2, 1fr)",
-                  sm: "repeat(3, 1fr)",
-                  md: "repeat(5, 1fr)",
-                },
-                gap: 1.5,
-                mb: 3,
-              }}
+              role="toolbar"
+              aria-label="Report actions"
+              sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
             >
-              {Array.from({ length: 5 }, (_, i) => (
-                <Skeleton
-                  key={`stat-skeleton-${i}`}
-                  variant="rounded"
-                  height={72}
-                  sx={{ borderRadius: 1 }}
-                />
-              ))}
-            </Box>
-          ) : (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "repeat(2, 1fr)",
-                  sm: "repeat(3, 1fr)",
-                  md: "repeat(5, 1fr)",
-                },
-                gap: 1.5,
-                mb: 3,
-              }}
-            >
-              {(
-                [
-                  {
-                    label: "Income",
-                    value: formatCurrency(agg.incomeAmount),
-                    color: "#26a69a",
-                    trend: comparableAgg
-                      ? buildStatTrend(
-                          agg.incomeAmount,
-                          comparableAgg.incomeAmount,
-                          true,
-                        )
-                      : null,
-                  },
-                  {
-                    label: "Spending",
-                    value: formatCurrency(agg.spendingAmount),
-                    color: "text.primary",
-                    trend: comparableAgg
-                      ? buildStatTrend(
-                          agg.spendingAmount,
-                          comparableAgg.spendingAmount,
-                          false,
-                        )
-                      : null,
-                  },
-                  {
-                    label: "Needs",
-                    value: formatCurrency(agg.totalByCategoryType.Need),
-                    color: "#B91C1C",
-                    trend: comparableAgg
-                      ? buildStatTrend(
-                          agg.totalByCategoryType.Need,
-                          comparableAgg.totalByCategoryType.Need,
-                          false,
-                        )
-                      : null,
-                  },
-                  {
-                    label: "Wants",
-                    value: formatCurrency(agg.totalByCategoryType.Want),
-                    color: "#42a5f5",
-                    trend: comparableAgg
-                      ? buildStatTrend(
-                          agg.totalByCategoryType.Want,
-                          comparableAgg.totalByCategoryType.Want,
-                          false,
-                        )
-                      : null,
-                  },
-                  {
-                    label: "Savings",
-                    value: formatCurrency(agg.totalByCategoryType.Saving),
-                    color: "#15803D",
-                    trend: comparableAgg
-                      ? buildStatTrend(
-                          agg.totalByCategoryType.Saving,
-                          comparableAgg.totalByCategoryType.Saving,
-                          true,
-                        )
-                      : null,
-                  },
-                ] as const
-              ).map((s) => (
-                <StatCard key={s.label} {...s} loading={loading} />
-              ))}
-            </Box>
-          )}
-          {loading ? (
-            <Skeleton
-              variant="rounded"
-              height={48}
-              sx={{ mb: 3, borderRadius: 1 }}
-            />
-          ) : (
-            <FilterBar
-              availableTags={availableTags}
-              availableYears={availableYears}
-              filters={filters}
-              onChange={setFilters}
-            />
-          )}
-          <Stack spacing={3} mb={3}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
-                gap: 3,
-              }}
-            >
-              <SectionCard
-                title="Breakdown"
-                headingId="reports-breakdown-heading"
-                elevation={1}
-                sx={{ display: "flex", flexDirection: "column" }}
-                contentSx={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                }}
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleAddTransaction()}
               >
-                {loading ? (
-                  <SpendingBreakdownLoadingState />
-                ) : (
-                  <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
-                    <SpendingPieChart data={agg.totalByCategoryType} />
-                  </Box>
-                )}
-              </SectionCard>
-              <SectionCard
-                title="Top Tags"
-                headingId="reports-tags-heading"
-                elevation={1}
-                sx={{ display: "flex", flexDirection: "column" }}
-                contentSx={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                {loading ? (
-                  <ChartLoadingState height={400} showLegend={false} />
-                ) : (
-                  <TagBarChart
-                    data={agg.tagDiagramData}
-                    activeTags={filters.tags}
-                    onTagClick={handleQuickTagFilter}
-                  />
-                )}
-              </SectionCard>
+                Add Transaction
+              </Button>
             </Box>
-            <SectionCard
-              title="Monthly Overview"
-              headingId="reports-monthly-heading"
-              elevation={1}
-            >
-              {loading ? (
-                <ChartLoadingState height={360} legendItems={4} />
-              ) : (
-                <SpendingBarChart data={agg.timeseries} />
-              )}
-            </SectionCard>
-          </Stack>
-          <SectionCard
-            title="Transactions"
-            headingId="reports-transactions-heading"
-            elevation={1}
-            action={
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={transactionsView}
-                onChange={(_event, nextView) => {
-                  if (nextView !== null) {
-                    const resolvedView = nextView as TransactionsViewMode;
-                    setTransactionsView(resolvedView);
-                    setLastSelectedReportTransactionsView(resolvedView);
-                  }
-                }}
-                aria-label="Choose the transaction results view"
-                sx={{
-                  "& .MuiToggleButtonGroup-grouped": {
-                    px: 1.5,
-                    textTransform: "none",
-                  },
-                }}
-              >
-                <ToggleButton value="table" aria-label="Table view">
-                  <ViewListIcon sx={{ fontSize: 18, mr: 0.5 }} />
-                  Table
-                </ToggleButton>
-                <ToggleButton value="calendar" aria-label="Calendar view">
-                  <CalendarMonthIcon sx={{ fontSize: 18, mr: 0.5 }} />
-                  Calendar
-                </ToggleButton>
-              </ToggleButtonGroup>
-            }
-          >
-            {transactionsView === "table" ? (
-              <TransactionsTable
-                transactions={filtered}
-                activeTags={filters.tags}
-                onEdit={handleEditTransaction}
-                onDuplicate={handleDuplicateTransaction}
-                onDelete={handleDeleteTransaction}
-                onTagClick={handleQuickTagFilter}
+            {loading ? (
+              <Skeleton
+                variant="rounded"
+                height={48}
+                sx={{ mb: 3, borderRadius: 1 }}
               />
             ) : (
-              <TransactionCalendar
-                transactions={filtered}
-                onDaySelect={handleAddTransaction}
-                onTransactionSelect={setDetailTarget}
+              <FilterBar
+                availableTags={availableTags}
+                availableYears={availableYears}
+                filters={filters}
+                onChange={setFilters}
               />
             )}
-          </SectionCard>
+            {loading ? (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "repeat(2, 1fr)",
+                    sm: "repeat(3, 1fr)",
+                    md: "repeat(5, 1fr)",
+                  },
+                  gap: 1.5,
+                  mb: 3,
+                }}
+              >
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Skeleton
+                    key={`stat-skeleton-${i}`}
+                    variant="rounded"
+                    height={72}
+                    sx={{ borderRadius: 1 }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "repeat(2, 1fr)",
+                    sm: "repeat(3, 1fr)",
+                    md: "repeat(5, 1fr)",
+                  },
+                  gap: 1.5,
+                  mb: 3,
+                }}
+              >
+                {(
+                  [
+                    {
+                      label: "Income",
+                      value: formatCurrency(agg.incomeAmount),
+                      color: "#26a69a",
+                      trend: comparableAgg
+                        ? buildStatTrend(
+                            agg.incomeAmount,
+                            comparableAgg.incomeAmount,
+                            true,
+                          )
+                        : null,
+                    },
+                    {
+                      label: "Spending",
+                      value: formatCurrency(agg.spendingAmount),
+                      color: "text.primary",
+                      trend: comparableAgg
+                        ? buildStatTrend(
+                            agg.spendingAmount,
+                            comparableAgg.spendingAmount,
+                            false,
+                          )
+                        : null,
+                    },
+                    {
+                      label: "Needs",
+                      value: formatCurrency(agg.totalByCategoryType.Need),
+                      color: "#B91C1C",
+                      trend: comparableAgg
+                        ? buildStatTrend(
+                            agg.totalByCategoryType.Need,
+                            comparableAgg.totalByCategoryType.Need,
+                            false,
+                          )
+                        : null,
+                    },
+                    {
+                      label: "Wants",
+                      value: formatCurrency(agg.totalByCategoryType.Want),
+                      color: "#42a5f5",
+                      trend: comparableAgg
+                        ? buildStatTrend(
+                            agg.totalByCategoryType.Want,
+                            comparableAgg.totalByCategoryType.Want,
+                            false,
+                          )
+                        : null,
+                    },
+                    {
+                      label: "Savings",
+                      value: formatCurrency(agg.totalByCategoryType.Saving),
+                      color: "#15803D",
+                      trend: comparableAgg
+                        ? buildStatTrend(
+                            agg.totalByCategoryType.Saving,
+                            comparableAgg.totalByCategoryType.Saving,
+                            true,
+                          )
+                        : null,
+                    },
+                  ] as const
+                ).map((s) => (
+                  <StatCard key={s.label} {...s} loading={loading} />
+                ))}
+              </Box>
+            )}
+            <Stack spacing={3} mb={3}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+                  gap: 3,
+                }}
+              >
+                <SectionCard
+                  title="Breakdown"
+                  headingId="reports-breakdown-heading"
+                  elevation={1}
+                  sx={{ display: "flex", flexDirection: "column" }}
+                  contentSx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {loading ? (
+                    <SpendingBreakdownLoadingState />
+                  ) : (
+                    <Box
+                      sx={{ flex: 1, display: "flex", alignItems: "center" }}
+                    >
+                      <SpendingPieChart data={agg.totalByCategoryType} />
+                    </Box>
+                  )}
+                </SectionCard>
+                <SectionCard
+                  title="Top Tags"
+                  headingId="reports-tags-heading"
+                  elevation={1}
+                  sx={{ display: "flex", flexDirection: "column" }}
+                  contentSx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {loading ? (
+                    <ChartLoadingState height={400} showLegend={false} />
+                  ) : (
+                    <TagBarChart
+                      data={agg.tagDiagramData}
+                      activeTags={filters.tags}
+                      onTagClick={handleQuickTagFilter}
+                    />
+                  )}
+                </SectionCard>
+              </Box>
+              <SectionCard
+                title="Monthly Overview"
+                headingId="reports-monthly-heading"
+                elevation={1}
+              >
+                {loading ? (
+                  <ChartLoadingState height={360} legendItems={4} />
+                ) : (
+                  <SpendingBarChart data={agg.timeseries} />
+                )}
+              </SectionCard>
+            </Stack>
+            <SectionCard
+              title="Transactions"
+              headingId="reports-transactions-heading"
+              elevation={1}
+              action={
+                <ToggleButtonGroup
+                  exclusive
+                  size="small"
+                  value={transactionsView}
+                  onChange={(_event, nextView) => {
+                    if (nextView !== null) {
+                      const resolvedView = nextView as TransactionsViewMode;
+                      setTransactionsView(resolvedView);
+                      setLastSelectedReportTransactionsView(resolvedView);
+                    }
+                  }}
+                  aria-label="Choose the transaction results view"
+                  sx={{
+                    "& .MuiToggleButtonGroup-grouped": {
+                      px: 1.5,
+                      textTransform: "none",
+                    },
+                  }}
+                >
+                  <ToggleButton value="table" aria-label="Table view">
+                    <ViewListIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                    Table
+                  </ToggleButton>
+                  <ToggleButton value="calendar" aria-label="Calendar view">
+                    <CalendarMonthIcon sx={{ fontSize: 18, mr: 0.5 }} />
+                    Calendar
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              }
+            >
+              {transactionsView === "table" ? (
+                <TransactionsTable
+                  transactions={filtered}
+                  activeTags={filters.tags}
+                  onEdit={handleEditTransaction}
+                  onDuplicate={handleDuplicateTransaction}
+                  onDelete={handleDeleteTransaction}
+                  onTagClick={handleQuickTagFilter}
+                />
+              ) : (
+                <TransactionCalendar
+                  transactions={filtered}
+                  onDaySelect={handleAddTransaction}
+                  onTransactionSelect={setDetailTarget}
+                />
+              )}
+            </SectionCard>
+          </Box>
         </>
       )}
       <TransactionDetailDialog
@@ -669,7 +724,7 @@ const ReportsPageContent = () => {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImported={() => {
-          void loadTransactions({ resetFilters: allTransactions.length === 0 });
+          void loadTransactions();
         }}
       />
       <MonthComparisonModal
@@ -677,6 +732,24 @@ const ReportsPageContent = () => {
         transactions={allTransactions}
         onClose={() => setCompareOpen(false)}
       />
+      <Dialog
+        open={yearlyReportOpen}
+        onClose={() => setYearlyReportOpen(false)}
+        fullWidth
+        maxWidth="xl"
+        scroll="paper"
+        className="yearly-report-dialog"
+        aria-labelledby="yearly-report-heading"
+      >
+        {!loading && (
+          <YearlyReport
+            report={yearlyReport}
+            availableYears={availableYears}
+            currentYear={currentYear}
+            onYearChange={setSelectedReportYear}
+          />
+        )}
+      </Dialog>
       {!isEmpty && (
         <Fab
           color="primary"

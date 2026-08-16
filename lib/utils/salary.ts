@@ -7,13 +7,14 @@ import { PutCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { getDocClient } from "../api/dynamoClient";
 import { generateId } from "./generateId";
 import { SK_PREFIX } from "../api/tableKeys";
+import type { SalaryEntry } from "../types/types";
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || "";
 
 export async function putSalary(
   userId: string,
   entry: { entryId?: string; year: number; amount: number; note?: string },
-) {
+): Promise<SalaryEntry> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
@@ -39,7 +40,7 @@ export async function putSalary(
   return item;
 }
 
-export async function getUserSalary(userId: string) {
+export async function getUserSalary(userId: string): Promise<SalaryEntry[]> {
   const client = getDocClient(TABLE_NAME);
   // Note 5: Returning an empty array (instead of throwing) when DynamoDB is
   // unconfigured allows the route to work in local/demo mode without crashing.

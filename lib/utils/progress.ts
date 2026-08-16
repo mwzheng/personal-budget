@@ -49,7 +49,7 @@ export async function putRetirement(
     startAmount: number;
     endAmount: number;
   },
-) {
+): Promise<RetirementEntry> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
@@ -118,7 +118,7 @@ export async function putMilestone(
     age?: number;
     note?: string;
   },
-) {
+): Promise<MilestoneEntry> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
@@ -185,7 +185,7 @@ export async function deleteMilestone(
 export async function putProgressGoal(
   userId: string,
   g: { goalId?: string; targetAmount: number },
-) {
+): Promise<ProgressGoal> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
