@@ -265,7 +265,7 @@ describe("budgets [id] api route", () => {
 
   it("deletes a budget by id for the authenticated user", async () => {
     mockedGetUserIdFromRequest.mockResolvedValue("user-123");
-    mockedDeleteBudget.mockResolvedValue(undefined);
+    mockedDeleteBudget.mockResolvedValue({ ok: true });
 
     const context = { params: Promise.resolve({ id: "budget-1" }) };
     const response = await DELETE(

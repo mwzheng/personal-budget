@@ -15,8 +15,13 @@ import { join } from "path";
 import { loadTransactionsFromCSV } from "../utils/csvParser";
 import { isDemoUserId } from "../auth/requestUser";
 import { generateId } from "../utils/generateId";
-import type { Transaction } from "../types/types";
+import type { SavedBudget, Transaction } from "../types/types";
 import { SK_PREFIX } from "./tableKeys";
+
+type TransactionRecord = Transaction & {
+  pk?: string;
+  sk?: string;
+};
 
 // Note 2: Reading the table name from an environment variable means the same
 // code can be deployed to dev, staging, and production without changes -- only
@@ -202,7 +207,10 @@ export async function getUserMonthlyAggregates(userId: string, year?: number) {
 // Note 14: `putTransaction` acts as an upsert. DynamoDB's `PutCommand` replaces
 // the entire item if the primary key already exists, or creates a new item if it
 // does not. This means the same function handles both create and update operations.
-export async function putTransaction(userId: string, tx: Transaction) {
+export async function putTransaction(
+  userId: string,
+  tx: Transaction,
+): Promise<TransactionRecord> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const item = buildTransactionItem(userId, tx);
@@ -236,7 +244,7 @@ export async function updateTransaction(
   userId: string,
   tx: Transaction,
   originalDate?: string,
-) {
+): Promise<TransactionRecord> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
 
@@ -261,7 +269,7 @@ export async function deleteTransaction(
   userId: string,
   txId: string,
   date: string,
-) {
+): Promise<{ ok: boolean }> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   // Note 16: DynamoDB `DeleteCommand` requires the full primary key (pk + sk).
@@ -294,7 +302,7 @@ export async function putBudget(
     createdAt?: string;
     updatedAt?: string;
   },
-) {
+): Promise<Record<string, unknown>> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const now = new Date().toISOString();
@@ -315,7 +323,7 @@ export async function putBudget(
   return item;
 }
 
-export async function getUserBudgets(userId: string) {
+export async function getUserBudgets(userId: string): Promise<SavedBudget[]> {
   const client = getDocClient(TABLE_NAME);
   if (!client) return [];
   const pk = `user#${userId}`;
@@ -340,7 +348,10 @@ export async function getUserBudgets(userId: string) {
   }));
 }
 
-export async function deleteBudget(userId: string, budgetId: string) {
+export async function deleteBudget(
+  userId: string,
+  budgetId: string,
+): Promise<{ ok: boolean }> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
   const sk = `${SK_PREFIX.BUDGET}${budgetId}`;

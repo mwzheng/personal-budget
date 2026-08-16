@@ -18,7 +18,6 @@ function makeRetirement(
     year: 2023,
     startAmount: 0,
     endAmount: 100_000,
-    contributions: 0,
     ...overrides,
   };
 }
