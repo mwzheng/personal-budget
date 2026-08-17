@@ -113,4 +113,17 @@ describe("milestone timeline helpers", () => {
     expect(formSource).toContain("year: year ? numericYear : null");
     expect(formSource).toContain("month: month ? numericMonth : null");
   });
+
+  it("sends the fetched version for edits without treating createdAt as client authority", () => {
+    const formSource = readFileSync(
+      resolve(process.cwd(), "components/forms/MilestoneForm.tsx"),
+      "utf8",
+    );
+    expect(formSource).toContain(
+      "body.expectedUpdatedAt = existingMilestone.updatedAt;",
+    );
+    expect(formSource).not.toContain(
+      "body.createdAt = existingMilestone.createdAt",
+    );
+  });
 });

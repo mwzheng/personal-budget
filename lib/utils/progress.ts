@@ -47,6 +47,23 @@ function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/** A conditional write lost its optimistic-concurrency race. */
+export class MilestoneConflictError extends Error {
+  constructor() {
+    super("Milestone was modified");
+    this.name = "MilestoneConflictError";
+  }
+}
+
+function isConditionalWriteFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? error.name : undefined;
+  return (
+    name === "ConditionalCheckFailedException" ||
+    name === "TransactionCanceledException"
+  );
+}
+
 export async function putRetirement(
   userId: string,
   entry: {
@@ -159,6 +176,7 @@ export async function updateMilestone(
     age?: number | null;
     note?: string;
     createdAt?: string;
+    expectedUpdatedAt?: string;
   },
 ): Promise<MilestoneEntry> {
   const client = getDocClient(TABLE_NAME);
@@ -166,40 +184,76 @@ export async function updateMilestone(
 
   const originalYear = milestone.originalYear ?? 0;
   const nextYear = milestone.year ?? 0;
+  const sourceCondition = milestone.expectedUpdatedAt
+    ? {
+        ConditionExpression:
+          "attribute_exists(pk) AND #updatedAt = :expectedUpdatedAt",
+        ExpressionAttributeNames: { "#updatedAt": "updatedAt" },
+        ExpressionAttributeValues: {
+          ":expectedUpdatedAt": milestone.expectedUpdatedAt,
+        },
+      }
+    : {
+        ConditionExpression:
+          "attribute_exists(pk) AND attribute_not_exists(#updatedAt)",
+        ExpressionAttributeNames: { "#updatedAt": "updatedAt" },
+      };
+  const now = new Date().toISOString();
+  const item = {
+    pk: `user#${userId}`,
+    sk: `${SK_PREFIX.MILESTONE}${nextYear}#${milestone.milestoneId}`,
+    milestoneId: milestone.milestoneId,
+    amount: milestone.amount,
+    year: milestone.year ?? null,
+    month: milestone.month ?? null,
+    age: milestone.age ?? null,
+    note: milestone.note || "",
+    createdAt: milestone.createdAt ?? now,
+    updatedAt: now,
+  } as const;
+
   if (originalYear !== nextYear) {
-    const now = new Date().toISOString();
-    const item = {
-      pk: `user#${userId}`,
-      sk: `${SK_PREFIX.MILESTONE}${nextYear}#${milestone.milestoneId}`,
-      milestoneId: milestone.milestoneId,
-      amount: milestone.amount,
-      year: milestone.year ?? null,
-      month: milestone.month ?? null,
-      age: milestone.age ?? null,
-      note: milestone.note || "",
-      createdAt: milestone.createdAt ?? now,
-      updatedAt: now,
-    } as const;
-    await client.send(
-      new TransactWriteCommand({
-        TransactItems: [
-          {
-            Delete: {
-              TableName: TABLE_NAME,
-              Key: {
-                pk: `user#${userId}`,
-                sk: `${SK_PREFIX.MILESTONE}${originalYear}#${milestone.milestoneId}`,
+    try {
+      await client.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Delete: {
+                TableName: TABLE_NAME,
+                Key: {
+                  pk: `user#${userId}`,
+                  sk: `${SK_PREFIX.MILESTONE}${originalYear}#${milestone.milestoneId}`,
+                },
+                ...sourceCondition,
               },
             },
-          },
-          { Put: { TableName: TABLE_NAME, Item: item } },
-        ],
-      }),
-    );
+            {
+              Put: {
+                TableName: TABLE_NAME,
+                Item: item,
+                ConditionExpression:
+                  "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+              },
+            },
+          ],
+        }),
+      );
+    } catch (error) {
+      if (isConditionalWriteFailure(error)) throw new MilestoneConflictError();
+      throw error;
+    }
     return item;
   }
 
-  return putMilestone(userId, milestone);
+  try {
+    await client.send(
+      new PutCommand({ TableName: TABLE_NAME, Item: item, ...sourceCondition }),
+    );
+  } catch (error) {
+    if (isConditionalWriteFailure(error)) throw new MilestoneConflictError();
+    throw error;
+  }
+  return item;
 }
 
 export async function getUserMilestones(

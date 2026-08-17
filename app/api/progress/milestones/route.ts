@@ -6,6 +6,7 @@ import {
   putMilestone,
   updateMilestone,
   deleteMilestone,
+  MilestoneConflictError,
 } from "@/lib/utils/progress";
 import {
   MilestoneCreateSchema,
@@ -71,9 +72,28 @@ export async function PUT(request: Request) {
         { status: 400 },
       );
     }
-    const updated = await updateMilestone(userId, parsed.data);
+    const existing = (await getUserMilestones(userId)).find(
+      (milestone) => milestone.milestoneId === parsed.data.milestoneId,
+    );
+    if (!existing) {
+      return NextResponse.json(
+        { ok: false, error: "Milestone not found" },
+        { status: 404 },
+      );
+    }
+    const updated = await updateMilestone(userId, {
+      ...parsed.data,
+      originalYear: existing.year,
+      createdAt: existing.createdAt,
+    });
     return NextResponse.json({ ok: true, updated });
   } catch (err) {
+    if (err instanceof MilestoneConflictError) {
+      return NextResponse.json(
+        { ok: false, error: "Milestone was modified. Refresh and try again." },
+        { status: 409 },
+      );
+    }
     console.error("[/api/progress/milestones PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },

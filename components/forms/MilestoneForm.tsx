@@ -107,9 +107,8 @@ export default function MilestoneForm({
     if (note.trim()) body.note = note.trim();
     if (existingMilestone) {
       body.milestoneId = existingMilestone.milestoneId;
-      body.originalYear = existingMilestone.year;
-      if (existingMilestone.createdAt)
-        body.createdAt = existingMilestone.createdAt;
+      if (existingMilestone.updatedAt)
+        body.expectedUpdatedAt = existingMilestone.updatedAt;
     }
 
     await apiSubmit(body, Boolean(existingMilestone));

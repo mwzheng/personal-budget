@@ -91,11 +91,9 @@ export const MilestoneCreateSchema =
 
 export const MilestoneUpdateSchema = MilestoneFieldsSchema.extend({
   milestoneId: z.string().trim().min(1),
-  // Null represents the legacy yearless sort key (`milestone#0#...`).
-  originalYear: z.number().int().nullable(),
-  // The edit form carries this forward so replacing a year-keyed item does not
-  // discard its creation timestamp.
-  createdAt: z.string().datetime().optional(),
+  // This is the version fetched by the editor. It is optional because legacy
+  // records may predate updatedAt metadata.
+  expectedUpdatedAt: z.string().datetime().optional(),
 }).superRefine(requireYearForMonth);
 
 export type Budget = z.infer<typeof BudgetSchema>;
