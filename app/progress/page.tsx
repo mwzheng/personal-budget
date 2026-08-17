@@ -193,9 +193,9 @@ export default function Page() {
         onClose={() => setMilestoneDialogOpen(false)}
       >
         <MilestoneForm
-          onSaved={() => {
+          onSaved={async () => {
+            await refreshMilestones();
             setMilestoneDialogOpen(false);
-            void refreshMilestones();
           }}
           onCancel={() => setMilestoneDialogOpen(false)}
         />

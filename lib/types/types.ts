@@ -67,6 +67,7 @@ export interface MilestoneEntry {
   milestoneId: string;
   amount: number;
   year: number | null;
+  month?: number | null;
   age?: number | null;
   note?: string;
   createdAt?: string;

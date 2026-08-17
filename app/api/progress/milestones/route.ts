@@ -4,8 +4,13 @@ import { upsertUserProfile } from "@/lib/auth/users";
 import {
   getUserMilestones,
   putMilestone,
+  updateMilestone,
   deleteMilestone,
 } from "@/lib/utils/progress";
+import {
+  MilestoneCreateSchema,
+  MilestoneUpdateSchema,
+} from "@/lib/schemas/schemas";
 
 // Note 1: Centralize payload -> userId extraction to avoid repeated `any` casts.
 function getUserIdFromPayload(payload: Record<string, unknown>): string {
@@ -37,16 +42,39 @@ export async function POST(request: Request) {
     const payload = await getPayloadFromRequest(request);
     await upsertUserProfile(payload);
     const userId = getUserIdFromPayload(payload);
-    const body = await request.json();
-    if (!body || typeof body.amount !== "number")
+    const parsed = MilestoneCreateSchema.safeParse(await request.json());
+    if (!parsed.success)
       return NextResponse.json(
-        { ok: false, error: "Missing amount" },
+        { ok: false, error: "Invalid milestone" },
         { status: 400 },
       );
-    const created = await putMilestone(userId, body);
+    const created = await putMilestone(userId, parsed.data);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
     console.error("[/api/progress/milestones POST]", err);
+    return NextResponse.json(
+      { ok: false, error: String(err) },
+      { status: 400 },
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const payload = await getPayloadFromRequest(request);
+    await upsertUserProfile(payload);
+    const userId = getUserIdFromPayload(payload);
+    const parsed = MilestoneUpdateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid milestone" },
+        { status: 400 },
+      );
+    }
+    const updated = await updateMilestone(userId, parsed.data);
+    return NextResponse.json({ ok: true, updated });
+  } catch (err) {
+    console.error("[/api/progress/milestones PUT]", err);
     return NextResponse.json(
       { ok: false, error: String(err) },
       { status: 400 },

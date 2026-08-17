@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiFetch } from "@/lib/api/apiFetch";
+import type { MilestoneEntry } from "@/lib/types/types";
 import {
   ACCESS_TOKEN_KEY,
   clearCognitoTokens,
@@ -337,7 +338,7 @@ describe("demo mode", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("creates and deletes a milestone in demo mode", async () => {
+  it("creates, updates, and deletes a milestone in demo mode", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -346,13 +347,42 @@ describe("demo mode", () => {
     const createResponse = await apiFetch("/api/progress/milestones", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 100000, year: 2035 }),
+      body: JSON.stringify({ amount: 100000, year: 2035, month: 6, age: 40 }),
     });
     const createPayload = (await createResponse.json()) as {
       ok: boolean;
-      created: { milestoneId: string };
+      created: {
+        milestoneId: string;
+        month: number | null;
+        age: number | null;
+      };
     };
     expect(createPayload.ok).toBe(true);
+    expect(createPayload.created).toMatchObject({ month: 6, age: 40 });
+
+    const updateResponse = await apiFetch("/api/progress/milestones", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        milestoneId: createPayload.created.milestoneId,
+        originalYear: 2035,
+        amount: 125000,
+        year: 2036,
+        month: 4,
+        age: 41,
+        note: "Updated",
+      }),
+    });
+    expect(
+      ((await updateResponse.json()) as { updated: MilestoneEntry }).updated,
+    ).toMatchObject({
+      milestoneId: createPayload.created.milestoneId,
+      amount: 125000,
+      year: 2036,
+      month: 4,
+      age: 41,
+      note: "Updated",
+    });
 
     const deleteResponse = await apiFetch("/api/progress/milestones", {
       method: "DELETE",
@@ -361,6 +391,31 @@ describe("demo mode", () => {
     });
     expect(((await deleteResponse.json()) as { ok: boolean }).ok).toBe(true);
 
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid milestone updates in demo mode", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    await startDemoSession();
+
+    const response = await apiFetch("/api/progress/milestones", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        milestoneId: "demo-milestone-six-figures",
+        originalYear: 2027,
+        amount: 100000,
+        year: 2027,
+        month: 13,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Invalid milestone",
+    });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
