@@ -194,7 +194,7 @@ export default function FaqPage() {
         <Container maxWidth="sm">
           <Stack spacing={3} alignItems="center">
             <Typography variant="h4" fontWeight={700}>
-              Still have questions?
+              Still Have Questions?
             </Typography>
             <Typography
               variant="body1"

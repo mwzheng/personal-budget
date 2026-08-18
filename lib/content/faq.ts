@@ -89,12 +89,12 @@ export const FAQ_ITEMS = [
 export const FAQ_PAGE_CONTENT = {
   hero: {
     eyebrow: "FAQ",
-    title: `Questions about ${APP_NAME}`,
+    title: `Questions About ${APP_NAME}`,
     summary:
       "Common questions about the app, the manual-first workflow, and core features.",
   },
   intro: {
-    heading: "Frequently asked questions",
+    heading: "Frequently Asked Questions",
     description:
       "Browse the most common questions about how the app works, why it prioritizes manual entry, and what you can track.",
   },

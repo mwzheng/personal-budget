@@ -43,12 +43,12 @@ export default function FireDashboardHero({ scenario, summary, rows }: Props) {
 
   const headline =
     status === "reached"
-      ? "You have reached FIRE"
+      ? "You Have Reached FIRE"
       : summary.yearsToFire !== null
-        ? `You could reach FIRE in ${summary.yearsToFire} year${summary.yearsToFire === 1 ? "" : "s"}`
+        ? `You Could Reach FIRE in ${summary.yearsToFire} Year${summary.yearsToFire === 1 ? "" : "s"}`
         : status === "no-target"
-          ? "Set a FIRE target to begin"
-          : "Your FIRE target needs a closer look";
+          ? "Set a FIRE Target to Begin"
+          : "Your FIRE Target Needs a Closer Look";
 
   const description =
     status === "reached"

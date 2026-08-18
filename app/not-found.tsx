@@ -67,7 +67,7 @@ export default function NotFoundPage() {
               color="primary.light"
               sx={{ letterSpacing: 1.3 }}
             >
-              Page not found
+              Page Not Found
             </Typography>
             <Typography
               id="not-found-title"
@@ -75,7 +75,7 @@ export default function NotFoundPage() {
               variant="h3"
               sx={{ maxWidth: 560 }}
             >
-              We couldn’t find that page.
+              We Couldn’t Find That Page.
             </Typography>
             <Typography
               variant="body1"

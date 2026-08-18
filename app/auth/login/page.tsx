@@ -68,7 +68,7 @@ export default function LoginPage() {
             align="center"
             sx={{ letterSpacing: "-0.02em" }}
           >
-            Welcome back
+            Welcome Back
           </Typography>
           <Typography variant="body1" color="text.secondary" align="center">
             Sign in to access your budget data.
@@ -102,7 +102,7 @@ export default function LoginPage() {
               <Stack spacing={2}>
                 <Box>
                   <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                    Try the demo
+                    Try the Demo
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Explore with seeded sample data. No account needed. Changes

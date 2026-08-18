@@ -126,7 +126,7 @@ export function SankeyForm({ onResult }: Props) {
       <Divider />
 
       <Typography variant="subtitle2" color="text.secondary">
-        Category Allocations (must total 100%)
+        Category Allocations (Must Total 100%)
       </Typography>
 
       {ROWS.map(({ key, label }) => (

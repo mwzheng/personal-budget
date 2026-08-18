@@ -181,7 +181,7 @@ export default function FireProjectionChart({
       : null;
 
   return (
-    <ChartWrapper title="Portfolio projection">
+    <ChartWrapper title="Portfolio Projection">
       <Box sx={{ width: "100%", height: 400, mx: "auto" }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart

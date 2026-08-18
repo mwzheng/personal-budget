@@ -134,7 +134,7 @@ export default function Page() {
   return (
     <Container component="main" maxWidth="xl" sx={{ py: { xs: 4, md: 5 } }}>
       <PageHeader
-        title="Your path to financial freedom"
+        title="Your Path to Financial Freedom"
         description="Track the goal, career, and milestones that shape your long-term progress."
         action={
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -249,7 +249,7 @@ export default function Page() {
         {/* History — full width */}
         <Grid item xs={12}>
           <SectionCard
-            title="Career & savings history"
+            title="Career & Savings History"
             description="Use your history to understand the story behind the progress."
             headingId="progress-history-heading"
             elevation={1}

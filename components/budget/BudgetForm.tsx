@@ -1011,7 +1011,7 @@ export function BudgetForm({
             </Typography>
 
             <Typography variant="subtitle2" fontWeight={700}>
-              How to write a Flow Path
+              How to Write a Flow Path
             </Typography>
 
             <Box component="ul" sx={{ pl: 2.5, m: 0 }}>

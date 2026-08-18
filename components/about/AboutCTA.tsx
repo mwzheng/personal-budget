@@ -10,7 +10,7 @@ const AboutCTA = () => (
     <Container maxWidth="sm">
       <Stack spacing={3} alignItems="center">
         <Typography variant="h4" fontWeight={700}>
-          Ready to take control of your budget?
+          Ready to Take Control of Your Budget?
         </Typography>
         <Typography
           variant="body1"

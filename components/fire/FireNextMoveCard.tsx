@@ -28,7 +28,7 @@ export default function FireNextMoveCard({ scenario, summary }: Props) {
       <CardContent sx={{ display: "flex", flex: 1, flexDirection: "column" }}>
         <Stack spacing={1.5} sx={{ flex: 1 }}>
           <Typography variant="subtitle1" fontWeight={700}>
-            Next move
+            Next Move
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Adjust the assumptions that drive {scenario.name}&apos;s projection.
