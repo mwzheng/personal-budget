@@ -29,7 +29,7 @@ Current active follow-ups:
   routes. Home hero CTAs ("Try Demo" / "Sign In") are hidden for signed-in users.
 - **Authenticated pages:** `/reports`, `/budget`, `/progress`, `/salary`, and
   `/fire`.
-- **Core capabilities:** transaction CRUD, CSV import/export, month comparison,
+- **Core capabilities:** transaction CRUD, CSV import/export, month and yearly comparison,
   saved budgets with Sankey visualization, salary/progress tracking, FIRE
   projections, and demo mode.
 - **Data model:** Cognito-scoped DynamoDB persistence with explicit browser-only

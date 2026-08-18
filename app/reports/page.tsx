@@ -67,6 +67,7 @@ import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
 import { TagBarChart } from "@/components/charts/TagBarChart";
 import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
+import { YearComparisonModal } from "@/components/charts/YearComparisonModal";
 
 interface TransactionsApiResponse {
   ok?: boolean;
@@ -96,6 +97,7 @@ const ReportsPageContent = () => {
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [yearCompareOpen, setYearCompareOpen] = useState(false);
   const [yearlyReportOpen, setYearlyReportOpen] = useState(false);
   const [selectedReportYear, setSelectedReportYear] = useState(() =>
     new Date().getFullYear(),
@@ -409,7 +411,15 @@ const ReportsPageContent = () => {
                 startIcon={<CompareArrowsIcon />}
                 onClick={() => setCompareOpen(true)}
               >
-                Compare
+                Compare Months
+              </Button>
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<CompareArrowsIcon />}
+                onClick={() => setYearCompareOpen(true)}
+              >
+                Compare Years
               </Button>
               <Button
                 variant="text"
@@ -731,6 +741,11 @@ const ReportsPageContent = () => {
         open={compareOpen}
         transactions={allTransactions}
         onClose={() => setCompareOpen(false)}
+      />
+      <YearComparisonModal
+        open={yearCompareOpen}
+        transactions={allTransactions}
+        onClose={() => setYearCompareOpen(false)}
       />
       <Dialog
         open={yearlyReportOpen}

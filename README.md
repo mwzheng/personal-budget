@@ -1,6 +1,6 @@
 # Porridge Budget
 
-Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, long-term progress, and investment planning with CSV import/export, month-over-month comparisons, and interactive charts that can be downloaded as PNG images.
+Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, long-term progress, and investment planning with CSV import/export, month- and year-over-year comparisons, and interactive charts that can be downloaded as PNG images.
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
-- `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, month-over-month comparison, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
+- `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, monthly and like-for-like yearly comparisons, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
 - `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, select saved budgets directly in the editor to update or delete them, export the active budget, and generate a Sankey diagram with optional nested path segments.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
 - `/fire` — FIRE calculator for projecting investment growth, comparing scenarios, and downloading the projection chart as PNG.
@@ -105,7 +105,7 @@ require a fresh login in the normal case.
 ## Notes & next steps
 
 - All authenticated report, import, export, budget, salary, progress, and transaction APIs are scoped to the signed-in Cognito user. Demo mode (`DISABLE_AUTH=true`) uses browser-local sample data instead of DynamoDB.
-- The reports page now includes month-over-month comparison alongside the existing charts, calendar/table views, and CSV flows.
+- The reports page includes monthly comparison plus like-for-like yearly comparison: historical years use full calendars, while selections involving the current year use matched year-to-date cutoffs.
 - The current Vitest suite covers route handlers, shared utilities, auth helpers, DynamoDB behavior, and CSV edge cases across 29 test files.
 - Public pages ship shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.

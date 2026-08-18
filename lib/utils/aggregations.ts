@@ -9,6 +9,8 @@ import {
   TimeseriesPoint,
   YearlyReport,
   YearlyReportMonth,
+  YearComparisonData,
+  YearSummary,
 } from "../types/types";
 import {
   endOfMonth,
@@ -535,4 +537,173 @@ export function getDefaultComparisonMonths(
 
   // Fall back to the two most recent months with data
   return [months[months.length - 2], months[months.length - 1]];
+}
+
+// ---------------------------------------------------------------------------
+// Year comparison utilities
+// ---------------------------------------------------------------------------
+
+function daysInMonth(year: number, monthIndex: number): number {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+/**
+ * Resolves matching calendar ranges. A current-year selection makes both years
+ * year-to-date through the same month/day; Feb 29 is clamped in non-leap years.
+ */
+export function getYearComparisonScope(
+  yearA: number,
+  yearB: number,
+  referenceDate: Date = new Date(),
+): YearComparisonData["scope"] {
+  return yearA === referenceDate.getFullYear() ||
+    yearB === referenceDate.getFullYear()
+    ? "year-to-date"
+    : "full-year";
+}
+
+export function getYearComparisonDateRange(
+  year: number,
+  scope: YearComparisonData["scope"],
+  referenceDate: Date = new Date(),
+): { startDate: string; endDate: string; monthsIncluded: number } {
+  const monthIndex = scope === "year-to-date" ? referenceDate.getMonth() : 11;
+  const day =
+    scope === "year-to-date"
+      ? Math.min(referenceDate.getDate(), daysInMonth(year, monthIndex))
+      : 31;
+  return {
+    startDate: `${year}-01-01`,
+    endDate: `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    monthsIncluded: monthIndex + 1,
+  };
+}
+
+export function buildYearSummary(
+  transactions: Transaction[],
+  year: number,
+  scope: YearComparisonData["scope"],
+  referenceDate: Date = new Date(),
+): YearSummary {
+  const range = getYearComparisonDateRange(year, scope, referenceDate);
+  const included = transactions.filter(
+    (transaction) =>
+      transaction.date >= range.startDate && transaction.date <= range.endDate,
+  );
+  const totalByCategoryType = createEmptyCategoryTotals();
+  const tagTotals = new Map<string, number>();
+  let incomeAmount = 0;
+
+  for (const transaction of included) {
+    const category = normalizeTransactionCategory(transaction.category);
+    if (category === "Income") {
+      incomeAmount += transaction.amount;
+      continue;
+    }
+    totalByCategoryType[category] += transaction.amount;
+    for (const tag of transaction.tags) {
+      tagTotals.set(tag, (tagTotals.get(tag) ?? 0) + transaction.amount);
+    }
+  }
+
+  const spendingAmount = totalByCategoryType.Need + totalByCategoryType.Want;
+  const topTags = Array.from(tagTotals, ([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+    .slice(0, 10);
+  return {
+    period: String(year),
+    year,
+    ...range,
+    totalAmount: included.reduce(
+      (sum, transaction) => sum + transaction.amount,
+      0,
+    ),
+    spendingAmount,
+    incomeAmount,
+    totalByCategoryType,
+    transactionCount: included.length,
+    topTags,
+    savingsAmount: totalByCategoryType.Saving,
+    averageMonthlySpending: spendingAmount / range.monthsIncluded,
+    savingsRate:
+      incomeAmount > 0
+        ? (totalByCategoryType.Saving / incomeAmount) * 100
+        : null,
+  };
+}
+
+export function buildYearComparison(
+  transactions: Transaction[],
+  previousYear: number,
+  currentYear: number,
+  referenceDate: Date = new Date(),
+): YearComparisonData {
+  const scope = getYearComparisonScope(
+    previousYear,
+    currentYear,
+    referenceDate,
+  );
+  const previous = buildYearSummary(
+    transactions,
+    previousYear,
+    scope,
+    referenceDate,
+  );
+  const current = buildYearSummary(
+    transactions,
+    currentYear,
+    scope,
+    referenceDate,
+  );
+  return {
+    previousYear: previous,
+    currentYear: current,
+    scope,
+    changes: {
+      incomeAmount: pctChange(previous.incomeAmount, current.incomeAmount),
+      spendingAmount: pctChange(
+        previous.spendingAmount,
+        current.spendingAmount,
+      ),
+      savingsAmount: pctChange(previous.savingsAmount, current.savingsAmount),
+      averageMonthlySpending: pctChange(
+        previous.averageMonthlySpending,
+        current.averageMonthlySpending,
+      ),
+      transactionCount: pctChange(
+        previous.transactionCount,
+        current.transactionCount,
+      ),
+      Need: pctChange(
+        previous.totalByCategoryType.Need,
+        current.totalByCategoryType.Need,
+      ),
+      Want: pctChange(
+        previous.totalByCategoryType.Want,
+        current.totalByCategoryType.Want,
+      ),
+      Saving: pctChange(
+        previous.totalByCategoryType.Saving,
+        current.totalByCategoryType.Saving,
+      ),
+      savingsRate:
+        previous.savingsRate === null || current.savingsRate === null
+          ? null
+          : current.savingsRate - previous.savingsRate,
+    },
+  };
+}
+
+export function getDefaultComparisonYears(
+  transactions: Transaction[],
+  today: Date = new Date(),
+): [number, number] {
+  const years = getAvailableReportYears(transactions)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (years.length === 0) return [today.getFullYear() - 1, today.getFullYear()];
+  if (years.length === 1) return [years[0], years[0]];
+  const currentIndex = years.indexOf(today.getFullYear());
+  if (currentIndex > 0) return [years[currentIndex - 1], years[currentIndex]];
+  return [years[years.length - 2], years[years.length - 1]];
 }

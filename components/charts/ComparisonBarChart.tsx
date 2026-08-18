@@ -17,10 +17,11 @@ import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
-import type { MonthSummary } from "@/lib/types/types";
+import type { ComparisonSummary } from "@/lib/types/types";
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
-function formatMonth(period: string): string {
+function formatPeriod(period: string): string {
+  if (/^\d{4}$/.test(period)) return period;
   try {
     return format(parseISO(`${period}-01`), "MMM yyyy");
   } catch {
@@ -34,8 +35,9 @@ function formatDollar(value: number): string {
 }
 
 interface Props {
-  prevMonth: MonthSummary;
-  currMonth: MonthSummary;
+  prevMonth: ComparisonSummary;
+  currMonth: ComparisonSummary;
+  emptyMessage?: string;
 }
 
 const CATEGORIES = ["Need", "Want", "Saving"] as const;
@@ -49,9 +51,13 @@ const MONTH_B_COLORS: Record<string, string> = {
   Saving: "#a5d6a7",
 };
 
-export function ComparisonBarChart({ prevMonth, currMonth }: Props) {
-  const labelA = formatMonth(prevMonth.period);
-  const labelB = formatMonth(currMonth.period);
+export function ComparisonBarChart({
+  prevMonth,
+  currMonth,
+  emptyMessage = "No category data for the selected periods",
+}: Props) {
+  const labelA = formatPeriod(prevMonth.period);
+  const labelB = formatPeriod(currMonth.period);
 
   const chartData = CATEGORIES.map((cat) => ({
     category: cat,
@@ -75,7 +81,7 @@ export function ComparisonBarChart({ prevMonth, currMonth }: Props) {
           height: 280,
         }}
       >
-        No category data for the selected months
+        {emptyMessage}
       </Box>
     );
   }
