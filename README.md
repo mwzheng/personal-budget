@@ -6,7 +6,7 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 - **Frontend:** Next.js (React) with TypeScript
 - **UI:** Material-UI (MUI)
-- **Charts:** Recharts (time-series/pie) and @nivo (sankey/treemap)
+- **Charts:** Recharts (time-series/pie) and @nivo/sankey
 - **Backend:** Next.js App Router route handlers backed by AWS services
 - **Persistence:** DynamoDB single-table design with typed helpers
 - **Authentication:** AWS Cognito
@@ -35,11 +35,11 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `GET /api/budgets` — (Authenticated) List saved budgets for the current user, including monthly income and expense rows when available.
 - `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload) with monthly income, expense rows, and legacy allocation compatibility.
 - `GET /api/budgets/:id`, `PUT /api/budgets/:id`, `DELETE /api/budgets/:id` — (Authenticated) Fetch, update, or delete a saved budget by id.
-- `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`.
-- `GET /api/salary`, `POST /api/salary`, `PUT /api/salary`, `DELETE /api/salary` — Salary history CRUD with server-computed YoY values on reads.
-- `GET /api/progress/goal`, `POST /api/progress/goal`, `PUT /api/progress/goal` — Long-term progress goal CRUD with derived progress fields.
-- `GET /api/progress/retirement`, `POST /api/progress/retirement`, `PUT /api/progress/retirement`, `DELETE /api/progress/retirement` — Retirement-history CRUD with derived change metrics.
-- `GET /api/progress/milestones`, `POST /api/progress/milestones`, `DELETE /api/progress/milestones` — Milestone CRUD for long-term savings checkpoints.
+- `POST /api/sankey` — Accepts allocation payload and returns `sankeyData` (nodes/links) and `budgetSuggestion`; this is a backend endpoint used by `/budget`, not a standalone page.
+- `GET /api/salary`, `POST /api/salary`, `PUT /api/salary`, `DELETE /api/salary` — (Authenticated) Salary history CRUD with server-computed YoY values on reads.
+- `GET /api/progress/goal`, `POST /api/progress/goal`, `PUT /api/progress/goal` — (Authenticated) Long-term progress goal CRUD with derived progress fields.
+- `GET /api/progress/retirement`, `POST /api/progress/retirement`, `PUT /api/progress/retirement`, `DELETE /api/progress/retirement` — (Authenticated) Retirement-history CRUD with derived change metrics.
+- `GET /api/progress/milestones`, `POST /api/progress/milestones`, `DELETE /api/progress/milestones` — (Authenticated) Milestone CRUD for long-term savings checkpoints.
 - `POST /api/contact` — Sends public contact-form submissions through SES.
 
 ### Auth / Environment
@@ -56,9 +56,12 @@ DYNAMODB_TABLE=<transactions_table_name>
 AWS_REGION=us-east-1
 NEXT_PUBLIC_GA_ID=<ga4_measurement_id>
 NEXT_PUBLIC_SITE_URL=https://porridge-budgeting.vercel.app
+CONTACT_SES_FROM_EMAIL=no-reply@example.com
+CONTACT_SES_TO_EMAIL=hello@example.com
+GOOGLE_SITE_VERIFICATION=<search_console_verification_token>
 ```
 
-Set `DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
+Set `DISABLE_AUTH=true` and `NEXT_PUBLIC_DISABLE_AUTH=true` only when you intentionally want the local demo user and sample CSV dataset; the server-side flag selects demo data and the public flag skips the client-side login redirect. In normal authenticated mode, all report, import, export, and transaction APIs are scoped to the Cognito `sub` and will not fall back to shared sample data for signed-in users.
 
 Google Analytics is optional, but when `NEXT_PUBLIC_GA_ID` is configured the
 app now chooses a safe cookie scope for the current host. Visits on the
@@ -92,7 +95,7 @@ require a fresh login in the normal case.
 3. Visit the app in your browser:
    - Reports: http://localhost:3000/reports
    - Budget Planner: http://localhost:3000/budget
-   - Example API requests:
+   - Example API requests (use Demo Sign In or provide a Cognito access token for authenticated routes):
      - `GET http://localhost:3000/api/reports?pageSize=5`
      - `POST http://localhost:3000/api/sankey` (see `app/api/sankey/route.ts` for the allocation payload shape)
 
@@ -106,7 +109,7 @@ require a fresh login in the normal case.
 
 - All authenticated report, import, export, budget, salary, progress, and transaction APIs are scoped to the signed-in Cognito user. Demo mode (`DISABLE_AUTH=true`) uses browser-local sample data instead of DynamoDB.
 - The reports page includes monthly comparison plus like-for-like yearly comparison: historical years use full calendars, while selections involving the current year use matched year-to-date cutoffs.
-- The current Vitest suite covers route handlers, shared utilities, auth helpers, DynamoDB behavior, and CSV edge cases across 29 test files.
+- The current Vitest suite covers route handlers, shared utilities, auth helpers, DynamoDB behavior, and CSV edge cases across 35 test files (344 tests).
 - Public pages ship shared metadata, Open Graph/Twitter tags, `robots.txt`, `sitemap.xml`, and JSON-LD on the home and FAQ routes.
 - The MUI date pickers use `AdapterDateFnsV3` (date-fns v3) — ensure compatibility when upgrading dependencies.
 - The active roadmap is now focused on documenting the DynamoDB integration-test strategy, adding a lightweight Budgets -> Sankey smoke test, and migrating `pnpm lint` from `next lint` to the standalone ESLint CLI.
