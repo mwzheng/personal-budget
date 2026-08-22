@@ -90,10 +90,18 @@ export async function getUserTransactions(
   // transactions pages should only hydrate true transaction records here.
   const params = buildTransactionsQuery(userId);
 
-  const res = await client.send(new QueryCommand(params));
-  // Note 7: `res.Items` may be undefined if no items match the query.
-  // The `?? []` nullish coalescing operator provides a safe empty array default.
-  const items = (res.Items ?? []) as Record<string, unknown>[];
+  // Note 7: DynamoDB Query responses are capped at 1 MB. Follow the cursor so
+  // the transactions route does not silently omit newer records after a user
+  // accumulates enough history to span multiple pages.
+  let lastKey: Record<string, NativeAttributeValue> | undefined;
+  const items: Record<string, unknown>[] = [];
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as Record<string, unknown>[]));
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
 
   // Note 8: Each item from DynamoDB is typed as `Record<string, unknown>` because
   // DynamoDB does not know our TypeScript types. Mapping with explicit String() and

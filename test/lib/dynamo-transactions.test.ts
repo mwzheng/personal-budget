@@ -120,6 +120,52 @@ describe("getUserTransactions — no client fallback", () => {
   });
 });
 
+describe("getUserTransactions — paginated DynamoDB results", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue({ send: sendMock });
+    sendMock.mockReset();
+  });
+
+  it("returns a transaction from a later DynamoDB page", async () => {
+    const cursor = { pk: "user#user-abc", sk: "date#2026-08-21#older" };
+    sendMock
+      .mockResolvedValueOnce({
+        Items: [
+          {
+            id: "older",
+            name: "Older transaction",
+            amount: 10,
+            category: "Need",
+            date: "2026-08-21",
+            tags: [],
+          },
+        ],
+        LastEvaluatedKey: cursor,
+      })
+      .mockResolvedValueOnce({
+        Items: [
+          {
+            id: "today",
+            name: "Today transaction",
+            amount: 20,
+            category: "Want",
+            date: "2026-08-22",
+            tags: [],
+          },
+        ],
+      });
+
+    const transactions = await getUserTransactions("user-abc");
+
+    expect(transactions.map((transaction) => transaction.id)).toEqual([
+      "older",
+      "today",
+    ]);
+    expect(sendMock).toHaveBeenCalledTimes(2);
+    expect(sendMock.mock.calls[1][0].input.ExclusiveStartKey).toEqual(cursor);
+  });
+});
+
 describe("getUserBudgets and monthly aggregates — no client fallback", () => {
   beforeEach(() => {
     getDocClientMock.mockReturnValue(null);

@@ -111,6 +111,31 @@ describe("storage complete report filter preference", () => {
     });
   });
 
+  it("refreshes a persisted last-90-days range when today changes", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 22, 12));
+    window.localStorage.setItem(
+      "personal-budget-report-filters",
+      JSON.stringify({
+        version: 1,
+        filters: {
+          years: [],
+          startDate: "2026-05-24",
+          endDate: "2026-08-21",
+          categories: [],
+          tags: [],
+          search: "",
+        },
+      }),
+    );
+
+    expect(getLastSelectedReportFilters()).toMatchObject({
+      startDate: "2026-05-25",
+      endDate: "2026-08-22",
+    });
+    vi.useRealTimers();
+  });
+
   it.each([
     "not-json",
     JSON.stringify({ version: 1 }),
