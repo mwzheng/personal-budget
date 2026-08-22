@@ -1,8 +1,17 @@
 import {
   differenceInCalendarDays,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
   format as formatDate,
   parseISO,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
   subDays,
+  subMonths,
+  subQuarters,
+  subYears,
 } from "date-fns";
 
 import {
@@ -107,6 +116,59 @@ export function buildComparablePeriodFilters(
     const rangeDays = differenceInCalendarDays(endDate, startDate) + 1;
     const previousEndDate = subDays(startDate, 1);
     const previousStartDate = subDays(previousEndDate, rangeDays - 1);
+    const today = new Date();
+    const calendarComparisons = [
+      [
+        startOfMonth(today),
+        endOfMonth(today),
+        startOfMonth(subMonths(today, 1)),
+        endOfMonth(subMonths(today, 1)),
+      ],
+      [
+        startOfMonth(subMonths(today, 1)),
+        endOfMonth(subMonths(today, 1)),
+        startOfMonth(subMonths(today, 2)),
+        endOfMonth(subMonths(today, 2)),
+      ],
+      [
+        startOfQuarter(today),
+        endOfQuarter(today),
+        startOfQuarter(subQuarters(today, 1)),
+        endOfQuarter(subQuarters(today, 1)),
+      ],
+      [
+        startOfQuarter(subQuarters(today, 1)),
+        endOfQuarter(subQuarters(today, 1)),
+        startOfQuarter(subQuarters(today, 2)),
+        endOfQuarter(subQuarters(today, 2)),
+      ],
+      [
+        startOfYear(today),
+        endOfYear(today),
+        startOfYear(subYears(today, 1)),
+        endOfYear(subYears(today, 1)),
+      ],
+      [
+        startOfYear(subYears(today, 1)),
+        endOfYear(subYears(today, 1)),
+        startOfYear(subYears(today, 2)),
+        endOfYear(subYears(today, 2)),
+      ],
+    ];
+    const calendarComparison = calendarComparisons.find(
+      ([periodStart, periodEnd]) =>
+        formatDate(periodStart, "yyyy-MM-dd") === filters.startDate &&
+        formatDate(periodEnd, "yyyy-MM-dd") === filters.endDate,
+    );
+
+    if (calendarComparison) {
+      return {
+        ...filters,
+        years: [],
+        startDate: formatDate(calendarComparison[2], "yyyy-MM-dd"),
+        endDate: formatDate(calendarComparison[3], "yyyy-MM-dd"),
+      };
+    }
 
     return {
       ...filters,
