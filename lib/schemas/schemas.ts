@@ -58,5 +58,43 @@ export const ContactSubmissionSchema = z.object({
     .max(2000, "Message must be 2000 characters or fewer."),
 });
 
+// Milestones historically accepted year-only and age-only records. Keep that
+// API compatibility while requiring a year whenever an exact calendar month is
+// supplied; the form enforces month/year for new interactive entries.
+const MilestoneFieldsSchema = z.object({
+  amount: z.number().finite().positive(),
+  year: z.number().int().min(1).max(9999).nullable().optional(),
+  month: z.number().int().min(1).max(12).nullable().optional(),
+  age: z.number().int().min(0).max(150).nullable().optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+function requireYearForMonth(
+  value: { year?: number | null; month?: number | null },
+  ctx: z.RefinementCtx,
+) {
+  if (
+    value.month !== null &&
+    value.month !== undefined &&
+    typeof value.year !== "number"
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["year"],
+      message: "Year is required when month is provided.",
+    });
+  }
+}
+
+export const MilestoneCreateSchema =
+  MilestoneFieldsSchema.superRefine(requireYearForMonth);
+
+export const MilestoneUpdateSchema = MilestoneFieldsSchema.extend({
+  milestoneId: z.string().trim().min(1),
+  // This is the version fetched by the editor. It is optional because legacy
+  // records may predate updatedAt metadata.
+  expectedUpdatedAt: z.string().datetime().optional(),
+}).superRefine(requireYearForMonth);
+
 export type Budget = z.infer<typeof BudgetSchema>;
 export type ContactSubmission = z.infer<typeof ContactSubmissionSchema>;

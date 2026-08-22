@@ -4,15 +4,23 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import MilestoneForm from "@/components/forms/MilestoneForm";
+import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { MilestoneEntry } from "@/lib/types/types";
+import {
+  buildMilestoneTimeline,
+  formatMilestoneDate,
+  sortMilestonesChronologically,
+} from "@/lib/progress/milestones";
 
 interface MilestonesApiResponse {
   ok: boolean;
@@ -28,11 +36,7 @@ interface Props {
   /** Current saved amount — used to show reached/unreached state. */
   currentAmount?: number | null;
   /** Called after a milestone is deleted so the parent can refresh. */
-  onMilestonesChanged?: () => void;
-}
-
-function sortMilestones(entries: MilestoneEntry[]): MilestoneEntry[] {
-  return [...entries].sort((a, b) => (a.amount ?? 0) - (b.amount ?? 0));
+  onMilestonesChanged?: () => void | Promise<void>;
 }
 
 function fmt(n: number): string {
@@ -46,6 +50,9 @@ export default function MilestonesList({
   onMilestonesChanged,
 }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const [editCandidate, setEditCandidate] = useState<MilestoneEntry | null>(
+    null,
+  );
   const {
     candidate: deleteCandidate,
     requestDelete,
@@ -71,7 +78,7 @@ export default function MilestonesList({
         if (!data.ok) {
           throw new Error(data.error || "Delete failed");
         }
-        onMilestonesChanged?.();
+        await onMilestonesChanged?.();
       } catch (deleteError) {
         setError(
           deleteError instanceof Error
@@ -82,13 +89,21 @@ export default function MilestonesList({
     },
   });
 
-  const sorted = sortMilestones(milestones);
-  const nextUnreachedId = sorted.find(
-    (milestone) => currentAmount === null || milestone.amount > currentAmount,
-  )?.milestoneId;
+  const timeline = buildMilestoneTimeline(milestones);
+  const nextUnreachedId = sortMilestonesChronologically(milestones)
+    .filter(
+      (milestone) => currentAmount === null || milestone.amount > currentAmount,
+    )
+    .sort((a, b) => a.amount - b.amount)[0]?.milestoneId;
 
   return (
-    <Box>
+    <Box
+      sx={{
+        maxHeight: { xs: 360, sm: 440, md: 520 },
+        overflowY: "auto",
+        pr: 0.5,
+      }}
+    >
       {error && <StatusAlert message={error} onClose={() => setError(null)} />}
 
       {loading ? (
@@ -114,10 +129,11 @@ export default function MilestonesList({
       ) : (
         <>
           <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {sorted.map((item, index) => {
-              const isLast = index === sorted.length - 1;
+            {timeline.map(({ milestone: item, elapsedLabel }, index) => {
+              const isLast = index === timeline.length - 1;
               const reached =
                 currentAmount !== null && item.amount <= currentAmount;
+              const dateLabel = formatMilestoneDate(item);
               return (
                 <Box
                   component="li"
@@ -158,6 +174,15 @@ export default function MilestonesList({
                   </Box>
 
                   <Box sx={{ pb: isLast ? 0 : 2.5, flexGrow: 1, minWidth: 0 }}>
+                    {elapsedLabel ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mb: 0.75 }}
+                      >
+                        {elapsedLabel}
+                      </Typography>
+                    ) : null}
                     <Stack
                       direction="row"
                       justifyContent="space-between"
@@ -205,17 +230,18 @@ export default function MilestonesList({
                           )}
                         </Stack>
 
-                        {item.year || item.age ? (
+                        {dateLabel ||
+                        (item.age !== null && item.age !== undefined) ? (
                           <Stack direction="row" spacing={1.5}>
-                            {item.year ? (
+                            {dateLabel ? (
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
                               >
-                                Year {item.year}
+                                {dateLabel}
                               </Typography>
                             ) : null}
-                            {item.age ? (
+                            {item.age !== null && item.age !== undefined ? (
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
@@ -237,19 +263,28 @@ export default function MilestonesList({
                         ) : null}
                       </Stack>
 
-                      <ActionIconButton
-                        tooltip="Delete"
-                        ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
-                        tone="danger"
-                        onClick={() =>
-                          requestDelete({
-                            milestoneId: item.milestoneId,
-                            year: item.year,
-                          })
-                        }
-                      >
-                        <DeleteOutlineRoundedIcon fontSize="small" />
-                      </ActionIconButton>
+                      <Stack direction="row" spacing={0.75}>
+                        <ActionIconButton
+                          tooltip="Edit"
+                          ariaLabel={`Edit milestone for ${item.year ?? "no year"}`}
+                          onClick={() => setEditCandidate(item)}
+                        >
+                          <EditOutlinedIcon fontSize="small" />
+                        </ActionIconButton>
+                        <ActionIconButton
+                          tooltip="Delete"
+                          ariaLabel={`Delete milestone for ${item.year ?? "no year"}`}
+                          tone="danger"
+                          onClick={() =>
+                            requestDelete({
+                              milestoneId: item.milestoneId,
+                              year: item.year,
+                            })
+                          }
+                        >
+                          <DeleteOutlineRoundedIcon fontSize="small" />
+                        </ActionIconButton>
+                      </Stack>
                     </Stack>
                   </Box>
                 </Box>
@@ -268,6 +303,22 @@ export default function MilestonesList({
         onClose={cancelDelete}
         onConfirm={confirmDelete}
       />
+      <ProgressEntryDialog
+        open={Boolean(editCandidate)}
+        title="Edit Milestone"
+        onClose={() => setEditCandidate(null)}
+      >
+        {editCandidate ? (
+          <MilestoneForm
+            existingMilestone={editCandidate}
+            onSaved={async () => {
+              await onMilestonesChanged?.();
+              setEditCandidate(null);
+            }}
+            onCancel={() => setEditCandidate(null)}
+          />
+        ) : null}
+      </ProgressEntryDialog>
     </Box>
   );
 }

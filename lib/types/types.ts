@@ -67,6 +67,7 @@ export interface MilestoneEntry {
   milestoneId: string;
   amount: number;
   year: number | null;
+  month?: number | null;
   age?: number | null;
   note?: string;
   createdAt?: string;
@@ -173,6 +174,17 @@ export interface MonthSummary {
   topTags: TagDataPoint[];
 }
 
+/** Shared financial snapshot used by month and year comparison views. */
+export interface ComparisonSummary {
+  period: string;
+  totalAmount: number;
+  spendingAmount: number;
+  incomeAmount: number;
+  totalByCategoryType: ReportsCategoryTotals;
+  transactionCount: number;
+  topTags: TagDataPoint[];
+}
+
 // Note 12c: MonthComparisonData bundles two MonthSummary snapshots plus the
 // pre-computed percentage changes between them. Storing the deltas here avoids
 // every UI consumer re-deriving the same arithmetic.
@@ -187,6 +199,37 @@ export interface MonthComparisonData {
     Want: number | null;
     Saving: number | null;
     transactionCount: number | null;
+  };
+}
+
+export type YearComparisonScope = "full-year" | "year-to-date";
+
+/** A like-for-like, calendar-year comparison snapshot. */
+export interface YearSummary extends ComparisonSummary {
+  year: number;
+  startDate: string;
+  endDate: string;
+  monthsIncluded: number;
+  savingsAmount: number;
+  averageMonthlySpending: number;
+  savingsRate: number | null;
+}
+
+export interface YearComparisonData {
+  previousYear: YearSummary;
+  currentYear: YearSummary;
+  scope: YearComparisonScope;
+  changes: {
+    incomeAmount: number | null;
+    spendingAmount: number | null;
+    savingsAmount: number | null;
+    averageMonthlySpending: number | null;
+    transactionCount: number | null;
+    Need: number | null;
+    Want: number | null;
+    Saving: number | null;
+    /** Difference in percentage points, never a relative percent change. */
+    savingsRate: number | null;
   };
 }
 

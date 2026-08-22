@@ -28,6 +28,7 @@ import {
   TAG_CHART_PALETTE,
 } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
+import { formatTransactionLongDate } from "@/lib/utils/transaction-calendar";
 
 interface YearlyReportProps {
   report: YearlyReportData;
@@ -206,7 +207,7 @@ export function YearlyReport({
               }}
             >
               <SectionCard
-                title="Highest-spend month"
+                title="Highest-Spend Month"
                 headingId="yearly-highest-month-heading"
                 elevation={0}
               >
@@ -222,7 +223,7 @@ export function YearlyReport({
                 </Typography>
               </SectionCard>
               <SectionCard
-                title="Largest purchase"
+                title="Largest Purchase"
                 headingId="yearly-largest-purchase-heading"
                 elevation={0}
               >
@@ -234,9 +235,14 @@ export function YearlyReport({
                     ? formatCurrency(report.largestPurchase.amount)
                     : "No spending recorded"}
                 </Typography>
+                {report.largestPurchase ? (
+                  <Typography color="text.secondary" variant="body2">
+                    {formatTransactionLongDate(report.largestPurchase.date)}
+                  </Typography>
+                ) : null}
               </SectionCard>
               <SectionCard
-                title="Category totals"
+                title="Category Totals"
                 headingId="yearly-category-totals-heading"
                 elevation={0}
               >
@@ -270,7 +276,7 @@ export function YearlyReport({
               }}
             >
               <SectionCard
-                title="Top tags"
+                title="Top Tags"
                 headingId="yearly-top-tags-heading"
                 description="Where tagged outflows were concentrated"
                 titleAlign="left"
@@ -358,7 +364,7 @@ export function YearlyReport({
                 )}
               </SectionCard>
               <SectionCard
-                title="Monthly detail"
+                title="Monthly Detail"
                 headingId="yearly-monthly-detail-heading"
                 elevation={0}
               >

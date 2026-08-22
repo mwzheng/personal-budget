@@ -160,7 +160,7 @@ export default function GoalHero({
             fontWeight={700}
             letterSpacing="0.1em"
           >
-            Primary goal · Financial progress
+            Primary Goal · Financial Progress
           </Typography>
           <Typography
             component="h2"
@@ -169,8 +169,8 @@ export default function GoalHero({
             sx={{ mt: 0.5 }}
           >
             {goalTargetAmount !== null
-              ? `${formatAmount(goalTargetAmount)} savings target`
-              : "Set your financial goal"}
+              ? `${formatAmount(goalTargetAmount)} Savings Target`
+              : "Set Your Financial Goal"}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
             Keep building the habit. Your progress and history are tracked here.
@@ -269,7 +269,7 @@ export default function GoalHero({
             }}
           >
             <Typography component="h2" variant="h6" fontWeight={600}>
-              At a glance
+              At a Glance
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Overview

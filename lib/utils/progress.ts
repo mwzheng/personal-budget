@@ -1,5 +1,10 @@
 // Note: Data access helpers for the progress (retirement/milestones/goal) APIs.
-import { PutCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  PutCommand,
+  QueryCommand,
+  DeleteCommand,
+  TransactWriteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { getDocClient } from "../api/dynamoClient";
 import { generateId } from "./generateId";
 import { SK_PREFIX } from "../api/tableKeys";
@@ -24,6 +29,7 @@ interface MilestoneQueryItem {
   milestoneId?: unknown;
   amount?: unknown;
   year?: unknown;
+  month?: unknown;
   age?: unknown;
   note?: unknown;
   createdAt?: unknown;
@@ -39,6 +45,23 @@ interface ProgressGoalQueryItem {
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+/** A conditional write lost its optimistic-concurrency race. */
+export class MilestoneConflictError extends Error {
+  constructor() {
+    super("Milestone was modified");
+    this.name = "MilestoneConflictError";
+  }
+}
+
+function isConditionalWriteFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? error.name : undefined;
+  return (
+    name === "ConditionalCheckFailedException" ||
+    name === "TransactionCanceledException"
+  );
 }
 
 export async function putRetirement(
@@ -114,9 +137,11 @@ export async function putMilestone(
   m: {
     milestoneId?: string;
     amount: number;
-    year?: number;
-    age?: number;
+    year?: number | null;
+    month?: number | null;
+    age?: number | null;
     note?: string;
+    createdAt?: string;
   },
 ): Promise<MilestoneEntry> {
   const client = getDocClient(TABLE_NAME);
@@ -130,12 +155,104 @@ export async function putMilestone(
     milestoneId: id,
     amount: m.amount,
     year: m.year ?? null,
+    month: m.month ?? null,
     age: m.age ?? null,
     note: m.note || "",
-    createdAt: now,
+    createdAt: m.createdAt ?? now,
     updatedAt: now,
   } as const;
   await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function updateMilestone(
+  userId: string,
+  milestone: {
+    milestoneId: string;
+    originalYear: number | null;
+    amount: number;
+    year?: number | null;
+    month?: number | null;
+    age?: number | null;
+    note?: string;
+    createdAt?: string;
+    expectedUpdatedAt?: string;
+  },
+): Promise<MilestoneEntry> {
+  const client = getDocClient(TABLE_NAME);
+  if (!client) throw new Error("DynamoDB table not configured");
+
+  const originalYear = milestone.originalYear ?? 0;
+  const nextYear = milestone.year ?? 0;
+  const sourceCondition = milestone.expectedUpdatedAt
+    ? {
+        ConditionExpression:
+          "attribute_exists(pk) AND #updatedAt = :expectedUpdatedAt",
+        ExpressionAttributeNames: { "#updatedAt": "updatedAt" },
+        ExpressionAttributeValues: {
+          ":expectedUpdatedAt": milestone.expectedUpdatedAt,
+        },
+      }
+    : {
+        ConditionExpression:
+          "attribute_exists(pk) AND attribute_not_exists(#updatedAt)",
+        ExpressionAttributeNames: { "#updatedAt": "updatedAt" },
+      };
+  const now = new Date().toISOString();
+  const item = {
+    pk: `user#${userId}`,
+    sk: `${SK_PREFIX.MILESTONE}${nextYear}#${milestone.milestoneId}`,
+    milestoneId: milestone.milestoneId,
+    amount: milestone.amount,
+    year: milestone.year ?? null,
+    month: milestone.month ?? null,
+    age: milestone.age ?? null,
+    note: milestone.note || "",
+    createdAt: milestone.createdAt ?? now,
+    updatedAt: now,
+  } as const;
+
+  if (originalYear !== nextYear) {
+    try {
+      await client.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Delete: {
+                TableName: TABLE_NAME,
+                Key: {
+                  pk: `user#${userId}`,
+                  sk: `${SK_PREFIX.MILESTONE}${originalYear}#${milestone.milestoneId}`,
+                },
+                ...sourceCondition,
+              },
+            },
+            {
+              Put: {
+                TableName: TABLE_NAME,
+                Item: item,
+                ConditionExpression:
+                  "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+              },
+            },
+          ],
+        }),
+      );
+    } catch (error) {
+      if (isConditionalWriteFailure(error)) throw new MilestoneConflictError();
+      throw error;
+    }
+    return item;
+  }
+
+  try {
+    await client.send(
+      new PutCommand({ TableName: TABLE_NAME, Item: item, ...sourceCondition }),
+    );
+  } catch (error) {
+    if (isConditionalWriteFailure(error)) throw new MilestoneConflictError();
+    throw error;
+  }
   return item;
 }
 
@@ -156,8 +273,9 @@ export async function getUserMilestones(
   return items.map((item) => ({
     milestoneId: String(item.milestoneId || ""),
     amount: Number(item.amount || 0),
-    year: item.year ? Number(item.year) : null,
-    age: item.age ? Number(item.age) : null,
+    year: typeof item.year === "number" ? item.year : null,
+    month: typeof item.month === "number" ? item.month : null,
+    age: typeof item.age === "number" ? item.age : null,
     note: String(item.note || ""),
     createdAt: readOptionalString(item.createdAt),
     updatedAt: readOptionalString(item.updatedAt),

@@ -7,7 +7,7 @@ Latest completed work:
 - Full-application dark-theme UI/UX redesign (Phases 1–6):
   - Expanded server-theme-tokens.ts with 9 semantic token groups
   - 20+ MUI component overrides in providers.tsx
-  - AppNav, Footer, landing page, login, register, reports, sankey, progress, fire pages redesigned
+  - AppNav, Footer, landing page, login, register, reports, budget, progress, and fire pages redesigned
   - All 8 chart components standardized with token-based grid/axis/label colors
   - Auth callback/signout pages polished with Paper card layouts
   - Contact page hero given gradient Paper matching About/FAQ
@@ -29,7 +29,7 @@ Current active follow-ups:
   routes. Home hero CTAs ("Try Demo" / "Sign In") are hidden for signed-in users.
 - **Authenticated pages:** `/reports`, `/budget`, `/progress`, `/salary`, and
   `/fire`.
-- **Core capabilities:** transaction CRUD, CSV import/export, month comparison,
+- **Core capabilities:** transaction CRUD, CSV import/export, month and yearly comparison,
   saved budgets with Sankey visualization, salary/progress tracking, FIRE
   projections, and demo mode.
 - **Data model:** Cognito-scoped DynamoDB persistence with explicit browser-only

@@ -1,5 +1,11 @@
 # Porridge Budget — Completed Work Log
 
+## Yearly comparison (completed 2026-08-18)
+
+- Added a Reports-page yearly comparison dialog with full-year and matched YTD scope.
+- Shared comparison cards, tag table, chart support, types, and pure aggregation helpers with monthly comparison.
+- Added focused Vitest coverage for yearly periods, leap-day clamping, metrics, defaults, tags, and empty data.
+
 This file is the authoritative record of completed work, listed in reverse
 chronological order (newest first). Each entry includes the date, summary,
 completed items, files changed, commit reference, and notes.

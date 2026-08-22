@@ -48,7 +48,7 @@ export default function RegisterPage() {
             align="center"
             sx={{ letterSpacing: "-0.02em" }}
           >
-            Create an account
+            Create an Account
           </Typography>
           <Typography variant="body1" color="text.secondary" align="center">
             Complete setup in the secure account window, then return here.

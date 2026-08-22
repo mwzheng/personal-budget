@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ABOUT_PAGE_CONTENT, CREATOR_SOCIAL_LINKS } from "@/lib/content/about";
 import { CONTACT_SECTION_CONTENT } from "@/lib/content/contact";
 import { FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
-import { FAQ_ITEMS } from "@/lib/content/faq";
+import { FAQ_ITEMS, FAQ_PAGE_CONTENT } from "@/lib/content/faq";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
 import {
   LIVE_SIGNED_OUT_PAGE_TITLE_KEYS,
@@ -116,6 +116,8 @@ describe("content data invariants", () => {
       title: "Other Ways To Connect",
       topicsTitle: "Good Reasons To Reach Out",
     });
+    expect(FAQ_PAGE_CONTENT.hero.title).toBe("Questions About Porridge Budget");
+    expect(FAQ_PAGE_CONTENT.intro.heading).toBe("Frequently Asked Questions");
     expect(
       CONTACT_SECTION_CONTENT.methods[0]?.description.toLowerCase(),
     ).toContain("github profile");

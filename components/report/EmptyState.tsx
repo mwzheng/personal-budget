@@ -22,7 +22,7 @@ const EmptyState = ({
       gap={2}
     >
       <Typography variant="h5" fontWeight={600} color="text.secondary">
-        No transactions yet
+        No Transactions Yet
       </Typography>
       <Typography
         variant="body2"

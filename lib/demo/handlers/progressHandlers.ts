@@ -18,6 +18,10 @@ import {
 } from "../demoData";
 import type { MilestoneEntry, RetirementEntry } from "../../types/types";
 import {
+  MilestoneCreateSchema,
+  MilestoneUpdateSchema,
+} from "../../schemas/schemas";
+import {
   type HandlerContext,
   jsonResponse,
   readJsonBody,
@@ -250,18 +254,21 @@ async function handleMilestones(ctx: HandlerContext): Promise<Response | null> {
   if (method === "POST") {
     const body =
       (await readJsonBody<Partial<MilestoneEntry>>(input, init)) ?? undefined;
-    if (!body || typeof body.amount !== "number") {
+    const parsed = MilestoneCreateSchema.safeParse(body);
+    if (!parsed.success) {
       return jsonResponse(
-        { ok: false, error: "Missing amount" },
+        { ok: false, error: "Invalid milestone" },
         { status: 400 },
       );
     }
 
     const created: MilestoneEntry = {
       milestoneId: createDemoId("demo-milestone"),
-      amount: body.amount,
-      year: body.year ?? null,
-      age: body.age ?? null,
+      amount: parsed.data.amount,
+      year: parsed.data.year ?? null,
+      month: parsed.data.month ?? null,
+      age: parsed.data.age ?? null,
+      note: parsed.data.note,
     };
 
     updateDemoStore((current) => ({
@@ -270,6 +277,34 @@ async function handleMilestones(ctx: HandlerContext): Promise<Response | null> {
     }));
 
     return jsonResponse({ ok: true, created });
+  }
+
+  if (method === "PUT") {
+    const body =
+      (await readJsonBody<Partial<MilestoneEntry>>(input, init)) ?? undefined;
+    const parsed = MilestoneUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonResponse(
+        { ok: false, error: "Invalid milestone" },
+        { status: 400 },
+      );
+    }
+
+    const updated: MilestoneEntry = {
+      milestoneId: parsed.data.milestoneId,
+      amount: parsed.data.amount,
+      year: parsed.data.year ?? null,
+      month: parsed.data.month ?? null,
+      age: parsed.data.age ?? null,
+      note: parsed.data.note,
+    };
+    updateDemoStore((current) => ({
+      ...current,
+      milestones: current.milestones.map((entry) =>
+        entry.milestoneId === updated.milestoneId ? updated : entry,
+      ),
+    }));
+    return jsonResponse({ ok: true, updated });
   }
 
   if (method === "DELETE") {

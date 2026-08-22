@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Transaction } from "../../lib/types/types";
 import { buildYearlyReport } from "../../lib/utils/aggregations";
+import { formatTransactionLongDate } from "../../lib/utils/transaction-calendar";
 
 function transaction(
   id: string,
@@ -145,6 +146,10 @@ describe("buildYearlyReport", () => {
     expect(report.spendingAmount).toBe(2_100);
     expect(report.highestSpendMonth?.period).toBe("2025-02");
     expect(report.largestPurchase?.id).toBe("trip");
+    expect(report.largestPurchase?.date).toBe("2025-02-02");
+    expect(formatTransactionLongDate(report.largestPurchase!.date)).toBe(
+      "February 2, 2025",
+    );
     expect(report.topTags).toEqual([
       { name: "emergency fund", value: 1_300 },
       { name: "travel", value: 1_200 },

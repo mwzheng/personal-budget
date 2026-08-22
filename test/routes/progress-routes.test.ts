@@ -21,7 +21,9 @@ vi.mock("@/lib/utils/progress", () => ({
   deleteRetirement: vi.fn(),
   getUserMilestones: vi.fn(),
   putMilestone: vi.fn(),
+  updateMilestone: vi.fn(),
   deleteMilestone: vi.fn(),
+  MilestoneConflictError: class MilestoneConflictError extends Error {},
 }));
 
 import {
@@ -33,6 +35,7 @@ import {
   DELETE as deleteMilestoneRoute,
   GET as getMilestones,
   POST as postMilestone,
+  PUT as putMilestoneRoute,
 } from "@/app/api/progress/milestones/route";
 import {
   DELETE as deleteRetirementRoute,
@@ -49,6 +52,8 @@ import {
   getUserProgressGoals,
   getUserRetirement,
   putMilestone,
+  updateMilestone,
+  MilestoneConflictError,
   putProgressGoal,
   putRetirement,
 } from "@/lib/utils/progress";
@@ -62,6 +67,7 @@ const mockedPutRetirement = vi.mocked(putRetirement);
 const mockedDeleteRetirement = vi.mocked(deleteRetirement);
 const mockedGetUserMilestones = vi.mocked(getUserMilestones);
 const mockedPutMilestone = vi.mocked(putMilestone);
+const mockedUpdateMilestone = vi.mocked(updateMilestone);
 const mockedDeleteMilestone = vi.mocked(deleteMilestone);
 
 function buildRequest(url: string, init?: RequestInit): Request {
@@ -79,6 +85,7 @@ describe("progress api routes", () => {
     mockedDeleteRetirement.mockReset();
     mockedGetUserMilestones.mockReset();
     mockedPutMilestone.mockReset();
+    mockedUpdateMilestone.mockReset();
     mockedDeleteMilestone.mockReset();
 
     mockedGetPayloadFromRequest.mockResolvedValue({ sub: "user-123" });
@@ -443,6 +450,7 @@ describe("progress api routes", () => {
         milestoneId: "milestone-1",
         amount: 100000,
         year: 2030,
+        month: 9,
         age: 45,
         note: "First six figures",
       },
@@ -461,6 +469,7 @@ describe("progress api routes", () => {
           milestoneId: "milestone-1",
           amount: 100000,
           year: 2030,
+          month: 9,
           age: 45,
           note: "First six figures",
         },
@@ -473,6 +482,7 @@ describe("progress api routes", () => {
       milestoneId: "milestone-2",
       amount: 250000,
       year: 2035,
+      month: 4,
       age: null,
       note: "Coast FI",
     });
@@ -484,6 +494,7 @@ describe("progress api routes", () => {
         body: JSON.stringify({
           amount: 250000,
           year: 2035,
+          month: 4,
           note: "Coast FI",
         }),
       }),
@@ -498,6 +509,7 @@ describe("progress api routes", () => {
     expect(mockedPutMilestone).toHaveBeenCalledWith("user-123", {
       amount: 250000,
       year: 2035,
+      month: 4,
       note: "Coast FI",
     });
     expect(mockedDeleteMilestone).toHaveBeenCalledWith(
@@ -511,11 +523,120 @@ describe("progress api routes", () => {
         milestoneId: "milestone-2",
         amount: 250000,
         year: 2035,
+        month: 4,
         age: null,
         note: "Coast FI",
       },
     });
     await expect(deleteResponse.json()).resolves.toEqual({ ok: true });
+  });
+
+  it("resolves milestone keys and createdAt server-side before updating", async () => {
+    mockedGetUserMilestones.mockResolvedValue([
+      {
+        milestoneId: "milestone-2",
+        amount: 250000,
+        year: 2035,
+        month: 4,
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+    mockedUpdateMilestone.mockResolvedValue({
+      milestoneId: "milestone-2",
+      amount: 300000,
+      year: 2036,
+      month: 4,
+      age: 46,
+      note: "Updated Coast FI",
+    });
+
+    const response = await putMilestoneRoute(
+      buildRequest("http://localhost/api/progress/milestones", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          milestoneId: "milestone-2",
+          originalYear: 1999,
+          createdAt: "1999-01-01T00:00:00.000Z",
+          expectedUpdatedAt: "2026-01-01T00:00:00.000Z",
+          amount: 300000,
+          year: 2036,
+          month: 4,
+          age: 46,
+          note: "Updated Coast FI",
+        }),
+      }),
+    );
+
+    expect(mockedUpdateMilestone).toHaveBeenCalledWith("user-123", {
+      milestoneId: "milestone-2",
+      originalYear: 2035,
+      amount: 300000,
+      year: 2036,
+      month: 4,
+      age: 46,
+      note: "Updated Coast FI",
+      createdAt: "2025-01-01T00:00:00.000Z",
+      expectedUpdatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      updated: { milestoneId: "milestone-2", year: 2036, month: 4 },
+    });
+  });
+
+  it("returns 404 when the requested milestone is not owned by the user", async () => {
+    mockedGetUserMilestones.mockResolvedValue([]);
+    const response = await putMilestoneRoute(
+      buildRequest("http://localhost/api/progress/milestones", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          milestoneId: "missing",
+          amount: 100,
+          year: 2036,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Milestone not found",
+    });
+    expect(mockedUpdateMilestone).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when a milestone update loses its optimistic concurrency race", async () => {
+    mockedGetUserMilestones.mockResolvedValue([
+      {
+        milestoneId: "milestone-2",
+        amount: 250000,
+        year: 2035,
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ]);
+    mockedUpdateMilestone.mockRejectedValue(new MilestoneConflictError());
+    const response = await putMilestoneRoute(
+      buildRequest("http://localhost/api/progress/milestones", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          milestoneId: "milestone-2",
+          amount: 300000,
+          year: 2036,
+          expectedUpdatedAt: "2026-01-01T00:00:00.000Z",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Milestone was modified. Refresh and try again.",
+    });
   });
 
   // Note 2: Milestone deletes allow `year` to be omitted because the helper
@@ -535,6 +656,26 @@ describe("progress api routes", () => {
         body: JSON.stringify({}),
       }),
     );
+    const invalidMonthResponse = await postMilestone(
+      buildRequest("http://localhost/api/progress/milestones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 100, month: 9 }),
+      }),
+    );
+    const invalidUpdateResponse = await putMilestoneRoute(
+      buildRequest("http://localhost/api/progress/milestones", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          milestoneId: "milestone-2",
+          originalYear: 2035,
+          amount: 100,
+          year: 2036,
+          month: 13,
+        }),
+      }),
+    );
 
     mockedGetPayloadFromRequest.mockRejectedValueOnce(new Error("No token"));
     const authFailureResponse = await getMilestones(
@@ -544,13 +685,21 @@ describe("progress api routes", () => {
     expect(invalidCreateResponse.status).toBe(400);
     await expect(invalidCreateResponse.json()).resolves.toEqual({
       ok: false,
-      error: "Missing amount",
+      error: "Invalid milestone",
     });
     expect(missingDeleteResponse.status).toBe(400);
     await expect(missingDeleteResponse.json()).resolves.toEqual({
       ok: false,
       error: "Missing milestoneId",
     });
+    expect(invalidMonthResponse.status).toBe(400);
+    expect(invalidUpdateResponse.status).toBe(400);
+    await expect(invalidUpdateResponse.json()).resolves.toEqual({
+      ok: false,
+      error: "Invalid milestone",
+    });
+    expect(mockedPutMilestone).not.toHaveBeenCalled();
+    expect(mockedUpdateMilestone).not.toHaveBeenCalled();
     expect(authFailureResponse.status).toBe(401);
     await expect(authFailureResponse.json()).resolves.toEqual({
       ok: false,

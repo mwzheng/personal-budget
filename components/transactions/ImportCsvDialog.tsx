@@ -235,7 +235,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             <Card variant="outlined" sx={{ borderColor: "divider" }}>
               <CardContent sx={{ p: 2.5 }}>
                 <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  Starter templates
+                  Starter Templates
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mb={2}>
                   Download a template if you need a clean file format to begin
@@ -346,7 +346,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             >
               <CardContent sx={{ p: 2.5 }}>
                 <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  What happens next
+                  What Happens Next
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Imported rows are written to your signed-in account only after
@@ -375,7 +375,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                 <CircularProgress size={28} />
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
-                    Parsing CSV file…
+                    Parsing CSV File…
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Validating columns and building a preview before import.
@@ -398,7 +398,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             >
               <CardContent sx={{ p: 2.5 }}>
                 <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  Try a different file
+                  Try a Different File
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mb={2}>
                   Check the column headers, or download one of the supported
@@ -454,7 +454,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                 >
                   <Box>
                     <Typography variant="subtitle1" fontWeight={700}>
-                      Preview ready
+                      Preview Ready
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Review the first few rows before importing everything.
@@ -542,7 +542,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               <Card variant="outlined" sx={{ borderColor: "divider" }}>
                 <CardContent sx={{ p: 2.5 }}>
                   <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                    Sample rows
+                    Sample Rows
                   </Typography>
                   <Typography variant="body2" color="text.secondary" mb={2}>
                     Showing the first {state.sample.length} row

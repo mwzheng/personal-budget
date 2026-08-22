@@ -92,7 +92,7 @@ export default function FireForm({
   return (
     <Stack spacing={2.5}>
       <Typography variant="overline" color="text.secondary">
-        Core plan
+        Core Plan
       </Typography>
       <TextField
         label="Scenario Name"
@@ -162,7 +162,7 @@ export default function FireForm({
 
       <Divider />
       <Typography variant="overline" color="text.secondary">
-        Planning assumptions
+        Planning Assumptions
       </Typography>
       <RateSlider
         label="Annual Inflation Rate"

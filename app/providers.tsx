@@ -428,6 +428,12 @@ const darkTheme = createTheme({
       },
     },
     MuiPopover: {
+      defaultProps: {
+        // Menus and other popovers should not remove the page scrollbar when
+        // opening; doing so changes the available width and shifts the layout.
+        // Dialogs retain their independent modal scroll lock behavior.
+        disableScrollLock: true,
+      },
       styleOverrides: {
         paper: {
           backgroundColor: SERVER_THEME_TOKENS.surface.overlay,

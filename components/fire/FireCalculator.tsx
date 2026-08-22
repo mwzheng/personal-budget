@@ -259,7 +259,7 @@ export default function FireCalculator() {
             />
             <Paper sx={{ p: 2.5 }} elevation={1}>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                Portfolio projection
+                Portfolio Projection
               </Typography>
               <FireProjectionChart
                 rows={chartRows}
@@ -386,7 +386,7 @@ export default function FireCalculator() {
 
             <Paper sx={{ p: 2.5 }} elevation={1}>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                Projection details
+                Projection Details
               </Typography>
               <FireProjectionTable rows={breakdownRows} />
             </Paper>
