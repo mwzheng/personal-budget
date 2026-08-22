@@ -43,18 +43,18 @@ function parseFilterDate(value: string | null): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-const DATE_RANGE_PRESETS: Array<{
+export const DATE_RANGE_PRESETS: Array<{
   label: string;
   value: ReportDateRangePreset;
 }> = [
-  { label: "This month", value: "this-month" },
-  { label: "Last month", value: "last-month" },
-  { label: "This quarter", value: "this-quarter" },
-  { label: "Last quarter", value: "last-quarter" },
-  { label: "This year", value: "this-year" },
-  { label: "Last year", value: "last-year" },
-  { label: "Last 90 days", value: "last-90-days" },
-  { label: "All time", value: "all-time" },
+  { label: "This Month", value: "this-month" },
+  { label: "Last Month", value: "last-month" },
+  { label: "This Quarter", value: "this-quarter" },
+  { label: "Last Quarter", value: "last-quarter" },
+  { label: "This Year", value: "this-year" },
+  { label: "Last Year", value: "last-year" },
+  { label: "Last 90 Days", value: "last-90-days" },
+  { label: "All Time", value: "all-time" },
   { label: "Custom", value: "custom" },
 ];
 

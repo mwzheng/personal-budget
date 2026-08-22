@@ -1,6 +1,6 @@
 // Note 1: These tests lock down the reports-page startup rules so refactors in
 // the UI layer cannot silently change which year is selected by default.
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getReportDateRangePreset,
@@ -12,7 +12,11 @@ import {
   resolveDefaultReportYears,
 } from "../../lib/utils/aggregations";
 import type { Transaction } from "../../lib/types/types";
-import { initializeReportFilters } from "../../lib/utils/reportUtils";
+import {
+  buildComparablePeriodFilters,
+  initializeReportFilters,
+} from "../../lib/utils/reportUtils";
+import { DATE_RANGE_PRESETS } from "../../components/report/FilterBar";
 
 function buildTransaction(
   id: string,
@@ -353,5 +357,64 @@ describe("report date-range presets", () => {
     ["custom", { startDate: null, endDate: null }],
   ] as const)("returns the %s local-calendar range", (preset, expected) => {
     expect(getReportDateRangePreset(preset, referenceDate)).toEqual(expected);
+  });
+});
+
+describe("comparable report periods", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const filters = (startDate: string, endDate: string) => ({
+    years: [],
+    startDate,
+    endDate,
+    categories: [],
+    tags: [],
+    search: "",
+  });
+
+  it("compares this month with the previous full calendar month", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2024, 2, 15, 12));
+    expect(
+      buildComparablePeriodFilters(filters("2024-03-01", "2024-03-31")),
+    ).toMatchObject({ startDate: "2024-02-01", endDate: "2024-02-29" });
+  });
+
+  it("compares this quarter with the previous full calendar quarter", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2024, 4, 15, 12));
+    expect(
+      buildComparablePeriodFilters(filters("2024-04-01", "2024-06-30")),
+    ).toMatchObject({ startDate: "2024-01-01", endDate: "2024-03-31" });
+  });
+
+  it("compares this year with the previous full calendar year", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2024, 6, 15, 12));
+    expect(
+      buildComparablePeriodFilters(filters("2024-01-01", "2024-12-31")),
+    ).toMatchObject({ startDate: "2023-01-01", endDate: "2023-12-31" });
+  });
+
+  it("keeps last 90 days as an equal-length contiguous range", () => {
+    expect(
+      buildComparablePeriodFilters(filters("2023-12-17", "2024-03-15")),
+    ).toMatchObject({ startDate: "2023-09-18", endDate: "2023-12-16" });
+  });
+
+  it("uses title case for date-range dropdown options", () => {
+    expect(DATE_RANGE_PRESETS.map(({ label }) => label)).toEqual([
+      "This Month",
+      "Last Month",
+      "This Quarter",
+      "Last Quarter",
+      "This Year",
+      "Last Year",
+      "Last 90 Days",
+      "All Time",
+      "Custom",
+    ]);
   });
 });

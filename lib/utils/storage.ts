@@ -10,6 +10,10 @@ import type { FilterParams, TransactionCategoryType } from "../types/types";
 import type { BudgetDraft } from "./budget-normalizer";
 import { isTransactionCategory } from "./transaction-categories";
 import { format, isValid, parseISO } from "date-fns";
+import {
+  getReportDateRangePreset,
+  type ReportDateRangePreset,
+} from "./aggregations";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
 // works well for small datasets. For larger datasets, IndexedDB or a server-side
@@ -27,6 +31,8 @@ type ReportTransactionsViewPreference = "table" | "calendar";
 type StoredReportFilters = {
   version: typeof REPORT_FILTERS_STORAGE_VERSION;
   filters: FilterParams;
+  /** Preserve relative ranges so they can advance when the calendar day changes. */
+  dateRangePreset?: ReportDateRangePreset;
 };
 
 function normalizeUniqueStrings(
@@ -110,7 +116,31 @@ export function getLastSelectedReportFilters(): FilterParams | null {
       return null;
     const stored = parsed as Partial<StoredReportFilters>;
     if (stored.version !== REPORT_FILTERS_STORAGE_VERSION) return null;
-    return normalizeReportFilters(stored.filters);
+    const filters = normalizeReportFilters(stored.filters);
+    if (!filters) return null;
+
+    // Older builds persisted only concrete dates. Migrate the one relative range
+    // that changes every day when its saved end date is yesterday.
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const legacyYesterdayRange = getReportDateRangePreset(
+      "last-90-days",
+      yesterday,
+    );
+    const preset = stored.dateRangePreset;
+    if (
+      preset === "last-90-days" ||
+      (!preset &&
+        filters.startDate === legacyYesterdayRange.startDate &&
+        filters.endDate === legacyYesterdayRange.endDate)
+    ) {
+      return { ...filters, ...getReportDateRangePreset("last-90-days") };
+    }
+
+    if (preset && preset !== "custom") {
+      return { ...filters, ...getReportDateRangePreset(preset) };
+    }
+
+    return filters;
   } catch {
     return null;
   }
@@ -125,12 +155,35 @@ export function setLastSelectedReportFilters(filters: FilterParams): void {
     const payload: StoredReportFilters = {
       version: REPORT_FILTERS_STORAGE_VERSION,
       filters: normalized,
+      dateRangePreset: inferReportDateRangePreset(normalized),
     };
     localStorage.setItem(REPORT_FILTERS_STORAGE_KEY, JSON.stringify(payload));
     localStorage.removeItem(REPORT_YEAR_STORAGE_KEY);
   } catch {
     // Ignore unavailable browser storage and quota failures.
   }
+}
+
+function inferReportDateRangePreset(
+  filters: FilterParams,
+): ReportDateRangePreset | undefined {
+  if (filters.years.length > 0) return undefined;
+
+  const presets: ReportDateRangePreset[] = [
+    "this-month",
+    "last-month",
+    "this-quarter",
+    "last-quarter",
+    "this-year",
+    "last-year",
+    "last-90-days",
+  ];
+  return presets.find((preset) => {
+    const range = getReportDateRangePreset(preset);
+    return (
+      filters.startDate === range.startDate && filters.endDate === range.endDate
+    );
+  });
 }
 
 export function clearLastSelectedReportFilters(): void {
