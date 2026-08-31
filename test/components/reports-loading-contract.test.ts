@@ -19,7 +19,9 @@ describe("Reports loading contract", () => {
   it("loads all history when All Time becomes the active date range", () => {
     const source = readSource("app/reports/page.tsx");
 
-    expect(source).toContain("void loadTransactions(true, true);");
+    expect(source).toContain(
+      "void loadTransactions(true, nextPlan.allHistory, nextPlan);",
+    );
     expect(source).not.toContain("Load all history");
     expect(source).not.toContain(
       "Showing the first page of current-year transactions",

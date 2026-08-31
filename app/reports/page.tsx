@@ -120,6 +120,32 @@ function currentTransactionScope() {
     : null;
 }
 
+function getFilterTransactionLoadPlan(filters: FilterParams) {
+  if (filters.years.length > 0) {
+    const years = filters.years
+      .map(Number)
+      .filter(Number.isInteger)
+      .sort((a, b) => a - b);
+    if (years.length > 0) {
+      return {
+        allHistory: false,
+        startDate: `${years[0]}-01-01`,
+        endDate: `${years[years.length - 1]}-12-31`,
+      };
+    }
+  }
+
+  if (filters.startDate || filters.endDate) {
+    return {
+      allHistory: false,
+      startDate: filters.startDate ?? undefined,
+      endDate: filters.endDate ?? undefined,
+    };
+  }
+
+  return { allHistory: true };
+}
+
 function getInitialTransactionLoadPlan(
   storedFilters: FilterParams | null,
   legacyYears: string[],
@@ -320,6 +346,23 @@ const ReportsPageContent = () => {
     [allHistoryLoaded, handleUnauthorized, router, scope],
   );
 
+  const handleFiltersChange = (nextFilters: FilterParams) => {
+    const previousPlan = getFilterTransactionLoadPlan(filters);
+    const nextPlan = getFilterTransactionLoadPlan(nextFilters);
+    setFilters(nextFilters);
+
+    if (
+      !filtersInitialized ||
+      (previousPlan.allHistory === nextPlan.allHistory &&
+        previousPlan.startDate === nextPlan.startDate &&
+        previousPlan.endDate === nextPlan.endDate)
+    ) {
+      return;
+    }
+
+    void loadTransactions(true, nextPlan.allHistory, nextPlan);
+  };
+
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
@@ -335,27 +378,6 @@ const ReportsPageContent = () => {
     );
     void loadTransactions(false, loadPlan.allHistory, loadPlan);
   }, [authVersion, loadTransactions, router]);
-
-  useEffect(() => {
-    if (
-      !filtersInitialized ||
-      loading ||
-      allHistoryLoaded ||
-      filters.years.length > 0 ||
-      filters.startDate ||
-      filters.endDate
-    ) {
-      return;
-    }
-
-    void loadTransactions(true, true);
-  }, [
-    allHistoryLoaded,
-    filters,
-    filtersInitialized,
-    loadTransactions,
-    loading,
-  ]);
 
   useEffect(() => {
     const handleAuthChanged = () => {
@@ -831,7 +853,7 @@ const ReportsPageContent = () => {
                 availableTags={availableTags}
                 availableYears={availableYears}
                 filters={filters}
-                onChange={setFilters}
+                onChange={handleFiltersChange}
               />
             )}
             {loading ? (
