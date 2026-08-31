@@ -12,9 +12,8 @@ describe("Reports loading contract", () => {
   it("forces all-history requests to bypass bounded cache data", () => {
     const source = readSource("app/reports/page.tsx");
 
-    expect(source).toContain(
-      "force: force || allHistory, maxPages: allHistory ? undefined : 1",
-    );
+    expect(source).toContain("force: force || allHistory");
+    expect(source).toContain("maxPages: allHistory ? undefined : 1");
   });
 
   it("loads all history when All Time becomes the active date range", () => {

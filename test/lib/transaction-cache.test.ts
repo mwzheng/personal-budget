@@ -70,6 +70,38 @@ describe("transactionCache", () => {
     expect(getCachedTransactions("user-a")).toEqual([tx("first")]);
   });
 
+  it("reloads when the requested date scope differs from the cached scope", async () => {
+    const fetchPage = vi
+      .fn()
+      .mockResolvedValueOnce({
+        transactions: [tx("current")],
+        hasMore: false,
+      })
+      .mockResolvedValueOnce({
+        transactions: [tx("historical", "2023-01-01")],
+        hasMore: false,
+      });
+
+    await loadCachedTransactions("user-a", fetchPage, {
+      scope: {
+        allHistory: false,
+        startDate: "2026-01-01",
+        endDate: "2026-12-31",
+      },
+    });
+    await expect(
+      loadCachedTransactions("user-a", fetchPage, {
+        scope: {
+          allHistory: false,
+          startDate: "2023-01-01",
+          endDate: "2023-12-31",
+        },
+      }),
+    ).resolves.toEqual([tx("historical", "2023-01-01")]);
+
+    expect(fetchPage).toHaveBeenCalledTimes(2);
+  });
+
   it("promotes a bounded cache to a complete history on force load", async () => {
     const fetchPage = vi
       .fn()

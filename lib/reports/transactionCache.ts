@@ -13,6 +13,7 @@ export type TransactionPageLoader = (
 interface CacheEntry {
   transactions?: Transaction[];
   stale: boolean;
+  loadedScope?: TransactionCacheScope;
   loadPromise?: Promise<Transaction[]>;
   pendingPatches: TransactionPatch[];
 }
@@ -24,6 +25,12 @@ type TransactionPatch =
       previous?: Pick<Transaction, "id" | "date">;
     }
   | { type: "remove"; transaction: Pick<Transaction, "id" | "date"> };
+
+export interface TransactionCacheScope {
+  allHistory: boolean;
+  startDate?: string;
+  endDate?: string;
+}
 
 const transactionCache = new Map<string, CacheEntry>();
 
@@ -143,11 +150,27 @@ function applyPatches(
 export function loadCachedTransactions(
   scope: string,
   loadPage: TransactionPageLoader,
-  options: { force?: boolean; maxPages?: number } = {},
+  options: {
+    force?: boolean;
+    maxPages?: number;
+    scope?: TransactionCacheScope;
+  } = {},
 ): Promise<Transaction[]> {
   const entry = entryFor(scope);
   if (entry.loadPromise) return entry.loadPromise;
-  if (entry.transactions && !entry.stale && !options.force) {
+  const cacheMatchesScope =
+    !options.scope ||
+    !entry.loadedScope ||
+    entry.loadedScope.allHistory ||
+    (entry.loadedScope.allHistory === options.scope.allHistory &&
+      entry.loadedScope.startDate === options.scope.startDate &&
+      entry.loadedScope.endDate === options.scope.endDate);
+  if (
+    entry.transactions &&
+    !entry.stale &&
+    !options.force &&
+    cacheMatchesScope
+  ) {
     return Promise.resolve(entry.transactions.slice());
   }
 
@@ -184,6 +207,7 @@ export function loadCachedTransactions(
     loadingEntry.pendingPatches = [];
     if (transactionCache.get(scope) === loadingEntry) {
       loadingEntry.transactions = mergedTransactions;
+      loadingEntry.loadedScope = options.scope;
       loadingEntry.stale = false;
     }
     return mergedTransactions.slice();

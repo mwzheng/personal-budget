@@ -282,7 +282,15 @@ const ReportsPageContent = () => {
               nextCursor: data.nextCursor,
             };
           },
-          { force: force || allHistory, maxPages: allHistory ? undefined : 1 },
+          {
+            force: force || allHistory,
+            maxPages: allHistory ? undefined : 1,
+            scope: {
+              allHistory,
+              startDate: allHistory ? undefined : range?.startDate,
+              endDate: allHistory ? undefined : range?.endDate,
+            },
+          },
         );
 
         // A request from a previous auth scope must not update this user's view.
