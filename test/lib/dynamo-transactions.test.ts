@@ -123,6 +123,38 @@ describe("getUserTransactions — no client fallback", () => {
   });
 });
 
+describe("getUserTransactionsPaged — demo fallback", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue(null);
+  });
+
+  it("honors date bounds, limits, and cursors without a DynamoDB client", async () => {
+    const firstPage = await getUserTransactionsPaged(DEMO_USER_ID, {
+      startDate: "2018-01-01",
+      endDate: "2018-12-31",
+      limit: 2,
+    });
+
+    expect(firstPage.transactions).toHaveLength(2);
+    expect(
+      firstPage.transactions.every((tx) => tx.date.startsWith("2018-")),
+    ).toBe(true);
+    expect(firstPage.lastKey).toMatchObject({ pk: `user#${DEMO_USER_ID}` });
+
+    const secondPage = await getUserTransactionsPaged(DEMO_USER_ID, {
+      startDate: "2018-01-01",
+      endDate: "2018-12-31",
+      limit: 2,
+      lastKey: firstPage.lastKey,
+    });
+
+    expect(secondPage.transactions).toHaveLength(2);
+    expect(secondPage.transactions[0].id).not.toBe(
+      firstPage.transactions[0].id,
+    );
+  });
+});
+
 describe("getUserTransactions — paginated DynamoDB results", () => {
   beforeEach(() => {
     getDocClientMock.mockReturnValue({ send: sendMock });

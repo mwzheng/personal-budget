@@ -70,6 +70,50 @@ export function buildTransactionsQuery(
   } as const;
 }
 
+function loadDemoTransactionsPage(
+  userId: string,
+  opts: {
+    limit?: number;
+    lastKey?: Record<string, NativeAttributeValue>;
+    startDate?: string;
+    endDate?: string;
+  } = {},
+) {
+  const csvPath = join(process.cwd(), "sample-data", "expenses.csv");
+  const transactions = loadTransactionsFromCSV(readFileSync(csvPath, "utf-8"))
+    .filter(
+      (transaction) =>
+        (!opts.startDate || transaction.date >= opts.startDate) &&
+        (!opts.endDate || transaction.date <= opts.endDate),
+    )
+    .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+  const cursorSortKey = opts.lastKey?.sk;
+  const cursorIndex =
+    typeof cursorSortKey === "string"
+      ? transactions.findIndex(
+          (transaction) =>
+            `${SK_PREFIX.TRANSACTION}${transaction.date}#${transaction.id}` ===
+            cursorSortKey,
+        )
+      : -1;
+  const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+  const limit = opts.limit ?? 100;
+  const page = transactions.slice(startIndex, startIndex + limit);
+  const hasMore = startIndex + page.length < transactions.length;
+  const lastTransaction = page.at(-1);
+
+  return {
+    transactions: page,
+    lastKey:
+      hasMore && lastTransaction
+        ? {
+            pk: `user#${userId}`,
+            sk: `${SK_PREFIX.TRANSACTION}${lastTransaction.date}#${lastTransaction.id}`,
+          }
+        : undefined,
+  };
+}
+
 export async function getUserTransactions(
   userId: string,
 ): Promise<Transaction[]> {
@@ -142,7 +186,10 @@ export async function getUserTransactionsPaged(
   },
 ) {
   const client = getDocClient(TABLE_NAME);
-  if (!client) throw new Error("DynamoDB table not configured");
+  if (!client) {
+    if (isDemoUserId(userId)) return loadDemoTransactionsPage(userId, opts);
+    throw new Error("DynamoDB table not configured");
+  }
   // Note 10: The shared query builder keeps the "transactions only" constraint in
   // one place, so both full and paginated readers stay aligned when the schema grows.
   const query = buildTransactionsQuery(userId, opts);
