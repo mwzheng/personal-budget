@@ -280,6 +280,7 @@ describe("progress api routes", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(mockedUpsertUserProfile).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       ok: true,
       entries: [
@@ -461,6 +462,7 @@ describe("progress api routes", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(mockedUpsertUserProfile).not.toHaveBeenCalled();
     expect(mockedGetUserMilestones).toHaveBeenCalledWith("user-123");
     await expect(response.json()).resolves.toEqual({
       ok: true,
