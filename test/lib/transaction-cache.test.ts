@@ -55,6 +55,50 @@ describe("transactionCache", () => {
     expect(fetchPage).toHaveBeenNthCalledWith(2, "p2");
   });
 
+  it("can intentionally stop after the first page for bounded browsing", async () => {
+    const fetchPage = vi.fn().mockResolvedValue({
+      transactions: [tx("first")],
+      hasMore: true,
+      nextCursor: "p2",
+    });
+
+    await expect(
+      loadCachedTransactions("user-a", fetchPage, { maxPages: 1 }),
+    ).resolves.toEqual([tx("first")]);
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(fetchPage).toHaveBeenCalledWith(undefined);
+    expect(getCachedTransactions("user-a")).toEqual([tx("first")]);
+  });
+
+  it("promotes a bounded cache to a complete history on force load", async () => {
+    const fetchPage = vi
+      .fn()
+      .mockResolvedValueOnce({
+        transactions: [tx("current")],
+        hasMore: true,
+        nextCursor: "p2",
+      })
+      .mockResolvedValueOnce({
+        transactions: [tx("current")],
+        hasMore: true,
+        nextCursor: "p2",
+      })
+      .mockResolvedValueOnce({
+        transactions: [tx("historical")],
+        hasMore: false,
+      });
+
+    await loadCachedTransactions("user-a", fetchPage, { maxPages: 1 });
+    await expect(
+      loadCachedTransactions("user-a", fetchPage, { force: true }),
+    ).resolves.toEqual([tx("current"), tx("historical")]);
+    expect(fetchPage).toHaveBeenCalledTimes(3);
+    expect(getCachedTransactions("user-a")).toEqual([
+      tx("current"),
+      tx("historical"),
+    ]);
+  });
+
   it("isolates scopes and clears data", async () => {
     const fetchA = vi
       .fn()

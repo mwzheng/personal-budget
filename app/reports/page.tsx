@@ -133,6 +133,7 @@ const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+  const [allHistoryLoaded, setAllHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -179,6 +180,7 @@ const ReportsPageContent = () => {
       clearTransactionCache(requestScope);
       setAllTransactions([]);
       setTransactionsLoaded(false);
+      setAllHistoryLoaded(false);
       setFiltersInitialized(false);
       setLoading(false);
       router.replace("/auth/login");
@@ -187,7 +189,7 @@ const ReportsPageContent = () => {
   );
 
   const loadTransactions = useCallback(
-    async (force = false) => {
+    async (force = false, allHistory = allHistoryLoaded) => {
       if (!scope) {
         router.replace("/auth/login");
         return;
@@ -204,6 +206,11 @@ const ReportsPageContent = () => {
           scope,
           async (cursor) => {
             const params = new URLSearchParams({ limit: "200" });
+            if (!allHistory) {
+              const year = new Date().getUTCFullYear();
+              params.set("startDate", `${year}-01-01`);
+              params.set("endDate", `${year}-12-31`);
+            }
             if (cursor) params.set("cursor", cursor);
             const res = await apiFetch(`/api/transactions?${params}`);
 
@@ -223,13 +230,14 @@ const ReportsPageContent = () => {
               nextCursor: data.nextCursor,
             };
           },
-          { force },
+          { force: force || allHistory, maxPages: allHistory ? undefined : 1 },
         );
 
         // A request from a previous auth scope must not update this user's view.
         if (isCurrentLoad()) {
           applyTransactions(transactions);
           setTransactionsLoaded(true);
+          setAllHistoryLoaded(allHistory);
         }
       } catch (error) {
         if (!isCurrentLoad()) return;
@@ -249,7 +257,7 @@ const ReportsPageContent = () => {
         if (isCurrentLoad()) setLoading(false);
       }
     },
-    [handleUnauthorized, router, scope],
+    [allHistoryLoaded, handleUnauthorized, router, scope],
   );
 
   useEffect(() => {
@@ -260,7 +268,21 @@ const ReportsPageContent = () => {
       return;
     }
 
-    void loadTransactions();
+    const currentYear = String(new Date().getUTCFullYear());
+    const storedFilters = getLastSelectedReportFilters();
+    const hasHistoricalPreference = storedFilters
+      ? (storedFilters.years.length === 0 &&
+          !storedFilters.startDate &&
+          !storedFilters.endDate) ||
+        storedFilters.years.some((year) => year !== currentYear) ||
+        Boolean(
+          (storedFilters.startDate &&
+            storedFilters.startDate < `${currentYear}-01-01`) ||
+          (storedFilters.endDate &&
+            storedFilters.endDate < `${currentYear}-01-01`),
+        )
+      : getLastSelectedReportYears().some((year) => year !== currentYear);
+    void loadTransactions(false, hasHistoricalPreference);
   }, [authVersion, loadTransactions, router]);
 
   useEffect(() => {
@@ -270,6 +292,7 @@ const ReportsPageContent = () => {
       setAllTransactions([]);
       setLoading(false);
       setTransactionsLoaded(false);
+      setAllHistoryLoaded(false);
       setFiltersInitialized(false);
       setErrorMessage(null);
       setAuthVersion((current) => current + 1);
@@ -674,6 +697,22 @@ const ReportsPageContent = () => {
                     />
                   </MenuItem>
                   <MenuItem
+                    disabled={allHistoryLoaded || loading}
+                    onClick={() => {
+                      setDataMenuAnchor(null);
+                      void loadTransactions(true, true);
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        allHistoryLoaded
+                          ? "All history loaded"
+                          : "Load all history"
+                      }
+                      secondary="Include older transactions for historical filters"
+                    />
+                  </MenuItem>
+                  <MenuItem
                     disabled={filtered.length === 0}
                     onClick={() => {
                       setDataMenuAnchor(null);
@@ -702,6 +741,17 @@ const ReportsPageContent = () => {
             onAddClick={() => handleAddTransaction()}
             onImportClick={() => setImportOpen(true)}
           />
+          {!allHistoryLoaded && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                variant="outlined"
+                disabled={loading}
+                onClick={() => void loadTransactions(true, true)}
+              >
+                Load all history
+              </Button>
+            </Box>
+          )}
         </Box>
       ) : (
         <>
@@ -738,6 +788,12 @@ const ReportsPageContent = () => {
                 filters={filters}
                 onChange={setFilters}
               />
+            )}
+            {!loading && !allHistoryLoaded && (
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Showing the first page of current-year transactions. Use Data →
+                Load all history for older years or complete historical results.
+              </Alert>
             )}
             {loading ? (
               <Box

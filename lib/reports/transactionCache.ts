@@ -135,13 +135,15 @@ function applyPatches(
 }
 
 /**
- * Loads every cursor page once per scope. A force refresh bypasses completed
- * cache data but deliberately still joins an in-flight load for that scope.
+ * Loads cursor pages once per scope. By default it follows every page; callers
+ * can pass maxPages to keep an ordinary view bounded. A force refresh bypasses
+ * completed cache data but deliberately still joins an in-flight load for that
+ * scope.
  */
 export function loadCachedTransactions(
   scope: string,
   loadPage: TransactionPageLoader,
-  options: { force?: boolean } = {},
+  options: { force?: boolean; maxPages?: number } = {},
 ): Promise<Transaction[]> {
   const entry = entryFor(scope);
   if (entry.loadPromise) return entry.loadPromise;
@@ -157,10 +159,15 @@ export function loadCachedTransactions(
     const transactions: Transaction[] = [];
     const seenCursors = new Set<string>();
     let cursor: string | undefined;
+    let pagesLoaded = 0;
 
     do {
       const page = await loadPage(cursor);
+      pagesLoaded += 1;
       transactions.push(...page.transactions);
+      if (options.maxPages !== undefined && pagesLoaded >= options.maxPages) {
+        break;
+      }
       cursor = page.hasMore ? page.nextCursor : undefined;
       if (cursor && seenCursors.has(cursor)) {
         throw new Error("Transaction pagination returned a repeated cursor");
