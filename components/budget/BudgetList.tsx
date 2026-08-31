@@ -17,6 +17,7 @@ import {
   downloadBudgetJson,
 } from "@/lib/utils/budgetExport";
 import { sortSavedBudgets } from "@/lib/utils/budget-planner";
+import { upsertSavedBudget } from "@/lib/utils/budget-list";
 import { SavedBudget } from "@/lib/types/types";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -24,7 +25,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   activeBudgetId: string | null;
@@ -32,6 +33,7 @@ interface Props {
   onBudgetsLoaded?: (budgets: SavedBudget[]) => void;
   onLoadingChange?: (loading: boolean) => void;
   onDeleted: (budgetId: string) => void;
+  savedBudget?: SavedBudget | null;
   reloadKey?: number;
 }
 
@@ -46,12 +48,15 @@ export function BudgetList({
   onBudgetsLoaded,
   onLoadingChange,
   onDeleted,
+  savedBudget,
   reloadKey,
 }: Props) {
   const [budgets, setBudgets] = useState<SavedBudget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
+  const savedBudgetRef = useRef<SavedBudget | null>(savedBudget ?? null);
+  savedBudgetRef.current = savedBudget ?? null;
 
   const loadBudgets = useCallback(async () => {
     setLoading(true);
@@ -70,9 +75,16 @@ export function BudgetList({
       }
 
       const nextBudgets = Array.isArray(data) ? data : (data?.budgets ?? []);
-      const sortedBudgets = sortSavedBudgets(
-        Array.isArray(nextBudgets) ? (nextBudgets as SavedBudget[]) : [],
-      );
+      const saved = savedBudgetRef.current;
+      const mergedBudgets = saved
+        ? upsertSavedBudget(
+            Array.isArray(nextBudgets) ? (nextBudgets as SavedBudget[]) : [],
+            saved,
+          )
+        : Array.isArray(nextBudgets)
+          ? (nextBudgets as SavedBudget[])
+          : [];
+      const sortedBudgets = sortSavedBudgets(mergedBudgets);
       setBudgets(sortedBudgets);
       onBudgetsLoaded?.(sortedBudgets);
     } catch (caughtError) {
@@ -87,6 +99,29 @@ export function BudgetList({
       onLoadingChange?.(false);
     }
   }, [onBudgetsLoaded, onLoadingChange]);
+
+  const handleBudgetSaved = useCallback(
+    (budget: SavedBudget) => {
+      const budgetId = budget.budgetId?.trim();
+      if (!budgetId) {
+        return;
+      }
+
+      setError(null);
+      setBudgets((current) => {
+        const nextBudgets = upsertSavedBudget(current, budget);
+        onBudgetsLoaded?.(nextBudgets);
+        return nextBudgets;
+      });
+    },
+    [onBudgetsLoaded],
+  );
+
+  useEffect(() => {
+    if (savedBudget) {
+      handleBudgetSaved(savedBudget);
+    }
+  }, [handleBudgetSaved, savedBudget]);
 
   useEffect(() => {
     void loadBudgets();

@@ -152,6 +152,7 @@ export default function BudgetPage() {
   const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
   const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
+  const [savedBudget, setSavedBudget] = useState<SavedBudget | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const hasAutoLoadedLatestBudget = useRef(false);
@@ -277,7 +278,11 @@ export default function BudgetPage() {
 
       setDraft(persisted);
       setEditingBudgetId(persisted.budgetId ?? null);
-      setBudgetsReloadKey((current) => current + 1);
+      if (persisted.budgetId?.trim()) {
+        setSavedBudget(persisted);
+      } else {
+        setBudgetsReloadKey((current) => current + 1);
+      }
       clearBudgetDraft();
     } catch (caughtError) {
       setSaveError(
@@ -461,6 +466,7 @@ export default function BudgetPage() {
               onBudgetsLoaded={handleBudgetsLoaded}
               onLoadingChange={setIsLoading}
               onDeleteBudget={handleBudgetDeleted}
+              savedBudget={savedBudget}
             />
           </SectionCard>
         </Grid>
