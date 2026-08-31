@@ -61,7 +61,7 @@ import {
   setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
-import { Transaction } from "@/lib/types/types";
+import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
 
 import SpendingBreakdownLoadingState from "@/components/report/SpendingBreakdownLoadingState";
@@ -118,6 +118,55 @@ function currentTransactionScope() {
   return process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
     ? "disabled-auth"
     : null;
+}
+
+function getInitialTransactionLoadPlan(
+  storedFilters: FilterParams | null,
+  legacyYears: string[],
+) {
+  const filters = storedFilters ?? {
+    ...EMPTY_FILTERS,
+    years: legacyYears,
+  };
+  const hasDateOrYearFilter =
+    filters.years.length > 0 || Boolean(filters.startDate || filters.endDate);
+  const hasOtherFilter =
+    filters.categories.length > 0 ||
+    filters.tags.length > 0 ||
+    Boolean(filters.search);
+
+  if (!hasDateOrYearFilter && !hasOtherFilter && !storedFilters) {
+    const year = new Date().getUTCFullYear();
+    return {
+      allHistory: false,
+      startDate: `${year}-01-01`,
+      endDate: `${year}-12-31`,
+    };
+  }
+
+  if (filters.years.length > 0) {
+    const years = filters.years
+      .map(Number)
+      .filter(Number.isInteger)
+      .sort((a, b) => a - b);
+    if (years.length > 0) {
+      return {
+        allHistory: false,
+        startDate: `${years[0]}-01-01`,
+        endDate: `${years[years.length - 1]}-12-31`,
+      };
+    }
+  }
+
+  if (filters.startDate || filters.endDate) {
+    return {
+      allHistory: false,
+      startDate: filters.startDate ?? undefined,
+      endDate: filters.endDate ?? undefined,
+    };
+  }
+
+  return { allHistory: true };
 }
 
 function isTransaction(value: unknown): value is Transaction {
@@ -189,7 +238,11 @@ const ReportsPageContent = () => {
   );
 
   const loadTransactions = useCallback(
-    async (force = false, allHistory = allHistoryLoaded) => {
+    async (
+      force = false,
+      allHistory = allHistoryLoaded,
+      range?: { startDate?: string; endDate?: string },
+    ) => {
       if (!scope) {
         router.replace("/auth/login");
         return;
@@ -207,9 +260,8 @@ const ReportsPageContent = () => {
           async (cursor) => {
             const params = new URLSearchParams({ limit: "200" });
             if (!allHistory) {
-              const year = new Date().getUTCFullYear();
-              params.set("startDate", `${year}-01-01`);
-              params.set("endDate", `${year}-12-31`);
+              if (range?.startDate) params.set("startDate", range.startDate);
+              if (range?.endDate) params.set("endDate", range.endDate);
             }
             if (cursor) params.set("cursor", cursor);
             const res = await apiFetch(`/api/transactions?${params}`);
@@ -268,22 +320,34 @@ const ReportsPageContent = () => {
       return;
     }
 
-    const currentYear = String(new Date().getUTCFullYear());
     const storedFilters = getLastSelectedReportFilters();
-    const hasHistoricalPreference = storedFilters
-      ? (storedFilters.years.length === 0 &&
-          !storedFilters.startDate &&
-          !storedFilters.endDate) ||
-        storedFilters.years.some((year) => year !== currentYear) ||
-        Boolean(
-          (storedFilters.startDate &&
-            storedFilters.startDate < `${currentYear}-01-01`) ||
-          (storedFilters.endDate &&
-            storedFilters.endDate < `${currentYear}-01-01`),
-        )
-      : getLastSelectedReportYears().some((year) => year !== currentYear);
-    void loadTransactions(false, hasHistoricalPreference);
+    const loadPlan = getInitialTransactionLoadPlan(
+      storedFilters,
+      getLastSelectedReportYears(),
+    );
+    void loadTransactions(false, loadPlan.allHistory, loadPlan);
   }, [authVersion, loadTransactions, router]);
+
+  useEffect(() => {
+    if (
+      !filtersInitialized ||
+      loading ||
+      allHistoryLoaded ||
+      filters.years.length > 0 ||
+      filters.startDate ||
+      filters.endDate
+    ) {
+      return;
+    }
+
+    void loadTransactions(true, true);
+  }, [
+    allHistoryLoaded,
+    filters,
+    filtersInitialized,
+    loadTransactions,
+    loading,
+  ]);
 
   useEffect(() => {
     const handleAuthChanged = () => {
@@ -697,22 +761,6 @@ const ReportsPageContent = () => {
                     />
                   </MenuItem>
                   <MenuItem
-                    disabled={allHistoryLoaded || loading}
-                    onClick={() => {
-                      setDataMenuAnchor(null);
-                      void loadTransactions(true, true);
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        allHistoryLoaded
-                          ? "All history loaded"
-                          : "Load all history"
-                      }
-                      secondary="Include older transactions for historical filters"
-                    />
-                  </MenuItem>
-                  <MenuItem
                     disabled={filtered.length === 0}
                     onClick={() => {
                       setDataMenuAnchor(null);
@@ -741,17 +789,6 @@ const ReportsPageContent = () => {
             onAddClick={() => handleAddTransaction()}
             onImportClick={() => setImportOpen(true)}
           />
-          {!allHistoryLoaded && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <Button
-                variant="outlined"
-                disabled={loading}
-                onClick={() => void loadTransactions(true, true)}
-              >
-                Load all history
-              </Button>
-            </Box>
-          )}
         </Box>
       ) : (
         <>
@@ -788,12 +825,6 @@ const ReportsPageContent = () => {
                 filters={filters}
                 onChange={setFilters}
               />
-            )}
-            {!loading && !allHistoryLoaded && (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Showing the first page of current-year transactions. Use Data →
-                Load all history for older years or complete historical results.
-              </Alert>
             )}
             {loading ? (
               <Box
