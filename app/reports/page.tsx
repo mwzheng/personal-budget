@@ -161,7 +161,7 @@ const ReportsPageContent = () => {
   const [selectedReportYear, setSelectedReportYear] = useState(() =>
     new Date().getFullYear(),
   );
-  const [, setAuthVersion] = useState(0);
+  const [authVersion, setAuthVersion] = useState(0);
   const router = useRouter();
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
@@ -261,7 +261,7 @@ const ReportsPageContent = () => {
     }
 
     void loadTransactions();
-  }, [loadTransactions, router]);
+  }, [authVersion, loadTransactions, router]);
 
   useEffect(() => {
     const handleAuthChanged = () => {
@@ -350,6 +350,7 @@ const ReportsPageContent = () => {
       setDuplicateTarget(undefined);
       setNewTransactionDate(null);
     } catch (error) {
+      if (!isCurrentRequest()) return;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to save transaction",
       );
@@ -417,6 +418,7 @@ const ReportsPageContent = () => {
       if (requestScope) removeCachedTransaction(requestScope, transaction);
       return true;
     } catch (error) {
+      if (!isCurrentRequest()) return false;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to delete transaction",
       );
