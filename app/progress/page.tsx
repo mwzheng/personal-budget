@@ -263,6 +263,9 @@ export default function Page() {
             elevation={1}
           >
             <HistoryTabs
+              retirementEntries={retirementEntries}
+              salaryEntries={salaryEntries}
+              loading={chartLoading}
               onRetirementEntriesChanged={handleRetirementEntriesChanged}
               onSalaryEntriesChanged={handleSalaryEntriesChanged}
             />

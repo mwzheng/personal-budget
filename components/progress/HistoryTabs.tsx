@@ -9,16 +9,23 @@ import React, { useState } from "react";
 import { Box, Tab, Tabs } from "@mui/material";
 import RetirementList from "@/components/ui/RetirementList";
 import SalaryList from "@/components/ui/SalaryList";
+import type { RetirementEntry, SalaryEntry } from "@/lib/types/types";
 
 const TAB_RETIREMENT = 0;
 const TAB_SALARY = 1;
 
 interface Props {
+  retirementEntries?: RetirementEntry[];
+  salaryEntries?: SalaryEntry[];
+  loading?: boolean;
   onRetirementEntriesChanged?: () => void | Promise<void>;
   onSalaryEntriesChanged?: () => void | Promise<void>;
 }
 
 export default function HistoryTabs({
+  retirementEntries,
+  salaryEntries,
+  loading,
   onRetirementEntriesChanged,
   onSalaryEntriesChanged,
 }: Props) {
@@ -70,7 +77,11 @@ export default function HistoryTabs({
         aria-labelledby="history-tab-0"
         sx={{ display: activeTab === TAB_RETIREMENT ? "block" : "none" }}
       >
-        <RetirementList onEntriesChanged={onRetirementEntriesChanged} />
+        <RetirementList
+          entries={retirementEntries}
+          loading={loading}
+          onEntriesChanged={onRetirementEntriesChanged}
+        />
       </Box>
 
       <Box
@@ -79,7 +90,11 @@ export default function HistoryTabs({
         aria-labelledby="history-tab-1"
         sx={{ display: activeTab === TAB_SALARY ? "block" : "none" }}
       >
-        <SalaryList onEntriesChanged={onSalaryEntriesChanged} />
+        <SalaryList
+          entries={salaryEntries}
+          loading={loading}
+          onEntriesChanged={onSalaryEntriesChanged}
+        />
       </Box>
     </Box>
   );

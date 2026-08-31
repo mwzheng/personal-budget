@@ -35,6 +35,9 @@ interface RetirementApiResponse {
 }
 
 interface Props {
+  /** When supplied, the parent owns the list data and refreshes it after mutations. */
+  entries?: RetirementEntry[];
+  loading?: boolean;
   onEntriesChanged?: () => void | Promise<void>;
 }
 
@@ -42,11 +45,13 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export default function RetirementList({ onEntriesChanged }: Props) {
-  // Note 1: RetirementList still owns its CRUD list state locally, but it also
-  // notifies the parent page after mutations so sibling charts can refetch.
-  const [entries, setEntries] = useState<RetirementEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function RetirementList({
+  entries: controlledEntries,
+  loading: controlledLoading,
+  onEntriesChanged,
+}: Props) {
+  const [localEntries, setLocalEntries] = useState<RetirementEntry[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
   const [editing, setEditing] = useState<RetirementEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +70,7 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         );
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || "Delete failed");
-        await fetchEntries();
+        if (controlledEntries === undefined) await fetchEntries();
         await Promise.resolve(onEntriesChanged?.());
       } catch (err: unknown) {
         setError(getErrorMessage(err));
@@ -74,23 +79,23 @@ export default function RetirementList({ onEntriesChanged }: Props) {
   });
 
   const fetchEntries = async () => {
-    setLoading(true);
+    setLocalLoading(true);
     setError(null);
     try {
       const res = await apiFetch("/api/progress/retirement");
       const data = (await res.json()) as RetirementApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
-      setEntries(data.entries ?? []);
+      setLocalEntries(data.entries ?? []);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchEntries();
-  }, []);
+    if (controlledEntries === undefined) void fetchEntries();
+  }, [controlledEntries]);
 
   const closeDialog = () => {
     setDialogOpen(false);
@@ -99,7 +104,7 @@ export default function RetirementList({ onEntriesChanged }: Props) {
 
   const handleSaved = async () => {
     closeDialog();
-    await fetchEntries();
+    if (controlledEntries === undefined) await fetchEntries();
     await Promise.resolve(onEntriesChanged?.());
   };
 
@@ -157,7 +162,7 @@ export default function RetirementList({ onEntriesChanged }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((entry) => {
+            {(controlledEntries ?? localEntries).map((entry) => {
               const change = Number(
                 entry.change ?? entry.endAmount - entry.startAmount,
               );
@@ -227,7 +232,8 @@ export default function RetirementList({ onEntriesChanged }: Props) {
         </Table>
       </TableContainer>
 
-      {entries.length === 0 && !loading ? (
+      {(controlledEntries ?? localEntries).length === 0 &&
+      !(controlledLoading ?? localLoading) ? (
         <EmptyState
           icon={<SavingsOutlinedIcon />}
           message="No retirement entries yet."
