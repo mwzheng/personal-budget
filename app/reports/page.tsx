@@ -19,7 +19,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
@@ -33,7 +33,20 @@ import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import { apiFetch } from "@/lib/api/apiFetch";
-import { isAuthenticated } from "@/lib/auth/cognitoClient";
+import {
+  AUTH_CHANGED_EVENT,
+  getStoredCognitoTokens,
+  isAuthenticated,
+  isDemoSessionActive,
+} from "@/lib/auth/cognitoClient";
+import {
+  clearTransactionCache,
+  loadCachedTransactions,
+  removeCachedTransaction,
+  removeTransactionFromList,
+  upsertCachedTransaction,
+  upsertTransactionInList,
+} from "@/lib/reports/transactionCache";
 import {
   filterTransactions,
   aggregateTransactions,
@@ -79,6 +92,43 @@ interface TransactionsApiResponse {
   nextCursor?: string;
 }
 
+function currentTransactionScope() {
+  if (isDemoSessionActive()) return "demo";
+  const { accessToken, idToken } = getStoredCognitoTokens();
+  const token = accessToken || idToken;
+  if (token) {
+    try {
+      const payload = token.split(".")[1];
+      if (payload) {
+        const claims = JSON.parse(
+          atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+        ) as { sub?: unknown };
+        if (typeof claims.sub === "string" && claims.sub) {
+          return `user:${claims.sub}`;
+        }
+      }
+    } catch {
+      // Keep malformed or non-JWT credentials isolated by their token below.
+    }
+    // Keep non-JWT or malformed credentials isolated as well. Reusing one
+    // generic scope could expose a previous user's cached transactions if an
+    // auth-change event is missed or the provider returns a non-JWT token.
+    return `authenticated:${token}`;
+  }
+  return process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
+    ? "disabled-auth"
+    : null;
+}
+
+function isTransaction(value: unknown): value is Transaction {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    typeof (value as Transaction).id === "string" &&
+    typeof (value as Transaction).date === "string",
+  );
+}
+
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,55 +161,96 @@ const ReportsPageContent = () => {
   const [selectedReportYear, setSelectedReportYear] = useState(() =>
     new Date().getFullYear(),
   );
+  const [, setAuthVersion] = useState(0);
   const router = useRouter();
+  const scope = currentTransactionScope();
+  const authGeneration = useRef(0);
+  const importGeneration = authGeneration.current;
+  const importScope = scope;
 
   const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
   };
 
-  const loadTransactions = async () => {
-    setLoading(true);
-    setErrorMessage(null);
+  const handleUnauthorized = useCallback(
+    (requestScope: string | null) => {
+      if (!requestScope || currentTransactionScope() !== requestScope) return;
+      authGeneration.current += 1;
+      clearTransactionCache(requestScope);
+      setAllTransactions([]);
+      setTransactionsLoaded(false);
+      setFiltersInitialized(false);
+      setLoading(false);
+      router.replace("/auth/login");
+    },
+    [router],
+  );
 
-    try {
-      const transactions: Transaction[] = [];
-      const seenCursors = new Set<string>();
-      let cursor: string | undefined;
+  const loadTransactions = useCallback(
+    async (force = false) => {
+      if (!scope) {
+        router.replace("/auth/login");
+        return;
+      }
+      const loadGeneration = authGeneration.current;
+      const isCurrentLoad = () =>
+        currentTransactionScope() === scope &&
+        authGeneration.current === loadGeneration;
+      setLoading(true);
+      setErrorMessage(null);
 
-      do {
-        const params = new URLSearchParams({ limit: "200" });
-        if (cursor) params.set("cursor", cursor);
-        const res = await apiFetch(`/api/transactions?${params}`);
+      try {
+        const transactions = await loadCachedTransactions(
+          scope,
+          async (cursor) => {
+            const params = new URLSearchParams({ limit: "200" });
+            if (cursor) params.set("cursor", cursor);
+            const res = await apiFetch(`/api/transactions?${params}`);
 
-        if (res.status === 401 || res.status === 403) {
-          router.replace("/auth/login");
+            if (res.status === 401 || res.status === 403) {
+              throw new Error("Transaction request is unauthorized");
+            }
+
+            const data = (await res.json()) as TransactionsApiResponse;
+
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || "Failed to load transactions");
+            }
+
+            return {
+              transactions: data.transactions ?? [],
+              hasMore: Boolean(data.hasMore),
+              nextCursor: data.nextCursor,
+            };
+          },
+          { force },
+        );
+
+        // A request from a previous auth scope must not update this user's view.
+        if (isCurrentLoad()) {
+          applyTransactions(transactions);
+          setTransactionsLoaded(true);
+        }
+      } catch (error) {
+        if (!isCurrentLoad()) return;
+        if (
+          error instanceof Error &&
+          error.message === "Transaction request is unauthorized"
+        ) {
+          handleUnauthorized(scope);
           return;
         }
-
-        const data = (await res.json()) as TransactionsApiResponse;
-
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || "Failed to load transactions");
-        }
-
-        transactions.push(...(data.transactions ?? []));
-        cursor = data.hasMore ? data.nextCursor : undefined;
-        if (cursor && seenCursors.has(cursor)) {
-          throw new Error("Transaction pagination returned a repeated cursor");
-        }
-        if (cursor) seenCursors.add(cursor);
-      } while (cursor);
-
-      applyTransactions(transactions);
-      setTransactionsLoaded(true);
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to load transactions",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to load transactions",
+        );
+      } finally {
+        if (isCurrentLoad()) setLoading(false);
+      }
+    },
+    [handleUnauthorized, router, scope],
+  );
 
   useEffect(() => {
     const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
@@ -170,8 +261,23 @@ const ReportsPageContent = () => {
     }
 
     void loadTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [loadTransactions, router]);
+
+  useEffect(() => {
+    const handleAuthChanged = () => {
+      authGeneration.current += 1;
+      clearTransactionCache();
+      setAllTransactions([]);
+      setLoading(false);
+      setTransactionsLoaded(false);
+      setFiltersInitialized(false);
+      setErrorMessage(null);
+      setAuthVersion((current) => current + 1);
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+    return () =>
+      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+  }, []);
 
   useEffect(() => {
     setTransactionsView(getLastSelectedReportTransactionsView());
@@ -196,6 +302,11 @@ const ReportsPageContent = () => {
   }, [filters, filtersInitialized]);
 
   const handleSaveTransaction = async (t: Transaction) => {
+    const requestGeneration = authGeneration.current;
+    const requestScope = scope;
+    const isCurrentRequest = () =>
+      authGeneration.current === requestGeneration &&
+      currentTransactionScope() === requestScope;
     setErrorMessage(null);
 
     try {
@@ -207,10 +318,17 @@ const ReportsPageContent = () => {
         ),
       });
 
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        created?: unknown;
+        updated?: unknown;
+      };
+
+      if (!isCurrentRequest()) return;
 
       if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/login");
+        handleUnauthorized(requestScope);
         return;
       }
 
@@ -218,7 +336,15 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to save transaction");
       }
 
-      await loadTransactions();
+      const saved = editTarget ? data.updated : data.created;
+      if (requestScope && isTransaction(saved)) {
+        setAllTransactions((current) =>
+          upsertTransactionInList(current, saved, editTarget),
+        );
+        upsertCachedTransaction(requestScope, saved, editTarget);
+      } else {
+        await loadTransactions(true);
+      }
       setFormOpen(false);
       setEditTarget(undefined);
       setDuplicateTarget(undefined);
@@ -253,6 +379,11 @@ const ReportsPageContent = () => {
   };
 
   const handleDeleteTransaction = async (id: string) => {
+    const requestGeneration = authGeneration.current;
+    const requestScope = scope;
+    const isCurrentRequest = () =>
+      authGeneration.current === requestGeneration &&
+      currentTransactionScope() === requestScope;
     const transaction = allTransactions.find((item) => item.id === id);
     if (!transaction) return false;
 
@@ -264,10 +395,15 @@ const ReportsPageContent = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, date: transaction.date }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (!isCurrentRequest()) return false;
 
       if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/login");
+        handleUnauthorized(requestScope);
         return false;
       }
 
@@ -275,7 +411,10 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to delete transaction");
       }
 
-      await loadTransactions();
+      setAllTransactions((current) =>
+        removeTransactionFromList(current, transaction),
+      );
+      if (requestScope) removeCachedTransaction(requestScope, transaction);
       return true;
     } catch (error) {
       setErrorMessage(
@@ -841,8 +980,34 @@ const ReportsPageContent = () => {
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        onImported={() => {
-          void loadTransactions();
+        onImported={(result) => {
+          if (
+            authGeneration.current !== importGeneration ||
+            currentTransactionScope() !== importScope
+          ) {
+            return;
+          }
+          if (result.unauthorized) {
+            handleUnauthorized(importScope);
+            return;
+          }
+          const imported = result.transactions;
+          if (imported) {
+            setAllTransactions((current) =>
+              imported.reduce(
+                (next, transaction) =>
+                  upsertTransactionInList(next, transaction),
+                current,
+              ),
+            );
+            if (importScope) {
+              for (const transaction of imported) {
+                upsertCachedTransaction(importScope, transaction);
+              }
+            }
+            return;
+          }
+          void loadTransactions(true);
         }}
       />
       <MonthComparisonModal

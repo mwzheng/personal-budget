@@ -48,9 +48,13 @@ type ImportState =
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Called after the server import succeeds so the parent can refetch account data. */
-  onImported: () => void;
+  /** Reports the import response so the parent can update account-scoped state. */
+  onImported: (result: ImportResult) => void;
 }
+
+type ImportResult =
+  | { unauthorized: true }
+  | { unauthorized: false; transactions?: Transaction[] };
 
 const EXPENSES_TEMPLATE_PATH = "/templates/expenses-template.csv";
 const INCOME_TEMPLATE_PATH = "/templates/income-template.csv";
@@ -117,6 +121,11 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
       });
       const data = await res.json().catch(() => ({}));
 
+      if (res.status === 401 || res.status === 403) {
+        onImported({ unauthorized: true });
+        return;
+      }
+
       if (!res.ok) {
         throw new Error(
           (data as { error?: { message?: string } }).error?.message ??
@@ -124,7 +133,14 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
         );
       }
 
-      onImported();
+      onImported({
+        unauthorized: false,
+        transactions: Array.isArray(
+          (data as { transactions?: unknown }).transactions,
+        )
+          ? (data as { transactions: Transaction[] }).transactions
+          : undefined,
+      });
       handleClose();
     } catch (err) {
       setState({
