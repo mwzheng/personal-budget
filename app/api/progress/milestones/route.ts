@@ -25,7 +25,6 @@ function getUserIdFromPayload(payload: Record<string, unknown>): string {
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
-    await upsertUserProfile(payload);
     const userId = getUserIdFromPayload(payload);
     const entries = await getUserMilestones(userId);
     return NextResponse.json({ ok: true, entries });
@@ -72,19 +71,9 @@ export async function PUT(request: Request) {
         { status: 400 },
       );
     }
-    const existing = (await getUserMilestones(userId)).find(
-      (milestone) => milestone.milestoneId === parsed.data.milestoneId,
-    );
-    if (!existing) {
-      return NextResponse.json(
-        { ok: false, error: "Milestone not found" },
-        { status: 404 },
-      );
-    }
     const updated = await updateMilestone(userId, {
       ...parsed.data,
-      originalYear: existing.year,
-      createdAt: existing.createdAt,
+      originalYear: parsed.data.originalYear ?? parsed.data.year ?? null,
     });
     return NextResponse.json({ ok: true, updated });
   } catch (err) {

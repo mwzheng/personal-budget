@@ -135,7 +135,7 @@ describe("progress api routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockedUpsertUserProfile).toHaveBeenCalledWith({ sub: "user-123" });
+    expect(mockedUpsertUserProfile).not.toHaveBeenCalled();
     expect(mockedGetUserProgressGoals).toHaveBeenCalledWith("user-123");
     expect(mockedGetUserRetirement).toHaveBeenCalledWith("user-123");
     await expect(response.json()).resolves.toEqual({
@@ -531,7 +531,7 @@ describe("progress api routes", () => {
     await expect(deleteResponse.json()).resolves.toEqual({ ok: true });
   });
 
-  it("resolves milestone keys and createdAt server-side before updating", async () => {
+  it("uses the client-supplied original key and version for a targeted milestone update", async () => {
     mockedGetUserMilestones.mockResolvedValue([
       {
         milestoneId: "milestone-2",
@@ -571,13 +571,12 @@ describe("progress api routes", () => {
 
     expect(mockedUpdateMilestone).toHaveBeenCalledWith("user-123", {
       milestoneId: "milestone-2",
-      originalYear: 2035,
+      originalYear: 1999,
       amount: 300000,
       year: 2036,
       month: 4,
       age: 46,
       note: "Updated Coast FI",
-      createdAt: "2025-01-01T00:00:00.000Z",
       expectedUpdatedAt: "2026-01-01T00:00:00.000Z",
     });
     await expect(response.json()).resolves.toMatchObject({
@@ -586,8 +585,15 @@ describe("progress api routes", () => {
     });
   });
 
-  it("returns 404 when the requested milestone is not owned by the user", async () => {
-    mockedGetUserMilestones.mockResolvedValue([]);
+  it("lets the conditional data-layer write determine whether a targeted milestone exists", async () => {
+    mockedUpdateMilestone.mockResolvedValue({
+      milestoneId: "missing",
+      amount: 100,
+      year: 2036,
+      month: null,
+      age: null,
+      note: "",
+    });
     const response = await putMilestoneRoute(
       buildRequest("http://localhost/api/progress/milestones", {
         method: "PUT",
@@ -600,12 +606,9 @@ describe("progress api routes", () => {
       }),
     );
 
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({
-      ok: false,
-      error: "Milestone not found",
-    });
-    expect(mockedUpdateMilestone).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true });
+    expect(mockedUpdateMilestone).toHaveBeenCalled();
   });
 
   it("returns 409 when a milestone update loses its optimistic concurrency race", async () => {

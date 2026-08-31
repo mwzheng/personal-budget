@@ -51,35 +51,39 @@ export default function Page() {
     [],
   );
 
-  const refreshChartData = useCallback(async () => {
+  const refreshSalaryData = useCallback(async () => {
     setChartLoading(true);
     setChartError(null);
 
     try {
-      const [salaryResponse, retirementResponse] = await Promise.all([
-        apiFetch("/api/salary"),
-        apiFetch("/api/progress/retirement"),
-      ]);
-
-      const [salaryData, retirementData] = (await Promise.all([
-        salaryResponse.json(),
-        retirementResponse.json(),
-      ])) as [
-        ApiEntriesResponse<SalaryEntry>,
-        ApiEntriesResponse<RetirementEntry>,
-      ];
+      const salaryResponse = await apiFetch("/api/salary");
+      const salaryData =
+        (await salaryResponse.json()) as ApiEntriesResponse<SalaryEntry>;
 
       if (!salaryData.ok) {
         throw new Error(salaryData.error || "Failed to load salary history");
       }
+      setSalaryEntries(salaryData.entries ?? []);
+    } catch (error) {
+      setChartError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setChartLoading(false);
+    }
+  }, []);
 
+  const refreshRetirementData = useCallback(async () => {
+    setChartLoading(true);
+    setChartError(null);
+
+    try {
+      const retirementResponse = await apiFetch("/api/progress/retirement");
+      const retirementData =
+        (await retirementResponse.json()) as ApiEntriesResponse<RetirementEntry>;
       if (!retirementData.ok) {
         throw new Error(
           retirementData.error || "Failed to load retirement history",
         );
       }
-
-      setSalaryEntries(salaryData.entries ?? []);
       setRetirementEntries(retirementData.entries ?? []);
     } catch (error) {
       setChartError(error instanceof Error ? error.message : String(error));
@@ -87,6 +91,10 @@ export default function Page() {
       setChartLoading(false);
     }
   }, []);
+
+  const refreshChartData = useCallback(async () => {
+    await Promise.all([refreshSalaryData(), refreshRetirementData()]);
+  }, [refreshRetirementData, refreshSalaryData]);
 
   const refreshMilestones = useCallback(async () => {
     try {
@@ -116,14 +124,14 @@ export default function Page() {
     }
   }, []);
 
-  const handleEntriesChanged = useCallback(async () => {
-    await Promise.all([
-      refreshChartData(),
-      refreshMilestones(),
-      refreshGoalData(),
-    ]);
+  const handleRetirementEntriesChanged = useCallback(async () => {
+    await Promise.all([refreshRetirementData(), refreshGoalData()]);
     setGoalRefreshTrigger((t) => t + 1);
-  }, [refreshChartData, refreshMilestones, refreshGoalData]);
+  }, [refreshGoalData, refreshRetirementData]);
+
+  const handleSalaryEntriesChanged = useCallback(async () => {
+    await refreshSalaryData();
+  }, [refreshSalaryData]);
 
   useEffect(() => {
     void refreshChartData();
@@ -254,7 +262,10 @@ export default function Page() {
             headingId="progress-history-heading"
             elevation={1}
           >
-            <HistoryTabs onEntriesChanged={handleEntriesChanged} />
+            <HistoryTabs
+              onRetirementEntriesChanged={handleRetirementEntriesChanged}
+              onSalaryEntriesChanged={handleSalaryEntriesChanged}
+            />
           </SectionCard>
         </Grid>
       </Grid>

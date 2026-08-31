@@ -6,9 +6,15 @@ import {
   aggregateTransactions,
   filterTransactions,
 } from "@/lib/utils/aggregations";
-import { getUserTransactions } from "@/lib/api/dynamo";
+import { getUserTransactionsPaged } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { parseTransactionCategoryFilters } from "@/lib/utils/transaction-categories";
+import {
+  decodeCursor,
+  encodeCursor,
+  InvalidCursorError,
+  resolveReportRange,
+} from "@/lib/api/reportRange";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,16 +29,35 @@ export async function GET(request: NextRequest) {
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
-    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const pageSize = Math.min(
-      2000,
-      Math.max(1, parseInt(searchParams.get("pageSize") ?? "1000", 10)),
+      200,
+      Math.max(1, parseInt(searchParams.get("pageSize") ?? "100", 10)),
     );
+    const page = Number(searchParams.get("page") ?? "1");
+    const cursor = searchParams.get("cursor");
+    if (Number.isInteger(page) && page > 1 && !cursor) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "CURSOR_REQUIRED",
+            message:
+              "Cursor pagination requires nextCursor from the previous response; page numbers above 1 are no longer supported.",
+          },
+        },
+        { status: 400 },
+      );
+    }
     const includeAggregates = searchParams.get("includeAggregates") !== "false";
 
+    const range = resolveReportRange(searchParams);
     const userId = await getRequestUserId(request);
-    const allTransactions = await getUserTransactions(userId);
-    const filtered = filterTransactions(allTransactions, {
+    const result = await getUserTransactionsPaged(userId, {
+      startDate: range.startDate,
+      endDate: range.endDate,
+      limit: pageSize,
+      lastKey: decodeCursor(cursor, userId),
+    });
+    const filtered = filterTransactions(result.transactions, {
       years,
       startDate,
       endDate,
@@ -41,19 +66,32 @@ export async function GET(request: NextRequest) {
       search,
     });
 
-    const start = (page - 1) * pageSize;
-    const transactions = filtered.slice(start, start + pageSize);
+    const transactions = filtered;
     const aggregates = includeAggregates
       ? aggregateTransactions(filtered)
       : undefined;
 
+    // `totalCount` and `aggregates` intentionally describe this cursor page
+    // after its in-memory filters. Computing filtered totals across the whole
+    // range would require an unbounded read and cannot be done from this query.
     return NextResponse.json({
       transactions,
       totalCount: filtered.length,
       aggregates,
+      range,
+      hasMore: Boolean(result.lastKey),
+      nextCursor: encodeCursor(
+        result.lastKey as Record<string, unknown> | undefined,
+      ),
     });
   } catch (error) {
     if (error instanceof Response) return error;
+    if (error instanceof InvalidCursorError) {
+      return NextResponse.json(
+        { error: { code: "INVALID_CURSOR", message: error.message } },
+        { status: 400 },
+      );
+    }
     console.error("[/api/reports]", error);
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "Failed to load reports" } },

@@ -75,6 +75,8 @@ interface TransactionsApiResponse {
   ok?: boolean;
   error?: string;
   transactions?: Transaction[];
+  hasMore?: boolean;
+  nextCursor?: string;
 }
 
 const ReportsPageContent = () => {
@@ -120,20 +122,35 @@ const ReportsPageContent = () => {
     setErrorMessage(null);
 
     try {
-      const res = await apiFetch("/api/transactions");
+      const transactions: Transaction[] = [];
+      const seenCursors = new Set<string>();
+      let cursor: string | undefined;
 
-      if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/login");
-        return;
-      }
+      do {
+        const params = new URLSearchParams({ limit: "200" });
+        if (cursor) params.set("cursor", cursor);
+        const res = await apiFetch(`/api/transactions?${params}`);
 
-      const data = (await res.json()) as TransactionsApiResponse;
+        if (res.status === 401 || res.status === 403) {
+          router.replace("/auth/login");
+          return;
+        }
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to load transactions");
-      }
+        const data = (await res.json()) as TransactionsApiResponse;
 
-      applyTransactions(data.transactions ?? []);
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Failed to load transactions");
+        }
+
+        transactions.push(...(data.transactions ?? []));
+        cursor = data.hasMore ? data.nextCursor : undefined;
+        if (cursor && seenCursors.has(cursor)) {
+          throw new Error("Transaction pagination returned a repeated cursor");
+        }
+        if (cursor) seenCursors.add(cursor);
+      } while (cursor);
+
+      applyTransactions(transactions);
       setTransactionsLoaded(true);
     } catch (error) {
       setErrorMessage(
@@ -284,6 +301,13 @@ const ReportsPageContent = () => {
         params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
+      if (
+        filters.years.length === 0 &&
+        !filters.startDate &&
+        !filters.endDate
+      ) {
+        params.set("allHistory", "true");
+      }
       if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));

@@ -4,9 +4,10 @@
 import { NextRequest } from "next/server";
 import { filterTransactions } from "@/lib/utils/aggregations";
 import { transactionsToCsv } from "@/lib/utils/csvExport";
-import { getUserTransactions } from "@/lib/api/dynamo";
+import { getUserTransactionsPaged } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { parseTransactionCategoryFilters } from "@/lib/utils/transaction-categories";
+import { resolveReportRange } from "@/lib/api/reportRange";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,20 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") ?? "";
 
     const userId = await getRequestUserId(request);
-    const allTransactions = await getUserTransactions(userId);
+    const range = resolveReportRange(searchParams);
+    // CSV export is intentionally the non-paginated exception: it follows the
+    // cursor to export the complete, explicitly date-bounded report range.
+    let lastKey: Record<string, unknown> | undefined;
+    const allTransactions = [];
+    do {
+      const result = await getUserTransactionsPaged(userId, {
+        ...range,
+        limit: 200,
+        lastKey: lastKey as never,
+      });
+      allTransactions.push(...result.transactions);
+      lastKey = result.lastKey as Record<string, unknown> | undefined;
+    } while (lastKey);
     const filtered = filterTransactions(allTransactions, {
       years,
       startDate,

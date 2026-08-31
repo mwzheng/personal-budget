@@ -3,12 +3,17 @@
 // and `DELETE` maps them to the corresponding HTTP methods automatically.
 import { NextResponse } from "next/server";
 import {
-  getUserTransactions,
+  getUserTransactionsPaged,
   putTransaction,
   updateTransaction,
 } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { generateId } from "@/lib/utils/generateId";
+import {
+  decodeCursor,
+  encodeCursor,
+  InvalidCursorError,
+} from "@/lib/api/reportRange";
 
 // Note 2: `GET /api/transactions` returns all transactions for the authenticated
 // user. Authentication is performed by `getUserIdFromRequest`, which validates the
@@ -16,10 +21,35 @@ import { generateId } from "@/lib/utils/generateId";
 export async function GET(request: Request) {
   try {
     const userId = await getRequestUserId(request);
-    const txs = await getUserTransactions(userId);
-    return NextResponse.json({ ok: true, transactions: txs });
+    const { searchParams } = new URL(request.url);
+    // `pageSize` is accepted as a compatibility alias for report-style clients.
+    const requestedLimit =
+      searchParams.get("limit") ?? searchParams.get("pageSize");
+    const limit = Math.min(200, Math.max(1, Number(requestedLimit) || 100));
+    const lastKey = decodeCursor(searchParams.get("cursor"), userId);
+    const result = await getUserTransactionsPaged(userId, {
+      limit,
+      lastKey,
+      startDate: searchParams.get("startDate") ?? undefined,
+      endDate: searchParams.get("endDate") ?? undefined,
+    });
+    const nextCursor = encodeCursor(
+      result.lastKey as Record<string, unknown> | undefined,
+    );
+    return NextResponse.json({
+      ok: true,
+      transactions: result.transactions,
+      hasMore: Boolean(nextCursor),
+      nextCursor,
+    });
   } catch (err) {
     if (err instanceof Response) return err;
+    if (err instanceof InvalidCursorError) {
+      return NextResponse.json(
+        { ok: false, error: err.message },
+        { status: 400 },
+      );
+    }
     // Note 3: Returning a 401 status code tells the client the request failed due
     // to authentication (not a server error). The error string is included in the
     // body for debugging purposes -- in production you may want to sanitize this.

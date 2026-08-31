@@ -6,6 +6,7 @@
 // the DynamoDB item shape and sort-key construction stay verifiable without
 // touching real AWS infrastructure.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 
 // Note 3: vi.hoisted ensures the sendMock reference is available before module
 // imports are processed. getDocClientMock is separately controlled per test so
@@ -21,10 +22,12 @@ vi.mock("@/lib/api/dynamoClient", () => ({
 
 import {
   buildTransactionsQuery,
+  batchWriteTransactions,
   deleteTransaction,
   getUserBudgets,
   getUserMonthlyAggregates,
   getUserTransactions,
+  getUserTransactionsPaged,
   putTransaction,
   updateTransaction,
 } from "../../lib/api/dynamo";
@@ -163,6 +166,38 @@ describe("getUserTransactions — paginated DynamoDB results", () => {
     ]);
     expect(sendMock).toHaveBeenCalledTimes(2);
     expect(sendMock.mock.calls[1][0].input.ExclusiveStartKey).toEqual(cursor);
+  });
+});
+
+describe("getUserTransactionsPaged", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue({ send: sendMock });
+    sendMock.mockReset();
+    sendMock.mockResolvedValue({ Items: [] });
+  });
+
+  it("issues exactly one date-bounded Query with its supplied cursor", async () => {
+    const cursor = { pk: "user#user-page", sk: "date#2026-01-15#tx-1" };
+
+    await getUserTransactionsPaged("user-page", {
+      startDate: "2026-01-01",
+      endDate: "2026-01-31",
+      limit: 25,
+      lastKey: cursor,
+    });
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sendMock.mock.calls[0][0].input).toMatchObject({
+      KeyConditionExpression: "#pk = :pk and #sk BETWEEN :skStart and :skEnd",
+      ExpressionAttributeValues: {
+        ":pk": "user#user-page",
+        ":skStart": "date#2026-01-01#",
+        ":skEnd": "date#2026-01-31#\uffff",
+      },
+      ExclusiveStartKey: cursor,
+      Limit: 25,
+      ScanIndexForward: false,
+    });
   });
 });
 
@@ -311,7 +346,7 @@ describe("updateTransaction — replace existing transaction", () => {
     });
   });
 
-  it("deletes the original record before writing the replacement when the date changes", async () => {
+  it("atomically replaces the original record when the date changes", async () => {
     const tx = {
       id: "tx-moved",
       name: "Rent",
@@ -325,19 +360,23 @@ describe("updateTransaction — replace existing transaction", () => {
 
     const written = await updateTransaction("user-4", tx, "2025-04-30");
 
-    expect(sendMock).toHaveBeenCalledTimes(2);
-    const [deleteCommand] = sendMock.mock.calls[0] as [
-      { input: { Key: { pk: string; sk: string } } },
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const [command] = sendMock.mock.calls[0] as [
+      {
+        input: {
+          TransactItems: Array<{
+            Delete?: { Key: { pk: string; sk: string } };
+            Put?: { Item: { pk: string; sk: string; id: string } };
+          }>;
+        };
+      },
     ];
-    const [putCommand] = sendMock.mock.calls[1] as [
-      { input: { Item: { pk: string; sk: string } } },
-    ];
-
-    expect(deleteCommand.input.Key).toEqual({
+    expect(command).toBeInstanceOf(TransactWriteCommand);
+    expect(command.input.TransactItems[0].Delete?.Key).toEqual({
       pk: "user#user-4",
       sk: "date#2025-04-30#tx-moved",
     });
-    expect(putCommand.input.Item).toMatchObject({
+    expect(command.input.TransactItems[1].Put?.Item).toMatchObject({
       pk: "user#user-4",
       sk: "date#2025-05-02#tx-moved",
       id: "tx-moved",
@@ -346,6 +385,105 @@ describe("updateTransaction — replace existing transaction", () => {
       pk: "user#user-4",
       sk: "date#2025-05-02#tx-moved",
       id: "tx-moved",
+    });
+  });
+});
+
+describe("batchWriteTransactions", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue({ send: sendMock });
+    sendMock.mockReset();
+  });
+
+  it("splits imports into 25-item DynamoDB batches", async () => {
+    const transactions = Array.from({ length: 51 }, (_, index) => ({
+      id: `tx-${index}`,
+      name: "Imported",
+      amount: 1,
+      category: "Need" as const,
+      date: "2026-01-01",
+      notes: "",
+      paymentMethod: "",
+      tags: [],
+    }));
+    sendMock
+      .mockResolvedValueOnce({ UnprocessedItems: {} })
+      .mockResolvedValueOnce({ UnprocessedItems: {} })
+      .mockResolvedValueOnce({ UnprocessedItems: {} });
+
+    const result = await batchWriteTransactions("user-batch", transactions);
+
+    expect(sendMock).toHaveBeenCalledTimes(3);
+    expect(sendMock.mock.calls[0][0].input.RequestItems[""]).toHaveLength(25);
+    expect(sendMock.mock.calls[1][0].input.RequestItems[""]).toHaveLength(25);
+    expect(sendMock.mock.calls[2][0].input.RequestItems[""]).toHaveLength(1);
+    expect(result).toMatchObject({ imported: transactions, skipped: [] });
+  });
+
+  it("retries UnprocessedItems a bounded number of times with exponential backoff", async () => {
+    const transaction = {
+      id: "tx-retry",
+      name: "Imported",
+      amount: 1,
+      category: "Need" as const,
+      date: "2026-01-01",
+      notes: "",
+      paymentMethod: "",
+      tags: [],
+    };
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    sendMock.mockResolvedValue({
+      UnprocessedItems: {
+        "": [{ PutRequest: { Item: { id: transaction.id } } }],
+      },
+    });
+
+    const result = await batchWriteTransactions("user-batch", [transaction], {
+      sleep,
+    });
+
+    expect(sendMock).toHaveBeenCalledTimes(5); // initial attempt plus four retries
+    expect(sleep).toHaveBeenCalledWith(25);
+    expect(sleep).toHaveBeenCalledWith(50);
+    expect(sleep).toHaveBeenCalledWith(100);
+    expect(sleep).toHaveBeenCalledWith(200);
+    expect(result).toEqual({
+      imported: [],
+      skipped: [
+        {
+          tx: transaction,
+          error: "DynamoDB did not process this row after retries",
+        },
+      ],
+    });
+  });
+
+  it("keeps acknowledged rows imported when a later retry fails", async () => {
+    const transactions = ["tx-acknowledged", "tx-failed"].map((id) => ({
+      id,
+      name: "Imported",
+      amount: 1,
+      category: "Need" as const,
+      date: "2026-01-01",
+      notes: "",
+      paymentMethod: "",
+      tags: [],
+    }));
+    sendMock
+      .mockResolvedValueOnce({
+        UnprocessedItems: {
+          "": [{ PutRequest: { Item: { id: "tx-failed" } } }],
+        },
+      })
+      .mockRejectedValueOnce(new Error("DynamoDB unavailable"));
+
+    const result = await batchWriteTransactions("user-batch", transactions, {
+      sleep: async () => undefined,
+    });
+
+    expect(result).toEqual({
+      imported: [transactions[0]],
+      skipped: [{ tx: transactions[1], error: "DynamoDB unavailable" }],
     });
   });
 });

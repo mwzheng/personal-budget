@@ -3,7 +3,7 @@
 // the only place where imported rows are actually written.
 import { NextRequest, NextResponse } from "next/server";
 import { loadTransactionsFromCSV } from "@/lib/utils/csvParser";
-import { putTransaction } from "@/lib/api/dynamo";
+import { batchWriteTransactions } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 
 export async function POST(request: NextRequest) {
@@ -34,27 +34,18 @@ export async function POST(request: NextRequest) {
 
     const userId = await getRequestUserId(request);
     const parsed = loadTransactionsFromCSV(csvText);
-    const imported: Array<Record<string, unknown>> = [];
-    const skipped: Array<Record<string, unknown>> = [];
-
-    for (const transaction of parsed) {
-      const tx = {
-        ...transaction,
-        // Note 2: The importer assigns a stable id server-side so the stored rows
-        // do not depend on the preview client keeping any local placeholder ids.
-        id:
-          transaction.id ||
-          `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      };
-
-      try {
-        await putTransaction(userId, tx);
-        imported.push(tx);
-      } catch (error) {
-        console.error("Error persisting imported transaction", error);
-        skipped.push({ tx, error: String(error) });
-      }
-    }
+    const transactions = parsed.map((transaction) => ({
+      ...transaction,
+      // Note 2: The importer assigns a stable id server-side so the stored rows
+      // do not depend on the preview client keeping any local placeholder ids.
+      id:
+        transaction.id ||
+        `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    }));
+    const { imported, skipped } = await batchWriteTransactions(
+      userId,
+      transactions,
+    );
 
     return NextResponse.json({
       importedCount: imported.length,

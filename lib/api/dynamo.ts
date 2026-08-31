@@ -6,6 +6,8 @@ import {
   QueryCommand,
   PutCommand,
   DeleteCommand,
+  BatchWriteCommand,
+  TransactWriteCommand,
   NativeAttributeValue,
   QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
@@ -154,7 +156,7 @@ export async function getUserTransactionsPaged(
   if (opts?.limit) params.Limit = opts.limit;
   if (opts?.lastKey) params.ExclusiveStartKey = opts.lastKey;
   const res = await client.send(new QueryCommand(params));
-  const items = res.Items ?? [];
+  const items = (res.Items ?? []) as Record<string, unknown>[];
   const txs = items.map(
     (item) =>
       ({
@@ -171,6 +173,128 @@ export async function getUserTransactionsPaged(
       }) as Transaction,
   );
   return { transactions: txs, lastKey: res.LastEvaluatedKey };
+}
+
+const BATCH_WRITE_SIZE = 25;
+const BATCH_WRITE_MAX_RETRIES = 4;
+const BATCH_WRITE_INITIAL_DELAY_MS = 25;
+const BATCH_WRITE_MAX_DELAY_MS = 200;
+
+export type BatchWriteTransactionsResult = {
+  imported: Transaction[];
+  skipped: Array<{ tx: Transaction; error: string }>;
+};
+
+export type BatchWriteTransactionsOptions = {
+  /** Test hook that avoids real retry waits without changing production timing. */
+  sleep?: (delayMs: number) => Promise<void>;
+};
+
+type PendingBatchWrite = {
+  tx: Transaction;
+  request: { PutRequest: { Item: ReturnType<typeof buildTransactionItem> } };
+};
+
+function isSameBatchWrite(
+  pending: PendingBatchWrite,
+  unprocessed: { PutRequest?: { Item?: Record<string, unknown> } },
+) {
+  const item = unprocessed.PutRequest?.Item;
+  if (!item) return false;
+
+  // DynamoDB returns the full request, so its primary key is the reliable row
+  // identity. The id fallback also supports minimal SDK mocks in unit tests.
+  if (item.pk !== undefined || item.sk !== undefined) {
+    return (
+      pending.request.PutRequest.Item.pk === item.pk &&
+      pending.request.PutRequest.Item.sk === item.sk
+    );
+  }
+  return pending.request.PutRequest.Item.id === item.id;
+}
+
+/** Persists CSV-sized transaction sets in DynamoDB's maximum-sized batches.
+ * BatchWriteItem has no per-item condition support, so callers must treat a
+ * successful acknowledgement as the point at which a row is imported. */
+export async function batchWriteTransactions(
+  userId: string,
+  transactions: Transaction[],
+  options: BatchWriteTransactionsOptions = {},
+): Promise<BatchWriteTransactionsResult> {
+  const client = getDocClient(TABLE_NAME);
+  if (!client) throw new Error("DynamoDB table not configured");
+
+  const imported: Transaction[] = [];
+  const skipped: Array<{ tx: Transaction; error: string }> = [];
+  for (
+    let offset = 0;
+    offset < transactions.length;
+    offset += BATCH_WRITE_SIZE
+  ) {
+    const batch = transactions.slice(offset, offset + BATCH_WRITE_SIZE);
+    let pending: PendingBatchWrite[] = batch.map((tx) => ({
+      tx,
+      request: { PutRequest: { Item: buildTransactionItem(userId, tx) } },
+    }));
+    let retries = 0;
+    try {
+      while (pending.length > 0) {
+        const response = await client.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [TABLE_NAME]: pending.map(({ request }) => request),
+            },
+          }),
+        );
+
+        const unprocessed = response.UnprocessedItems?.[TABLE_NAME] ?? [];
+        const nextPending: PendingBatchWrite[] = [];
+        for (const request of unprocessed) {
+          const matchingIndex = pending.findIndex(
+            (candidate) =>
+              !nextPending.includes(candidate) &&
+              isSameBatchWrite(candidate, request),
+          );
+          if (matchingIndex >= 0) nextPending.push(pending[matchingIndex]);
+        }
+
+        // Only rows absent from UnprocessedItems were acknowledged in this
+        // attempt. Recording them immediately prevents both duplicate imports
+        // and incorrectly marking them skipped if a later request fails.
+        imported.push(
+          ...pending
+            .filter((candidate) => !nextPending.includes(candidate))
+            .map(({ tx }) => tx),
+        );
+        pending = nextPending;
+        if (pending.length === 0) break;
+        if (retries >= BATCH_WRITE_MAX_RETRIES) {
+          skipped.push(
+            ...pending.map(({ tx }) => ({
+              tx,
+              error: "DynamoDB did not process this row after retries",
+            })),
+          );
+          break;
+        }
+
+        const delayMs = Math.min(
+          BATCH_WRITE_INITIAL_DELAY_MS * 2 ** retries,
+          BATCH_WRITE_MAX_DELAY_MS,
+        );
+        await (
+          options.sleep ??
+          ((delay) =>
+            new Promise<void>((resolve) => setTimeout(resolve, delay)))
+        )(delayMs);
+        retries += 1;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      skipped.push(...pending.map(({ tx }) => ({ tx, error: message })));
+    }
+  }
+  return { imported, skipped };
 }
 
 // Note 12: Queries a full year of transactions to build monthly aggregates.
@@ -257,15 +381,25 @@ export async function updateTransaction(
   if (!client) throw new Error("DynamoDB table not configured");
 
   if (originalDate && originalDate !== tx.date) {
+    const item = buildTransactionItem(userId, tx);
     await client.send(
-      new DeleteCommand({
-        TableName: TABLE_NAME,
-        Key: {
-          pk: `user#${userId}`,
-          sk: `${SK_PREFIX.TRANSACTION}${originalDate}#${tx.id}`,
-        },
+      new TransactWriteCommand({
+        TransactItems: [
+          {
+            Delete: {
+              TableName: TABLE_NAME,
+              Key: {
+                pk: `user#${userId}`,
+                sk: `${SK_PREFIX.TRANSACTION}${originalDate}#${tx.id}`,
+              },
+              ConditionExpression: "attribute_exists(pk)",
+            },
+          },
+          { Put: { TableName: TABLE_NAME, Item: item } },
+        ],
       }),
     );
+    return item;
   }
 
   const item = buildTransactionItem(userId, tx);

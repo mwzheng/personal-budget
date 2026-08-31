@@ -1,14 +1,11 @@
 // Note: Simple user profile upsert/get helpers. Uses a dedicated users table
-// when available (DYNAMODB_USERS_TABLE or USERS_TABLE) and falls back to the
-// main DYNAMODB_TABLE if necessary.
+// when explicitly configured. Profiles must never fall back to the transaction
+// table: that mixes entity classes and makes normal transaction reads costlier.
 import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { getDocClient } from "../api/dynamoClient";
 
 const USERS_TABLE =
-  process.env.DYNAMODB_USERS_TABLE ||
-  process.env.USERS_TABLE ||
-  process.env.DYNAMODB_TABLE ||
-  "";
+  process.env.DYNAMODB_USERS_TABLE || process.env.USERS_TABLE || "";
 
 interface UserProfileRecord {
   pk: string;

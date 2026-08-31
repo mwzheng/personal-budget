@@ -13,7 +13,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
 
 import {
   ContactSubmissionSchema,
@@ -65,6 +65,11 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
   const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({});
   const [status, setStatus] = useState<ContactFormStatus>(null);
   const [submitting, setSubmitting] = useState(false);
+  const idempotencyKey = useRef(
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `contact-${Date.now()}`,
+  );
 
   const handleFieldChange =
     (fieldName: ContactFieldName) =>
@@ -116,8 +121,11 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parseResult.data),
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey.current,
+        },
+        body: JSON.stringify({ ...parseResult.data, website: "" }),
       });
 
       const data = (await response.json().catch(() => null)) as {
@@ -143,6 +151,10 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
       }
 
       setValues(INITIAL_FORM_VALUES);
+      idempotencyKey.current =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `contact-${Date.now()}`;
       setStatus({
         severity: "success",
         message:

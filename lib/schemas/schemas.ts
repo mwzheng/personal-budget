@@ -91,6 +91,7 @@ export const MilestoneCreateSchema =
 
 export const MilestoneUpdateSchema = MilestoneFieldsSchema.extend({
   milestoneId: z.string().trim().min(1),
+  originalYear: z.number().int().min(1).max(9999).nullable().optional(),
   // This is the version fetched by the editor. It is optional because legacy
   // records may predate updatedAt metadata.
   expectedUpdatedAt: z.string().datetime().optional(),

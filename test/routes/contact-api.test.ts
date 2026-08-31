@@ -26,6 +26,7 @@ vi.mock("@aws-sdk/client-ses", () => {
 });
 
 import { POST } from "@/app/api/contact/route";
+import { resetContactAbuseProtectionForTests } from "@/lib/api/contactAbuseProtection";
 
 const originalSender = process.env.CONTACT_SES_FROM_EMAIL;
 const originalRecipient = process.env.CONTACT_SES_TO_EMAIL;
@@ -44,6 +45,7 @@ describe("contact api route", () => {
     process.env.CONTACT_SES_TO_EMAIL = "owner@example.com";
 
     sendMock.mockReset();
+    resetContactAbuseProtectionForTests();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2025-02-03T04:05:06.000Z"));
   });
@@ -169,5 +171,64 @@ describe("contact api route", () => {
 
     expect(response.status).toBe(502);
     await expect(response.json()).resolves.toMatchObject({ ok: false });
+  });
+
+  it("deduplicates completed submissions and rate limits abusive clients before SES", async () => {
+    sendMock.mockResolvedValue({});
+    const payload = {
+      name: "Taylor",
+      email: "taylor@example.com",
+      subject: "Feature idea",
+      message: "I have a thoughtful suggestion for the public roadmap.",
+    };
+    await POST(
+      new Request("http://localhost/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": "same",
+          "X-Forwarded-For": "198.51.100.1",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+    const duplicate = await POST(
+      new Request("http://localhost/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": "same",
+          "X-Forwarded-For": "198.51.100.1",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+    expect(duplicate.status).toBe(200);
+    expect(sendMock).toHaveBeenCalledTimes(1);
+
+    for (let index = 0; index < 5; index += 1) {
+      await POST(
+        new Request("http://localhost/api/contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Forwarded-For": "203.0.113.2",
+          },
+          body: JSON.stringify(payload),
+        }),
+      );
+    }
+    const limited = await POST(
+      new Request("http://localhost/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Forwarded-For": "203.0.113.2",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+    expect(limited.status).toBe(429);
+    expect(sendMock).toHaveBeenCalledTimes(6);
   });
 });

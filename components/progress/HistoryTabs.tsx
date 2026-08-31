@@ -14,10 +14,14 @@ const TAB_RETIREMENT = 0;
 const TAB_SALARY = 1;
 
 interface Props {
-  onEntriesChanged?: () => void | Promise<void>;
+  onRetirementEntriesChanged?: () => void | Promise<void>;
+  onSalaryEntriesChanged?: () => void | Promise<void>;
 }
 
-export default function HistoryTabs({ onEntriesChanged }: Props) {
+export default function HistoryTabs({
+  onRetirementEntriesChanged,
+  onSalaryEntriesChanged,
+}: Props) {
   const [activeTab, setActiveTab] = useState(TAB_RETIREMENT);
 
   return (
@@ -66,7 +70,7 @@ export default function HistoryTabs({ onEntriesChanged }: Props) {
         aria-labelledby="history-tab-0"
         sx={{ display: activeTab === TAB_RETIREMENT ? "block" : "none" }}
       >
-        <RetirementList onEntriesChanged={onEntriesChanged} />
+        <RetirementList onEntriesChanged={onRetirementEntriesChanged} />
       </Box>
 
       <Box
@@ -75,7 +79,7 @@ export default function HistoryTabs({ onEntriesChanged }: Props) {
         aria-labelledby="history-tab-1"
         sx={{ display: activeTab === TAB_SALARY ? "block" : "none" }}
       >
-        <SalaryList onEntriesChanged={onEntriesChanged} />
+        <SalaryList onEntriesChanged={onSalaryEntriesChanged} />
       </Box>
     </Box>
   );

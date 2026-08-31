@@ -107,6 +107,7 @@ export default function MilestoneForm({
     if (note.trim()) body.note = note.trim();
     if (existingMilestone) {
       body.milestoneId = existingMilestone.milestoneId;
+      body.originalYear = existingMilestone.year ?? null;
       if (existingMilestone.updatedAt)
         body.expectedUpdatedAt = existingMilestone.updatedAt;
     }

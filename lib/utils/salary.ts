@@ -56,8 +56,15 @@ export async function getUserSalary(userId: string): Promise<SalaryEntry[]> {
     ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.SALARY },
   } as const;
 
-  const res = await client.send(new QueryCommand(params));
-  const items = res.Items ?? [];
+  const items = [] as Record<string, unknown>[];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as Record<string, unknown>[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   // Note 7: Explicitly coercing each field with `String(...)` and `Number(...)`
   // protects against DynamoDB returning numeric fields as the `N` attribute
   // type (a string representation) when the Document Client is bypassed or
@@ -67,8 +74,8 @@ export async function getUserSalary(userId: string): Promise<SalaryEntry[]> {
     year: Number(item.year || 0),
     amount: Number(item.amount || 0),
     note: String(item.note || ""),
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
+    createdAt: typeof item.createdAt === "string" ? item.createdAt : undefined,
+    updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : undefined,
   }));
 }
 

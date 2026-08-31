@@ -19,7 +19,6 @@ function getUserIdFromPayload(payload: Record<string, unknown>): string {
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
-    await upsertUserProfile(payload);
     const userId = getUserIdFromPayload(payload);
     const entries = await getUserRetirement(userId);
     // Note 2: Sort a copy so the original array remains unchanged.
