@@ -103,8 +103,15 @@ export async function getUserRetirement(
     ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
     ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.RETIREMENT },
   } as const;
-  const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as RetirementQueryItem[];
+  const items: RetirementQueryItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as RetirementQueryItem[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   return items.map((item) => ({
     entryId: String(item.entryId || ""),
     year: Number(item.year || 0),
@@ -268,8 +275,15 @@ export async function getUserMilestones(
     ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
     ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.MILESTONE },
   } as const;
-  const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as MilestoneQueryItem[];
+  const items: MilestoneQueryItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as MilestoneQueryItem[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   return items.map((item) => ({
     milestoneId: String(item.milestoneId || ""),
     amount: Number(item.amount || 0),
@@ -335,8 +349,15 @@ export async function getUserProgressGoals(
       ":prefix": SK_PREFIX.PROGRESS_GOAL,
     },
   } as const;
-  const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as ProgressGoalQueryItem[];
+  const items: ProgressGoalQueryItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as ProgressGoalQueryItem[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   return items.map((item) => ({
     goalId: String(item.goalId || ""),
     targetAmount: Number(item.targetAmount || 0),

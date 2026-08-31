@@ -217,6 +217,54 @@ describe("getUserBudgets and monthly aggregates — no client fallback", () => {
   });
 });
 
+describe("getUserBudgets — paginated DynamoDB results", () => {
+  beforeEach(() => {
+    getDocClientMock.mockReturnValue({ send: sendMock });
+    sendMock.mockReset();
+  });
+
+  it("collects budgets from every query page and preserves the budget shape", async () => {
+    const cursor = { pk: "user#user-budget", sk: "budget#first" };
+    sendMock
+      .mockResolvedValueOnce({
+        Items: [
+          { budgetId: "first", name: "First", expenses: [], allocations: [] },
+        ],
+        LastEvaluatedKey: cursor,
+      })
+      .mockResolvedValueOnce({
+        Items: [
+          { budgetId: "second", name: "Second", expenses: [], allocations: [] },
+        ],
+      });
+
+    const budgets = await getUserBudgets("user-budget");
+
+    expect(budgets).toEqual([
+      {
+        budgetId: "first",
+        name: "First",
+        monthlyIncome: undefined,
+        expenses: [],
+        allocations: [],
+        createdAt: undefined,
+        updatedAt: undefined,
+      },
+      {
+        budgetId: "second",
+        name: "Second",
+        monthlyIncome: undefined,
+        expenses: [],
+        allocations: [],
+        createdAt: undefined,
+        updatedAt: undefined,
+      },
+    ]);
+    expect(sendMock).toHaveBeenCalledTimes(2);
+    expect(sendMock.mock.calls[1][0].input.ExclusiveStartKey).toEqual(cursor);
+  });
+});
+
 // Note 7: Write and delete operations must surface a clear error when the table
 // is unconfigured rather than silently doing nothing, so callers can propagate
 // the failure to the HTTP layer.

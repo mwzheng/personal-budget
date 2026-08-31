@@ -476,8 +476,15 @@ export async function getUserBudgets(userId: string): Promise<SavedBudget[]> {
     ExpressionAttributeValues: { ":pk": pk, ":prefix": SK_PREFIX.BUDGET },
   } as const;
 
-  const res = await client.send(new QueryCommand(params));
-  const items = res.Items ?? [];
+  const items: Record<string, unknown>[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as Record<string, unknown>[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   return items.map((item) => ({
     budgetId: String(item.budgetId || ""),
     name: String(item.name || ""),
@@ -485,8 +492,8 @@ export async function getUserBudgets(userId: string): Promise<SavedBudget[]> {
       typeof item.monthlyIncome === "number" ? item.monthlyIncome : undefined,
     expenses: Array.isArray(item.expenses) ? item.expenses : [],
     allocations: Array.isArray(item.allocations) ? item.allocations : [],
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
+    createdAt: typeof item.createdAt === "string" ? item.createdAt : undefined,
+    updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : undefined,
   }));
 }
 
