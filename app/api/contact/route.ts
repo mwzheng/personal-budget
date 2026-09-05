@@ -10,6 +10,14 @@ import {
   ContactSubmissionSchema,
   type ContactSubmission,
 } from "@/lib/schemas/schemas";
+import {
+  getContactClientKey,
+  hasCompletedContactSubmission,
+  isContactRateLimited,
+  rememberContactSubmission,
+} from "@/lib/api/contactAbuseProtection";
+
+const MAX_REQUEST_BYTES = 8 * 1024;
 
 const sesClient = new SESClient({
   region:
@@ -41,6 +49,14 @@ function buildEmailBody({ email, message, name, subject }: ContactSubmission) {
 export async function POST(request: Request) {
   let body: unknown;
 
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_REQUEST_BYTES) {
+    return NextResponse.json(
+      { ok: false, message: "Please keep your message concise." },
+      { status: 413 },
+    );
+  }
+
   try {
     body = await request.json();
   } catch {
@@ -63,6 +79,35 @@ export async function POST(request: Request) {
         fieldErrors: getFieldErrors(parseResult.error.flatten().fieldErrors),
       },
       { status: 422 },
+    );
+  }
+
+  if (
+    typeof (body as Record<string, unknown>).website === "string" &&
+    (body as Record<string, unknown>).website
+  ) {
+    return NextResponse.json({
+      ok: true,
+      message:
+        "Thanks for reaching out. Your message has been sent successfully.",
+    });
+  }
+
+  const idempotencyKey = request.headers.get("idempotency-key")?.trim();
+  if (idempotencyKey && hasCompletedContactSubmission(idempotencyKey)) {
+    return NextResponse.json({
+      ok: true,
+      message:
+        "Thanks for reaching out. Your message has been sent successfully.",
+    });
+  }
+  if (isContactRateLimited(getContactClientKey(request))) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Too many contact requests. Please try again shortly.",
+      },
+      { status: 429 },
     );
   }
 
@@ -108,6 +153,8 @@ export async function POST(request: Request) {
         },
       }),
     );
+
+    if (idempotencyKey) rememberContactSubmission(idempotencyKey);
 
     return NextResponse.json({
       ok: true,

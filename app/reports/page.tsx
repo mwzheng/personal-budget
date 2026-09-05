@@ -19,7 +19,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
@@ -33,7 +33,20 @@ import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import { apiFetch } from "@/lib/api/apiFetch";
-import { isAuthenticated } from "@/lib/auth/cognitoClient";
+import {
+  AUTH_CHANGED_EVENT,
+  getStoredCognitoTokens,
+  isAuthenticated,
+  isDemoSessionActive,
+} from "@/lib/auth/cognitoClient";
+import {
+  clearTransactionCache,
+  loadCachedTransactions,
+  removeCachedTransaction,
+  removeTransactionFromList,
+  upsertCachedTransaction,
+  upsertTransactionInList,
+} from "@/lib/reports/transactionCache";
 import {
   filterTransactions,
   aggregateTransactions,
@@ -48,7 +61,7 @@ import {
   setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
 } from "@/lib/utils/storage";
-import { Transaction } from "@/lib/types/types";
+import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
 
 import SpendingBreakdownLoadingState from "@/components/report/SpendingBreakdownLoadingState";
@@ -75,12 +88,127 @@ interface TransactionsApiResponse {
   ok?: boolean;
   error?: string;
   transactions?: Transaction[];
+  hasMore?: boolean;
+  nextCursor?: string;
+}
+
+function currentTransactionScope() {
+  if (isDemoSessionActive()) return "demo";
+  const { accessToken, idToken } = getStoredCognitoTokens();
+  const token = accessToken || idToken;
+  if (token) {
+    try {
+      const payload = token.split(".")[1];
+      if (payload) {
+        const claims = JSON.parse(
+          atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+        ) as { sub?: unknown };
+        if (typeof claims.sub === "string" && claims.sub) {
+          return `user:${claims.sub}`;
+        }
+      }
+    } catch {
+      // Keep malformed or non-JWT credentials isolated by their token below.
+    }
+    // Keep non-JWT or malformed credentials isolated as well. Reusing one
+    // generic scope could expose a previous user's cached transactions if an
+    // auth-change event is missed or the provider returns a non-JWT token.
+    return `authenticated:${token}`;
+  }
+  return process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
+    ? "disabled-auth"
+    : null;
+}
+
+function getFilterTransactionLoadPlan(filters: FilterParams) {
+  if (filters.years.length > 0) {
+    const years = filters.years
+      .map(Number)
+      .filter(Number.isInteger)
+      .sort((a, b) => a - b);
+    if (years.length > 0) {
+      return {
+        allHistory: false,
+        startDate: `${years[0]}-01-01`,
+        endDate: `${years[years.length - 1]}-12-31`,
+      };
+    }
+  }
+
+  if (filters.startDate || filters.endDate) {
+    return {
+      allHistory: false,
+      startDate: filters.startDate ?? undefined,
+      endDate: filters.endDate ?? undefined,
+    };
+  }
+
+  return { allHistory: true };
+}
+
+function getInitialTransactionLoadPlan(
+  storedFilters: FilterParams | null,
+  legacyYears: string[],
+) {
+  const filters = storedFilters ?? {
+    ...EMPTY_FILTERS,
+    years: legacyYears,
+  };
+  const hasDateOrYearFilter =
+    filters.years.length > 0 || Boolean(filters.startDate || filters.endDate);
+  const hasOtherFilter =
+    filters.categories.length > 0 ||
+    filters.tags.length > 0 ||
+    Boolean(filters.search);
+
+  if (!hasDateOrYearFilter && !hasOtherFilter && !storedFilters) {
+    const year = new Date().getUTCFullYear();
+    return {
+      allHistory: false,
+      startDate: `${year}-01-01`,
+      endDate: `${year}-12-31`,
+    };
+  }
+
+  if (filters.years.length > 0) {
+    const years = filters.years
+      .map(Number)
+      .filter(Number.isInteger)
+      .sort((a, b) => a - b);
+    if (years.length > 0) {
+      return {
+        allHistory: false,
+        startDate: `${years[0]}-01-01`,
+        endDate: `${years[years.length - 1]}-12-31`,
+      };
+    }
+  }
+
+  if (filters.startDate || filters.endDate) {
+    return {
+      allHistory: false,
+      startDate: filters.startDate ?? undefined,
+      endDate: filters.endDate ?? undefined,
+    };
+  }
+
+  return { allHistory: true };
+}
+
+function isTransaction(value: unknown): value is Transaction {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    typeof (value as Transaction).id === "string" &&
+    typeof (value as Transaction).date === "string",
+  );
 }
 
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+  const [allHistoryLoaded, setAllHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -109,39 +237,130 @@ const ReportsPageContent = () => {
   const [selectedReportYear, setSelectedReportYear] = useState(() =>
     new Date().getFullYear(),
   );
+  const [authVersion, setAuthVersion] = useState(0);
   const router = useRouter();
+  const scope = currentTransactionScope();
+  const authGeneration = useRef(0);
+  const importGeneration = authGeneration.current;
+  const importScope = scope;
 
   const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
   };
 
-  const loadTransactions = async () => {
-    setLoading(true);
-    setErrorMessage(null);
+  const handleUnauthorized = useCallback(
+    (requestScope: string | null) => {
+      if (!requestScope || currentTransactionScope() !== requestScope) return;
+      authGeneration.current += 1;
+      clearTransactionCache(requestScope);
+      setAllTransactions([]);
+      setTransactionsLoaded(false);
+      setAllHistoryLoaded(false);
+      setFiltersInitialized(false);
+      setLoading(false);
+      router.replace("/auth/login");
+    },
+    [router],
+  );
 
-    try {
-      const res = await apiFetch("/api/transactions");
-
-      if (res.status === 401 || res.status === 403) {
+  const loadTransactions = useCallback(
+    async (
+      force = false,
+      allHistory = allHistoryLoaded,
+      range?: { startDate?: string; endDate?: string },
+    ) => {
+      if (!scope) {
         router.replace("/auth/login");
         return;
       }
+      const loadGeneration = authGeneration.current;
+      const isCurrentLoad = () =>
+        currentTransactionScope() === scope &&
+        authGeneration.current === loadGeneration;
+      setLoading(true);
+      setErrorMessage(null);
 
-      const data = (await res.json()) as TransactionsApiResponse;
+      try {
+        const transactions = await loadCachedTransactions(
+          scope,
+          async (cursor) => {
+            const params = new URLSearchParams({ limit: "200" });
+            if (!allHistory) {
+              if (range?.startDate) params.set("startDate", range.startDate);
+              if (range?.endDate) params.set("endDate", range.endDate);
+            }
+            if (cursor) params.set("cursor", cursor);
+            const res = await apiFetch(`/api/transactions?${params}`);
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to load transactions");
+            if (res.status === 401 || res.status === 403) {
+              throw new Error("Transaction request is unauthorized");
+            }
+
+            const data = (await res.json()) as TransactionsApiResponse;
+
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || "Failed to load transactions");
+            }
+
+            return {
+              transactions: data.transactions ?? [],
+              hasMore: Boolean(data.hasMore),
+              nextCursor: data.nextCursor,
+            };
+          },
+          {
+            force: force || allHistory,
+            maxPages: allHistory ? undefined : 1,
+            scope: {
+              allHistory,
+              startDate: allHistory ? undefined : range?.startDate,
+              endDate: allHistory ? undefined : range?.endDate,
+            },
+          },
+        );
+
+        // A request from a previous auth scope must not update this user's view.
+        if (isCurrentLoad()) {
+          applyTransactions(transactions);
+          setTransactionsLoaded(true);
+          setAllHistoryLoaded(allHistory);
+        }
+      } catch (error) {
+        if (!isCurrentLoad()) return;
+        if (
+          error instanceof Error &&
+          error.message === "Transaction request is unauthorized"
+        ) {
+          handleUnauthorized(scope);
+          return;
+        }
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to load transactions",
+        );
+      } finally {
+        if (isCurrentLoad()) setLoading(false);
       }
+    },
+    [allHistoryLoaded, handleUnauthorized, router, scope],
+  );
 
-      applyTransactions(data.transactions ?? []);
-      setTransactionsLoaded(true);
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to load transactions",
-      );
-    } finally {
-      setLoading(false);
+  const handleFiltersChange = (nextFilters: FilterParams) => {
+    const previousPlan = getFilterTransactionLoadPlan(filters);
+    const nextPlan = getFilterTransactionLoadPlan(nextFilters);
+    setFilters(nextFilters);
+
+    if (
+      !filtersInitialized ||
+      (previousPlan.allHistory === nextPlan.allHistory &&
+        previousPlan.startDate === nextPlan.startDate &&
+        previousPlan.endDate === nextPlan.endDate)
+    ) {
+      return;
     }
+
+    void loadTransactions(true, nextPlan.allHistory, nextPlan);
   };
 
   useEffect(() => {
@@ -152,9 +371,30 @@ const ReportsPageContent = () => {
       return;
     }
 
-    void loadTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+    const storedFilters = getLastSelectedReportFilters();
+    const loadPlan = getInitialTransactionLoadPlan(
+      storedFilters,
+      getLastSelectedReportYears(),
+    );
+    void loadTransactions(false, loadPlan.allHistory, loadPlan);
+  }, [authVersion, loadTransactions, router]);
+
+  useEffect(() => {
+    const handleAuthChanged = () => {
+      authGeneration.current += 1;
+      clearTransactionCache();
+      setAllTransactions([]);
+      setLoading(false);
+      setTransactionsLoaded(false);
+      setAllHistoryLoaded(false);
+      setFiltersInitialized(false);
+      setErrorMessage(null);
+      setAuthVersion((current) => current + 1);
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+    return () =>
+      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+  }, []);
 
   useEffect(() => {
     setTransactionsView(getLastSelectedReportTransactionsView());
@@ -179,6 +419,11 @@ const ReportsPageContent = () => {
   }, [filters, filtersInitialized]);
 
   const handleSaveTransaction = async (t: Transaction) => {
+    const requestGeneration = authGeneration.current;
+    const requestScope = scope;
+    const isCurrentRequest = () =>
+      authGeneration.current === requestGeneration &&
+      currentTransactionScope() === requestScope;
     setErrorMessage(null);
 
     try {
@@ -190,10 +435,17 @@ const ReportsPageContent = () => {
         ),
       });
 
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        created?: unknown;
+        updated?: unknown;
+      };
+
+      if (!isCurrentRequest()) return;
 
       if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/login");
+        handleUnauthorized(requestScope);
         return;
       }
 
@@ -201,12 +453,21 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to save transaction");
       }
 
-      await loadTransactions();
+      const saved = editTarget ? data.updated : data.created;
+      if (requestScope && isTransaction(saved)) {
+        setAllTransactions((current) =>
+          upsertTransactionInList(current, saved, editTarget),
+        );
+        upsertCachedTransaction(requestScope, saved, editTarget);
+      } else {
+        await loadTransactions(true);
+      }
       setFormOpen(false);
       setEditTarget(undefined);
       setDuplicateTarget(undefined);
       setNewTransactionDate(null);
     } catch (error) {
+      if (!isCurrentRequest()) return;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to save transaction",
       );
@@ -236,6 +497,11 @@ const ReportsPageContent = () => {
   };
 
   const handleDeleteTransaction = async (id: string) => {
+    const requestGeneration = authGeneration.current;
+    const requestScope = scope;
+    const isCurrentRequest = () =>
+      authGeneration.current === requestGeneration &&
+      currentTransactionScope() === requestScope;
     const transaction = allTransactions.find((item) => item.id === id);
     if (!transaction) return false;
 
@@ -247,10 +513,15 @@ const ReportsPageContent = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, date: transaction.date }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (!isCurrentRequest()) return false;
 
       if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/login");
+        handleUnauthorized(requestScope);
         return false;
       }
 
@@ -258,9 +529,13 @@ const ReportsPageContent = () => {
         throw new Error(data.error || "Failed to delete transaction");
       }
 
-      await loadTransactions();
+      setAllTransactions((current) =>
+        removeTransactionFromList(current, transaction),
+      );
+      if (requestScope) removeCachedTransaction(requestScope, transaction);
       return true;
     } catch (error) {
+      if (!isCurrentRequest()) return false;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to delete transaction",
       );
@@ -284,6 +559,13 @@ const ReportsPageContent = () => {
         params.set("years", filters.years.join(","));
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
+      if (
+        filters.years.length === 0 &&
+        !filters.startDate &&
+        !filters.endDate
+      ) {
+        params.set("allHistory", "true");
+      }
       if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
@@ -571,7 +853,7 @@ const ReportsPageContent = () => {
                 availableTags={availableTags}
                 availableYears={availableYears}
                 filters={filters}
-                onChange={setFilters}
+                onChange={handleFiltersChange}
               />
             )}
             {loading ? (
@@ -817,8 +1099,34 @@ const ReportsPageContent = () => {
       <ImportCsvDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
-        onImported={() => {
-          void loadTransactions();
+        onImported={(result) => {
+          if (
+            authGeneration.current !== importGeneration ||
+            currentTransactionScope() !== importScope
+          ) {
+            return;
+          }
+          if (result.unauthorized) {
+            handleUnauthorized(importScope);
+            return;
+          }
+          const imported = result.transactions;
+          if (imported) {
+            setAllTransactions((current) =>
+              imported.reduce(
+                (next, transaction) =>
+                  upsertTransactionInList(next, transaction),
+                current,
+              ),
+            );
+            if (importScope) {
+              for (const transaction of imported) {
+                upsertCachedTransaction(importScope, transaction);
+              }
+            }
+            return;
+          }
+          void loadTransactions(true);
         }}
       />
       <MonthComparisonModal

@@ -7,6 +7,7 @@ This document covers everything needed to provision (or redeploy) the AWS infras
 | Resource           | CloudFormation logical ID | Default name (dev)                       |
 | ------------------ | ------------------------- | ---------------------------------------- |
 | DynamoDB table     | `TransactionsTable`       | `personal-budget-infra-dev-transactions` |
+| DynamoDB table     | `UsersTable`              | `personal-budget-infra-dev-users`        |
 | Cognito User Pool  | `CognitoUserPool`         | `personal-budget-infra-dev-userpool`     |
 | Cognito App Client | `CognitoUserPoolClient`   | `personal-budget-infra-dev-client`       |
 
@@ -135,6 +136,7 @@ Copy the stack outputs into `.env.local` at the repository root:
 NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
 NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
 DYNAMODB_TABLE=personal-budget-infra-dev-transactions
+DYNAMODB_USERS_TABLE=personal-budget-infra-dev-users
 AWS_REGION=us-east-1
 ```
 

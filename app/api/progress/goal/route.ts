@@ -19,7 +19,6 @@ function getUserIdFromPayload(payload: Record<string, unknown>): string {
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
-    await upsertUserProfile(payload);
     const userId = getUserIdFromPayload(payload);
     const goals = await getUserProgressGoals(userId);
     const retirement = await getUserRetirement(userId);

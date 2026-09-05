@@ -39,6 +39,9 @@ interface SalaryApiResponse {
 }
 
 interface Props {
+  /** When supplied, the parent owns the list data and refreshes it after mutations. */
+  entries?: SalaryEntry[];
+  loading?: boolean;
   onEntriesChanged?: () => void | Promise<void>;
   /** Set to false when SalaryList is used as a full standalone page and a
    *  PageHeader is rendered above it by the parent page route. */
@@ -50,11 +53,13 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function SalaryList({
+  entries: controlledEntries,
+  loading: controlledLoading,
   onEntriesChanged,
   showSectionHeader = true,
 }: Props) {
-  const [entries, setEntries] = useState<SalaryEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [localEntries, setLocalEntries] = useState<SalaryEntry[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
   // Note 2: `editing` holds the full salary object being edited, or `null` when
   // the form is in "create new" mode. Passing it as `defaultEntry` pre-fills the
   // SalaryForm fields when the user clicks Edit.
@@ -79,7 +84,7 @@ export default function SalaryList({
         );
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || "Delete failed");
-        await fetchEntries();
+        if (controlledEntries === undefined) await fetchEntries();
         await Promise.resolve(onEntriesChanged?.());
       } catch (err: unknown) {
         setError(getErrorMessage(err));
@@ -88,23 +93,23 @@ export default function SalaryList({
   });
 
   const fetchEntries = async () => {
-    setLoading(true);
+    setLocalLoading(true);
     setError(null);
     try {
       const res = await apiFetch("/api/salary");
       const data = (await res.json()) as SalaryApiResponse;
       if (!data.ok) throw new Error(data.error || "Failed to load");
-      setEntries(data.entries ?? []);
+      setLocalEntries(data.entries ?? []);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchEntries();
-  }, []);
+    if (controlledEntries === undefined) void fetchEntries();
+  }, [controlledEntries]);
 
   const closeDialog = () => {
     setDialogOpen(false);
@@ -112,11 +117,8 @@ export default function SalaryList({
   };
 
   const handleSaved = async () => {
-    // Note 3: After a successful save the dialog is dismissed and the list is
-    // re-fetched. Re-fetching from the server guarantees the list reflects the
-    // freshly stored data (including any server-computed YoY values).
     closeDialog();
-    await fetchEntries();
+    if (controlledEntries === undefined) await fetchEntries();
     await Promise.resolve(onEntriesChanged?.());
   };
 
@@ -175,7 +177,7 @@ export default function SalaryList({
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((entry) => {
+            {(controlledEntries ?? localEntries).map((entry) => {
               const chipColor: "success" | "error" | "default" =
                 (entry.yoy ?? 0) > 0
                   ? "success"
@@ -241,7 +243,8 @@ export default function SalaryList({
         </Table>
       </TableContainer>
 
-      {entries.length === 0 && !loading ? (
+      {(controlledEntries ?? localEntries).length === 0 &&
+      !(controlledLoading ?? localLoading) ? (
         <EmptyState
           icon={<TrendingUpOutlinedIcon />}
           message="No salary history yet."

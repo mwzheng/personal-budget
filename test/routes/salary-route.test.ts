@@ -59,9 +59,7 @@ describe("salary api route", () => {
     const response = await GET(buildSalaryRequest());
 
     expect(mockedGetUserSalary).toHaveBeenCalledWith("user-salary");
-    expect(mockedUpsertUserProfile).toHaveBeenCalledWith({
-      sub: "user-salary",
-    });
+    expect(mockedUpsertUserProfile).not.toHaveBeenCalled();
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       ok: true,

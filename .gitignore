@@ -11,3 +11,4 @@ coverage
 !/sample-data/expenses.csv
 /reference-images
 logs/
+/.hermes/

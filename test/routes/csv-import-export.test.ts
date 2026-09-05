@@ -10,10 +10,10 @@ vi.mock("@/lib/auth/requestUser", () => ({
 }));
 
 vi.mock("@/lib/api/dynamo", () => ({
-  putTransaction: vi.fn(),
+  batchWriteTransactions: vi.fn(),
 }));
 
-import { putTransaction } from "@/lib/api/dynamo";
+import { batchWriteTransactions } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { POST as importReports } from "@/app/api/reports/import/route";
 import { transactionsToCsv } from "@/lib/utils/csvExport";
@@ -21,7 +21,7 @@ import { loadTransactionsFromCSV } from "@/lib/utils/csvParser";
 import type { Transaction } from "@/lib/types/types";
 
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
-const mockedPutTransaction = vi.mocked(putTransaction);
+const mockedBatchWriteTransactions = vi.mocked(batchWriteTransactions);
 
 describe("loadTransactionsFromCSV edge cases", () => {
   it("returns no transactions for empty content, header-only files, or missing required columns", () => {
@@ -285,7 +285,13 @@ describe("transactionsToCsv edge cases", () => {
 describe("POST /api/reports/import edge cases", () => {
   beforeEach(() => {
     mockedGetRequestUserId.mockReset();
-    mockedPutTransaction.mockReset();
+    mockedBatchWriteTransactions.mockReset();
+    mockedBatchWriteTransactions.mockImplementation(
+      async (_userId, transactions) => ({
+        imported: transactions,
+        skipped: [],
+      }),
+    );
   });
 
   it("returns 400 for an empty CSV payload", async () => {
@@ -299,7 +305,7 @@ describe("POST /api/reports/import edge cases", () => {
 
     expect(response.status).toBe(400);
     expect(mockedGetRequestUserId).not.toHaveBeenCalled();
-    expect(mockedPutTransaction).not.toHaveBeenCalled();
+    expect(mockedBatchWriteTransactions).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toMatchObject({
       error: { code: "INVALID_INPUT", message: "No CSV payload provided" },
     });
@@ -318,7 +324,7 @@ describe("POST /api/reports/import edge cases", () => {
 
     expect(response.status).toBe(200);
     expect(mockedGetRequestUserId).toHaveBeenCalledTimes(1);
-    expect(mockedPutTransaction).not.toHaveBeenCalled();
+    expect(mockedBatchWriteTransactions).toHaveBeenCalledWith("user-csv", []);
     await expect(response.json()).resolves.toMatchObject({
       importedCount: 0,
       transactions: [],
@@ -328,7 +334,6 @@ describe("POST /api/reports/import edge cases", () => {
 
   it("imports only parser-valid rows and silently drops rows the parser filters out", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-csv");
-    mockedPutTransaction.mockResolvedValue({} as never);
 
     const csv = [
       "Name,Amount,Category,Date,Notes,Payment Method,Tags",
@@ -347,15 +352,13 @@ describe("POST /api/reports/import edge cases", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockedPutTransaction).toHaveBeenCalledTimes(1);
-    expect(mockedPutTransaction).toHaveBeenCalledWith(
-      "user-csv",
+    expect(mockedBatchWriteTransactions).toHaveBeenCalledWith("user-csv", [
       expect.objectContaining({
         name: "Lunch",
         amount: 12,
         date: "2025-02-01",
       }),
-    );
+    ]);
     await expect(response.json()).resolves.toMatchObject({
       importedCount: 1,
       skipped: [],
@@ -365,7 +368,6 @@ describe("POST /api/reports/import edge cases", () => {
 
   it("imports income CSV rows into the authenticated user's account", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-income");
-    mockedPutTransaction.mockResolvedValue({} as never);
 
     const csv = [
       "Source,Amount,Pay Date",
@@ -382,26 +384,19 @@ describe("POST /api/reports/import edge cases", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockedPutTransaction).toHaveBeenCalledTimes(2);
-    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
-      1,
-      "user-income",
+    expect(mockedBatchWriteTransactions).toHaveBeenCalledWith("user-income", [
       expect.objectContaining({
         name: "Employer",
         amount: 2500,
         category: "Income",
         date: "2025-03-14",
       }),
-    );
-    expect(mockedPutTransaction).toHaveBeenNthCalledWith(
-      2,
-      "user-income",
       expect.objectContaining({
         name: "Tax Refund",
         amount: 125.5,
         category: "Income",
         date: "2025-03-21",
       }),
-    );
+    ]);
   });
 });

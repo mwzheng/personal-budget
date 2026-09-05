@@ -67,6 +67,7 @@ interface Props {
   onBudgetsLoaded: (budgets: SavedBudget[]) => void;
   onLoadingChange: (loading: boolean) => void;
   onDeleteBudget: (budgetId: string) => void;
+  savedBudget?: SavedBudget | null;
 }
 
 const CATEGORY_OPTIONS: CategoryType[] = ["Need", "Want", "Saving"];
@@ -145,6 +146,7 @@ export function BudgetForm({
   onBudgetsLoaded,
   onLoadingChange,
   onDeleteBudget,
+  savedBudget,
 }: Props) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [rawAmounts, setRawAmounts] = useState<Record<string, string>>({});
@@ -373,6 +375,7 @@ export function BudgetForm({
         onBudgetsLoaded={onBudgetsLoaded}
         onLoadingChange={onLoadingChange}
         onDeleted={onDeleteBudget}
+        savedBudget={savedBudget}
       />
 
       <Divider />

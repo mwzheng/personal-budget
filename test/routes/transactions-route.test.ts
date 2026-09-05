@@ -9,7 +9,7 @@ vi.mock("@/lib/auth/requestUser", () => ({
 
 vi.mock("@/lib/api/dynamo", () => ({
   deleteTransaction: vi.fn(),
-  getUserTransactions: vi.fn(),
+  getUserTransactionsPaged: vi.fn(),
   putTransaction: vi.fn(),
   updateTransaction: vi.fn(),
 }));
@@ -21,7 +21,7 @@ vi.mock("@/lib/utils/generateId", () => ({
 import { DELETE, GET, POST, PUT } from "@/app/api/transactions/route";
 import {
   deleteTransaction,
-  getUserTransactions,
+  getUserTransactionsPaged,
   putTransaction,
   updateTransaction,
 } from "@/lib/api/dynamo";
@@ -29,7 +29,7 @@ import { getRequestUserId } from "@/lib/auth/requestUser";
 import { generateId } from "@/lib/utils/generateId";
 
 const mockedDeleteTransaction = vi.mocked(deleteTransaction);
-const mockedGetUserTransactions = vi.mocked(getUserTransactions);
+const mockedGetUserTransactionsPaged = vi.mocked(getUserTransactionsPaged);
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
 const mockedPutTransaction = vi.mocked(putTransaction);
 const mockedUpdateTransaction = vi.mocked(updateTransaction);
@@ -45,7 +45,7 @@ function buildRequest(
 describe("transactions api route", () => {
   beforeEach(() => {
     mockedDeleteTransaction.mockReset();
-    mockedGetUserTransactions.mockReset();
+    mockedGetUserTransactionsPaged.mockReset();
     mockedGetRequestUserId.mockReset();
     mockedPutTransaction.mockReset();
     mockedUpdateTransaction.mockReset();
@@ -61,36 +61,43 @@ describe("transactions api route", () => {
 
   it("returns the authenticated user's transactions", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-100");
-    mockedGetUserTransactions.mockResolvedValue([
-      {
-        id: "tx-1",
-        name: "Coffee",
-        amount: 50,
-        date: "2026-01-15",
-        category: "Want",
-        notes: "",
-        paymentMethod: "card",
-        tags: [],
-      },
-      {
-        id: "tx-2",
-        name: "Rent",
-        amount: 120,
-        date: "2026-01-16",
-        category: "Need",
-        notes: "",
-        paymentMethod: "bank",
-        tags: [],
-      },
-    ]);
+    mockedGetUserTransactionsPaged.mockResolvedValue({
+      transactions: [
+        {
+          id: "tx-1",
+          name: "Coffee",
+          amount: 50,
+          date: "2026-01-15",
+          category: "Want",
+          notes: "",
+          paymentMethod: "card",
+          tags: [],
+        },
+        {
+          id: "tx-2",
+          name: "Rent",
+          amount: 120,
+          date: "2026-01-16",
+          category: "Need",
+          notes: "",
+          paymentMethod: "bank",
+          tags: [],
+        },
+      ],
+      lastKey: undefined,
+    });
 
     const response = await GET(buildRequest());
 
     expect(mockedGetRequestUserId).toHaveBeenCalledTimes(1);
-    expect(mockedGetUserTransactions).toHaveBeenCalledWith("user-100");
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledWith(
+      "user-100",
+      expect.objectContaining({ limit: 100 }),
+    );
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    await expect(response.json()).resolves.toMatchObject({
       ok: true,
+      hasMore: false,
       transactions: [
         {
           id: "tx-1",
@@ -123,11 +130,56 @@ describe("transactions api route", () => {
 
     const response = await GET(buildRequest());
 
-    expect(mockedGetUserTransactions).not.toHaveBeenCalled();
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: "Error: Missing or invalid Authorization header",
+    });
+  });
+
+  it("accepts pageSize as a cursor-pagination compatibility alias", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-page");
+    const lastKey = { pk: "user#user-page", sk: "date#2026-01-01#tx-1" };
+    mockedGetUserTransactionsPaged.mockResolvedValue({
+      transactions: [],
+      lastKey,
+    });
+    const cursor = Buffer.from(JSON.stringify(lastKey)).toString("base64url");
+
+    const response = await GET(
+      buildRequest(
+        `http://localhost/api/transactions?page=2&pageSize=25&cursor=${cursor}&startDate=2026-01-01&endDate=2026-01-31`,
+      ),
+    );
+
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledWith("user-page", {
+      limit: 25,
+      lastKey,
+      startDate: "2026-01-01",
+      endDate: "2026-01-31",
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      hasMore: true,
+      nextCursor: cursor,
+    });
+  });
+
+  it("returns 400 for a malformed cursor without querying DynamoDB", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-invalid-cursor");
+
+    const response = await GET(
+      buildRequest(
+        `http://localhost/api/transactions?cursor=${Buffer.from("{}").toString("base64url")}`,
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Invalid cursor",
     });
   });
 

@@ -79,8 +79,15 @@ export async function getUserFireScenarios(
       ":prefix": SK_PREFIX.FIRE_SCENARIO,
     },
   } as const;
-  const res = await client.send(new QueryCommand(params));
-  const items = (res.Items ?? []) as FireScenarioQueryItem[];
+  const items: FireScenarioQueryItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await client.send(
+      new QueryCommand({ ...params, ExclusiveStartKey: lastKey }),
+    );
+    items.push(...((res.Items ?? []) as FireScenarioQueryItem[]));
+    lastKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
   return items.map((item) => ({
     scenarioId: String(item.scenarioId || ""),
     name: String(item.name || ""),

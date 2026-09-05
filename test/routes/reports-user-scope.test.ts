@@ -7,20 +7,39 @@ vi.mock("@/lib/auth/requestUser", () => ({
   getRequestUserId: vi.fn(),
 }));
 
-vi.mock("@/lib/api/dynamo", () => ({
-  getUserTransactions: vi.fn(),
-  putTransaction: vi.fn(),
-}));
+vi.mock("@/lib/api/dynamo", () => {
+  const getUserTransactions = vi.fn();
+  const putTransaction = vi.fn();
+  return {
+    getUserTransactions,
+    getUserTransactionsPaged: vi.fn(async (userId: string) => ({
+      transactions: await getUserTransactions(userId),
+      lastKey: undefined,
+    })),
+    putTransaction,
+    batchWriteTransactions: vi.fn(async (userId: string, transactions) => {
+      for (const transaction of transactions) {
+        await putTransaction(userId, transaction);
+      }
+      return { imported: transactions, skipped: [] };
+    }),
+  };
+});
 
 import { GET as getReports } from "../../app/api/reports/route";
 import { GET as exportReports } from "../../app/api/reports/export/route";
 import { POST as importReports } from "../../app/api/reports/import/route";
-import { getUserTransactions, putTransaction } from "@/lib/api/dynamo";
+import {
+  getUserTransactions,
+  getUserTransactionsPaged,
+  putTransaction,
+} from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import type { Transaction } from "../../lib/types/types";
 
 const mockedGetRequestUserId = vi.mocked(getRequestUserId);
 const mockedGetUserTransactions = vi.mocked(getUserTransactions);
+const mockedGetUserTransactionsPaged = vi.mocked(getUserTransactionsPaged);
 const mockedPutTransaction = vi.mocked(putTransaction);
 
 function buildTransaction(
@@ -44,6 +63,13 @@ describe("reports routes user scoping", () => {
   beforeEach(() => {
     mockedGetRequestUserId.mockReset();
     mockedGetUserTransactions.mockReset();
+    mockedGetUserTransactionsPaged.mockReset();
+    mockedGetUserTransactionsPaged.mockImplementation(
+      async (userId: string) => ({
+        transactions: await mockedGetUserTransactions(userId),
+        lastKey: undefined,
+      }),
+    );
     mockedPutTransaction.mockReset();
   });
 
@@ -64,17 +90,84 @@ describe("reports routes user scoping", () => {
 
     const response = await getReports(
       new Request(
-        "http://localhost/api/reports?search=groc&page=1&pageSize=10&includeAggregates=true",
+        "http://localhost/api/reports?search=groc&startDate=2025-01-01&endDate=2025-12-31&page=1&pageSize=10&includeAggregates=true",
       ) as any,
     );
 
     expect(mockedGetRequestUserId).toHaveBeenCalledTimes(1);
-    expect(mockedGetUserTransactions).toHaveBeenCalledWith("user-a");
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledWith("user-a", {
+      startDate: "2025-01-01",
+      endDate: "2025-12-31",
+      limit: 10,
+      lastKey: undefined,
+    });
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       totalCount: 1,
       transactions: [expect.objectContaining({ name: "Groceries" })],
       aggregates: expect.objectContaining({ totalAmount: 25 }),
+    });
+  });
+
+  it("requires a cursor rather than silently repeating page one for legacy page requests", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-page");
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?startDate=2026-01-01&endDate=2026-01-31&page=2&pageSize=25",
+      ) as any,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "CURSOR_REQUIRED" },
+    });
+  });
+
+  it("returns one bounded cursor page and page-local aggregates", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-page");
+    const cursor = { pk: "user#user-page", sk: "date#2026-01-15#tx-1" };
+    mockedGetUserTransactionsPaged.mockResolvedValue({
+      transactions: [
+        buildTransaction("tx-2", { amount: 50, date: "2026-01-14" }),
+      ],
+      lastKey: cursor,
+    });
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?startDate=2026-01-01&endDate=2026-01-31&pageSize=25",
+      ) as any,
+    );
+
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledWith("user-page", {
+      startDate: "2026-01-01",
+      endDate: "2026-01-31",
+      limit: 25,
+      lastKey: undefined,
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 1,
+      aggregates: expect.objectContaining({ totalAmount: 50 }),
+      hasMore: true,
+      nextCursor: Buffer.from(JSON.stringify(cursor)).toString("base64url"),
+    });
+  });
+
+  it("rejects a malformed reports cursor without querying DynamoDB", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-invalid-cursor");
+
+    const response = await getReports(
+      new Request(
+        `http://localhost/api/reports?cursor=${Buffer.from("{}").toString("base64url")}`,
+      ) as any,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "INVALID_CURSOR" },
     });
   });
 
@@ -225,6 +318,67 @@ describe("reports routes user scoping", () => {
     expect(response.status).toBe(200);
     expect(csv).toContain('"Emergency Fund"');
     expect(csv).not.toContain('"Rent"');
+  });
+
+  it("follows bounded DynamoDB cursors only for the complete CSV export", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-export");
+    const cursor = { pk: "user#user-export", sk: "date#2026-01-02#first" };
+    mockedGetUserTransactionsPaged
+      .mockResolvedValueOnce({
+        transactions: [buildTransaction("first", { date: "2026-01-02" })],
+        lastKey: cursor,
+      })
+      .mockResolvedValueOnce({
+        transactions: [buildTransaction("second", { date: "2026-01-01" })],
+        lastKey: undefined,
+      });
+
+    const response = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?startDate=2026-01-01&endDate=2026-01-31",
+      ) as any,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledTimes(2);
+    expect(mockedGetUserTransactionsPaged).toHaveBeenNthCalledWith(
+      1,
+      "user-export",
+      {
+        startDate: "2026-01-01",
+        endDate: "2026-01-31",
+        limit: 200,
+        lastKey: undefined,
+      },
+    );
+    expect(mockedGetUserTransactionsPaged).toHaveBeenNthCalledWith(
+      2,
+      "user-export",
+      {
+        startDate: "2026-01-01",
+        endDate: "2026-01-31",
+        limit: 200,
+        lastKey: cursor,
+      },
+    );
+  });
+
+  it("exports all history only when explicitly requested", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-export-all-history");
+    mockedGetUserTransactionsPaged.mockResolvedValue({
+      transactions: [buildTransaction("older", { date: "2020-01-01" })],
+      lastKey: undefined,
+    });
+
+    const response = await exportReports(
+      new Request("http://localhost/api/reports/export?allHistory=true") as any,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockedGetUserTransactionsPaged).toHaveBeenCalledWith(
+      "user-export-all-history",
+      { limit: 200, lastKey: undefined },
+    );
   });
 
   it("exports only the authenticated user's income transactions when filtered by income", async () => {
