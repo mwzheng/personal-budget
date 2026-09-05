@@ -8,7 +8,7 @@
 import { useCallback, useRef, useState } from "react";
 
 export interface UseDeleteConfirmationOptions<T> {
-  onConfirm: (item: T) => Promise<void>;
+  onConfirm: (item: T) => Promise<void | boolean>;
 }
 
 export function useDeleteConfirmation<T>({
@@ -34,10 +34,10 @@ export function useDeleteConfirmation<T>({
     if (!candidate) return;
     setIsDeleting(true);
     try {
-      await onConfirmRef.current(candidate);
+      const result = await onConfirmRef.current(candidate);
+      if (result !== false) setCandidate(null);
     } finally {
       setIsDeleting(false);
-      setCandidate(null);
     }
   }, [candidate]);
 

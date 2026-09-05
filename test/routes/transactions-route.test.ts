@@ -391,7 +391,7 @@ describe("transactions api route", () => {
 
   it("deletes a transaction using JSON body with id and date", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-400");
-    mockedDeleteTransaction.mockResolvedValue(undefined as never);
+    mockedDeleteTransaction.mockResolvedValue({ ok: true, deleted: null });
 
     const response = await DELETE(
       buildRequest("http://localhost/api/transactions", {
@@ -407,12 +407,12 @@ describe("transactions api route", () => {
       "2026-06-15",
     );
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true });
+    await expect(response.json()).resolves.toEqual({ ok: true, deleted: null });
   });
 
   it("deletes a transaction using query parameters for id and date", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-401");
-    mockedDeleteTransaction.mockResolvedValue(undefined as never);
+    mockedDeleteTransaction.mockResolvedValue({ ok: true, deleted: null });
 
     const response = await DELETE(
       buildRequest(
@@ -427,7 +427,7 @@ describe("transactions api route", () => {
       "2026-07-20",
     );
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true });
+    await expect(response.json()).resolves.toEqual({ ok: true, deleted: null });
   });
 
   it("rejects DELETE when id or date is missing with 400", async () => {

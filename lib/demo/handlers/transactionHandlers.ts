@@ -5,6 +5,10 @@
  * `appendImportedTransactions` live here because they are transaction-specific.
  */
 
+import {
+  RestoreTransactionSchema,
+  sameTransactionContent,
+} from "../../utils/transaction-restore";
 import { filterTransactions } from "../../utils/aggregations";
 import { loadTransactionsFromCSV } from "../../utils/csvParser";
 import { transactionsToCsv } from "../../utils/csvExport";
@@ -76,6 +80,37 @@ export async function handleTransactionRoutes(
   const { url, method, input, init } = ctx;
   const pathname = url.pathname;
 
+  if (pathname === "/api/transactions/restore" && method === "POST") {
+    const body = await readJsonBody<{ transaction?: unknown }>(input, init);
+    const parsed = RestoreTransactionSchema.safeParse(body?.transaction);
+    if (!parsed.success)
+      return jsonResponse(
+        { ok: false, error: "Invalid transaction" },
+        { status: 400 },
+      );
+    const existing = getDemoStore().transactions.find(
+      (tx) => tx.id === parsed.data.id,
+    );
+    if (existing) {
+      if (sameTransactionContent(existing, parsed.data))
+        return jsonResponse({ ok: true, restored: existing });
+      return jsonResponse(
+        {
+          ok: false,
+          error:
+            "A different transaction already exists. It was not overwritten.",
+        },
+        { status: 409 },
+      );
+    }
+    const restored = { ...parsed.data, updatedAt: new Date().toISOString() };
+    updateDemoStore((current) => ({
+      ...current,
+      transactions: sortTransactions([...current.transactions, restored]),
+    }));
+    return jsonResponse({ ok: true, restored });
+  }
+
   if (pathname === "/api/transactions") {
     if (method === "GET") {
       return jsonResponse({
@@ -140,6 +175,8 @@ export async function handleTransactionRoutes(
         );
       }
 
+      const deleted =
+        getDemoStore().transactions.find((tx) => tx.id === id) ?? null;
       updateDemoStore((current) => ({
         ...current,
         transactions: current.transactions.filter(
@@ -147,7 +184,7 @@ export async function handleTransactionRoutes(
         ),
       }));
 
-      return jsonResponse({ ok: true });
+      return jsonResponse({ ok: true, deleted });
     }
   }
 

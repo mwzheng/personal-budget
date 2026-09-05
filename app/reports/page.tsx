@@ -27,18 +27,16 @@ import { FilterBar } from "@/components/report/FilterBar";
 import { YearlyReport } from "@/components/report/YearlyReport";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
+import { useTransactionUndo } from "@/hooks/useTransactionUndo";
+import { TransactionUndoNotification } from "@/components/transactions/TransactionUndoNotification";
 import { TransactionCalendar } from "@/components/transactions/TransactionCalendar";
 import { TransactionDetailDialog } from "@/components/transactions/TransactionDetailDialog";
 import { ImportCsvDialog } from "@/components/transactions/ImportCsvDialog";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
+import { currentTransactionScope } from "@/lib/auth/accountScope";
 import { apiFetch } from "@/lib/api/apiFetch";
-import {
-  AUTH_CHANGED_EVENT,
-  getStoredCognitoTokens,
-  isAuthenticated,
-  isDemoSessionActive,
-} from "@/lib/auth/cognitoClient";
+import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   clearTransactionCache,
   loadCachedTransactions,
@@ -90,34 +88,6 @@ interface TransactionsApiResponse {
   transactions?: Transaction[];
   hasMore?: boolean;
   nextCursor?: string;
-}
-
-function currentTransactionScope() {
-  if (isDemoSessionActive()) return "demo";
-  const { accessToken, idToken } = getStoredCognitoTokens();
-  const token = accessToken || idToken;
-  if (token) {
-    try {
-      const payload = token.split(".")[1];
-      if (payload) {
-        const claims = JSON.parse(
-          atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
-        ) as { sub?: unknown };
-        if (typeof claims.sub === "string" && claims.sub) {
-          return `user:${claims.sub}`;
-        }
-      }
-    } catch {
-      // Keep malformed or non-JWT credentials isolated by their token below.
-    }
-    // Keep non-JWT or malformed credentials isolated as well. Reusing one
-    // generic scope could expose a previous user's cached transactions if an
-    // auth-change event is missed or the provider returns a non-JWT token.
-    return `authenticated:${token}`;
-  }
-  return process.env.NEXT_PUBLIC_DISABLE_AUTH === "true"
-    ? "disabled-auth"
-    : null;
 }
 
 function getFilterTransactionLoadPlan(filters: FilterParams) {
@@ -496,6 +466,26 @@ const ReportsPageContent = () => {
     setFormOpen(true);
   };
 
+  const undo = useTransactionUndo({
+    scope,
+    onRemoved: (id, deleted) => {
+      const removed =
+        deleted ?? allTransactions.find((transaction) => transaction.id === id);
+      if (!removed || !scope) return;
+      setAllTransactions((current) =>
+        removeTransactionFromList(current, removed),
+      );
+      removeCachedTransaction(scope, removed);
+    },
+    onRestored: (restored) => {
+      if (!scope) return;
+      setAllTransactions((current) =>
+        upsertTransactionInList(current, restored),
+      );
+      upsertCachedTransaction(scope, restored);
+    },
+  });
+
   const handleDeleteTransaction = async (id: string) => {
     const requestGeneration = authGeneration.current;
     const requestScope = scope;
@@ -508,34 +498,16 @@ const ReportsPageContent = () => {
     setErrorMessage(null);
 
     try {
-      const res = await apiFetch("/api/transactions", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, date: transaction.date }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-      };
-
+      return await undo.controller.remove(transaction);
+    } catch (error) {
       if (!isCurrentRequest()) return false;
-
-      if (res.status === 401 || res.status === 403) {
+      if (
+        (error as { status?: number }).status === 401 ||
+        (error as { status?: number }).status === 403
+      ) {
         handleUnauthorized(requestScope);
         return false;
       }
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Failed to delete transaction");
-      }
-
-      setAllTransactions((current) =>
-        removeTransactionFromList(current, transaction),
-      );
-      if (requestScope) removeCachedTransaction(requestScope, transaction);
-      return true;
-    } catch (error) {
-      if (!isCurrentRequest()) return false;
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to delete transaction",
       );
@@ -896,7 +868,7 @@ const ReportsPageContent = () => {
                     {
                       label: "Income",
                       value: formatCurrency(agg.incomeAmount),
-                      color: "#26a69a",
+                      color: "primary.main",
                       trend: comparableAgg
                         ? buildStatTrend(
                             agg.incomeAmount,
@@ -920,7 +892,7 @@ const ReportsPageContent = () => {
                     {
                       label: "Needs",
                       value: formatCurrency(agg.totalByCategoryType.Need),
-                      color: "#B91C1C",
+                      color: "error.main",
                       trend: comparableAgg
                         ? buildStatTrend(
                             agg.totalByCategoryType.Need,
@@ -932,7 +904,7 @@ const ReportsPageContent = () => {
                     {
                       label: "Wants",
                       value: formatCurrency(agg.totalByCategoryType.Want),
-                      color: "#42a5f5",
+                      color: "info.main",
                       trend: comparableAgg
                         ? buildStatTrend(
                             agg.totalByCategoryType.Want,
@@ -944,7 +916,7 @@ const ReportsPageContent = () => {
                     {
                       label: "Savings",
                       value: formatCurrency(agg.totalByCategoryType.Saving),
-                      color: "#15803D",
+                      color: "success.main",
                       trend: comparableAgg
                         ? buildStatTrend(
                             agg.totalByCategoryType.Saving,
@@ -1077,6 +1049,7 @@ const ReportsPageContent = () => {
           </Box>
         </>
       )}
+      <TransactionUndoNotification {...undo} />
       <TransactionDetailDialog
         open={Boolean(detailTarget)}
         transaction={detailTarget}

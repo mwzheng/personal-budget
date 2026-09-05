@@ -62,7 +62,7 @@ export function TransactionsTable({
   } = useDeleteConfirmation<Transaction>({
     onConfirm: async (item) => {
       if (onDelete) {
-        await onDelete(item.id);
+        return await onDelete(item.id);
       }
     },
   });
@@ -276,7 +276,7 @@ export function TransactionsTable({
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Delete Transaction?"
-        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? This cannot be undone.`}
+        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? Undo is available briefly after deletion.`}
         confirmLabel="Delete"
         loading={isDeleting}
         onClose={cancelDelete}

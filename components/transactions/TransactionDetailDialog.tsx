@@ -223,7 +223,7 @@ export function TransactionDetailDialog({
       <ConfirmDialog
         open={confirmDeleteOpen}
         title="Delete transaction"
-        message="Delete this transaction permanently? This action cannot be undone."
+        message="Delete this transaction? Undo is available briefly after deletion."
         confirmLabel="Delete"
         destructive
         loading={deletePending}
