@@ -14,16 +14,17 @@ import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AllocationBar } from "@/components/budget/AllocationBar";
+import { ActualVsBudget } from "@/components/budget/ActualVsBudget";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
-import { isAuthenticated } from "@/lib/auth/cognitoClient";
+import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 import {
   buildBudgetInsights,
   createDefaultBudgetDraft,
@@ -34,7 +35,6 @@ import {
   sortSavedBudgets,
 } from "@/lib/utils/budget-planner";
 import { SavedBudget } from "@/lib/types/types";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import {
   clearBudgetDraft,
   getBudgetDraft,
@@ -149,9 +149,11 @@ function StatCard({
 }
 
 export default function BudgetPage() {
+  const theme = useTheme();
   const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
   const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
+  const [savedBudgets, setSavedBudgets] = useState<SavedBudget[]>([]);
   const [savedBudget, setSavedBudget] = useState<SavedBudget | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -171,6 +173,20 @@ export default function BudgetPage() {
       router.replace("/auth/login");
     }
   }, [router]);
+
+  // Saved budgets belong to the current account. Clearing this page-local
+  // collection immediately avoids briefly comparing a new account's activity
+  // with the previous account's plan while BudgetList reloads its collection.
+  useEffect(() => {
+    const clearAccountBudgetState = () => {
+      setSavedBudgets([]);
+      setSavedBudget(null);
+      setBudgetsReloadKey((current) => current + 1);
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, clearAccountBudgetState);
+    return () =>
+      window.removeEventListener(AUTH_CHANGED_EVENT, clearAccountBudgetState);
+  }, []);
 
   const insights = useMemo(() => buildBudgetInsights(draft), [draft]);
   const hasDraftChanges =
@@ -225,6 +241,7 @@ export default function BudgetPage() {
   }, []);
 
   const handleBudgetsLoaded = useCallback((budgets: SavedBudget[]) => {
+    setSavedBudgets(budgets);
     if (hasAutoLoadedLatestBudget.current) {
       return;
     }
@@ -310,6 +327,12 @@ export default function BudgetPage() {
   }
 
   function handleBudgetDeleted(budgetId: string) {
+    setSavedBudgets((current) =>
+      current.filter((budget) => budget.budgetId !== budgetId),
+    );
+    setSavedBudget((current) =>
+      current?.budgetId === budgetId ? null : current,
+    );
     if (editingBudgetId === budgetId) {
       startFresh();
     }
@@ -323,7 +346,7 @@ export default function BudgetPage() {
         : undefined;
   const leftoverBorderColor =
     insights.overspending > 0 || insights.leftoverSavings > 0
-      ? SERVER_THEME_TOKENS.palette.secondary
+      ? theme.palette.secondary.main
       : undefined;
 
   const savingsRate =
@@ -372,7 +395,7 @@ export default function BudgetPage() {
           label="Monthly Income"
           value={formatCurrencyWhole(insights.monthlyIncome)}
           subtitle={`${formatCurrencyWhole(insights.monthlyIncome * 12)} yearly`}
-          borderColor={SERVER_THEME_TOKENS.palette.primary}
+          borderColor={theme.palette.primary.main}
           icon={<AttachMoneyIcon fontSize="small" />}
           isLoading={isLoading}
         />
@@ -380,7 +403,7 @@ export default function BudgetPage() {
           label="Planned Expenses"
           value={formatCurrencyWhole(insights.totalExpenses)}
           subtitle={`${expensesPct}% of income`}
-          borderColor={SERVER_THEME_TOKENS.text.secondary}
+          borderColor={theme.palette.text.secondary}
           icon={<TrendingDownIcon fontSize="small" />}
           isLoading={isLoading}
         />
@@ -471,6 +494,12 @@ export default function BudgetPage() {
           </SectionCard>
         </Grid>
       </Grid>
+      <Box sx={{ mt: 3 }}>
+        <ActualVsBudget
+          savedBudgets={savedBudgets}
+          preferredBudgetId={editingBudgetId}
+        />
+      </Box>
     </Container>
   );
 }
