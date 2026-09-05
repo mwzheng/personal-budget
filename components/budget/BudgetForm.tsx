@@ -152,8 +152,8 @@ export function BudgetForm({
   const [helpOpen, setHelpOpen] = useState(false);
   const [rawAmounts, setRawAmounts] = useState<Record<string, string>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<
-    Record<string, boolean>
-  >({});
+    Record<CategoryType, boolean>
+  >(() => ({ Need: true, Want: true, Saving: true }));
   const [addMenuAnchor, setAddMenuAnchor] = useState<HTMLElement | null>(null);
   const [deletedExpense, setDeletedExpense] = useState<DeletedExpense | null>(
     null,
@@ -405,6 +405,8 @@ export function BudgetForm({
             component="button"
             type="button"
             onClick={() => toggleCategory(category)}
+            aria-controls={`expense-category-${category}`}
+            aria-expanded={!collapsedCategories[category]}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -471,7 +473,10 @@ export function BudgetForm({
             />
           </Box>
 
-          <Collapse in={!collapsedCategories[category]}>
+          <Collapse
+            id={`expense-category-${category}`}
+            in={!collapsedCategories[category]}
+          >
             {expenses.length > 0 ? (
               <Box sx={{ overflowX: { xs: "auto", lg: "visible" } }}>
                 <Table

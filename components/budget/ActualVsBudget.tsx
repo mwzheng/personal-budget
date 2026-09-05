@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { SavedBudget, Transaction } from "@/lib/types/types";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth/cognitoClient";
 import { currentTransactionScope } from "@/lib/auth/accountScope";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/budget/comparison";
 import { loadMonthlyTransactions } from "@/lib/budget/loadMonthlyTransactions";
 import type { BudgetDraft } from "@/lib/utils/budget-normalizer";
+import { CATEGORY_COLORS } from "@/lib/utils/budget-planner";
 import { formatCurrency } from "@/lib/utils/format";
 
 function currentMonth() {
@@ -31,10 +33,12 @@ function ComparisonLine({
   label,
   value,
   saving = false,
+  barColor,
 }: {
   label: string;
   value: ComparisonRow;
   saving?: boolean;
+  barColor?: string;
 }) {
   const amount = formatCurrency(Math.abs(value.difference));
   const description = {
@@ -45,12 +49,8 @@ function ComparisonLine({
     "above-target": `${amount} above target`,
     "no-target": "No target set",
   }[value.status];
-  const color =
-    value.status === "over" || value.status === "unbudgeted"
-      ? "error"
-      : saving
-        ? "success"
-        : "primary";
+  const isOver = value.status === "over" || value.status === "unbudgeted";
+  const color = isOver ? "error" : saving ? "success" : "primary";
   return (
     <Box>
       <Stack
@@ -71,12 +71,19 @@ function ComparisonLine({
         value={value.progress}
         color={color}
         aria-label={`${label} progress`}
-        sx={{ height: 8, borderRadius: 1 }}
+        sx={{
+          height: 8,
+          borderRadius: 1,
+          ...(barColor && {
+            bgcolor: alpha(barColor, 0.14),
+            "& .MuiLinearProgress-bar": { bgcolor: barColor },
+          }),
+        }}
       />
       <Typography
         variant="body2"
         color={
-          color === "error"
+          isOver
             ? "error.main"
             : saving && value.status === "above-target"
               ? "success.main"
@@ -297,15 +304,18 @@ export function ActualVsBudget({
               <ComparisonLine
                 label="Needs"
                 value={comparison.categories.Need}
+                barColor={CATEGORY_COLORS.Need}
               />
               <ComparisonLine
                 label="Wants"
                 value={comparison.categories.Want}
+                barColor={CATEGORY_COLORS.Want}
               />
               <ComparisonLine
                 label="Savings"
                 value={comparison.categories.Saving}
                 saving
+                barColor={CATEGORY_COLORS.Saving}
               />
             </Stack>
           )}

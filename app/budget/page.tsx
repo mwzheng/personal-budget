@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api/apiFetch";
 import { formatCurrency, formatCurrencyWhole } from "@/lib/utils/format";
 
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SavingsIcon from "@mui/icons-material/Savings";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -94,7 +95,7 @@ function StatCard({
         },
       }}
     >
-      <Stack direction="row" alignItems="flex-start" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={1}>
         {icon && (
           <Box
             sx={{
@@ -349,10 +350,6 @@ export default function BudgetPage() {
       ? theme.palette.secondary.main
       : undefined;
 
-  const savingsRate =
-    insights.monthlyIncome > 0
-      ? ((insights.leftoverSavings / insights.monthlyIncome) * 100).toFixed(0)
-      : "0";
   const expensesPct =
     insights.monthlyIncome > 0
       ? ((insights.totalExpenses / insights.monthlyIncome) * 100).toFixed(0)
@@ -408,30 +405,28 @@ export default function BudgetPage() {
           isLoading={isLoading}
         />
         <StatCard
-          label={
-            insights.overspending > 0
-              ? "Overspending"
-              : insights.leftoverSavings > 0
-                ? "Leftover Savings"
-                : "Balance"
-          }
+          label="Budget Allocation"
           value={formatCurrency(
             insights.overspending > 0
               ? insights.overspending
               : insights.leftoverSavings,
           )}
           subtitle={
-            insights.overspending <= 0 && insights.leftoverSavings > 0
-              ? `${savingsRate}% savings rate`
-              : undefined
+            insights.overspending > 0
+              ? "Over-allocated budget"
+              : insights.leftoverSavings > 0
+                ? "Unallocated budget"
+                : "Fully allocated budget"
           }
           color={leftoverColor}
           borderColor={leftoverBorderColor}
           icon={
             insights.overspending > 0 ? (
               <WarningIcon fontSize="small" />
-            ) : (
+            ) : insights.leftoverSavings > 0 ? (
               <SavingsIcon fontSize="small" />
+            ) : (
+              <CheckCircleIcon fontSize="small" />
             )
           }
           isLoading={isLoading}
