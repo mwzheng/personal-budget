@@ -15,6 +15,15 @@ describe("Budget page visual contracts", () => {
     expect(comparison).toContain("barColor={CATEGORY_COLORS.Saving}");
   });
 
+  it("provides an editable month and year picker for budget comparisons", () => {
+    const comparison = readSource("components/budget/ActualVsBudget.tsx");
+
+    expect(comparison).toContain('from "@mui/x-date-pickers/DatePicker"');
+    expect(comparison).toContain('views={["year", "month"]}');
+    expect(comparison).toContain('format="MMMM yyyy"');
+    expect(comparison).not.toContain('type="month"');
+  });
+
   it("starts expense categories collapsed with accessible toggles", () => {
     const form = readSource("components/budget/BudgetForm.tsx");
 

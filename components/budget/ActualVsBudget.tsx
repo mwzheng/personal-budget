@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { SavedBudget, Transaction } from "@/lib/types/types";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth/cognitoClient";
 import { currentTransactionScope } from "@/lib/auth/accountScope";
@@ -25,9 +26,13 @@ import type { BudgetDraft } from "@/lib/utils/budget-normalizer";
 import { CATEGORY_COLORS } from "@/lib/utils/budget-planner";
 import { formatCurrency } from "@/lib/utils/format";
 
-function currentMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+function monthStart(value = new Date()) {
+  return new Date(value.getFullYear(), value.getMonth(), 1);
+}
+
+function monthPeriod(value: Date | null) {
+  if (!value || Number.isNaN(value.getTime())) return null;
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
 }
 function ComparisonLine({
   label,
@@ -108,7 +113,8 @@ export function ActualVsBudget({
   activeBudgetId: string | null;
   onBudgetSelect: (budget: SavedBudget) => void;
 }) {
-  const [month, setMonth] = useState(currentMonth);
+  const [selectedMonth, setSelectedMonth] = useState<Date | null>(monthStart);
+  const month = monthPeriod(selectedMonth);
   const [scope, setScope] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [load, setLoad] = useState<{
@@ -140,7 +146,7 @@ export function ActualVsBudget({
         scopeRef.current = next;
         generation.current += 1;
         setLoad(null);
-        setMonth(currentMonth());
+        setSelectedMonth(monthStart());
         setScope(next);
       }
     };
@@ -162,7 +168,7 @@ export function ActualVsBudget({
     const request = ++generation.current;
     const controller = new AbortController();
     setLoad(null);
-    if (!scope || !hasBudget) return () => controller.abort();
+    if (!scope || !hasBudget || !month) return () => controller.abort();
     loadMonthlyTransactions(month, controller.signal)
       .then((transactions) => {
         if (
@@ -195,7 +201,7 @@ export function ActualVsBudget({
   const currentLoad =
     load?.scope === scope && load.month === month ? load : null;
   const comparison =
-    selectedBudget && currentLoad?.transactions
+    month && selectedBudget && currentLoad?.transactions
       ? calculateBudgetComparison(
           selectedBudget,
           currentLoad.transactions,
@@ -241,19 +247,24 @@ export function ActualVsBudget({
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
+            <DatePicker
               label="Month"
-              type="month"
-              value={month}
-              onChange={(event) => {
-                if (/^\d{4}-(0[1-9]|1[0-2])$/.test(event.target.value))
-                  setMonth(event.target.value);
+              views={["year", "month"]}
+              openTo="month"
+              format="MMMM yyyy"
+              value={selectedMonth}
+              onChange={(value) => {
+                setSelectedMonth(value ? monthStart(value) : null);
               }}
-              size="small"
-              InputLabelProps={{ shrink: true }}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: { minWidth: { xs: 0, sm: 190 } },
+                },
+              }}
             />
           </Stack>
-          {month === currentMonth() && (
+          {month === monthPeriod(monthStart()) && (
             <Typography variant="body2" color="text.secondary" mb={2}>
               Month to date against full monthly budget.
             </Typography>
@@ -264,7 +275,9 @@ export function ActualVsBudget({
               budget items marked not to compare.
             </Typography>
           )}
-          {!scope ? (
+          {!month ? (
+            <Alert severity="info">Choose a valid month and year.</Alert>
+          ) : !scope ? (
             <Typography color="text.secondary">
               Sign in to load recorded transactions.
             </Typography>
