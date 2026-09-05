@@ -182,6 +182,59 @@ describe("budget comparison", () => {
 
     expect(result.categories.Saving.planned).toBe(200);
   });
+
+  it("removes payroll-deducted expenses from planned comparison targets", () => {
+    const result = calculateBudgetComparison(
+      {
+        name: "Payroll deductions",
+        monthlyIncome: 5000,
+        expenses: [
+          {
+            expenseId: "taxes",
+            name: "Taxes",
+            amount: 900,
+            category: "Need",
+            includeInActualComparison: false,
+          },
+          {
+            expenseId: "insurance",
+            name: "Health insurance",
+            amount: 200,
+            category: "Need",
+            includeInActualComparison: false,
+          },
+          {
+            expenseId: "rent",
+            name: "Rent",
+            amount: 1500,
+            category: "Need",
+          },
+          {
+            expenseId: "hsa",
+            name: "HSA",
+            amount: 300,
+            category: "Saving",
+            includeInActualComparison: false,
+          },
+        ],
+      },
+      [tx("rent", 1500), tx("save", 2100, "Saving")],
+      "2024-02",
+    );
+
+    expect(result.excludedPlannedAmount).toBe(1400);
+    expect(result.spending).toMatchObject({ planned: 1500, actual: 1500 });
+    expect(result.categories.Need).toMatchObject({
+      planned: 1500,
+      actual: 1500,
+    });
+    // Leftover savings remains based on the full budget; only the excluded HSA
+    // contribution is removed from its comparison target.
+    expect(result.categories.Saving).toMatchObject({
+      planned: 2100,
+      actual: 2100,
+    });
+  });
 });
 describe("monthly transaction loader", () => {
   beforeEach(() => {

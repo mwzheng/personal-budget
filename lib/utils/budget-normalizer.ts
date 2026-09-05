@@ -99,6 +99,7 @@ export function createBudgetExpense(
     amount: overrides.amount ?? 0,
     category: overrides.category ?? "Need",
     group: overrides.group ?? "",
+    includeInActualComparison: overrides.includeInActualComparison !== false,
   };
 }
 
@@ -209,6 +210,7 @@ export function normalizeBudgetExpenses(
       amount,
       category,
       group: trimText(expense.group),
+      includeInActualComparison: expense.includeInActualComparison !== false,
     });
   }
 
@@ -234,6 +236,8 @@ export function normalizeBudgetForEditor(
           name: trimText(expense.name),
           amount: normalizePositiveAmount(Number(expense.amount)),
           group: trimText(expense.group),
+          includeInActualComparison:
+            expense.includeInActualComparison !== false,
         }),
       )
     : normalizeLegacyAllocations(budget.allocations ?? []);

@@ -185,6 +185,31 @@ describe("normalizeBudgetForEditor", () => {
     expect(result.expenses[0].category).toBe("Saving");
     expect(result.expenses[1].category).toBe("Need");
   });
+
+  it("includes expenses in Actual vs Budget unless explicitly excluded", () => {
+    const result = normalizeBudgetForEditor({
+      name: "Payroll",
+      expenses: [
+        {
+          expenseId: "taxes",
+          name: "Taxes",
+          amount: 500,
+          category: "Need",
+          includeInActualComparison: false,
+        },
+        {
+          expenseId: "rent",
+          name: "Rent",
+          amount: 1000,
+          category: "Need",
+        },
+      ],
+    });
+
+    expect(
+      result.expenses.map((expense) => expense.includeInActualComparison),
+    ).toEqual([false, true]);
+  });
 });
 
 describe("sortSavedBudgets", () => {

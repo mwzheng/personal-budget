@@ -123,6 +123,7 @@ describe("budgets api route", () => {
               amount: 20,
               category: "Want",
               group: "Subscriptions",
+              includeInActualComparison: false,
             },
           ],
         }),
@@ -141,6 +142,7 @@ describe("budgets api route", () => {
           amount: 1800,
           category: "Need",
           group: "Housing",
+          includeInActualComparison: true,
         },
         {
           expenseId: expect.any(String),
@@ -148,6 +150,7 @@ describe("budgets api route", () => {
           amount: 20,
           category: "Want",
           group: "Subscriptions",
+          includeInActualComparison: false,
         },
       ],
       allocations: [
@@ -170,12 +173,14 @@ describe("budgets api route", () => {
             amount: 1800,
             category: "Need",
             group: "Housing",
+            includeInActualComparison: true,
           }),
           expect.objectContaining({
             name: "Streaming",
             amount: 20,
             category: "Want",
             group: "Subscriptions",
+            includeInActualComparison: false,
           }),
         ],
         allocations: [
@@ -374,6 +379,7 @@ describe("budgets [id] api route", () => {
           amount: 1800,
           category: "Need",
           group: "Housing",
+          includeInActualComparison: true,
         },
       ],
       allocations: [{ category: "Rent", amount: 1800 }],

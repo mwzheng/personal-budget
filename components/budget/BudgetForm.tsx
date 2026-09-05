@@ -20,6 +20,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Checkbox from "@mui/material/Checkbox";
 import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -180,7 +181,7 @@ export function BudgetForm({
   function updateExpenseRow(
     expenseId: string,
     field: keyof BudgetExpense,
-    next: string | number,
+    next: string | number | boolean,
   ) {
     onChange({
       ...value,
@@ -390,6 +391,14 @@ export function BudgetForm({
         </Typography>
       )}
 
+      {!isEmpty && (
+        <Typography variant="body2" color="text.secondary">
+          Actual vs Budget uses expenses you record as transactions. Clear
+          Compare for payroll deductions such as taxes, health insurance, or HSA
+          contributions.
+        </Typography>
+      )}
+
       {groupedExpenses.map(({ category, expenses, total, pct }) => (
         <Box key={category}>
           <Box
@@ -480,7 +489,7 @@ export function BudgetForm({
                     <TableRow>
                       <TableCell
                         align="center"
-                        width="26%"
+                        width="23%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -491,7 +500,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="17%"
+                        width="15%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -502,7 +511,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="15%"
+                        width="12%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -513,7 +522,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="25%"
+                        width="22%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -567,7 +576,20 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="17%"
+                        width="13%"
+                        sx={{
+                          textTransform: "none",
+                          letterSpacing: 0,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Tooltip title="Include this expense in Actual vs Budget. Turn it off when you do not record a matching transaction.">
+                          <span>Compare</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        width="15%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -753,6 +775,24 @@ export function BudgetForm({
                                 sx={{ flex: 1 }}
                               />
                             </Stack>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Checkbox
+                              checked={
+                                expense.includeInActualComparison !== false
+                              }
+                              onChange={(event) =>
+                                updateExpenseRow(
+                                  expense.expenseId,
+                                  "includeInActualComparison",
+                                  event.target.checked,
+                                )
+                              }
+                              inputProps={{
+                                "aria-label": `Include ${expense.name || `expense ${globalIndex + 1}`} in Actual vs Budget`,
+                              }}
+                              size="small"
+                            />
                           </TableCell>
                           <TableCell align="right">
                             <Stack

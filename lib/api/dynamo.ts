@@ -537,6 +537,7 @@ export async function putBudget(
       amount: number;
       category: string;
       group?: string;
+      includeInActualComparison?: boolean;
     }[];
     allocations?: { category: string; amount: number }[];
     createdAt?: string;

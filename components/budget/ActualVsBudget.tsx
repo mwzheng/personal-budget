@@ -251,6 +251,12 @@ export function ActualVsBudget({
               Month to date against full monthly budget.
             </Typography>
           )}
+          {comparison && comparison.excludedPlannedAmount > 0 && (
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Excludes {formatCurrency(comparison.excludedPlannedAmount)} of
+              budget items marked not to compare.
+            </Typography>
+          )}
           {!scope ? (
             <Typography color="text.secondary">
               Sign in to load recorded transactions.

@@ -15,6 +15,7 @@ export const BudgetExpenseSchema = z.object({
   amount: z.number().positive(),
   category: CategoryTypeSchema,
   group: z.string().optional(),
+  includeInActualComparison: z.boolean().optional(),
 });
 
 export const BudgetSchema = z.object({

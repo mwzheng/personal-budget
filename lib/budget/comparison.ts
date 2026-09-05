@@ -62,10 +62,23 @@ export function calculateBudgetComparison(
   const actual: Record<CategoryType, number> = { Need: 0, Want: 0, Saving: 0 };
   const normalizedBudget = normalizeBudgetForEditor(budget);
   const insights = buildBudgetInsights(normalizedBudget);
+  const excluded: Record<CategoryType, number> = {
+    Need: 0,
+    Want: 0,
+    Saving: 0,
+  };
+  for (const expense of normalizedBudget.expenses) {
+    if (expense.includeInActualComparison === false) {
+      excluded[expense.category] += cents(expense.amount);
+    }
+  }
   const planned: Record<CategoryType, number> = {
-    Need: cents(insights.categoryTotals.Need),
-    Want: cents(insights.categoryTotals.Want),
-    Saving: cents(insights.categoryTotals.Saving),
+    Need: Math.max(0, cents(insights.categoryTotals.Need) - excluded.Need),
+    Want: Math.max(0, cents(insights.categoryTotals.Want) - excluded.Want),
+    Saving: Math.max(
+      0,
+      cents(insights.categoryTotals.Saving) - excluded.Saving,
+    ),
   };
 
   const monthly = transactions.filter(
@@ -77,6 +90,8 @@ export function calculateBudgetComparison(
   }
   return {
     transactionCount: monthly.length,
+    excludedPlannedAmount:
+      (excluded.Need + excluded.Want + excluded.Saving) / 100,
     spending: row(planned.Need + planned.Want, actual.Need + actual.Want),
     categories: {
       Need: row(planned.Need, actual.Need),
