@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   appearanceStorageManager,
   normalizeAppearanceMode,
+  resolveEffectiveAppearanceMode,
+  toggleAppearanceMode,
 } from "@/lib/theme/appearance-storage";
 import {
   DARK_THEME_TOKENS,
@@ -66,6 +68,23 @@ describe("appearance storage", () => {
       "storage",
       listener,
     );
+  });
+});
+
+describe("appearance mode toggle", () => {
+  it("resolves explicit modes before system mode", () => {
+    expect(resolveEffectiveAppearanceMode("light", "dark")).toBe("light");
+    expect(resolveEffectiveAppearanceMode("dark", "light")).toBe("dark");
+    expect(resolveEffectiveAppearanceMode("system", "light")).toBe("light");
+    expect(resolveEffectiveAppearanceMode("system", "dark")).toBe("dark");
+    expect(resolveEffectiveAppearanceMode(undefined, undefined)).toBe("light");
+  });
+
+  it("toggles to the opposite explicit mode", () => {
+    expect(toggleAppearanceMode("light", "dark")).toBe("dark");
+    expect(toggleAppearanceMode("dark", "light")).toBe("light");
+    expect(toggleAppearanceMode("system", "light")).toBe("dark");
+    expect(toggleAppearanceMode("system", "dark")).toBe("light");
   });
 });
 

@@ -1,6 +1,6 @@
 // FilterBar is controlled by applied parent filters while the advanced panel keeps
-// a local draft until Apply. Date presets and year toggles are intentionally
-// immediate because they are the common report-navigation controls.
+// a local draft until Apply. Date presets are intentionally immediate because
+// they are common report-navigation controls.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -18,8 +18,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Close";
@@ -35,7 +33,6 @@ import { TRANSACTION_CATEGORY_OPTIONS } from "@/lib/utils/transaction-categories
 
 interface Props {
   availableTags: string[];
-  availableYears: string[];
   filters: FilterParams;
   onChange: (filters: FilterParams) => void;
 }
@@ -112,12 +109,7 @@ function getSelectedDateRangePreset(
   return "custom";
 }
 
-export function FilterBar({
-  availableTags,
-  availableYears,
-  filters,
-  onChange,
-}: Props) {
+export function FilterBar({ availableTags, filters, onChange }: Props) {
   const [startDate, setStartDate] = useState<Date | null>(() =>
     parseFilterDate(filters.startDate),
   );
@@ -214,21 +206,6 @@ export function FilterBar({
       tags,
       search: q,
     });
-  }
-
-  function handleYearsChange(nextYears: string[]) {
-    setSelectedYears(nextYears);
-    setStartDate(null);
-    setEndDate(null);
-    setSelectedDateRangePreset(null);
-    applyFilters(
-      nextYears,
-      null,
-      null,
-      filters.categories,
-      filters.tags,
-      filters.search,
-    );
   }
 
   function handleDateRangePreset(preset: ReportDateRangePreset) {
@@ -553,41 +530,6 @@ export function FilterBar({
           }}
         >
           <Stack spacing={2} sx={{ mt: 2 }}>
-            {availableYears.length > 0 && (
-              <ToggleButtonGroup
-                value={selectedYears}
-                onChange={(_event, nextYears) =>
-                  handleYearsChange(Array.isArray(nextYears) ? nextYears : [])
-                }
-                size="small"
-                aria-label="Filter reports by year"
-                sx={{
-                  display: "inline-flex",
-                  maxWidth: "100%",
-                  flexWrap: "wrap",
-                  gap: 0.5,
-                  "& .MuiToggleButtonGroup-grouped": {
-                    borderRadius: 1,
-                    borderColor: "divider",
-                    px: 1.5,
-                    py: 0.25,
-                    textTransform: "none",
-                    fontSize: "0.8125rem",
-                  },
-                }}
-              >
-                {availableYears.map((year) => (
-                  <ToggleButton
-                    key={year}
-                    value={year}
-                    aria-label={`Toggle reports year ${year}`}
-                  >
-                    {year}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            )}
-
             {/* Date range row */}
             <Box
               display="flex"

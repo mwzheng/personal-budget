@@ -675,7 +675,7 @@ const ReportsPageContent = () => {
                     width: { xs: "100%", sm: "auto" },
                   }}
                 >
-                  Explore reports
+                  Explore Reports
                 </Button>
                 <Button
                   id="reports-data-menu-button"
@@ -725,7 +725,7 @@ const ReportsPageContent = () => {
                     }}
                   >
                     <ListItemText
-                      primary="Yearly report"
+                      primary="Yearly Report"
                       secondary="View your yearly spending overview"
                     />
                   </MenuItem>
@@ -736,7 +736,7 @@ const ReportsPageContent = () => {
                     }}
                   >
                     <ListItemText
-                      primary="Compare months"
+                      primary="Compare Months"
                       secondary="Compare spending across two months"
                     />
                   </MenuItem>
@@ -747,7 +747,7 @@ const ReportsPageContent = () => {
                     }}
                   >
                     <ListItemText
-                      primary="Compare years"
+                      primary="Compare Years"
                       secondary="Compare like-for-like yearly spending"
                     />
                   </MenuItem>
@@ -781,7 +781,7 @@ const ReportsPageContent = () => {
                     }}
                   >
                     <ListItemText
-                      primary="Export filtered data"
+                      primary="Export Filtered Data"
                       secondary="Download the current filtered transactions"
                     />
                   </MenuItem>
@@ -820,7 +820,6 @@ const ReportsPageContent = () => {
             ) : (
               <FilterBar
                 availableTags={availableTags}
-                availableYears={availableYears}
                 filters={filters}
                 onChange={handleFiltersChange}
               />
