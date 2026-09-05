@@ -15,68 +15,59 @@ they are options to evaluate after the current testing and tooling follow-ups.
      goal progress, and recent activity.
    - Keep the public landing page marketing-focused and reserve the dashboard
      for authenticated users.
-3. **Budget vs. actual comparison**
-   - Compare saved budget categories against real report totals for the same
-     month.
-   - Highlight over-budget and under-budget categories clearly.
-4. **Transaction tag autocomplete**
+3. **Transaction tag autocomplete**
    - Suggest existing tags while users type in the transaction form.
    - Reduce duplicates caused by inconsistent capitalization or spelling.
-5. **Light/dark theme toggle**
-   - Add a persisted theme preference instead of shipping a dark-only UI.
-   - Keep the current visual identity as the default if no preference is set.
 
 ## Strong medium-term ideas
 
-6. **Net worth tracking**
+4. **Net worth tracking**
    - Track assets and liabilities over time with a net-worth chart.
    - Extend the app beyond expense tracking into broader financial visibility.
-7. **Category spending alerts**
+5. **Category spending alerts**
    - Warn users when a category is approaching or exceeding its monthly budget.
    - Surface this in reports and any future dashboard.
-8. **Bulk transaction actions**
+6. **Bulk transaction actions**
    - Add bulk categorize, bulk tag, and bulk delete for imported transaction
      cleanup.
    - Pair well with CSV-heavy workflows.
-9. **JSON backup and restore**
+7. **JSON backup and restore**
    - Export/import full account data, not just transaction CSVs.
    - Improve user ownership and portability.
-10. **CSV import history**
-    - Record import time, source filename, and inserted row count.
-    - Make recent imports auditable and easier to undo.
+8. **CSV import history**
+   - Record import time, source filename, and inserted row count.
+   - Make recent imports auditable and easier to undo.
 
 ## Longer-term product expansion ideas
 
-11. **PWA / offline support**
-    - Add installability, local caching, and explicit sync behavior.
-    - Preserve the current clear distinction between real data and demo data.
-12. **Scheduled summaries**
+9. **PWA / offline support**
+   - Add installability, local caching, and explicit sync behavior.
+   - Preserve the current clear distinction between real data and demo data.
+10. **Scheduled summaries**
     - Use SES to email weekly or monthly spending summaries.
     - Could build on existing report aggregates and contact/email plumbing.
-13. **Investment portfolio tracker**
+11. **Investment portfolio tracker**
     - Track actual holdings, allocation, and dividend income alongside FIRE
       scenarios.
     - Keep the current FIRE calculator as the planning layer.
-14. **Shared budgets**
+12. **Shared budgets**
     - Allow two users to collaborate on a shared budget while preserving clear
       ownership of data and actions.
-15. **Multi-currency support**
+13. **Multi-currency support**
     - Store a currency per transaction and add exchange-rate-aware reporting.
 
 ## Quality-of-life ideas
 
-16. **Keyboard shortcuts**
+14. **Keyboard shortcuts**
     - Add shortcuts for common actions like new transaction, search, and opening
       filters.
-17. **Chart annotations**
+15. **Chart annotations**
     - Let users add notes to specific months, such as vacations or one-time
       expenses.
-18. **Goal sharing / read-only export**
+16. **Goal sharing / read-only export**
     - Generate a simple shareable view for progress-goal milestones.
-19. **Onboarding flow**
+17. **Onboarding flow**
     - Guide new users through their first budget, transaction import, and progress goal.
-20. **Search across notes and descriptions**
-    - Add richer transaction search for imported or historical data.
 
 ## Selection criteria
 
