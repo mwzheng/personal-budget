@@ -11,7 +11,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
-import Fab from "@mui/material/Fab";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -647,7 +646,7 @@ const ReportsPageContent = () => {
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
       className="reports-page"
-      sx={{ py: { xs: 3, md: 4 } }}
+      sx={{ py: { xs: 3, md: 4 }, minWidth: 0, maxWidth: "100%" }}
     >
       <PageHeader
         title="Reports"
@@ -696,6 +695,18 @@ const ReportsPageContent = () => {
                   }}
                 >
                   Data
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleAddTransaction()}
+                  sx={{
+                    justifyContent: "flex-start",
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
+                  Add Transaction
                 </Button>
 
                 <Menu
@@ -800,20 +811,6 @@ const ReportsPageContent = () => {
                 {errorMessage}
               </Alert>
             )}
-            <Box
-              role="toolbar"
-              aria-label="Report actions"
-              sx={{ display: { xs: "flex", md: "none" }, mb: 2 }}
-            >
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => handleAddTransaction()}
-              >
-                Add Transaction
-              </Button>
-            </Box>
             {loading ? (
               <Skeleton
                 variant="rounded"
@@ -833,9 +830,9 @@ const ReportsPageContent = () => {
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)",
-                    sm: "repeat(3, 1fr)",
-                    md: "repeat(5, 1fr)",
+                    xs: "repeat(2, minmax(0, 1fr))",
+                    sm: "repeat(3, minmax(0, 1fr))",
+                    md: "repeat(5, minmax(0, 1fr))",
                   },
                   gap: 1.5,
                   mb: 3,
@@ -855,9 +852,9 @@ const ReportsPageContent = () => {
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)",
-                    sm: "repeat(3, 1fr)",
-                    md: "repeat(5, 1fr)",
+                    xs: "repeat(2, minmax(0, 1fr))",
+                    sm: "repeat(3, minmax(0, 1fr))",
+                    md: "repeat(5, minmax(0, 1fr))",
                   },
                   gap: 1.5,
                   mb: 3,
@@ -935,19 +932,24 @@ const ReportsPageContent = () => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" },
+                  gridTemplateColumns: {
+                    xs: "minmax(0, 1fr)",
+                    md: "minmax(0, 5fr) minmax(0, 7fr)",
+                  },
                   gap: 3,
+                  minWidth: 0,
                 }}
               >
                 <SectionCard
                   title="Breakdown"
                   headingId="reports-breakdown-heading"
                   elevation={1}
-                  sx={{ display: "flex", flexDirection: "column" }}
+                  sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
                   contentSx={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
+                    minWidth: 0,
                   }}
                 >
                   {loading ? (
@@ -964,11 +966,12 @@ const ReportsPageContent = () => {
                   title="Top Tags"
                   headingId="reports-tags-heading"
                   elevation={1}
-                  sx={{ display: "flex", flexDirection: "column" }}
+                  sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
                   contentSx={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
+                    minWidth: 0,
                   }}
                 >
                   {loading ? (
@@ -1130,21 +1133,6 @@ const ReportsPageContent = () => {
           />
         )}
       </Dialog>
-      {!isEmpty && (
-        <Fab
-          color="primary"
-          aria-label="Add transaction"
-          sx={{
-            position: "fixed",
-            bottom: 32,
-            right: 32,
-            display: { xs: "none", md: "inline-flex" },
-          }}
-          onClick={() => handleAddTransaction()}
-        >
-          <AddIcon />
-        </Fab>
-      )}
     </Container>
   );
 };

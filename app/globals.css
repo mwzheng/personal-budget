@@ -78,11 +78,19 @@ th[data-numeric="true"] {
   );
   --fc-now-indicator-color: var(--pb-palette-warning);
   color: var(--pb-text-primary);
+  max-width: 100%;
+  min-width: 0;
 }
 .transaction-calendar .fc-theme-standard td,
 .transaction-calendar .fc-theme-standard th,
 .transaction-calendar .fc-theme-standard .fc-scrollgrid {
   border-color: var(--pb-border-subtle);
+}
+.transaction-calendar .fc .fc-scrollgrid {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  table-layout: fixed;
 }
 .transaction-calendar .fc .fc-toolbar {
   gap: 0.75rem;
@@ -317,6 +325,9 @@ input[type="number"] {
   .transaction-calendar .fc .fc-toolbar-chunk {
     display: flex;
     justify-content: space-between;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   .transaction-calendar .fc .fc-daygrid-day-frame {
     min-height: 7rem;

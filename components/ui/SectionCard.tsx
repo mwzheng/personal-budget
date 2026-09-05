@@ -45,7 +45,10 @@ export default function SectionCard({
             ? "dither-violet"
             : undefined
       }
-      sx={[{ overflow: "hidden" }, ...(Array.isArray(sx) ? sx : [sx])]}
+      sx={[
+        { overflow: "hidden", minWidth: 0, maxWidth: "100%" },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     >
       {hasHeader && (
         <Box
@@ -53,6 +56,7 @@ export default function SectionCard({
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
+            flexWrap: "wrap",
             gap: 2,
             px: { xs: 2.5, sm: 3 },
             pt: { xs: 2.5, sm: 3 },
@@ -88,7 +92,15 @@ export default function SectionCard({
             <Box sx={{ flexGrow: 1 }} />
           )}
           {action ? (
-            <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+            <Box
+              sx={{
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                minWidth: 0,
+                maxWidth: "100%",
+              }}
+            >
               {action}
             </Box>
           ) : null}
@@ -96,7 +108,7 @@ export default function SectionCard({
       )}
       <Box
         sx={[
-          { px: { xs: 2.5, sm: 3 }, py: { xs: 2.5, sm: 3 } },
+          { px: { xs: 2.5, sm: 3 }, py: { xs: 2.5, sm: 3 }, minWidth: 0 },
           ...(Array.isArray(contentSx) ? contentSx : [contentSx]),
         ]}
       >

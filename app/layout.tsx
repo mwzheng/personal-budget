@@ -20,25 +20,28 @@ import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Note 1.6: `next/font/google` downloads and self-hosts the Inter font at build
-// time. This avoids a third-party Google Fonts request at runtime (privacy,
-// performance), and the generated CSS variable `--font-inter` is applied to
-// <body> so MUI's Inter font-stack resolves immediately without FOUT.
+// Note 1.6: `next/font/google` downloads and self-hosts the app fonts at build
+// time. They are requested by their CSS declarations instead of being eagerly
+// preloaded on every route, while the generated variables keep MUI's font
+// stacks available without a third-party request at runtime.
 const openSans = Open_Sans({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-open-sans",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-space-grotesk",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-ibm-plex-mono",
   weight: ["400", "500", "600", "700"],
 });
@@ -273,10 +276,16 @@ export default function RootLayout({
                 minHeight: "100dvh",
                 display: "flex",
                 flexDirection: "column",
+                width: "100%",
+                minWidth: 0,
+                overflowX: "clip",
               }}
             >
               <AppNav />
-              <Box component="div" sx={{ flexGrow: 1 }}>
+              <Box
+                component="div"
+                sx={{ flexGrow: 1, minWidth: 0, maxWidth: "100%" }}
+              >
                 {children}
               </Box>
               <Footer />

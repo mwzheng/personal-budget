@@ -107,9 +107,9 @@ const appTheme = createTheme({
     dark: { palette: makePalette(DARK_THEME_TOKENS, "dark") },
   },
   typography: {
-    // Note 3.1: `var(--font-inter)` resolves to the Next.js self-hosted Inter
-    // font injected by the root layout. The remaining stack is a safe fallback
-    // chain for the rare case the variable is absent (e.g., in Storybook).
+    // Note 3.1: `var(--font-open-sans)` resolves to the Next.js self-hosted
+    // body font injected by the root layout. The remaining stack is a safe
+    // fallback chain for the rare case the variable is absent (e.g., Storybook).
     fontFamily:
       'var(--font-open-sans), "Open Sans", "Helvetica", "Arial", sans-serif',
     h1: {

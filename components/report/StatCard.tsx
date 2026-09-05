@@ -27,6 +27,8 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
         display: "flex",
         flexDirection: "column",
         gap: 0.5,
+        minWidth: 0,
+        overflow: "hidden",
       }}
     >
       <Typography
@@ -43,7 +45,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
           <Typography
             variant="h6"
             fontWeight={700}
-            sx={{ color, lineHeight: 1.2 }}
+            sx={{ color, lineHeight: 1.2, overflowWrap: "anywhere" }}
           >
             {value}
           </Typography>

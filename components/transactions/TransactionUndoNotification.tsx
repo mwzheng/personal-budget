@@ -21,8 +21,10 @@ export function TransactionUndoNotification({
         aria-live="polite"
         sx={{
           position: "absolute",
-          width: 1,
-          height: 1,
+          // Numeric 1 in MUI sx sizing means 100%, not one pixel. Keep this
+          // live region accessible without extending the document bounds.
+          width: "1px",
+          height: "1px",
           overflow: "hidden",
           clipPath: "inset(50%)",
         }}
@@ -51,6 +53,25 @@ export function TransactionUndoNotification({
             bgcolor: "background.paper",
             color: "text.primary",
             boxShadow: 6,
+            alignItems: "center",
+            // Keep the icon, message, and action row on the same centerline.
+            // Alert's defaults give each region different vertical padding.
+            "& .MuiAlert-icon": {
+              alignItems: "center",
+              padding: 0,
+              marginRight: 1.5,
+            },
+            "& .MuiAlert-message": {
+              display: "flex",
+              alignItems: "center",
+              padding: 0,
+            },
+            "& .MuiAlert-action": {
+              alignItems: "center",
+              padding: 0,
+              marginLeft: 2,
+              marginRight: -1,
+            },
           }}
           action={
             <Stack direction="row">

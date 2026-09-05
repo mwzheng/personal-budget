@@ -63,13 +63,26 @@ export function ChartWrapper({ title, children }: Props) {
   }, [title, chartTheme.surface.card]);
 
   return (
-    <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+    <Box
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        minWidth: 0,
+        maxWidth: "100%",
+      }}
+    >
       {error ? (
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
       <Box
         ref={wrapperRef}
-        sx={{ position: "relative", width: "100%", height: "100%" }}
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          minWidth: 0,
+        }}
       >
         {children}
         <Tooltip title="Download as PNG" placement="left">

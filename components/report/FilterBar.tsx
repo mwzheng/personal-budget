@@ -357,16 +357,20 @@ export function FilterBar({
   }
 
   return (
-    <Paper sx={{ mb: 3 }}>
+    <Paper sx={{ mb: 3, minWidth: 0, maxWidth: "100%" }}>
       {/* Toolbar */}
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "minmax(0, 1fr) auto",
+          },
+          alignItems: "start",
           gap: 1.5,
           px: { xs: 2, sm: 2.5 },
           py: 1.5,
-          flexWrap: "wrap",
+          minWidth: 0,
         }}
       >
         <TextField
@@ -378,7 +382,7 @@ export function FilterBar({
             onChange({ ...filters, search: event.target.value })
           }
           helperText="Search within the selected filters."
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 240px" }, minWidth: 0 }}
+          sx={{ gridColumn: 1, minWidth: 0, width: "100%" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -404,7 +408,9 @@ export function FilterBar({
             alignItems: "center",
             gap: 1.5,
             flexWrap: "wrap",
+            gridColumn: { xs: 1, sm: 2 },
             maxWidth: "100%",
+            minWidth: 0,
           }}
         >
           <Button
@@ -473,10 +479,16 @@ export function FilterBar({
             gap={1}
             alignItems="center"
             sx={{
-              flexBasis: { xs: "100%", md: "auto" },
-              flexGrow: { xs: 0, md: 1 },
-              justifyContent: { xs: "flex-start", md: "flex-end" },
+              gridColumn: "1 / -1",
+              maxWidth: "100%",
               minWidth: 0,
+              "& .MuiChip-root": {
+                maxWidth: "100%",
+              },
+              "& .MuiChip-label": {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              },
             }}
             aria-label="Active report filters"
           >
@@ -551,6 +563,7 @@ export function FilterBar({
                 aria-label="Filter reports by year"
                 sx={{
                   display: "inline-flex",
+                  maxWidth: "100%",
                   flexWrap: "wrap",
                   gap: 0.5,
                   "& .MuiToggleButtonGroup-grouped": {
@@ -576,7 +589,13 @@ export function FilterBar({
             )}
 
             {/* Date range row */}
-            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
+            <Box
+              display="flex"
+              flexWrap="wrap"
+              gap={2}
+              alignItems="center"
+              sx={{ minWidth: 0 }}
+            >
               <DatePicker
                 label="Start Date"
                 value={startDate}
@@ -585,7 +604,12 @@ export function FilterBar({
                   setSelectedYears([]);
                   setSelectedDateRangePreset("custom");
                 }}
-                slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: { width: { xs: "100%", sm: 170 } },
+                  },
+                }}
               />
               <DatePicker
                 label="End Date"
@@ -595,12 +619,23 @@ export function FilterBar({
                   setSelectedYears([]);
                   setSelectedDateRangePreset("custom");
                 }}
-                slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: { width: { xs: "100%", sm: 170 } },
+                  },
+                }}
               />
             </Box>
 
             {/* Category and tags row */}
-            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
+            <Box
+              display="flex"
+              flexWrap="wrap"
+              gap={2}
+              alignItems="center"
+              sx={{ minWidth: 0 }}
+            >
               <Autocomplete
                 multiple
                 size="small"
@@ -612,7 +647,7 @@ export function FilterBar({
                 renderInput={(params) => (
                   <TextField {...params} label="Category" />
                 )}
-                sx={{ minWidth: 200, flex: "1 1 200px" }}
+                sx={{ minWidth: 0, flex: "1 1 200px" }}
                 limitTags={3}
               />
               <Autocomplete
@@ -622,7 +657,7 @@ export function FilterBar({
                 value={selectedTags}
                 onChange={(_event, value) => setSelectedTags(value)}
                 renderInput={(params) => <TextField {...params} label="Tags" />}
-                sx={{ minWidth: 200, flex: "1 1 200px" }}
+                sx={{ minWidth: 0, flex: "1 1 200px" }}
                 limitTags={3}
               />
             </Box>
