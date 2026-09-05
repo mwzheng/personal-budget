@@ -16,14 +16,10 @@ type Options = {
 
 type ApiError = { ok?: unknown; error?: unknown };
 
-function readApiError(data: unknown, fallback: string) {
-  if (
-    data &&
-    typeof data === "object" &&
-    typeof (data as ApiError).error === "string"
-  ) {
-    return (data as ApiError).error;
-  }
+function readApiError(data: unknown, fallback: string): string {
+  const error =
+    data && typeof data === "object" ? (data as ApiError).error : undefined;
+  if (typeof error === "string") return error;
   return fallback;
 }
 
