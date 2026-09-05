@@ -489,7 +489,7 @@ export function BudgetForm({
                     <TableRow>
                       <TableCell
                         align="center"
-                        width="23%"
+                        width="24%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -522,7 +522,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="22%"
+                        width="27%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -576,7 +576,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="13%"
+                        width="10%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -589,7 +589,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="15%"
+                        width="12%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -711,19 +711,22 @@ export function BudgetForm({
                                   },
                                 }}
                               />
-                              {percentage > 0 && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    whiteSpace: "nowrap",
-                                    flexShrink: 0,
-                                    fontSize: 11,
-                                  }}
-                                >
-                                  {percentage.toFixed(1)}%
-                                </Typography>
-                              )}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  width: "6ch",
+                                  whiteSpace: "nowrap",
+                                  flexShrink: 0,
+                                  textAlign: "right",
+                                  fontSize: 11,
+                                  fontVariantNumeric: "tabular-nums",
+                                }}
+                              >
+                                {percentage > 0
+                                  ? `${percentage.toFixed(1)}%`
+                                  : "0%"}
+                              </Typography>
                             </Box>
                           </TableCell>
                           <TableCell>
@@ -794,10 +797,10 @@ export function BudgetForm({
                               size="small"
                             />
                           </TableCell>
-                          <TableCell align="right">
+                          <TableCell align="center">
                             <Stack
                               direction="row"
-                              justifyContent="flex-end"
+                              justifyContent="center"
                               alignItems="center"
                               spacing={0.5}
                             >
