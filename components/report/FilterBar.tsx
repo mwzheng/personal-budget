@@ -12,6 +12,9 @@ import ListSubheader from "@mui/material/ListSubheader";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -21,7 +24,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Close";
 import { format, parseISO } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FilterParams, TransactionCategoryType } from "@/lib/types/types";
 import {
@@ -81,6 +84,13 @@ const PRESET_LABELS = new Map(
   DATE_RANGE_PRESETS.map((preset) => [preset.value, preset.label]),
 );
 
+function sameStringValues(left: readonly string[], right: readonly string[]) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
 function getSelectedDateRangePreset(
   filters: FilterParams,
 ): ReportDateRangePreset | null {
@@ -120,7 +130,6 @@ export function FilterBar({
   const [selectedCategories, setSelectedCategories] = useState<
     TransactionCategoryType[]
   >(() => filters.categories);
-  const [search, setSearch] = useState(() => filters.search);
   const [selectedYears, setSelectedYears] = useState<string[]>(
     () => filters.years,
   );
@@ -132,15 +141,34 @@ export function FilterBar({
   const [dateRangeMenuAnchor, setDateRangeMenuAnchor] =
     useState<HTMLElement | null>(null);
 
-  // Sync external filter changes (e.g. from chart tag clicks) back into local state.
+  // Only changed applied fields replace their drafts. In particular, immediate
+  // search changes must leave unfinished advanced edits alone, even when the
+  // parent recreates array values while persisting filters.
+  const previousFilters = useRef(filters);
   useEffect(() => {
-    setStartDate(parseFilterDate(filters.startDate));
-    setEndDate(parseFilterDate(filters.endDate));
-    setSelectedCategories(filters.categories);
-    setSelectedTags(filters.tags);
-    setSearch(filters.search);
-    setSelectedYears(filters.years);
-    setSelectedDateRangePreset(getSelectedDateRangePreset(filters));
+    const previous = previousFilters.current;
+    const yearsChanged = !sameStringValues(previous.years, filters.years);
+    if (previous.startDate !== filters.startDate) {
+      setStartDate(parseFilterDate(filters.startDate));
+    }
+    if (previous.endDate !== filters.endDate) {
+      setEndDate(parseFilterDate(filters.endDate));
+    }
+    if (!sameStringValues(previous.categories, filters.categories)) {
+      setSelectedCategories(filters.categories);
+    }
+    if (!sameStringValues(previous.tags, filters.tags)) {
+      setSelectedTags(filters.tags);
+    }
+    if (yearsChanged) setSelectedYears(filters.years);
+    if (
+      yearsChanged ||
+      previous.startDate !== filters.startDate ||
+      previous.endDate !== filters.endDate
+    ) {
+      setSelectedDateRangePreset(getSelectedDateRangePreset(filters));
+    }
+    previousFilters.current = filters;
   }, [filters]);
 
   // Count individual applied filters for the More filters badge.
@@ -290,7 +318,6 @@ export function FilterBar({
   }
 
   function handleRemoveSearch() {
-    setSearch("");
     applyFilters(
       filters.years,
       parseFilterDate(filters.startDate),
@@ -308,7 +335,7 @@ export function FilterBar({
       endDate,
       selectedCategories,
       selectedTags,
-      search,
+      filters.search,
     );
   }
 
@@ -317,7 +344,6 @@ export function FilterBar({
     setEndDate(null);
     setSelectedCategories([]);
     setSelectedTags([]);
-    setSearch("");
     setSelectedYears([]);
     setSelectedDateRangePreset("all-time");
     onChange({
@@ -343,12 +369,42 @@ export function FilterBar({
           flexWrap: "wrap",
         }}
       >
+        <TextField
+          label="Search transactions"
+          placeholder="Name, note, or tag"
+          size="small"
+          value={filters.search}
+          onChange={(event) =>
+            onChange({ ...filters, search: event.target.value })
+          }
+          helperText="Search within the selected filters."
+          sx={{ flex: { xs: "1 1 100%", sm: "1 1 240px" }, minWidth: 0 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+            endAdornment: filters.search ? (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="Clear search"
+                  size="small"
+                  onClick={handleRemoveSearch}
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : undefined,
+          }}
+        />
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
             gap: 1.5,
-            flexShrink: 0,
+            flexWrap: "wrap",
+            maxWidth: "100%",
           }}
         >
           <Button
@@ -571,16 +627,8 @@ export function FilterBar({
               />
             </Box>
 
-            {/* Search and actions row */}
+            {/* Advanced filter actions */}
             <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
-              <TextField
-                label="Search"
-                size="small"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => event.key === "Enter" && handleApply()}
-                sx={{ minWidth: 200, flex: "1 1 200px" }}
-              />
               <Box display="flex" gap={1} sx={{ ml: { md: "auto" } }}>
                 <Button
                   variant="contained"
