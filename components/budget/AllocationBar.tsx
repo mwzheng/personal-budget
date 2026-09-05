@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 
 import {
   CATEGORY_COLORS,
@@ -73,7 +72,7 @@ export function AllocationBar({
           height: 28,
           borderRadius: 2,
           overflow: "hidden",
-          bgcolor: alpha("#ffffff", 0.05),
+          bgcolor: "action.hover",
           position: "relative",
         }}
       >

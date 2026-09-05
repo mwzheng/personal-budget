@@ -15,6 +15,7 @@ import TableRow from "@mui/material/TableRow";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { format, parseISO } from "date-fns";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState } from "react";
 
@@ -47,6 +48,7 @@ export function YearlyReport({
   currentYear,
   onYearChange,
 }: YearlyReportProps) {
+  const chartTheme = useChartTheme();
   const reportRef = useRef<HTMLElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export function YearlyReport({
     setDownloadError(null);
     try {
       const dataUrl = await toPng(reportRef.current, {
-        backgroundColor: "#0B1B26",
+        backgroundColor: chartTheme.surface.card,
         pixelRatio: 2,
         cacheBust: true,
         skipFonts: true,
@@ -80,7 +82,7 @@ export function YearlyReport({
     } finally {
       setDownloading(false);
     }
-  }, [report.year]);
+  }, [report.year, chartTheme.surface.card]);
 
   return (
     <section

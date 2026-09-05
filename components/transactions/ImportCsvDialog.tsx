@@ -208,7 +208,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               variant="outlined"
               sx={{
                 borderColor: "divider",
-                bgcolor: "rgba(255,255,255,0.03)",
+                bgcolor: "action.hover",
               }}
             >
               <CardContent sx={{ p: 2.5 }}>
@@ -224,7 +224,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     sx={{
                       width: "fit-content",
                       bgcolor: "rgba(102, 187, 106, 0.12)",
-                      color: "#81c784",
+                      color: "success.main",
                     }}
                   />
                   <Chip
@@ -233,7 +233,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     sx={{
                       width: "fit-content",
                       bgcolor: "rgba(38, 166, 154, 0.12)",
-                      color: "#4db6ac",
+                      color: "primary.main",
                     }}
                   />
                 </Stack>
@@ -357,7 +357,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               variant="outlined"
               sx={{
                 borderColor: "divider",
-                bgcolor: "rgba(255,255,255,0.02)",
+                bgcolor: "action.hover",
               }}
             >
               <CardContent sx={{ p: 2.5 }}>
@@ -379,7 +379,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
             variant="outlined"
             sx={{
               borderColor: "divider",
-              bgcolor: "rgba(255,255,255,0.03)",
+              bgcolor: "action.hover",
             }}
           >
             <CardContent sx={{ p: 3 }}>
@@ -409,7 +409,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               variant="outlined"
               sx={{
                 borderColor: "divider",
-                bgcolor: "rgba(255,255,255,0.02)",
+                bgcolor: "action.hover",
               }}
             >
               <CardContent sx={{ p: 2.5 }}>
@@ -457,7 +457,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
               variant="outlined"
               sx={{
                 borderColor: "divider",
-                bgcolor: "rgba(255,255,255,0.03)",
+                bgcolor: "action.hover",
               }}
             >
               <CardContent sx={{ p: 2.5 }}>
@@ -481,7 +481,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     size="small"
                     sx={{
                       bgcolor: "rgba(38, 166, 154, 0.14)",
-                      color: "#4db6ac",
+                      color: "primary.main",
                     }}
                   />
                 </Stack>
@@ -506,7 +506,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     variant="outlined"
                     sx={{
                       borderColor: "divider",
-                      bgcolor: "rgba(255,255,255,0.02)",
+                      bgcolor: "action.hover",
                     }}
                   >
                     <CardContent sx={{ p: 2 }}>
@@ -522,7 +522,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     variant="outlined"
                     sx={{
                       borderColor: "divider",
-                      bgcolor: "rgba(255,255,255,0.02)",
+                      bgcolor: "action.hover",
                     }}
                   >
                     <CardContent sx={{ p: 2 }}>
@@ -538,7 +538,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     variant="outlined"
                     sx={{
                       borderColor: "divider",
-                      bgcolor: "rgba(255,255,255,0.02)",
+                      bgcolor: "action.hover",
                     }}
                   >
                     <CardContent sx={{ p: 2 }}>
@@ -570,13 +570,13 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                       border: "1px solid",
                       borderColor: "divider",
                       borderRadius: 2,
-                      bgcolor: "rgba(255,255,255,0.02)",
+                      bgcolor: "action.hover",
                     }}
                   >
                     <Table size="small">
                       <TableHead
                         sx={{
-                          bgcolor: "rgba(255,255,255,0.04)",
+                          bgcolor: "action.hover",
                           "& .MuiTableCell-root": {
                             borderColor: "divider",
                             color: "text.secondary",

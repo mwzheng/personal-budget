@@ -4,7 +4,6 @@ import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -36,8 +35,8 @@ export function NotFoundHomeRedirect() {
         maxWidth: 640,
         p: 2.25,
         borderRadius: 1,
-        border: `1px solid ${alpha(SERVER_THEME_TOKENS.palette.primary, 0.24)}`,
-        bgcolor: alpha(SERVER_THEME_TOKENS.palette.primary, 0.08),
+        border: `1px solid color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 24%, transparent)`,
+        bgcolor: `color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 8%, transparent)`,
       }}
     >
       <Stack direction="row" spacing={1.5} alignItems="flex-start">

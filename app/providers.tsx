@@ -4,6 +4,7 @@
 // which requires client-side rendering. Server Components cannot use Context.
 "use client";
 
+import { appearanceStorageManager } from "@/lib/theme/appearance-storage";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -21,7 +22,11 @@ import {
   getPageTitleEntryByPathname,
   normalizeAppPathname,
 } from "@/lib/content/page-titles";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import {
+  DARK_THEME_TOKENS,
+  LIGHT_THEME_TOKENS,
+  SERVER_THEME_TOKENS,
+} from "@/lib/theme/server-theme-tokens";
 
 type Gtag = {
   (command: "config", targetId: string, config: Record<string, unknown>): void;
@@ -45,50 +50,61 @@ type AnalyticsWindow = Window & {
 // Defining it outside the component prevents the theme object from being
 // recreated on every render, which would trigger unnecessary re-renders of all
 // themed child components.
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
+function makePalette(
+  tokens: typeof LIGHT_THEME_TOKENS | typeof DARK_THEME_TOKENS,
+  mode: "light" | "dark",
+) {
+  return {
+    mode,
     // Note 3: MUI palette colors follow the Material Design convention:
     // `main` is the primary color used for buttons, links, and highlights.
     // `primary` and `secondary` are used throughout MUI's default component styles.
     primary: {
       // Keep the requested bright blue available for decorative fills, while
       // using the darker semantic value for normal-sized text and controls.
-      main: SERVER_THEME_TOKENS.palette.primary,
-      light: SERVER_THEME_TOKENS.palette.primaryLight,
-      dark: SERVER_THEME_TOKENS.palette.primaryDark,
+      main: tokens.palette.primary,
+      light: tokens.palette.primaryLight,
+      dark: tokens.palette.primaryDark,
     },
     secondary: {
-      main: SERVER_THEME_TOKENS.palette.secondary,
-      light: SERVER_THEME_TOKENS.palette.secondary,
-      dark: SERVER_THEME_TOKENS.palette.primaryDark,
+      main: tokens.palette.secondary,
+      light: tokens.palette.secondary,
+      dark: tokens.palette.primaryDark,
     },
-    success: { main: SERVER_THEME_TOKENS.palette.success },
-    warning: { main: SERVER_THEME_TOKENS.palette.warning },
-    error: { main: SERVER_THEME_TOKENS.palette.danger },
-    info: { main: SERVER_THEME_TOKENS.palette.secondary },
+    success: { main: tokens.palette.success },
+    warning: { main: tokens.palette.warning },
+    error: { main: tokens.palette.danger },
+    info: { main: tokens.palette.secondary },
     text: {
-      primary: SERVER_THEME_TOKENS.text.primary,
-      secondary: SERVER_THEME_TOKENS.text.secondary,
-      disabled: SERVER_THEME_TOKENS.text.disabled,
+      primary: tokens.text.primary,
+      secondary: tokens.text.secondary,
+      disabled: tokens.text.disabled,
     },
     background: {
-      default: SERVER_THEME_TOKENS.palette.backgroundDefault,
-      paper: SERVER_THEME_TOKENS.palette.backgroundPaper,
+      default: tokens.palette.backgroundDefault,
+      paper: tokens.palette.backgroundPaper,
     },
-    divider: SERVER_THEME_TOKENS.border.subtle,
+    divider: tokens.border.subtle,
     action: {
-      active: SERVER_THEME_TOKENS.text.primary,
-      hover: SERVER_THEME_TOKENS.surface.raised,
-      selected: SERVER_THEME_TOKENS.surface.selected,
+      active: tokens.text.primary,
+      hover: tokens.surface.raised,
+      selected: tokens.surface.selected,
       selectedOpacity: 0.14,
-      focus: SERVER_THEME_TOKENS.surface.selected,
+      focus: tokens.surface.selected,
       focusOpacity: 0.16,
       hoverOpacity: 0.08,
       activatedOpacity: 0.12,
-      disabled: SERVER_THEME_TOKENS.text.disabled,
-      disabledBackground: SERVER_THEME_TOKENS.surface.raised,
+      disabled: tokens.text.disabled,
+      disabledBackground: tokens.surface.raised,
     },
+  };
+}
+
+const appTheme = createTheme({
+  cssVariables: { colorSchemeSelector: '[data-mui-color-scheme="%s"]' },
+  colorSchemes: {
+    light: { palette: makePalette(LIGHT_THEME_TOKENS, "light") },
+    dark: { palette: makePalette(DARK_THEME_TOKENS, "dark") },
   },
   typography: {
     // Note 3.1: `var(--font-inter)` resolves to the Next.js self-hosted Inter
@@ -182,7 +198,7 @@ const darkTheme = createTheme({
           },
         },
         contained: {
-          color: SERVER_THEME_TOKENS.palette.backgroundDefault,
+          color: "var(--mui-palette-primary-contrastText)",
           backgroundColor: SERVER_THEME_TOKENS.palette.primary,
           boxShadow: SERVER_THEME_TOKENS.shadow.low,
           "&:hover": {
@@ -404,6 +420,7 @@ const darkTheme = createTheme({
       },
       styleOverrides: {
         tooltip: {
+          color: SERVER_THEME_TOKENS.text.primary,
           backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
           border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
           borderRadius: 6,
@@ -652,7 +669,13 @@ export function Providers({ children }: { children: ReactNode }) {
     // MUI components via React Context. `LocalizationProvider` provides the
     // date adapter (date-fns) to MUI date picker components. `CssBaseline`
     // injects a CSS reset and applies the theme's background color to <body>.
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider
+      theme={appTheme}
+      defaultMode="system"
+      modeStorageKey="pb:theme-mode"
+      storageManager={appearanceStorageManager}
+      disableTransitionOnChange
+    >
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <CssBaseline />
         {children}

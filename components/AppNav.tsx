@@ -20,6 +20,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import { AppearanceMenu } from "@/components/AppearanceMenu";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -216,6 +217,7 @@ export function AppNav() {
               gap: 0.5,
             }}
           >
+            <AppearanceMenu />
             <Button
               id="app-nav-info-button"
               color="inherit"
@@ -473,6 +475,7 @@ export function AppNav() {
                 </IconButton>
               </Box>
               <Box sx={{ flexGrow: 1, overflowY: "auto", px: 1.5, py: 2 }}>
+                <AppearanceMenu mobile />
                 {loggedIn ? (
                   <Box sx={{ mb: 3 }}>
                     <Typography

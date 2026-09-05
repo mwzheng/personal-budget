@@ -18,7 +18,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import type { ComparisonSummary } from "@/lib/types/types";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 function formatPeriod(period: string): string {
   if (/^\d{4}$/.test(period)) return period;
@@ -56,6 +56,7 @@ export function ComparisonBarChart({
   currMonth,
   emptyMessage = "No category data for the selected periods",
 }: Props) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   const labelA = formatPeriod(prevMonth.period);
   const labelB = formatPeriod(currMonth.period);
 

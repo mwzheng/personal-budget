@@ -21,7 +21,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { FireProjectionRow } from "@/lib/types/types";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 export const FIRE_CHART_LABELS = {
   projectedNominal: "Projected",
@@ -61,6 +61,7 @@ export default function FireProjectionChart({
   actualMilestones = [],
   loading = false,
 }: Props) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   // Merge projections and recorded yearly balances into one chart timeline.
   const chartData = useMemo(() => {
     const rowsByYear = new Map<
@@ -260,7 +261,11 @@ export default function FireProjectionChart({
               dot={false}
               connectNulls={false}
               name={FIRE_CHART_LABELS.projectedReal}
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{
+                r: 6,
+                strokeWidth: 2,
+                stroke: SERVER_THEME_TOKENS.surface.card,
+              }}
               animationDuration={1500}
               animationEasing="ease-in-out"
               animationBegin={200}
@@ -278,7 +283,11 @@ export default function FireProjectionChart({
                 dot={false}
                 connectNulls={false}
                 name={FIRE_CHART_LABELS.fireTarget}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{
+                  r: 6,
+                  strokeWidth: 2,
+                  stroke: SERVER_THEME_TOKENS.surface.card,
+                }}
                 animationDuration={1500}
                 animationEasing="ease-in-out"
                 animationBegin={400}
@@ -296,7 +305,11 @@ export default function FireProjectionChart({
                 dot={{ fill: "#ff9800", r: 3, strokeWidth: 0 }}
                 connectNulls={false}
                 name={FIRE_CHART_LABELS.actualBalance}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{
+                  r: 6,
+                  strokeWidth: 2,
+                  stroke: SERVER_THEME_TOKENS.surface.card,
+                }}
                 animationDuration={1500}
                 animationEasing="ease-in-out"
               />

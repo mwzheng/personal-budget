@@ -932,7 +932,7 @@ export function BudgetForm({
             px: 2,
             py: 1,
             borderRadius: 2,
-            bgcolor: alpha("#ffffff", 0.05),
+            bgcolor: "action.hover",
             border: "1px solid",
             borderColor: "divider",
           }}
