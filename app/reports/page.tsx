@@ -11,6 +11,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
+import Fab from "@mui/material/Fab";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -696,19 +697,6 @@ const ReportsPageContent = () => {
                 >
                   Data
                 </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => handleAddTransaction()}
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: { xs: "100%", sm: "auto" },
-                  }}
-                >
-                  Add Transaction
-                </Button>
-
                 <Menu
                   id="reports-explore-menu"
                   anchorEl={exploreMenuAnchor}
@@ -1132,6 +1120,35 @@ const ReportsPageContent = () => {
           />
         )}
       </Dialog>
+      <Fab
+        data-testid="reports-add-transaction-fab"
+        color="primary"
+        variant="extended"
+        aria-label="Add transaction"
+        onClick={() => handleAddTransaction()}
+        sx={{
+          position: "fixed",
+          right: {
+            xs: "calc(16px + env(safe-area-inset-right))",
+            sm: "calc(24px + env(safe-area-inset-right))",
+          },
+          bottom: {
+            xs: "calc(16px + env(safe-area-inset-bottom))",
+            sm: "calc(24px + env(safe-area-inset-bottom))",
+          },
+          zIndex: (theme) => theme.zIndex.speedDial,
+          width: { xs: 56, sm: "auto" },
+          minWidth: { xs: 56, sm: 0 },
+          height: 56,
+          px: { xs: 0, sm: 2 },
+          borderRadius: { xs: "50%", sm: 7 },
+        }}
+      >
+        <AddIcon sx={{ mr: { xs: 0, sm: 1 } }} />
+        <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+          Add Transaction
+        </Box>
+      </Fab>
     </Container>
   );
 };

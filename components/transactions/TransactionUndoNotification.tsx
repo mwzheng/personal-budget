@@ -34,6 +34,14 @@ export function TransactionUndoNotification({
       <Snackbar
         open={Boolean(notice)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        sx={{
+          // Keep the notification above the Reports page's persistent action
+          // button wherever their horizontal bounds can intersect.
+          bottom: {
+            xs: "calc(88px + env(safe-area-inset-bottom))",
+            lg: 24,
+          },
+        }}
       >
         <Alert
           severity={
