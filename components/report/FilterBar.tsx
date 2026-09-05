@@ -174,21 +174,19 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     return count;
   }, [filters]);
 
-  const dateRangeChipLabel = useMemo(() => {
-    const presetLabel = selectedDateRangePreset
-      ? PRESET_LABELS.get(selectedDateRangePreset)
-      : undefined;
-
-    if (presetLabel && selectedDateRangePreset !== "custom") {
-      return `Date: ${presetLabel}`;
-    }
-
-    if (filters.startDate && filters.endDate) {
-      return `Date: ${filters.startDate} – ${filters.endDate}`;
-    }
-    if (filters.startDate) return `From: ${filters.startDate}`;
-    return `Until: ${filters.endDate}`;
-  }, [filters.endDate, filters.startDate, selectedDateRangePreset]);
+  // Date range and search are already represented by visible toolbar controls.
+  // Chips are reserved for filters that otherwise remain hidden while collapsed.
+  const hasAdvancedAppliedFilters =
+    filters.years.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.tags.length > 0;
+  const hasClearableFilters =
+    activeFilterCount > 0 ||
+    startDate !== null ||
+    endDate !== null ||
+    selectedYears.length > 0 ||
+    selectedCategories.length > 0 ||
+    selectedTags.length > 0;
 
   function applyFilters(
     years: string[],
@@ -229,20 +227,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       [],
       nextStartDate,
       nextEndDate,
-      filters.categories,
-      filters.tags,
-      filters.search,
-    );
-  }
-
-  function handleRemoveDateRange() {
-    setStartDate(null);
-    setEndDate(null);
-    setSelectedDateRangePreset("all-time");
-    applyFilters(
-      filters.years,
-      null,
-      null,
       filters.categories,
       filters.tags,
       filters.search,
@@ -316,7 +300,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     );
   }
 
-  function handleReset() {
+  function handleClearFilters() {
     setStartDate(null);
     setEndDate(null);
     setSelectedCategories([]);
@@ -337,28 +321,27 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     <Paper sx={{ mb: 3, minWidth: 0, maxWidth: "100%" }}>
       {/* Toolbar */}
       <Box
+        data-testid="report-filter-toolbar"
         sx={{
           display: "grid",
           gridTemplateColumns: {
             xs: "minmax(0, 1fr)",
             sm: "minmax(0, 1fr) auto",
           },
-          alignItems: "start",
-          gap: 1.5,
-          px: { xs: 2, sm: 2.5 },
-          py: 1.5,
+          alignItems: "center",
+          gap: 1.25,
+          p: { xs: 2, sm: 2.5 },
           minWidth: 0,
         }}
       >
         <TextField
-          label="Search transactions"
+          label="Search Transactions"
           placeholder="Name, note, or tag"
           size="small"
           value={filters.search}
           onChange={(event) =>
             onChange({ ...filters, search: event.target.value })
           }
-          helperText="Search within the selected filters."
           sx={{ gridColumn: 1, minWidth: 0, width: "100%" }}
           InputProps={{
             startAdornment: (
@@ -383,7 +366,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1.5,
+            gap: 1.25,
             flexWrap: "wrap",
             gridColumn: { xs: 1, sm: 2 },
             maxWidth: "100%",
@@ -400,9 +383,9 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             aria-controls={
               dateRangeMenuAnchor ? "report-date-range-menu" : undefined
             }
-            sx={{ minHeight: 36, textTransform: "none" }}
+            sx={{ minHeight: 40, textTransform: "none" }}
           >
-            Date range
+            Date Range
             {selectedDateRangePreset
               ? `: ${PRESET_LABELS.get(selectedDateRangePreset)}`
               : ""}
@@ -420,11 +403,21 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               aria-expanded={expanded}
               aria-controls="report-advanced-filters"
               aria-label={expanded ? "Hide more filters" : "Show more filters"}
-              sx={{ minHeight: 36, textTransform: "none" }}
+              sx={{ minHeight: 40, textTransform: "none" }}
             >
               More filters
             </Button>
           </Badge>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ClearIcon />}
+            onClick={handleClearFilters}
+            disabled={!hasClearableFilters}
+            sx={{ minHeight: 40, textTransform: "none" }}
+          >
+            Clear Filters
+          </Button>
         </Box>
         <Menu
           id="report-date-range-menu"
@@ -449,7 +442,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           ])}
         </Menu>
 
-        {activeFilterCount > 0 && (
+        {hasAdvancedAppliedFilters && (
           <Stack
             direction="row"
             flexWrap="wrap"
@@ -469,13 +462,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             }}
             aria-label="Active report filters"
           >
-            {Boolean(filters.startDate || filters.endDate) && (
-              <Chip
-                label={dateRangeChipLabel}
-                size="small"
-                onDelete={handleRemoveDateRange}
-              />
-            )}
             {filters.years.map((year) => (
               <Chip
                 key={`year-${year}`}
@@ -500,20 +486,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 onDelete={() => handleRemoveTag(tag)}
               />
             ))}
-            {filters.search && (
-              <Chip
-                label={`Search: ${filters.search}`}
-                size="small"
-                onDelete={handleRemoveSearch}
-              />
-            )}
-            <Button
-              size="small"
-              onClick={handleReset}
-              sx={{ textTransform: "none" }}
-            >
-              Clear all
-            </Button>
           </Stack>
         )}
       </Box>
@@ -522,111 +494,97 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       <Collapse in={expanded}>
         <Box
           id="report-advanced-filters"
+          data-testid="report-advanced-filter-panel"
           sx={{
-            px: { xs: 2, sm: 2.5 },
-            pb: 2,
-            pt: 0.5,
+            p: { xs: 2, sm: 2.5 },
             borderTop: (theme) => `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            {/* Date range row */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                sm: "repeat(2, minmax(0, 1fr))",
+                md: "170px 170px minmax(0, 1fr) minmax(0, 1fr)",
+                lg: "170px 170px minmax(180px, 1fr) minmax(180px, 1fr) auto",
+              },
+              gap: 1.25,
+              alignItems: "center",
+              minWidth: 0,
+            }}
+          >
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(value) => {
+                setStartDate(value);
+                setSelectedYears([]);
+                setSelectedDateRangePreset("custom");
+              }}
+              slotProps={{
+                textField: { size: "small", sx: { width: "100%" } },
+              }}
+            />
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(value) => {
+                setEndDate(value);
+                setSelectedYears([]);
+                setSelectedDateRangePreset("custom");
+              }}
+              slotProps={{
+                textField: { size: "small", sx: { width: "100%" } },
+              }}
+            />
+            <Autocomplete
+              multiple
+              size="small"
+              options={TRANSACTION_CATEGORY_OPTIONS}
+              value={selectedCategories}
+              onChange={(_event, value) =>
+                setSelectedCategories(value as TransactionCategoryType[])
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Category" />
+              )}
+              sx={{ minWidth: 0, width: "100%" }}
+              limitTags={2}
+            />
+            <Autocomplete
+              multiple
+              size="small"
+              options={availableTags}
+              value={selectedTags}
+              onChange={(_event, value) => setSelectedTags(value)}
+              renderInput={(params) => <TextField {...params} label="Tags" />}
+              sx={{ minWidth: 0, width: "100%" }}
+              limitTags={2}
+            />
             <Box
               display="flex"
-              flexWrap="wrap"
-              gap={2}
-              alignItems="center"
-              sx={{ minWidth: 0 }}
+              gap={1}
+              sx={{
+                justifyContent: {
+                  xs: "stretch",
+                  sm: "flex-end",
+                  lg: "flex-start",
+                },
+                gridColumn: { xs: "auto", sm: "1 / -1", lg: "auto" },
+                whiteSpace: "nowrap",
+              }}
             >
-              <DatePicker
-                label="Start Date"
-                value={startDate}
-                onChange={(value) => {
-                  setStartDate(value);
-                  setSelectedYears([]);
-                  setSelectedDateRangePreset("custom");
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: { width: { xs: "100%", sm: 170 } },
-                  },
-                }}
-              />
-              <DatePicker
-                label="End Date"
-                value={endDate}
-                onChange={(value) => {
-                  setEndDate(value);
-                  setSelectedYears([]);
-                  setSelectedDateRangePreset("custom");
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: { width: { xs: "100%", sm: 170 } },
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Category and tags row */}
-            <Box
-              display="flex"
-              flexWrap="wrap"
-              gap={2}
-              alignItems="center"
-              sx={{ minWidth: 0 }}
-            >
-              <Autocomplete
-                multiple
+              <Button
+                variant="contained"
                 size="small"
-                options={TRANSACTION_CATEGORY_OPTIONS}
-                value={selectedCategories}
-                onChange={(_event, value) =>
-                  setSelectedCategories(value as TransactionCategoryType[])
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Category" />
-                )}
-                sx={{ minWidth: 0, flex: "1 1 200px" }}
-                limitTags={3}
-              />
-              <Autocomplete
-                multiple
-                size="small"
-                options={availableTags}
-                value={selectedTags}
-                onChange={(_event, value) => setSelectedTags(value)}
-                renderInput={(params) => <TextField {...params} label="Tags" />}
-                sx={{ minWidth: 0, flex: "1 1 200px" }}
-                limitTags={3}
-              />
+                onClick={handleApply}
+                sx={{ minHeight: 40, flex: { xs: 1, sm: "initial" } }}
+              >
+                Apply
+              </Button>
             </Box>
-
-            {/* Advanced filter actions */}
-            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
-              <Box display="flex" gap={1} sx={{ ml: { md: "auto" } }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={handleApply}
-                  sx={{ minHeight: 36 }}
-                >
-                  Apply
-                </Button>
-                <Button
-                  variant="text"
-                  size="small"
-                  startIcon={<ClearIcon />}
-                  onClick={handleReset}
-                  sx={{ minHeight: 36 }}
-                >
-                  Reset
-                </Button>
-              </Box>
-            </Box>
-          </Stack>
+          </Box>
         </Box>
       </Collapse>
     </Paper>
