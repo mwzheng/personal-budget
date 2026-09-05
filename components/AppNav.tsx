@@ -164,6 +164,9 @@ export function AppNav() {
       elevation={0}
       sx={{
         bgcolor: SERVER_THEME_TOKENS.surface.page,
+        // Keep inherited controls (including the desktop tab labels) readable
+        // when the light-mode AppBar background is white.
+        color: "text.primary",
         borderBottom: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
       }}
     >
