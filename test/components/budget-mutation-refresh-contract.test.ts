@@ -22,4 +22,17 @@ describe("Budget mutation refresh contract", () => {
     expect(list).toContain("handleBudgetSaved(savedBudget);");
     expect(list).toContain("upsertSavedBudget(current, budget)");
   });
+
+  it("keeps the allocation and comparison sections on the same active budget", () => {
+    const page = readSource("app/budget/page.tsx");
+    const comparison = readSource("components/budget/ActualVsBudget.tsx");
+
+    expect(page).toContain("activeBudget={draft}");
+    expect(page).toContain("activeBudgetId={editingBudgetId}");
+    expect(page).toContain("onBudgetSelect={editBudget}");
+    expect(comparison).toContain(
+      "const selectedBudget = activeBudgetId ? activeBudget : null;",
+    );
+    expect(comparison).toContain("if (budget) onBudgetSelect(budget);");
+  });
 });

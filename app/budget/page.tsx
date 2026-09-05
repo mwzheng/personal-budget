@@ -497,7 +497,9 @@ export default function BudgetPage() {
       <Box sx={{ mt: 3 }}>
         <ActualVsBudget
           savedBudgets={savedBudgets}
-          preferredBudgetId={editingBudgetId}
+          activeBudget={draft}
+          activeBudgetId={editingBudgetId}
+          onBudgetSelect={editBudget}
         />
       </Box>
     </Container>

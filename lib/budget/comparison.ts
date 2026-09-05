@@ -1,4 +1,5 @@
 import type { CategoryType, SavedBudget, Transaction } from "@/lib/types/types";
+import { buildBudgetInsights } from "@/lib/utils/budget-calculator";
 import { normalizeBudgetForEditor } from "@/lib/utils/budget-normalizer";
 import { normalizeTransactionCategory } from "@/lib/utils/transaction-categories";
 
@@ -58,10 +59,15 @@ export function calculateBudgetComparison(
   month: string,
 ) {
   const bounds = monthBounds(month);
-  const planned: Record<CategoryType, number> = { Need: 0, Want: 0, Saving: 0 };
   const actual: Record<CategoryType, number> = { Need: 0, Want: 0, Saving: 0 };
-  for (const expense of normalizeBudgetForEditor(budget).expenses)
-    planned[expense.category] += cents(expense.amount);
+  const normalizedBudget = normalizeBudgetForEditor(budget);
+  const insights = buildBudgetInsights(normalizedBudget);
+  const planned: Record<CategoryType, number> = {
+    Need: cents(insights.categoryTotals.Need),
+    Want: cents(insights.categoryTotals.Want),
+    Saving: cents(insights.categoryTotals.Saving),
+  };
+
   const monthly = transactions.filter(
     (tx) => tx.date >= bounds.startDate && tx.date <= bounds.endDate,
   );

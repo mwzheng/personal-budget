@@ -20,6 +20,7 @@ import {
   type ComparisonRow,
 } from "@/lib/budget/comparison";
 import { loadMonthlyTransactions } from "@/lib/budget/loadMonthlyTransactions";
+import type { BudgetDraft } from "@/lib/utils/budget-normalizer";
 import { formatCurrency } from "@/lib/utils/format";
 
 function currentMonth() {
@@ -91,13 +92,16 @@ function ComparisonLine({
 
 export function ActualVsBudget({
   savedBudgets,
-  preferredBudgetId,
+  activeBudget,
+  activeBudgetId,
+  onBudgetSelect,
 }: {
   savedBudgets: SavedBudget[];
-  preferredBudgetId: string | null;
+  activeBudget: BudgetDraft;
+  activeBudgetId: string | null;
+  onBudgetSelect: (budget: SavedBudget) => void;
 }) {
   const [month, setMonth] = useState(currentMonth);
-  const [explicitBudgetId, setExplicitBudgetId] = useState<string | null>(null);
   const [scope, setScope] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [load, setLoad] = useState<{
@@ -119,24 +123,9 @@ export function ActualVsBudget({
         ),
     [savedBudgets],
   );
-  const defaultBudget =
-    budgets.find((budget) => budget.budgetId === preferredBudgetId) ??
-    budgets[0];
-  const selectedBudget =
-    budgets.find((budget) => budget.budgetId === explicitBudgetId) ??
-    defaultBudget;
+  const selectedBudget = activeBudgetId ? activeBudget : null;
   const hasBudget = Boolean(selectedBudget);
 
-  useEffect(() => {
-    if (
-      explicitBudgetId &&
-      !budgets.some((budget) => budget.budgetId === explicitBudgetId)
-    ) {
-      // Keep an editor selection as the default. Only an explicit comparison
-      // selection is cleared when its saved budget is deleted.
-      setExplicitBudgetId(null);
-    }
-  }, [budgets, explicitBudgetId]);
   useEffect(() => {
     const sync = () => {
       const next = currentTransactionScope();
@@ -144,7 +133,6 @@ export function ActualVsBudget({
         scopeRef.current = next;
         generation.current += 1;
         setLoad(null);
-        setExplicitBudgetId(null);
         setMonth(currentMonth());
         setScope(next);
       }
@@ -214,10 +202,10 @@ export function ActualVsBudget({
       sx={{ p: { xs: 2, sm: 3 }, mt: 3 }}
     >
       <Typography id="actual-budget-heading" variant="h5" mb={1}>
-        Actual vs budget
+        Actual vs Budget
       </Typography>
       <Typography color="text.secondary" variant="body2" mb={2}>
-        Uses saved budget amounts and recorded transactions.
+        Uses the active budget amounts and recorded transactions.
       </Typography>
       {!selectedBudget ? (
         <Typography color="text.secondary">
@@ -230,8 +218,13 @@ export function ActualVsBudget({
             <TextField
               select
               label="Saved budget"
-              value={selectedBudget.budgetId}
-              onChange={(event) => setExplicitBudgetId(event.target.value)}
+              value={activeBudgetId}
+              onChange={(event) => {
+                const budget = budgets.find(
+                  (candidate) => candidate.budgetId === event.target.value,
+                );
+                if (budget) onBudgetSelect(budget);
+              }}
               size="small"
               sx={{ flex: 1, minWidth: 0 }}
             >

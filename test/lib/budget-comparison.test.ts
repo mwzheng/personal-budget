@@ -5,6 +5,10 @@ import {
 } from "@/lib/budget/comparison";
 import { loadMonthlyTransactions } from "@/lib/budget/loadMonthlyTransactions";
 import { apiFetch } from "@/lib/api/apiFetch";
+import {
+  buildBudgetInsights,
+  normalizeBudgetForEditor,
+} from "@/lib/utils/budget-planner";
 import type { SavedBudget, Transaction } from "@/lib/types/types";
 vi.mock("@/lib/api/apiFetch", () => ({ apiFetch: vi.fn() }));
 const budget: SavedBudget = {
@@ -115,6 +119,68 @@ describe("budget comparison", () => {
       actual: 0.3,
       difference: 0,
     });
+  });
+  it("includes leftover income in the planned savings target", () => {
+    const budget: SavedBudget = {
+      name: "With leftover savings",
+      monthlyIncome: 4000,
+      expenses: [
+        {
+          expenseId: "need",
+          name: "Rent",
+          amount: 700,
+          category: "Need",
+        },
+        {
+          expenseId: "want",
+          name: "Dining",
+          amount: 44.94,
+          category: "Want",
+        },
+        {
+          expenseId: "saving",
+          name: "Retirement",
+          amount: 3235.06,
+          category: "Saving",
+        },
+      ],
+    };
+    const result = calculateBudgetComparison(budget, [], "2024-02");
+    const allocation = buildBudgetInsights(normalizeBudgetForEditor(budget));
+
+    expect(result.categories.Need.planned).toBe(allocation.categoryTotals.Need);
+    expect(result.categories.Want.planned).toBe(allocation.categoryTotals.Want);
+    expect(result.categories.Saving.planned).toBe(
+      allocation.categoryTotals.Saving,
+    );
+    expect(result.categories.Saving.planned).toBe(3255.06);
+  });
+
+  it("does not add leftover savings when the budget overspends income", () => {
+    const result = calculateBudgetComparison(
+      {
+        name: "Overspent",
+        monthlyIncome: 1000,
+        expenses: [
+          {
+            expenseId: "need",
+            name: "Rent",
+            amount: 900,
+            category: "Need",
+          },
+          {
+            expenseId: "saving",
+            name: "Retirement",
+            amount: 200,
+            category: "Saving",
+          },
+        ],
+      },
+      [],
+      "2024-02",
+    );
+
+    expect(result.categories.Saving.planned).toBe(200);
   });
 });
 describe("monthly transaction loader", () => {
