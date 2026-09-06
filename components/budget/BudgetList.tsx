@@ -52,6 +52,7 @@ export function BudgetList({
   reloadKey,
 }: Props) {
   const [budgets, setBudgets] = useState<SavedBudget[]>([]);
+  const [budgetSyncVersion, setBudgetSyncVersion] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
@@ -86,7 +87,7 @@ export function BudgetList({
           : [];
       const sortedBudgets = sortSavedBudgets(mergedBudgets);
       setBudgets(sortedBudgets);
-      onBudgetsLoaded?.(sortedBudgets);
+      setBudgetSyncVersion((current) => current + 1);
     } catch (caughtError) {
       setBudgets([]);
       setError(
@@ -98,30 +99,34 @@ export function BudgetList({
       setLoading(false);
       onLoadingChange?.(false);
     }
-  }, [onBudgetsLoaded, onLoadingChange]);
+  }, [onLoadingChange]);
 
-  const handleBudgetSaved = useCallback(
-    (budget: SavedBudget) => {
-      const budgetId = budget.budgetId?.trim();
-      if (!budgetId) {
-        return;
-      }
+  const handleBudgetSaved = useCallback((budget: SavedBudget) => {
+    const budgetId = budget.budgetId?.trim();
+    if (!budgetId) {
+      return;
+    }
 
-      setError(null);
-      setBudgets((current) => {
-        const nextBudgets = upsertSavedBudget(current, budget);
-        onBudgetsLoaded?.(nextBudgets);
-        return nextBudgets;
-      });
-    },
-    [onBudgetsLoaded],
-  );
+    setError(null);
+    setBudgets((current) => {
+      return upsertSavedBudget(current, budget);
+    });
+    setBudgetSyncVersion((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     if (savedBudget) {
       handleBudgetSaved(savedBudget);
     }
   }, [handleBudgetSaved, savedBudget]);
+
+  useEffect(() => {
+    if (budgetSyncVersion === 0) {
+      return;
+    }
+
+    onBudgetsLoaded?.(budgets);
+  }, [budgetSyncVersion, budgets, onBudgetsLoaded]);
 
   useEffect(() => {
     void loadBudgets();
@@ -158,12 +163,9 @@ export function BudgetList({
         }
 
         setBudgets((current) => {
-          const nextBudgets = current.filter(
-            (budget) => budget.budgetId !== item.id,
-          );
-          onBudgetsLoaded?.(nextBudgets);
-          return nextBudgets;
+          return current.filter((budget) => budget.budgetId !== item.id);
         });
+        setBudgetSyncVersion((current) => current + 1);
         onDeleted(item.id);
       } catch (caughtError) {
         setError(

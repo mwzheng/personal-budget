@@ -7,7 +7,6 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 
 import { NotFoundHomeRedirect } from "@/components/NotFoundHomeRedirect";
 import { ROUTE_PATHS } from "@/lib/content/page-titles";
@@ -15,14 +14,11 @@ import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 const NOT_FOUND_PAGE_DESCRIPTION =
   "The requested page could not be found. Return to the Porridge Budget home page to keep browsing.";
-const NOT_FOUND_PANEL_BACKGROUND = `radial-gradient(circle at top, ${alpha(
-  SERVER_THEME_TOKENS.palette.primary,
-  0.2,
-)} 0%, ${alpha(SERVER_THEME_TOKENS.palette.backgroundPaper, 0.98)} 46%, ${
+const NOT_FOUND_PANEL_BACKGROUND = `radial-gradient(circle at top, ${`color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 20%, transparent)`} 0%, ${`color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.backgroundPaper} 98%, transparent)`} 46%, ${
   SERVER_THEME_TOKENS.palette.backgroundPaper
 } 100%)`;
-const NOT_FOUND_PANEL_BORDER = alpha(SERVER_THEME_TOKENS.palette.primary, 0.28);
-const NOT_FOUND_CODE_COLOR = alpha("#ffffff", 0.22);
+const NOT_FOUND_PANEL_BORDER = `color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 28%, transparent)`;
+const NOT_FOUND_CODE_COLOR = SERVER_THEME_TOKENS.text.disabled;
 
 export const metadata: Metadata = {
   title: "Page not found",

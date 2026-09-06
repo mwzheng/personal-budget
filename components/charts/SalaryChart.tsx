@@ -23,7 +23,7 @@ import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import type { SalaryEntry } from "@/lib/types/types";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 type SalaryTooltipProps = TooltipProps<number, string>;
 type SalaryTooltipEntry = NonNullable<SalaryTooltipProps["payload"]>[number];
@@ -35,6 +35,7 @@ export default function SalaryChart({
   data: SalaryEntry[];
   loading?: boolean;
 }) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   // Note 2: Chart always shows the full salary history (year filter was removed).
   const chartData = React.useMemo(() => {
     return [...data]
@@ -142,7 +143,11 @@ export default function SalaryChart({
               strokeWidth={2}
               strokeLinecap="round"
               dot
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{
+                r: 6,
+                strokeWidth: 2,
+                stroke: SERVER_THEME_TOKENS.surface.card,
+              }}
               animationDuration={1500}
               animationEasing="ease-in-out"
             />
@@ -153,7 +158,11 @@ export default function SalaryChart({
               strokeWidth={2}
               strokeLinecap="round"
               dot
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{
+                r: 6,
+                strokeWidth: 2,
+                stroke: SERVER_THEME_TOKENS.surface.card,
+              }}
               yAxisId={1}
               animationDuration={1500}
               animationEasing="ease-in-out"

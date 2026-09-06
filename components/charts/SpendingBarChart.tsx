@@ -14,7 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 import { ChartLegend } from "@/components/charts/ChartLegend";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
@@ -66,7 +66,7 @@ function renderBarTotalLabel(
     <text
       x={x}
       y={y}
-      fill={SERVER_THEME_TOKENS.chart.axis}
+      fill="var(--pb-chart-axis)"
       fontSize={fontSize}
       textAnchor="middle"
       transform={angle === 0 ? undefined : `rotate(${angle} ${x} ${y})`}
@@ -81,6 +81,7 @@ interface Props {
 }
 
 export function SpendingBarChart({ data }: Props) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   if (data.length === 0) {
     return (
       <Box

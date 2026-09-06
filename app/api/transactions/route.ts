@@ -141,10 +141,10 @@ export async function DELETE(request: Request) {
     // Note 7: Dynamic import is used here to lazy-load the DynamoDB module only
     // when a DELETE is actually performed. This can reduce cold start time in
     // serverless environments where not every invocation deletes data.
-    await (
+    const result = await (
       await import("../../../lib/api/dynamo")
     ).deleteTransaction(userId, id, date);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(result);
   } catch (err) {
     if (err instanceof Response) return err;
     console.error("[/api/transactions DELETE]", err);

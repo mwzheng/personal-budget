@@ -20,6 +20,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Checkbox from "@mui/material/Checkbox";
 import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -151,8 +152,8 @@ export function BudgetForm({
   const [helpOpen, setHelpOpen] = useState(false);
   const [rawAmounts, setRawAmounts] = useState<Record<string, string>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<
-    Record<string, boolean>
-  >({});
+    Record<CategoryType, boolean>
+  >(() => ({ Need: true, Want: true, Saving: true }));
   const [addMenuAnchor, setAddMenuAnchor] = useState<HTMLElement | null>(null);
   const [deletedExpense, setDeletedExpense] = useState<DeletedExpense | null>(
     null,
@@ -180,7 +181,7 @@ export function BudgetForm({
   function updateExpenseRow(
     expenseId: string,
     field: keyof BudgetExpense,
-    next: string | number,
+    next: string | number | boolean,
   ) {
     onChange({
       ...value,
@@ -390,12 +391,22 @@ export function BudgetForm({
         </Typography>
       )}
 
+      {!isEmpty && (
+        <Typography variant="body2" color="text.secondary">
+          Actual vs Budget uses expenses you record as transactions. Clear
+          Compare for payroll deductions such as taxes, health insurance, or HSA
+          contributions.
+        </Typography>
+      )}
+
       {groupedExpenses.map(({ category, expenses, total, pct }) => (
         <Box key={category}>
           <Box
             component="button"
             type="button"
             onClick={() => toggleCategory(category)}
+            aria-controls={`expense-category-${category}`}
+            aria-expanded={!collapsedCategories[category]}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -462,7 +473,10 @@ export function BudgetForm({
             />
           </Box>
 
-          <Collapse in={!collapsedCategories[category]}>
+          <Collapse
+            id={`expense-category-${category}`}
+            in={!collapsedCategories[category]}
+          >
             {expenses.length > 0 ? (
               <Box sx={{ overflowX: { xs: "auto", lg: "visible" } }}>
                 <Table
@@ -480,7 +494,7 @@ export function BudgetForm({
                     <TableRow>
                       <TableCell
                         align="center"
-                        width="26%"
+                        width="24%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -491,7 +505,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="17%"
+                        width="15%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -502,7 +516,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="15%"
+                        width="12%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -513,7 +527,7 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="25%"
+                        width="27%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -567,7 +581,20 @@ export function BudgetForm({
                       </TableCell>
                       <TableCell
                         align="center"
-                        width="17%"
+                        width="10%"
+                        sx={{
+                          textTransform: "none",
+                          letterSpacing: 0,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Tooltip title="Include this expense in Actual vs Budget. Turn it off when you do not record a matching transaction.">
+                          <span>Compare</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        width="12%"
                         sx={{
                           textTransform: "none",
                           letterSpacing: 0,
@@ -689,19 +716,22 @@ export function BudgetForm({
                                   },
                                 }}
                               />
-                              {percentage > 0 && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    whiteSpace: "nowrap",
-                                    flexShrink: 0,
-                                    fontSize: 11,
-                                  }}
-                                >
-                                  {percentage.toFixed(1)}%
-                                </Typography>
-                              )}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  width: "6ch",
+                                  whiteSpace: "nowrap",
+                                  flexShrink: 0,
+                                  textAlign: "right",
+                                  fontSize: 11,
+                                  fontVariantNumeric: "tabular-nums",
+                                }}
+                              >
+                                {percentage > 0
+                                  ? `${percentage.toFixed(1)}%`
+                                  : "0%"}
+                              </Typography>
                             </Box>
                           </TableCell>
                           <TableCell>
@@ -754,10 +784,28 @@ export function BudgetForm({
                               />
                             </Stack>
                           </TableCell>
-                          <TableCell align="right">
+                          <TableCell align="center">
+                            <Checkbox
+                              checked={
+                                expense.includeInActualComparison !== false
+                              }
+                              onChange={(event) =>
+                                updateExpenseRow(
+                                  expense.expenseId,
+                                  "includeInActualComparison",
+                                  event.target.checked,
+                                )
+                              }
+                              inputProps={{
+                                "aria-label": `Include ${expense.name || `expense ${globalIndex + 1}`} in Actual vs Budget`,
+                              }}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell align="center">
                             <Stack
                               direction="row"
-                              justifyContent="flex-end"
+                              justifyContent="center"
                               alignItems="center"
                               spacing={0.5}
                             >
@@ -932,7 +980,7 @@ export function BudgetForm({
             px: 2,
             py: 1,
             borderRadius: 2,
-            bgcolor: alpha("#ffffff", 0.05),
+            bgcolor: "action.hover",
             border: "1px solid",
             borderColor: "divider",
           }}

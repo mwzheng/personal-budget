@@ -203,6 +203,46 @@ describe("transactionCache", () => {
     expect(getCachedTransactions("user-a")).toEqual([tx("from-load"), created]);
   });
 
+  it("replays deletion and restoration in order over a stale server load", async () => {
+    const original = tx("coffee");
+    let resolveLoad!: (page: {
+      transactions: Transaction[];
+      hasMore: boolean;
+    }) => void;
+    const load = loadCachedTransactions(
+      "user-a",
+      () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve;
+        }),
+    );
+    removeCachedTransaction("user-a", original);
+    const restored = { ...original, updatedAt: "2026-09-04T12:00:00.000Z" };
+    upsertCachedTransaction("user-a", restored);
+    resolveLoad({ transactions: [original], hasMore: false });
+    await expect(load).resolves.toEqual([restored]);
+    expect(getCachedTransactions("user-a")).toEqual([restored]);
+  });
+
+  it("does not resurrect a deleted transaction from an in-flight load", async () => {
+    const original = tx("coffee");
+    let resolveLoad!: (page: {
+      transactions: Transaction[];
+      hasMore: boolean;
+    }) => void;
+    const load = loadCachedTransactions(
+      "user-a",
+      () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve;
+        }),
+    );
+    removeCachedTransaction("user-a", original);
+    resolveLoad({ transactions: [original], hasMore: false });
+    await expect(load).resolves.toEqual([]);
+    expect(getCachedTransactions("user-a")).toEqual([]);
+  });
+
   it("does not restore a cleared scope when its late load settles", async () => {
     let resolveLoad!: (value: {
       transactions: Transaction[];

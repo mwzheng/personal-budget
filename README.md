@@ -17,11 +17,14 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 
 - `/` — Public landing page with the app overview plus structured data for search engines.
 - `/about`, `/contact`, `/faq` — Public information pages with shared metadata, canonical URLs, and accessible section structure.
-- `/reports` — Interactive Reports page with tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, monthly and like-for-like yearly comparisons, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
-- `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, select saved budgets directly in the editor to update or delete them, export the active budget, and generate a Sankey diagram with optional nested path segments.
+- `/reports` — Interactive Reports page with visible name/note/tag search, tag/date filtering, income-aware summary cards, a spending-vs-income monthly chart, a spending breakdown pie chart (Needs/Wants/Savings), top-tags bar chart, monthly and like-for-like yearly comparisons, recoverable transaction deletion, a transactions table backed by authenticated per-user APIs, and CSV import templates for both expense and income files.
+- `/budget` — Budget Planner page: enter monthly income plus named expense rows, preview an expense pie chart, select saved budgets directly in the editor to update or delete them, compare saved budget categories with recorded activity for an independently selected month, export the active budget, and generate a Sankey diagram with optional nested path segments.
 - `/progress` — Salary, retirement, and milestone tracking from one long-term progress workspace with downloadable charts.
 - `/fire` — FIRE calculator for projecting investment growth, comparing scenarios, and downloading the projection chart as PNG.
 - `/salary` — Dedicated salary history entry and comparison screen.
+
+Appearance is available from the navigation on every page. Choose Light, Dark,
+or System; the choice is saved locally and System follows the device setting.
 
 ## APIs (local)
 
@@ -31,7 +34,8 @@ Porridge Budget is a personal budgeting application built with TypeScript, Next.
 - `GET /api/transactions` — (Authenticated) Lists transactions for the current user.
 - `POST /api/transactions` — (Authenticated) Creates a transaction for the current user.
 - `PUT /api/transactions` — (Authenticated) Updates a transaction for the current user.
-- `DELETE /api/transactions` — (Authenticated) Deletes a transaction for the current user when `id` and `date` are supplied.
+- `DELETE /api/transactions` — (Authenticated) Deletes a transaction for the current user when `id` and `date` are supplied, returning the deleted public record when one existed.
+- `POST /api/transactions/restore` — (Authenticated) Restores a previously deleted transaction with a conditional create; an identical retry is idempotent and conflicting content is rejected.
 - `GET /api/budgets` — (Authenticated) List saved budgets for the current user, including monthly income and expense rows when available.
 - `POST /api/budgets` — (Authenticated) Create a budget (Zod-validated request payload) with monthly income, expense rows, and legacy allocation compatibility.
 - `GET /api/budgets/:id`, `PUT /api/budgets/:id`, `DELETE /api/budgets/:id` — (Authenticated) Fetch, update, or delete a saved budget by id.

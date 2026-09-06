@@ -1,3 +1,9 @@
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+import {
+  DARK_THEME_TOKENS,
+  LIGHT_THEME_TOKENS,
+  schemeCssVariables,
+} from "@/lib/theme/server-theme-tokens";
 // Note 1: `app/layout.tsx` is the root layout in the Next.js App Router. It
 // wraps every page in the application and renders exactly once. Server
 // Components (no "use client" directive) like this file are rendered on the
@@ -14,25 +20,28 @@ import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Note 1.6: `next/font/google` downloads and self-hosts the Inter font at build
-// time. This avoids a third-party Google Fonts request at runtime (privacy,
-// performance), and the generated CSS variable `--font-inter` is applied to
-// <body> so MUI's Inter font-stack resolves immediately without FOUT.
+// Note 1.6: `next/font/google` downloads and self-hosts the app fonts at build
+// time. They are requested by their CSS declarations instead of being eagerly
+// preloaded on every route, while the generated variables keep MUI's font
+// stacks available without a third-party request at runtime.
 const openSans = Open_Sans({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-open-sans",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-space-grotesk",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-ibm-plex-mono",
   weight: ["400", "500", "600", "700"],
 });
@@ -95,7 +104,7 @@ export default function RootLayout({
     // Note 3: `lang="en"` on the `<html>` element is an accessibility best
     // practice: screen readers use it to select the correct voice/pronunciation
     // profile, and search engines use it for language-aware indexing.
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       {/*
         Note 4: `suppressHydrationWarning` on <body> reduces React's hydration
         warnings when server-rendered HTML differs from the client. A common
@@ -121,6 +130,12 @@ export default function RootLayout({
           especially important for components like `Tabs` that attach inline styles
           derived from MUI's styling pipeline.
         */}
+        <InitColorSchemeScript
+          attribute="data-mui-color-scheme"
+          defaultMode="system"
+          modeStorageKey="pb:theme-mode"
+        />
+        <style>{`:root, [data-mui-color-scheme="light"] {${schemeCssVariables(LIGHT_THEME_TOKENS)} color-scheme: light;} [data-mui-color-scheme="dark"] {${schemeCssVariables(DARK_THEME_TOKENS)} color-scheme: dark;}`}</style>
         <AppRouterCacheProvider>
           <Script id="cleanup-darkreader" strategy="beforeInteractive">
             {`(function cleanupDarkReaderVars(){
@@ -261,10 +276,16 @@ export default function RootLayout({
                 minHeight: "100dvh",
                 display: "flex",
                 flexDirection: "column",
+                width: "100%",
+                minWidth: 0,
+                overflowX: "clip",
               }}
             >
               <AppNav />
-              <Box component="div" sx={{ flexGrow: 1 }}>
+              <Box
+                component="div"
+                sx={{ flexGrow: 1, minWidth: 0, maxWidth: "100%" }}
+              >
                 {children}
               </Box>
               <Footer />

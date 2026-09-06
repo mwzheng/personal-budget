@@ -4,6 +4,7 @@
 // to and from DynamoDB's native AttributeValue format.
 import {
   QueryCommand,
+  GetCommand,
   PutCommand,
   DeleteCommand,
   BatchWriteCommand,
@@ -18,6 +19,10 @@ import { loadTransactionsFromCSV } from "../utils/csvParser";
 import { isDemoUserId } from "../auth/requestUser";
 import { generateId } from "../utils/generateId";
 import type { SavedBudget, Transaction } from "../types/types";
+import {
+  publicTransaction,
+  sameTransactionContent,
+} from "../utils/transaction-restore";
 import { SK_PREFIX } from "./tableKeys";
 
 type TransactionRecord = Transaction & {
@@ -458,20 +463,66 @@ export async function deleteTransaction(
   userId: string,
   txId: string,
   date: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: true; deleted: Transaction | null }> {
   const client = getDocClient(TABLE_NAME);
   if (!client) throw new Error("DynamoDB table not configured");
-  // Note 16: DynamoDB `DeleteCommand` requires the full primary key (pk + sk).
-  // Both partition key and sort key must be provided -- the sort key cannot be
-  // omitted even though we only want to delete by transaction id.
-  const sk = `${SK_PREFIX.TRANSACTION}${date}#${txId}`;
-  await client.send(
+  const result = await client.send(
     new DeleteCommand({
       TableName: TABLE_NAME,
-      Key: { pk: `user#${userId}`, sk },
+      Key: {
+        pk: `user#${userId}`,
+        sk: `${SK_PREFIX.TRANSACTION}${date}#${txId}`,
+      },
+      ReturnValues: "ALL_OLD",
     }),
   );
-  return { ok: true };
+  return {
+    ok: true,
+    deleted: result.Attributes ? publicTransaction(result.Attributes) : null,
+  };
+}
+
+export class TransactionRestoreConflict extends Error {}
+
+export async function restoreTransaction(
+  userId: string,
+  tx: Transaction,
+): Promise<Transaction> {
+  const client = getDocClient(TABLE_NAME);
+  if (!client) throw new Error("DynamoDB table not configured");
+  const item = buildTransactionItem(userId, tx);
+  try {
+    await client.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: item,
+        ConditionExpression: "attribute_not_exists(pk)",
+      }),
+    );
+    return publicTransaction(item);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      error.name !== "ConditionalCheckFailedException"
+    )
+      throw error;
+    const existing = await client.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { pk: item.pk, sk: item.sk },
+        ConsistentRead: true,
+      }),
+    );
+    if (
+      existing.Item &&
+      sameTransactionContent(publicTransaction(existing.Item), tx)
+    ) {
+      return publicTransaction(existing.Item);
+    }
+    throw new TransactionRestoreConflict(
+      "A different transaction already exists. It was not overwritten.",
+    );
+  }
 }
 
 export async function putBudget(
@@ -486,6 +537,7 @@ export async function putBudget(
       amount: number;
       category: string;
       group?: string;
+      includeInActualComparison?: boolean;
     }[];
     allocations?: { category: string; amount: number }[];
     createdAt?: string;

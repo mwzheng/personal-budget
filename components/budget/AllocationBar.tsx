@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 
 import {
   CATEGORY_COLORS,
@@ -70,10 +69,10 @@ export function AllocationBar({
         sx={{
           display: "flex",
           width: "100%",
-          height: 28,
+          height: 32,
           borderRadius: 2,
           overflow: "hidden",
-          bgcolor: alpha("#ffffff", 0.05),
+          bgcolor: "action.hover",
           position: "relative",
         }}
       >
@@ -97,8 +96,9 @@ export function AllocationBar({
                 variant="caption"
                 fontWeight={700}
                 sx={{
-                  color: "#000",
-                  fontSize: 10,
+                  color: (theme) =>
+                    theme.palette.getContrastText(CATEGORY_COLORS[category]),
+                  fontSize: "0.75rem",
                   whiteSpace: "nowrap",
                   lineHeight: 1,
                 }}

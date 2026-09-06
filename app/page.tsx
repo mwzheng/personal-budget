@@ -11,7 +11,6 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import Stack from "@mui/material/Stack";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 
 import HomeHeroActions from "@/components/home/HomeHeroActions";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
@@ -91,8 +90,8 @@ const FeatureCard = ({
             width: 48,
             height: 48,
             borderRadius: 1,
-            backgroundColor: alpha(SERVER_THEME_TOKENS.palette.primary, 0.12),
-            border: `1px solid ${alpha(SERVER_THEME_TOKENS.palette.primary, 0.42)}`,
+            backgroundColor: `color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 12%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 42%, transparent)`,
             margin: "auto",
           }}
         >
@@ -183,7 +182,7 @@ export default function Home() {
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(circle at 50% -20%, rgba(54,217,197,0.12), transparent 55%), linear-gradient(180deg, rgba(6,17,27,0.2), rgba(6,17,27,0.7))",
+              "radial-gradient(circle at 50% -20%, rgba(54,217,197,0.12), transparent 55%), linear-gradient(180deg, transparent, var(--pb-surface-page))",
             pointerEvents: "none",
             zIndex: 0,
           },

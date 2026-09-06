@@ -105,7 +105,10 @@ export function TransactionCalendar({
           not be shown on the calendar.
         </Typography>
       )}
-      <Box className="transaction-calendar">
+      <Box
+        className="transaction-calendar"
+        sx={{ minWidth: 0, maxWidth: "100%" }}
+      >
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, interactionPlugin]}
@@ -113,6 +116,10 @@ export function TransactionCalendar({
           initialDate={calendarAnchorDate}
           headerToolbar={{ left: "title", right: "prev,next today" }}
           height="auto"
+          stickyHeaderDates={false}
+          stickyFooterScrollbar={false}
+          buttonIcons={false}
+          buttonText={{ prev: "Previous", next: "Next", today: "Today" }}
           fixedWeekCount={false}
           dayMaxEventRows={5}
           eventDisplay="block"

@@ -6,6 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import DownloadIcon from "@mui/icons-material/Download";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 import { toPng } from "html-to-image";
 
 import { StatusAlert } from "@/components/ui/StatusAlert";
@@ -24,6 +25,7 @@ const DOWNLOAD_BTN_CLASS = "chart-download-btn";
  * exported PNG stays clean.
  */
 export function ChartWrapper({ title, children }: Props) {
+  const chartTheme = useChartTheme();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function ChartWrapper({ title, children }: Props) {
 
     try {
       const dataUrl = await toPng(node, {
-        backgroundColor: "#0B1B26",
+        backgroundColor: chartTheme.surface.card,
         pixelRatio: 2,
         cacheBust: true,
         // MUI/next/font styles can trigger a font-face parsing bug in
@@ -58,16 +60,29 @@ export function ChartWrapper({ title, children }: Props) {
     } finally {
       setExporting(false);
     }
-  }, [title]);
+  }, [title, chartTheme.surface.card]);
 
   return (
-    <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+    <Box
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        minWidth: 0,
+        maxWidth: "100%",
+      }}
+    >
       {error ? (
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
       <Box
         ref={wrapperRef}
-        sx={{ position: "relative", width: "100%", height: "100%" }}
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          minWidth: 0,
+        }}
       >
         {children}
         <Tooltip title="Download as PNG" placement="left">
@@ -84,10 +99,10 @@ export function ChartWrapper({ title, children }: Props) {
               opacity: exporting ? 1 : 0.4,
               transition: "opacity 0.2s",
               "&:hover": { opacity: 1 },
-              bgcolor: "#142F3A",
+              bgcolor: "background.paper",
               color: "text.secondary",
               "&:hover, &:focus-visible": {
-                bgcolor: "#102632",
+                bgcolor: "action.hover",
                 color: "text.primary",
               },
             }}

@@ -57,7 +57,7 @@ export default function FireProjectionTable({ rows }: Props) {
   return (
     <Box>
       <TableContainer sx={{ maxHeight: expanded ? 600 : undefined }}>
-        <Table size="small" stickyHeader aria-label="FIRE projection table">
+        <Table size="small" aria-label="FIRE projection table">
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>

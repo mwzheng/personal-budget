@@ -394,10 +394,7 @@ export default function FireCalculator() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Stack
-            spacing={2}
-            sx={{ position: { md: "sticky" }, top: { md: 24 } }}
-          >
+          <Stack spacing={2}>
             <Paper
               id="fire-assumptions"
               tabIndex={-1}

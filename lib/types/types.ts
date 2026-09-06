@@ -261,6 +261,11 @@ export interface BudgetExpense {
   amount: number;
   category: CategoryType;
   group?: string;
+  /**
+   * Whether this expense contributes to Actual vs Budget targets. Missing on
+   * older budgets means true so existing comparisons keep their behavior.
+   */
+  includeInActualComparison?: boolean;
 }
 
 // Note 16: SavedBudget models the persisted response from the budgets API.

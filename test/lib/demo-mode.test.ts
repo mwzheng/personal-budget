@@ -72,6 +72,36 @@ describe("demo mode", () => {
     vi.unstubAllGlobals();
   });
 
+  it("returns demo deletion snapshots and restores idempotently without overwriting conflicts", async () => {
+    await startDemoSession();
+    const listing = await (await apiFetch("/api/transactions")).json();
+    const original = listing.transactions[0];
+    const deleted = await (
+      await apiFetch("/api/transactions", {
+        method: "DELETE",
+        body: JSON.stringify({ id: original.id, date: original.date }),
+      })
+    ).json();
+    expect(deleted.deleted).toEqual(original);
+    const restore = (transaction: unknown) =>
+      apiFetch("/api/transactions/restore", {
+        method: "POST",
+        body: JSON.stringify({ transaction }),
+      });
+    const restored = await (await restore(deleted.deleted)).json();
+    expect(restored.restored).toMatchObject(original);
+    expect((await restore(deleted.deleted)).status).toBe(200);
+    expect(
+      (await restore({ ...deleted.deleted, amount: original.amount + 1 }))
+        .status,
+    ).toBe(409);
+    const after = await (await apiFetch("/api/transactions")).json();
+    expect(
+      after.transactions.filter((tx: { id: string }) => tx.id === original.id),
+    ).toHaveLength(1);
+    expect((await restore({ id: "invalid" })).status).toBe(400);
+  });
+
   it("starts a browser-only demo session and seeds demo data", async () => {
     localStorage.setItem(ACCESS_TOKEN_KEY, "real-access");
     localStorage.setItem(ID_TOKEN_KEY, "real-id");

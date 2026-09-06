@@ -62,7 +62,7 @@ export function TransactionsTable({
   } = useDeleteConfirmation<Transaction>({
     onConfirm: async (item) => {
       if (onDelete) {
-        await onDelete(item.id);
+        return await onDelete(item.id);
       }
     },
   });
@@ -108,167 +108,176 @@ export function TransactionsTable({
 
   return (
     <>
-      <Paper>
-        <TableContainer sx={{ maxHeight: 520 }}>
-          {/* Note 7: `stickyHeader` keeps column headers visible while scrolling
-              a long list. The container must have a fixed `maxHeight` for this to work. */}
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "date"}
-                    direction={sortField === "date" ? sortDir : "asc"}
-                    onClick={() => handleSort("date")}
-                  >
-                    Date
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "name"}
-                    direction={sortField === "name" ? sortDir : "asc"}
-                    onClick={() => handleSort("name")}
-                  >
-                    Name
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "category"}
-                    direction={sortField === "category" ? sortDir : "asc"}
-                    onClick={() => handleSort("category")}
-                  >
-                    Category
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Payment Method</TableCell>
-                <TableCell>Tags</TableCell>
-                <TableCell align="right">
-                  <TableSortLabel
-                    active={sortField === "amount"}
-                    direction={sortField === "amount" ? sortDir : "asc"}
-                    onClick={() => handleSort("amount")}
-                  >
-                    Amount
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Notes</TableCell>
-                {showActions && <TableCell align="center">Actions</TableCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paged.map((t) => (
-                <TableRow key={t.id} hover>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{t.date}</TableCell>
-                  <TableCell>{t.name}</TableCell>
+      <Box
+        aria-label="Transaction results table"
+        sx={{ maxWidth: "100%", minWidth: 0, overflowX: "auto" }}
+      >
+        <Paper sx={{ minWidth: 800 }}>
+          <TableContainer
+            sx={{ maxHeight: 520, overflowX: "visible", overflowY: "auto" }}
+          >
+            <Table size="small">
+              <TableHead>
+                <TableRow>
                   <TableCell>
-                    <Chip
-                      label={t.category}
-                      size="small"
-                      color={TRANSACTION_CATEGORY_CHIP_COLORS[t.category]}
-                    />
+                    <TableSortLabel
+                      active={sortField === "date"}
+                      direction={sortField === "date" ? sortDir : "asc"}
+                      onClick={() => handleSort("date")}
+                    >
+                      Date
+                    </TableSortLabel>
                   </TableCell>
-                  <TableCell>{t.paymentMethod}</TableCell>
                   <TableCell>
-                    <Box display="flex" flexWrap="wrap" gap={0.5}>
-                      {t.tags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={tag}
-                          size="small"
-                          color={activeTagSet.has(tag) ? "primary" : "default"}
-                          variant={
-                            activeTagSet.has(tag) ? "filled" : "outlined"
-                          }
-                          onClick={
-                            onTagClick ? () => onTagClick(tag) : undefined
-                          }
-                          sx={{
-                            fontSize: 11,
-                            cursor: onTagClick ? "pointer" : "default",
-                          }}
-                        />
-                      ))}
-                    </Box>
+                    <TableSortLabel
+                      active={sortField === "name"}
+                      direction={sortField === "name" ? sortDir : "asc"}
+                      onClick={() => handleSort("name")}
+                    >
+                      Name
+                    </TableSortLabel>
                   </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ whiteSpace: "nowrap", fontWeight: 600 }}
-                  >
-                    $
-                    {t.amount.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
+                  <TableCell>
+                    <TableSortLabel
+                      active={sortField === "category"}
+                      direction={sortField === "category" ? sortDir : "asc"}
+                      onClick={() => handleSort("category")}
+                    >
+                      Category
+                    </TableSortLabel>
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      maxWidth: 200,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      color: "text.secondary",
-                      fontSize: 12,
-                    }}
-                  >
-                    {t.notes}
+                  <TableCell>Payment Method</TableCell>
+                  <TableCell>Tags</TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={sortField === "amount"}
+                      direction={sortField === "amount" ? sortDir : "asc"}
+                      onClick={() => handleSort("amount")}
+                    >
+                      Amount
+                    </TableSortLabel>
                   </TableCell>
-                  {showActions && (
-                    <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                      <Stack
-                        direction="row"
-                        justifyContent="center"
-                        spacing={0.75}
-                      >
-                        {onEdit ? (
-                          <ActionIconButton
-                            tooltip="Edit"
-                            ariaLabel={`Edit transaction ${t.name}`}
-                            onClick={() => onEdit(t)}
-                          >
-                            <EditOutlinedIcon fontSize="small" />
-                          </ActionIconButton>
-                        ) : null}
-                        {onDuplicate ? (
-                          <ActionIconButton
-                            tooltip="Duplicate"
-                            ariaLabel={`Duplicate transaction ${t.name}`}
-                            onClick={() => onDuplicate(t)}
-                          >
-                            <ContentCopyOutlinedIcon fontSize="small" />
-                          </ActionIconButton>
-                        ) : null}
-                        {onDelete ? (
-                          <ActionIconButton
-                            tooltip="Delete"
-                            ariaLabel={`Delete transaction ${t.name}`}
-                            tone="danger"
-                            onClick={() => requestDelete(t)}
-                          >
-                            <DeleteOutlineRoundedIcon fontSize="small" />
-                          </ActionIconButton>
-                        ) : null}
-                      </Stack>
-                    </TableCell>
-                  )}
+                  <TableCell>Notes</TableCell>
+                  {showActions && <TableCell align="center">Actions</TableCell>}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={transactions.length}
-          page={page}
-          onPageChange={(_, p) => setPage(p)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {paged.map((t) => (
+                  <TableRow key={t.id} hover>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {t.date}
+                    </TableCell>
+                    <TableCell>{t.name}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t.category}
+                        size="small"
+                        color={TRANSACTION_CATEGORY_CHIP_COLORS[t.category]}
+                      />
+                    </TableCell>
+                    <TableCell>{t.paymentMethod}</TableCell>
+                    <TableCell>
+                      <Box display="flex" flexWrap="wrap" gap={0.5}>
+                        {t.tags.map((tag) => (
+                          <Chip
+                            key={tag}
+                            label={tag}
+                            size="small"
+                            color={
+                              activeTagSet.has(tag) ? "primary" : "default"
+                            }
+                            variant={
+                              activeTagSet.has(tag) ? "filled" : "outlined"
+                            }
+                            onClick={
+                              onTagClick ? () => onTagClick(tag) : undefined
+                            }
+                            sx={{
+                              fontSize: 11,
+                              cursor: onTagClick ? "pointer" : "default",
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ whiteSpace: "nowrap", fontWeight: 600 }}
+                    >
+                      $
+                      {t.amount.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 200,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: "text.secondary",
+                        fontSize: 12,
+                      }}
+                    >
+                      {t.notes}
+                    </TableCell>
+                    {showActions && (
+                      <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                        <Stack
+                          direction="row"
+                          justifyContent="center"
+                          spacing={0.75}
+                        >
+                          {onEdit ? (
+                            <ActionIconButton
+                              tooltip="Edit"
+                              ariaLabel={`Edit transaction ${t.name}`}
+                              onClick={() => onEdit(t)}
+                            >
+                              <EditOutlinedIcon fontSize="small" />
+                            </ActionIconButton>
+                          ) : null}
+                          {onDuplicate ? (
+                            <ActionIconButton
+                              tooltip="Duplicate"
+                              ariaLabel={`Duplicate transaction ${t.name}`}
+                              onClick={() => onDuplicate(t)}
+                            >
+                              <ContentCopyOutlinedIcon fontSize="small" />
+                            </ActionIconButton>
+                          ) : null}
+                          {onDelete ? (
+                            <ActionIconButton
+                              tooltip="Delete"
+                              ariaLabel={`Delete transaction ${t.name}`}
+                              tone="danger"
+                              onClick={() => requestDelete(t)}
+                            >
+                              <DeleteOutlineRoundedIcon fontSize="small" />
+                            </ActionIconButton>
+                          ) : null}
+                        </Stack>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={transactions.length}
+            page={page}
+            onPageChange={(_, p) => setPage(p)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
+        </Paper>
+      </Box>
 
       {/* Note 8: The delete dialog is rendered outside the table in the same
           React Fragment so it is not nested inside a <table> element (which
@@ -276,7 +285,7 @@ export function TransactionsTable({
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Delete Transaction?"
-        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? This cannot be undone.`}
+        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.date}, $${deleteTarget?.amount.toFixed(2)})? Undo is available briefly after deletion.`}
         confirmLabel="Delete"
         loading={isDeleting}
         onClose={cancelDelete}

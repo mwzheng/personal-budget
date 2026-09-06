@@ -42,6 +42,7 @@ function buildJsonPayload(budget: SavedBudget): Record<string, unknown> {
         amount: e.amount,
         category: e.category,
         group: e.group ?? "",
+        includeInActualComparison: e.includeInActualComparison !== false,
       })) ?? [],
     createdAt: budget.createdAt,
     updatedAt: budget.updatedAt,
@@ -81,7 +82,15 @@ function buildBudgetCsv(budget: SavedBudget): string {
     // Metadata line — note the second column is the formatted income value.
     `${escapeCell(budget.name)},${escapeCell(String(budget.monthlyIncome ?? 0))}`,
     // Expense columns header
-    ["Expense", "Amount", "Category", "Sankey Path"].map(escapeCell).join(","),
+    [
+      "Expense",
+      "Amount",
+      "Category",
+      "Sankey Path",
+      "Include in Actual vs Budget",
+    ]
+      .map(escapeCell)
+      .join(","),
   ];
 
   for (const expense of budget.expenses ?? []) {
@@ -91,6 +100,7 @@ function buildBudgetCsv(budget: SavedBudget): string {
         `$${expense.amount.toFixed(2)}`,
         escapeCell(expense.category),
         escapeCell(expense.group ?? ""),
+        escapeCell(expense.includeInActualComparison !== false ? "Yes" : "No"),
       ].join(","),
     );
   }

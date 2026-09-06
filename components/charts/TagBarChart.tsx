@@ -19,7 +19,7 @@ import { TAG_CHART_PALETTE } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import { TagDataPoint } from "@/lib/types/types";
 import Box from "@mui/material/Box";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 interface Props {
   data: TagDataPoint[];
@@ -28,6 +28,7 @@ interface Props {
 }
 
 export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   const visibleData = data.slice(0, 10);
 
   if (visibleData.length === 0) {
@@ -129,7 +130,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
                   key={`cell-${entry.name}-${i}`}
                   fill={TAG_CHART_PALETTE[i % TAG_CHART_PALETTE.length]}
                   fillOpacity={hasVisibleActiveTags && !isActive ? 0.45 : 1}
-                  stroke={isActive ? "#fff" : "none"}
+                  stroke={isActive ? SERVER_THEME_TOKENS.text.primary : "none"}
                   strokeWidth={isActive ? 2 : 0}
                   role={onTagClick ? "button" : undefined}
                   tabIndex={onTagClick ? 0 : undefined}

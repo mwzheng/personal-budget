@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
+import { useChartTheme } from "@/lib/theme/use-chart-theme";
 
 type ProjectionTooltipValue = number | string | Array<number | string>;
 
@@ -25,6 +25,7 @@ export default function ProjectionChart({
 }: {
   data: { month: number; date: string; balance: number }[];
 }) {
+  const SERVER_THEME_TOKENS = useChartTheme();
   if (!data || data.length === 0) {
     return (
       <Box
@@ -87,8 +88,7 @@ export default function ProjectionChart({
               content={({ active, label, payload }) => {
                 if (!active || !payload?.length) return null;
                 const value = payload[0]?.value as
-                  | ProjectionTooltipValue
-                  | undefined;
+                  ProjectionTooltipValue | undefined;
                 const normalizedValue = Array.isArray(value) ? value[0] : value;
                 return (
                   <ChartTooltipCard
@@ -114,7 +114,11 @@ export default function ProjectionChart({
               strokeWidth={2}
               strokeLinecap="round"
               dot={false}
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{
+                r: 6,
+                strokeWidth: 2,
+                stroke: SERVER_THEME_TOKENS.surface.card,
+              }}
               animationDuration={1500}
               animationEasing="ease-in-out"
             />

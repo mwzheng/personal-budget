@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
 
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
@@ -18,8 +17,8 @@ const PrincipleItem = ({ principle, index }: PrincipleItemProps) => (
       gap: 2,
       p: 2,
       borderRadius: 1,
-      border: `1px solid ${alpha(PRIMARY, 0.2)}`,
-      bgcolor: alpha(PRIMARY, 0.04),
+      border: `1px solid color-mix(in srgb, ${PRIMARY} 20%, transparent)`,
+      bgcolor: `color-mix(in srgb, ${PRIMARY} 4%, transparent)`,
     }}
   >
     <Typography

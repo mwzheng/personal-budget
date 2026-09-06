@@ -596,6 +596,6 @@ describe("deleteTransaction — sort key construction", () => {
 
   it("returns { ok: true } after a successful deletion", async () => {
     const result = await deleteTransaction("user-1", "tx-xyz", "2025-06-30");
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, deleted: null });
   });
 });
