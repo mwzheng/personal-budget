@@ -7,7 +7,14 @@ import { transactionsToCsv } from "@/lib/utils/csvExport";
 import { getUserTransactionsPaged } from "@/lib/api/dynamo";
 import { getRequestUserId } from "@/lib/auth/requestUser";
 import { parseTransactionCategoryFilters } from "@/lib/utils/transaction-categories";
-import { resolveReportRange } from "@/lib/api/reportRange";
+import {
+  InvalidReportDateRangeError,
+  resolveReportRange,
+} from "@/lib/api/reportRange";
+import {
+  InvalidReportAmountRangeError,
+  parseReportAmountRange,
+} from "@/lib/utils/reportAmount";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +29,7 @@ export async function GET(request: NextRequest) {
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
+    const { minAmount, maxAmount } = parseReportAmountRange(searchParams);
 
     const userId = await getRequestUserId(request);
     const range = resolveReportRange(searchParams);
@@ -45,6 +53,8 @@ export async function GET(request: NextRequest) {
       categories,
       tags,
       search,
+      minAmount,
+      maxAmount,
     });
     const csv = transactionsToCsv(filtered);
 
@@ -57,6 +67,18 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof Response) return error;
+    if (error instanceof InvalidReportDateRangeError) {
+      return Response.json(
+        { error: { code: "INVALID_DATE_RANGE", message: error.message } },
+        { status: 400 },
+      );
+    }
+    if (error instanceof InvalidReportAmountRangeError) {
+      return Response.json(
+        { error: { code: "INVALID_AMOUNT_RANGE", message: error.message } },
+        { status: 400 },
+      );
+    }
     console.error("[/api/reports/export]", error);
     return new Response("Failed to export CSV", { status: 500 });
   }

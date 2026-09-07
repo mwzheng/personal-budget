@@ -14,6 +14,10 @@ import {
   getReportDateRangePreset,
   type ReportDateRangePreset,
 } from "./aggregations";
+import {
+  DEFAULT_REPORT_AMOUNT_RANGE,
+  isValidReportAmountRange,
+} from "./reportAmount";
 
 // Note 2: Storing all transactions under a single localStorage key is simple and
 // works well for small datasets. For larger datasets, IndexedDB or a server-side
@@ -22,14 +26,14 @@ import {
 const STORAGE_KEY = "personal-budget-transactions";
 const REPORT_YEAR_STORAGE_KEY = "personal-budget-last-report-year";
 const REPORT_FILTERS_STORAGE_KEY = "personal-budget-report-filters";
-const REPORT_FILTERS_STORAGE_VERSION = 1;
+const REPORT_FILTERS_STORAGE_VERSION = 2;
 const REPORT_TRANSACTIONS_VIEW_STORAGE_KEY =
   "personal-budget-last-report-transactions-view";
 
 type ReportTransactionsViewPreference = "table" | "calendar";
 
 type StoredReportFilters = {
-  version: typeof REPORT_FILTERS_STORAGE_VERSION;
+  version: 1 | typeof REPORT_FILTERS_STORAGE_VERSION;
   filters: FilterParams;
   /** Preserve relative ranges so they can advance when the calendar day changes. */
   dateRangePreset?: ReportDateRangePreset;
@@ -92,6 +96,19 @@ function normalizeReportFilters(value: unknown): FilterParams | null {
     !(endDate === null || (typeof endDate === "string" && isIsoDate(endDate)))
   )
     return null;
+  const minAmount =
+    "minAmount" in filters
+      ? filters.minAmount
+      : DEFAULT_REPORT_AMOUNT_RANGE.minAmount;
+  const maxAmount =
+    "maxAmount" in filters
+      ? filters.maxAmount
+      : DEFAULT_REPORT_AMOUNT_RANGE.maxAmount;
+  if (
+    !isValidReportAmountRange(minAmount, maxAmount) ||
+    typeof maxAmount !== "number"
+  )
+    return null;
   if (years.length > 0 && (startDate !== null || endDate !== null)) return null;
   if (startDate && endDate && startDate > endDate) return null;
 
@@ -102,6 +119,8 @@ function normalizeReportFilters(value: unknown): FilterParams | null {
     categories,
     tags,
     search: filters.search.trim(),
+    minAmount,
+    maxAmount,
   };
 }
 
@@ -115,7 +134,11 @@ export function getLastSelectedReportFilters(): FilterParams | null {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
       return null;
     const stored = parsed as Partial<StoredReportFilters>;
-    if (stored.version !== REPORT_FILTERS_STORAGE_VERSION) return null;
+    if (
+      stored.version !== 1 &&
+      stored.version !== REPORT_FILTERS_STORAGE_VERSION
+    )
+      return null;
     const filters = normalizeReportFilters(stored.filters);
     if (!filters) return null;
 

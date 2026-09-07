@@ -78,22 +78,31 @@ try {
     }
     if (width >= 1440) {
       const filterRows = await evaluate(`(() => {
-        const fields = Array.from(
+        const primaryFields = Array.from(
           document.querySelectorAll("#report-advanced-filters .MuiFormControl-root"),
+        ).slice(0, 4);
+        const amountFields = Array.from(
+          document.querySelectorAll(
+            '[data-testid="report-amount-filter"] .MuiFormControl-root',
+          ),
         );
         const apply = Array.from(
           document.querySelectorAll("#report-advanced-filters button"),
-        ).find((button) => button.textContent.trim() === "Apply");
+        ).find((button) => button.textContent.trim() === "Apply Amount Range");
         return {
-          fields: fields.map((field) => Math.round(field.getBoundingClientRect().top)),
+          primary: primaryFields.map((field) => Math.round(field.getBoundingClientRect().top)),
+          amount: amountFields.map((field) => Math.round(field.getBoundingClientRect().top)),
           apply: Math.round(apply.getBoundingClientRect().top),
         };
       })()`);
-      assert.equal(filterRows.fields.length, 4, "Advanced filters must render four fields");
-      assert(filterRows.fields.every((top) => top === filterRows.fields[0]),
-        `${width}px: advanced fields must share a desktop row: ${filterRows.fields}`);
-      assert.equal(filterRows.apply, filterRows.fields[0],
-        `${width}px: Apply must share the advanced-filter row`);
+      assert.equal(filterRows.primary.length, 4, "Advanced filters must render four primary fields");
+      assert(filterRows.primary.every((top) => top === filterRows.primary[0]),
+        `${width}px: primary fields must share a desktop row: ${filterRows.primary}`);
+      assert.equal(filterRows.amount.length, 2, "Amount filter must render two bounds");
+      assert(filterRows.amount.every((top) => top === filterRows.amount[0]),
+        `${width}px: amount controls must share a desktop row: ${filterRows.amount}`);
+      assert.equal(filterRows.apply, filterRows.amount[0],
+        `${width}px: Apply must share the amount-filter row`);
     }
     for (const view of ["Table", "Calendar"]) {
       await evaluate(`document.querySelector('[aria-label="${view} view"]').click()`);

@@ -195,6 +195,38 @@ describe("demo mode", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it("rejects a reversed custom date range for demo CSV export", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    await startDemoSession();
+
+    const response = await apiFetch(
+      "/api/reports/export?startDate=2026-02-01&endDate=2026-01-31",
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "INVALID_DATE_RANGE" },
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid amount range for demo CSV export", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    await startDemoSession();
+
+    const response = await apiFetch(
+      "/api/reports/export?minAmount=100&maxAmount=99",
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "INVALID_AMOUNT_RANGE" },
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("persists demo budget edits locally across requests", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);

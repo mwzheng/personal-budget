@@ -12,6 +12,14 @@ import {
 import { filterTransactions } from "../../utils/aggregations";
 import { loadTransactionsFromCSV } from "../../utils/csvParser";
 import { transactionsToCsv } from "../../utils/csvExport";
+import {
+  InvalidReportAmountRangeError,
+  parseReportAmountRange,
+} from "../../utils/reportAmount";
+import {
+  InvalidReportDateRangeError,
+  validateReportDateRange,
+} from "../../api/reportRange";
 import { parseTransactionCategoryFilters } from "../../utils/transaction-categories";
 import { createDemoId, getDemoStore, updateDemoStore } from "../demoData";
 import type { Transaction } from "../../types/types";
@@ -234,6 +242,35 @@ export async function handleTransactionRoutes(
     const tags = (url.searchParams.get("tags") || "")
       .split(",")
       .filter(Boolean);
+    let amountRange;
+    try {
+      validateReportDateRange(url.searchParams);
+      amountRange = parseReportAmountRange(url.searchParams);
+    } catch (error) {
+      if (error instanceof InvalidReportDateRangeError) {
+        return jsonResponse(
+          {
+            error: {
+              code: "INVALID_DATE_RANGE",
+              message: error.message,
+            },
+          },
+          { status: 400 },
+        );
+      }
+      if (error instanceof InvalidReportAmountRangeError) {
+        return jsonResponse(
+          {
+            error: {
+              code: "INVALID_AMOUNT_RANGE",
+              message: error.message,
+            },
+          },
+          { status: 400 },
+        );
+      }
+      throw error;
+    }
     const filtered = filterTransactions(getDemoStore().transactions, {
       years,
       startDate: url.searchParams.get("startDate"),
@@ -241,6 +278,7 @@ export async function handleTransactionRoutes(
       categories,
       tags,
       search: url.searchParams.get("search") ?? "",
+      ...amountRange,
     });
     const csv = transactionsToCsv(filtered);
 

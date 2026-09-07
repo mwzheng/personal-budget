@@ -61,6 +61,10 @@ import {
 } from "@/lib/utils/storage";
 import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
+import {
+  DEFAULT_REPORT_AMOUNT_RANGE,
+  REPORT_AMOUNT_MAX,
+} from "@/lib/utils/reportAmount";
 
 import SpendingBreakdownLoadingState from "@/components/report/SpendingBreakdownLoadingState";
 import EmptyState from "@/components/report/EmptyState";
@@ -211,6 +215,7 @@ const ReportsPageContent = () => {
   const router = useRouter();
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
+  const loadRequestGeneration = useRef(0);
   const importGeneration = authGeneration.current;
   const importScope = scope;
 
@@ -244,9 +249,11 @@ const ReportsPageContent = () => {
         return;
       }
       const loadGeneration = authGeneration.current;
+      const requestGeneration = ++loadRequestGeneration.current;
       const isCurrentLoad = () =>
         currentTransactionScope() === scope &&
-        authGeneration.current === loadGeneration;
+        authGeneration.current === loadGeneration &&
+        loadRequestGeneration.current === requestGeneration;
       setLoading(true);
       setErrorMessage(null);
 
@@ -542,6 +549,10 @@ const ReportsPageContent = () => {
         params.set("categories", filters.categories.join(","));
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
       if (filters.search) params.set("search", filters.search);
+      if (filters.minAmount !== DEFAULT_REPORT_AMOUNT_RANGE.minAmount)
+        params.set("minAmount", String(filters.minAmount));
+      if (filters.maxAmount !== REPORT_AMOUNT_MAX)
+        params.set("maxAmount", String(filters.maxAmount));
 
       const query = params.toString();
       const res = await apiFetch(

@@ -15,6 +15,7 @@ interface CacheEntry {
   stale: boolean;
   loadedScope?: TransactionCacheScope;
   loadPromise?: Promise<Transaction[]>;
+  loadingScope?: TransactionCacheScope;
   pendingPatches: TransactionPatch[];
 }
 
@@ -141,6 +142,17 @@ function applyPatches(
   }, transactions);
 }
 
+function scopesMatch(
+  left: TransactionCacheScope | undefined,
+  right: TransactionCacheScope | undefined,
+) {
+  return (
+    left?.allHistory === right?.allHistory &&
+    left?.startDate === right?.startDate &&
+    left?.endDate === right?.endDate
+  );
+}
+
 /**
  * Loads cursor pages once per scope. By default it follows every page; callers
  * can pass maxPages to keep an ordinary view bounded. A force refresh bypasses
@@ -156,8 +168,21 @@ export function loadCachedTransactions(
     scope?: TransactionCacheScope;
   } = {},
 ): Promise<Transaction[]> {
-  const entry = entryFor(scope);
-  if (entry.loadPromise) return entry.loadPromise;
+  let entry = entryFor(scope);
+  if (entry.loadPromise && scopesMatch(entry.loadingScope, options.scope)) {
+    return entry.loadPromise;
+  }
+  if (entry.loadPromise) {
+    // A different date selection supersedes the in-flight request. Keeping a
+    // distinct entry lets both promises settle while only the latest may cache.
+    entry = {
+      transactions: entry.transactions?.slice(),
+      stale: entry.stale,
+      loadedScope: entry.loadedScope,
+      pendingPatches: [],
+    };
+    transactionCache.set(scope, entry);
+  }
   const cacheMatchesScope =
     !options.scope ||
     !entry.loadedScope ||
@@ -214,15 +239,18 @@ export function loadCachedTransactions(
   })();
 
   entry.loadPromise = promise;
+  entry.loadingScope = options.scope;
   void promise.then(
     () => {
       if (transactionCache.get(scope) === loadingEntry) {
         delete loadingEntry.loadPromise;
+        delete loadingEntry.loadingScope;
       }
     },
     () => {
       if (transactionCache.get(scope) === loadingEntry) {
         delete loadingEntry.loadPromise;
+        delete loadingEntry.loadingScope;
       }
     },
   );

@@ -102,6 +102,60 @@ describe("transactionCache", () => {
     expect(fetchPage).toHaveBeenCalledTimes(2);
   });
 
+  it("does not coalesce rapid loads for different date scopes or cache the stale response", async () => {
+    let resolveOlder!: (value: {
+      transactions: Transaction[];
+      hasMore: boolean;
+    }) => void;
+    let resolveLatest!: (value: {
+      transactions: Transaction[];
+      hasMore: boolean;
+    }) => void;
+    const loadOlder = vi.fn(
+      () =>
+        new Promise<{ transactions: Transaction[]; hasMore: boolean }>(
+          (resolve) => {
+            resolveOlder = resolve;
+          },
+        ),
+    );
+    const loadLatest = vi.fn(
+      () =>
+        new Promise<{ transactions: Transaction[]; hasMore: boolean }>(
+          (resolve) => {
+            resolveLatest = resolve;
+          },
+        ),
+    );
+
+    const older = loadCachedTransactions("user-a", loadOlder, {
+      scope: {
+        allHistory: false,
+        startDate: "2025-01-01",
+        endDate: "2025-12-31",
+      },
+    });
+    const latest = loadCachedTransactions("user-a", loadLatest, {
+      scope: {
+        allHistory: false,
+        startDate: "2026-01-01",
+        endDate: "2026-12-31",
+      },
+    });
+
+    resolveLatest({ transactions: [tx("latest")], hasMore: false });
+    await expect(latest).resolves.toEqual([tx("latest")]);
+    resolveOlder({
+      transactions: [tx("older", "2025-01-01")],
+      hasMore: false,
+    });
+    await expect(older).resolves.toEqual([tx("older", "2025-01-01")]);
+
+    expect(loadOlder).toHaveBeenCalledTimes(1);
+    expect(loadLatest).toHaveBeenCalledTimes(1);
+    expect(getCachedTransactions("user-a")).toEqual([tx("latest")]);
+  });
+
   it("promotes a bounded cache to a complete history on force load", async () => {
     const fetchPage = vi
       .fn()

@@ -1,6 +1,5 @@
-// FilterBar is controlled by applied parent filters while the advanced panel keeps
-// a local draft until Apply. Date presets are intentionally immediate because
-// they are common report-navigation controls.
+// FilterBar is controlled by applied parent filters. Only manually entered
+// amount bounds remain local drafts until their dedicated Apply action.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -30,6 +29,17 @@ import {
   ReportDateRangePreset,
 } from "@/lib/utils/aggregations";
 import { TRANSACTION_CATEGORY_OPTIONS } from "@/lib/utils/transaction-categories";
+import { AmountRangeFilter } from "@/components/report/AmountRangeFilter";
+import {
+  DEFAULT_REPORT_AMOUNT_RANGE,
+  formatReportAmount,
+  isSameReportAmountRange,
+  parseReportAmountDraft,
+  REPORT_AMOUNT_PRESETS,
+  REPORT_AMOUNT_MAX,
+  type ReportAmountInputErrors,
+  type ReportAmountRange,
+} from "@/lib/utils/reportAmount";
 
 interface Props {
   availableTags: string[];
@@ -81,13 +91,6 @@ const PRESET_LABELS = new Map(
   DATE_RANGE_PRESETS.map((preset) => [preset.value, preset.label]),
 );
 
-function sameStringValues(left: readonly string[], right: readonly string[]) {
-  return (
-    left.length === right.length &&
-    left.every((value, index) => value === right[index])
-  );
-}
-
 function getSelectedDateRangePreset(
   filters: FilterParams,
 ): ReportDateRangePreset | null {
@@ -109,6 +112,21 @@ function getSelectedDateRangePreset(
   return "custom";
 }
 
+function formatAmountFilterLabel(range: ReportAmountRange) {
+  if (range.minAmount === 0)
+    return `Amount: Up to ${formatReportAmount(range.maxAmount)}`;
+  if (range.maxAmount === REPORT_AMOUNT_MAX)
+    return `Amount: ${formatReportAmount(range.minAmount)}+`;
+  return `Amount: ${formatReportAmount(range.minAmount)}–${formatReportAmount(range.maxAmount)}`;
+}
+
+function getAmountRangeMenuLabel(range: ReportAmountRange) {
+  const preset = REPORT_AMOUNT_PRESETS.find((option) =>
+    isSameReportAmountRange(option.range, range),
+  );
+  return `Amount Range: ${preset?.label ?? "Custom"}`;
+}
+
 export function FilterBar({ availableTags, filters, onChange }: Props) {
   const [startDate, setStartDate] = useState<Date | null>(() =>
     parseFilterDate(filters.startDate),
@@ -116,21 +134,18 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   const [endDate, setEndDate] = useState<Date | null>(() =>
     parseFilterDate(filters.endDate),
   );
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    () => filters.tags,
+  const selectedDateRangePreset = getSelectedDateRangePreset(filters);
+  const [minAmountInput, setMinAmountInput] = useState(() =>
+    String(filters.minAmount),
   );
-  const [selectedCategories, setSelectedCategories] = useState<
-    TransactionCategoryType[]
-  >(() => filters.categories);
-  const [selectedYears, setSelectedYears] = useState<string[]>(
-    () => filters.years,
+  const [maxAmountInput, setMaxAmountInput] = useState(() =>
+    filters.maxAmount === REPORT_AMOUNT_MAX ? "" : String(filters.maxAmount),
   );
-  const [selectedDateRangePreset, setSelectedDateRangePreset] =
-    useState<ReportDateRangePreset | null>(() =>
-      getSelectedDateRangePreset(filters),
-    );
+  const [amountErrors, setAmountErrors] = useState<ReportAmountInputErrors>({});
   const [expanded, setExpanded] = useState(false);
   const [dateRangeMenuAnchor, setDateRangeMenuAnchor] =
+    useState<HTMLElement | null>(null);
+  const [amountRangeMenuAnchor, setAmountRangeMenuAnchor] =
     useState<HTMLElement | null>(null);
 
   // Only changed applied fields replace their drafts. In particular, immediate
@@ -139,26 +154,27 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   const previousFilters = useRef(filters);
   useEffect(() => {
     const previous = previousFilters.current;
-    const yearsChanged = !sameStringValues(previous.years, filters.years);
     if (previous.startDate !== filters.startDate) {
       setStartDate(parseFilterDate(filters.startDate));
     }
     if (previous.endDate !== filters.endDate) {
       setEndDate(parseFilterDate(filters.endDate));
     }
-    if (!sameStringValues(previous.categories, filters.categories)) {
-      setSelectedCategories(filters.categories);
+    if (previous.minAmount !== filters.minAmount) {
+      setMinAmountInput(String(filters.minAmount));
     }
-    if (!sameStringValues(previous.tags, filters.tags)) {
-      setSelectedTags(filters.tags);
+    if (previous.maxAmount !== filters.maxAmount) {
+      setMaxAmountInput(
+        filters.maxAmount === REPORT_AMOUNT_MAX
+          ? ""
+          : String(filters.maxAmount),
+      );
     }
-    if (yearsChanged) setSelectedYears(filters.years);
     if (
-      yearsChanged ||
-      previous.startDate !== filters.startDate ||
-      previous.endDate !== filters.endDate
+      previous.minAmount !== filters.minAmount ||
+      previous.maxAmount !== filters.maxAmount
     ) {
-      setSelectedDateRangePreset(getSelectedDateRangePreset(filters));
+      setAmountErrors({});
     }
     previousFilters.current = filters;
   }, [filters]);
@@ -171,6 +187,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     count += filters.categories.length;
     count += filters.tags.length;
     if (filters.search) count += 1;
+    if (!isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE))
+      count += 1;
     return count;
   }, [filters]);
 
@@ -179,14 +197,17 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   const hasAdvancedAppliedFilters =
     filters.years.length > 0 ||
     filters.categories.length > 0 ||
-    filters.tags.length > 0;
+    filters.tags.length > 0 ||
+    !isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE);
   const hasClearableFilters =
     activeFilterCount > 0 ||
     startDate !== null ||
     endDate !== null ||
-    selectedYears.length > 0 ||
-    selectedCategories.length > 0 ||
-    selectedTags.length > 0;
+    minAmountInput !== String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount) ||
+    maxAmountInput !== "";
+  const amountDraft = parseReportAmountDraft(minAmountInput, maxAmountInput);
+  const hasPendingAmountChanges =
+    !amountDraft.range || !isSameReportAmountRange(amountDraft.range, filters);
 
   function applyFilters(
     years: string[],
@@ -195,6 +216,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     categories: TransactionCategoryType[],
     tags: string[],
     q: string,
+    amountRange: ReportAmountRange = filters,
   ) {
     onChange({
       years,
@@ -203,6 +225,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       categories,
       tags,
       search: q,
+      minAmount: amountRange.minAmount,
+      maxAmount: amountRange.maxAmount,
     });
   }
 
@@ -210,7 +234,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     setDateRangeMenuAnchor(null);
 
     if (preset === "custom") {
-      setSelectedDateRangePreset("custom");
       setExpanded(true);
       return;
     }
@@ -219,10 +242,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     const nextStartDate = parseFilterDate(range.startDate);
     const nextEndDate = parseFilterDate(range.endDate);
 
-    setSelectedDateRangePreset(preset);
     setStartDate(nextStartDate);
     setEndDate(nextEndDate);
-    setSelectedYears([]);
     applyFilters(
       [],
       nextStartDate,
@@ -233,11 +254,83 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     );
   }
 
+  function handleStartDateChange(value: Date | null) {
+    setStartDate(value);
+
+    if (value && Number.isNaN(value.getTime())) {
+      return;
+    }
+
+    const nextStartDate = value ? format(value, "yyyy-MM-dd") : null;
+    if (nextStartDate && filters.endDate && nextStartDate > filters.endDate) {
+      return;
+    }
+
+    const nextFilters: FilterParams = {
+      ...filters,
+      years: [],
+      startDate: nextStartDate,
+    };
+    onChange(nextFilters);
+  }
+
+  function handleEndDateChange(value: Date | null) {
+    setEndDate(value);
+
+    if (value && Number.isNaN(value.getTime())) {
+      return;
+    }
+
+    const nextEndDate = value ? format(value, "yyyy-MM-dd") : null;
+    if (nextEndDate && filters.startDate && nextEndDate < filters.startDate) {
+      return;
+    }
+
+    const nextFilters: FilterParams = {
+      ...filters,
+      years: [],
+      endDate: nextEndDate,
+    };
+    onChange(nextFilters);
+  }
+
+  function handleAmountPreset(range: ReportAmountRange) {
+    setAmountRangeMenuAnchor(null);
+    setMinAmountInput(String(range.minAmount));
+    setMaxAmountInput(
+      range.maxAmount === REPORT_AMOUNT_MAX ? "" : String(range.maxAmount),
+    );
+    setAmountErrors({});
+    applyFilters(
+      filters.years,
+      parseFilterDate(filters.startDate),
+      parseFilterDate(filters.endDate),
+      filters.categories,
+      filters.tags,
+      filters.search,
+      range,
+    );
+  }
+
+  function handleCustomAmountRange() {
+    setAmountRangeMenuAnchor(null);
+    setExpanded(true);
+  }
+
+  function handleMinAmountInputChange(value: string) {
+    setMinAmountInput(value);
+    setAmountErrors({});
+  }
+
+  function handleMaxAmountInputChange(value: string) {
+    setMaxAmountInput(value);
+    setAmountErrors({});
+  }
+
   function handleRemoveYear(year: string) {
     const nextYears = filters.years.filter(
       (selectedYear) => selectedYear !== year,
     );
-    setSelectedYears(nextYears);
     applyFilters(
       nextYears,
       null,
@@ -252,9 +345,10 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     const nextCategories = filters.categories.filter(
       (item) => item !== category,
     );
-    setSelectedCategories((current) =>
-      current.filter((item) => item !== category),
-    );
+    handleCategoriesChange(nextCategories);
+  }
+
+  function handleCategoriesChange(nextCategories: TransactionCategoryType[]) {
     applyFilters(
       filters.years,
       parseFilterDate(filters.startDate),
@@ -267,7 +361,10 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
 
   function handleRemoveTag(tag: string) {
     const nextTags = filters.tags.filter((item) => item !== tag);
-    setSelectedTags((current) => current.filter((item) => item !== tag));
+    handleTagsChange(nextTags);
+  }
+
+  function handleTagsChange(nextTags: string[]) {
     applyFilters(
       filters.years,
       parseFilterDate(filters.startDate),
@@ -275,6 +372,21 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       filters.categories,
       nextTags,
       filters.search,
+    );
+  }
+
+  function handleRemoveAmount() {
+    setMinAmountInput(String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount));
+    setMaxAmountInput("");
+    setAmountErrors({});
+    applyFilters(
+      filters.years,
+      parseFilterDate(filters.startDate),
+      parseFilterDate(filters.endDate),
+      filters.categories,
+      filters.tags,
+      filters.search,
+      DEFAULT_REPORT_AMOUNT_RANGE,
     );
   }
 
@@ -289,24 +401,22 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     );
   }
 
-  function handleApply() {
-    applyFilters(
-      selectedYears,
-      startDate,
-      endDate,
-      selectedCategories,
-      selectedTags,
-      filters.search,
-    );
+  function handleApplyAmountRange() {
+    const result = parseReportAmountDraft(minAmountInput, maxAmountInput);
+    if (!result.range) {
+      setAmountErrors(result.errors);
+      return;
+    }
+    setAmountErrors({});
+    onChange({ ...filters, ...result.range });
   }
 
   function handleClearFilters() {
     setStartDate(null);
     setEndDate(null);
-    setSelectedCategories([]);
-    setSelectedTags([]);
-    setSelectedYears([]);
-    setSelectedDateRangePreset("all-time");
+    setMinAmountInput(String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount));
+    setMaxAmountInput("");
+    setAmountErrors({});
     onChange({
       years: [],
       startDate: null,
@@ -314,6 +424,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       categories: [],
       tags: [],
       search: "",
+      ...DEFAULT_REPORT_AMOUNT_RANGE,
     });
   }
 
@@ -352,7 +463,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             endAdornment: filters.search ? (
               <InputAdornment position="end">
                 <IconButton
-                  aria-label="Clear search"
+                  aria-label="Clear Search"
                   size="small"
                   onClick={handleRemoveSearch}
                 >
@@ -377,7 +488,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             variant="outlined"
             size="small"
             onClick={(event) => setDateRangeMenuAnchor(event.currentTarget)}
-            aria-label="Choose report date range"
+            aria-label="Choose Date Range"
             aria-haspopup="menu"
             aria-expanded={Boolean(dateRangeMenuAnchor)}
             aria-controls={
@@ -389,6 +500,20 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             {selectedDateRangePreset
               ? `: ${PRESET_LABELS.get(selectedDateRangePreset)}`
               : ""}
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={(event) => setAmountRangeMenuAnchor(event.currentTarget)}
+            aria-label="Choose Amount Range"
+            aria-haspopup="menu"
+            aria-expanded={Boolean(amountRangeMenuAnchor)}
+            aria-controls={
+              amountRangeMenuAnchor ? "report-amount-range-menu" : undefined
+            }
+            sx={{ minHeight: 40, textTransform: "none" }}
+          >
+            {getAmountRangeMenuLabel(filters)}
           </Button>
           <Badge
             badgeContent={activeFilterCount}
@@ -402,10 +527,10 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               onClick={() => setExpanded((prev) => !prev)}
               aria-expanded={expanded}
               aria-controls="report-advanced-filters"
-              aria-label={expanded ? "Hide more filters" : "Show more filters"}
+              aria-label={expanded ? "Hide More Filters" : "Show More Filters"}
               sx={{ minHeight: 40, textTransform: "none" }}
             >
-              More filters
+              More Filters
             </Button>
           </Badge>
           <Button
@@ -424,7 +549,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           anchorEl={dateRangeMenuAnchor}
           open={Boolean(dateRangeMenuAnchor)}
           onClose={() => setDateRangeMenuAnchor(null)}
-          MenuListProps={{ "aria-label": "Report date range options" }}
+          MenuListProps={{ "aria-label": "Report Date Range Options" }}
         >
           {DATE_RANGE_MENU_GROUPS.flatMap((group) => [
             <ListSubheader key={`${group.label}-heading`} disableSticky>
@@ -440,6 +565,33 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               </MenuItem>
             )),
           ])}
+        </Menu>
+        <Menu
+          id="report-amount-range-menu"
+          anchorEl={amountRangeMenuAnchor}
+          open={Boolean(amountRangeMenuAnchor)}
+          onClose={() => setAmountRangeMenuAnchor(null)}
+          MenuListProps={{ "aria-label": "Report Amount Range Options" }}
+        >
+          {REPORT_AMOUNT_PRESETS.map((preset) => (
+            <MenuItem
+              key={preset.value}
+              selected={isSameReportAmountRange(preset.range, filters)}
+              onClick={() => handleAmountPreset(preset.range)}
+            >
+              {preset.label}
+            </MenuItem>
+          ))}
+          <MenuItem
+            selected={
+              !REPORT_AMOUNT_PRESETS.some((preset) =>
+                isSameReportAmountRange(preset.range, filters),
+              )
+            }
+            onClick={handleCustomAmountRange}
+          >
+            Custom Range
+          </MenuItem>
         </Menu>
 
         {hasAdvancedAppliedFilters && (
@@ -460,7 +612,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 textOverflow: "ellipsis",
               },
             }}
-            aria-label="Active report filters"
+            aria-label="Active Report Filters"
           >
             {filters.years.map((year) => (
               <Chip
@@ -486,6 +638,14 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 onDelete={() => handleRemoveTag(tag)}
               />
             ))}
+            {!isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE) && (
+              <Chip
+                key="amount"
+                label={formatAmountFilterLabel(filters)}
+                size="small"
+                onDelete={handleRemoveAmount}
+              />
+            )}
           </Stack>
         )}
       </Box>
@@ -507,7 +667,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 xs: "minmax(0, 1fr)",
                 sm: "repeat(2, minmax(0, 1fr))",
                 md: "170px 170px minmax(0, 1fr) minmax(0, 1fr)",
-                lg: "170px 170px minmax(180px, 1fr) minmax(180px, 1fr) auto",
+                lg: "170px 170px minmax(180px, 1fr) minmax(180px, 1fr)",
               },
               gap: 1.25,
               alignItems: "center",
@@ -517,11 +677,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             <DatePicker
               label="Start Date"
               value={startDate}
-              onChange={(value) => {
-                setStartDate(value);
-                setSelectedYears([]);
-                setSelectedDateRangePreset("custom");
-              }}
+              onChange={handleStartDateChange}
               slotProps={{
                 textField: { size: "small", sx: { width: "100%" } },
               }}
@@ -529,11 +685,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             <DatePicker
               label="End Date"
               value={endDate}
-              onChange={(value) => {
-                setEndDate(value);
-                setSelectedYears([]);
-                setSelectedDateRangePreset("custom");
-              }}
+              onChange={handleEndDateChange}
               slotProps={{
                 textField: { size: "small", sx: { width: "100%" } },
               }}
@@ -542,9 +694,9 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               multiple
               size="small"
               options={TRANSACTION_CATEGORY_OPTIONS}
-              value={selectedCategories}
+              value={filters.categories}
               onChange={(_event, value) =>
-                setSelectedCategories(value as TransactionCategoryType[])
+                handleCategoriesChange(value as TransactionCategoryType[])
               }
               renderInput={(params) => (
                 <TextField {...params} label="Category" />
@@ -556,32 +708,39 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               multiple
               size="small"
               options={availableTags}
-              value={selectedTags}
-              onChange={(_event, value) => setSelectedTags(value)}
+              value={filters.tags}
+              onChange={(_event, value) => handleTagsChange(value)}
               renderInput={(params) => <TextField {...params} label="Tags" />}
               sx={{ minWidth: 0, width: "100%" }}
               limitTags={2}
             />
             <Box
-              display="flex"
-              gap={1}
+              data-testid="report-amount-actions"
               sx={{
-                justifyContent: {
-                  xs: "stretch",
-                  sm: "flex-end",
-                  lg: "flex-start",
-                },
-                gridColumn: { xs: "auto", sm: "1 / -1", lg: "auto" },
-                whiteSpace: "nowrap",
+                gridColumn: "1 / -1",
+                display: "grid",
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "auto auto" },
+                gap: 1.25,
+                alignItems: "start",
+                justifyContent: { md: "start" },
+                minWidth: 0,
               }}
             >
+              <AmountRangeFilter
+                minAmountInput={minAmountInput}
+                maxAmountInput={maxAmountInput}
+                errors={amountErrors}
+                onMinAmountChange={handleMinAmountInputChange}
+                onMaxAmountChange={handleMaxAmountInputChange}
+              />
               <Button
                 variant="contained"
                 size="small"
-                onClick={handleApply}
-                sx={{ minHeight: 40, flex: { xs: 1, sm: "initial" } }}
+                onClick={handleApplyAmountRange}
+                disabled={!hasPendingAmountChanges}
+                sx={{ minHeight: 40, width: { xs: "100%", md: "auto" } }}
               >
-                Apply
+                Apply Amount Range
               </Button>
             </Box>
           </Box>
