@@ -1,5 +1,5 @@
-// FilterBar is controlled by applied parent filters. Only manually entered
-// amount bounds remain local drafts until their dedicated Apply action.
+// FilterBar is controlled by applied parent filters. Manually entered amount
+// bounds remain local drafts until they have been idle long enough to validate.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -146,6 +146,26 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     useState<HTMLElement | null>(null);
   const [amountRangeMenuAnchor, setAmountRangeMenuAnchor] =
     useState<HTMLElement | null>(null);
+  const [amountDebounceRequest, setAmountDebounceRequest] = useState<
+    number | null
+  >(null);
+  const amountDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const latestFilters = useRef(filters);
+  const latestOnChange = useRef(onChange);
+  const latestAmountDraft = useRef({ minAmountInput, maxAmountInput });
+  latestFilters.current = filters;
+  latestOnChange.current = onChange;
+  latestAmountDraft.current = { minAmountInput, maxAmountInput };
+
+  function cancelAmountDebounce() {
+    if (amountDebounceTimer.current) {
+      clearTimeout(amountDebounceTimer.current);
+      amountDebounceTimer.current = null;
+    }
+    setAmountDebounceRequest(null);
+  }
 
   // Only changed applied fields replace their drafts. In particular, immediate
   // search changes must leave unfinished advanced edits alone, even when the
@@ -173,10 +193,40 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       previous.minAmount !== filters.minAmount ||
       previous.maxAmount !== filters.maxAmount
     ) {
+      cancelAmountDebounce();
       setAmountErrors({});
     }
     previousFilters.current = filters;
   }, [filters]);
+
+  useEffect(() => {
+    if (amountDebounceRequest === null) return;
+
+    amountDebounceTimer.current = setTimeout(() => {
+      amountDebounceTimer.current = null;
+      const result = parseReportAmountDraft(
+        latestAmountDraft.current.minAmountInput,
+        latestAmountDraft.current.maxAmountInput,
+      );
+      if (!result.range) {
+        setAmountErrors(result.errors);
+        return;
+      }
+
+      setAmountErrors({});
+      const currentFilters = latestFilters.current;
+      if (!isSameReportAmountRange(result.range, currentFilters)) {
+        latestOnChange.current({ ...currentFilters, ...result.range });
+      }
+    }, 500);
+
+    return () => {
+      if (amountDebounceTimer.current) {
+        clearTimeout(amountDebounceTimer.current);
+        amountDebounceTimer.current = null;
+      }
+    };
+  }, [amountDebounceRequest]);
 
   // Count individual applied filters for the More filters badge.
   const activeFilterCount = useMemo(() => {
@@ -204,10 +254,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     endDate !== null ||
     minAmountInput !== String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount) ||
     maxAmountInput !== "";
-  const amountDraft = parseReportAmountDraft(minAmountInput, maxAmountInput);
-  const hasPendingAmountChanges =
-    !amountDraft.range || !isSameReportAmountRange(amountDraft.range, filters);
-
   function applyFilters(
     years: string[],
     sd: Date | null,
@@ -289,6 +335,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   }
 
   function handleAmountPreset(range: ReportAmountRange) {
+    cancelAmountDebounce();
     setAmountRangeMenuAnchor(null);
     setMinAmountInput(String(range.minAmount));
     setMaxAmountInput(
@@ -309,11 +356,13 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   function handleMinAmountInputChange(value: string) {
     setMinAmountInput(value);
     setAmountErrors({});
+    setAmountDebounceRequest((request) => (request ?? 0) + 1);
   }
 
   function handleMaxAmountInputChange(value: string) {
     setMaxAmountInput(value);
     setAmountErrors({});
+    setAmountDebounceRequest((request) => (request ?? 0) + 1);
   }
 
   function handleRemoveYear(year: string) {
@@ -365,6 +414,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   }
 
   function handleRemoveAmount() {
+    cancelAmountDebounce();
     setMinAmountInput(String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount));
     setMaxAmountInput("");
     setAmountErrors({});
@@ -390,17 +440,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     );
   }
 
-  function handleApplyAmountRange() {
-    const result = parseReportAmountDraft(minAmountInput, maxAmountInput);
-    if (!result.range) {
-      setAmountErrors(result.errors);
-      return;
-    }
-    setAmountErrors({});
-    onChange({ ...filters, ...result.range });
-  }
-
   function handleClearFilters() {
+    cancelAmountDebounce();
     setStartDate(null);
     setEndDate(null);
     setMinAmountInput(String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount));
@@ -581,7 +622,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             gap={1}
             alignItems="center"
             sx={{
-              gridColumn: "1 / -1",
+              flexBasis: "100%",
+              width: "100%",
               maxWidth: "100%",
               minWidth: 0,
               "& .MuiChip-root": {
@@ -703,20 +745,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                   onMaxAmountChange={handleMaxAmountInputChange}
                 />
               </Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleApplyAmountRange}
-                disabled={!hasPendingAmountChanges}
-                sx={{
-                  minHeight: 40,
-                  width: { xs: "100%", lg: "auto" },
-                  flexShrink: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Apply Amount Range
-              </Button>
             </Box>
             <Autocomplete
               multiple

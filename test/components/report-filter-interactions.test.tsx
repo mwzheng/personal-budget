@@ -84,6 +84,8 @@ function setup(initial: FilterParams = EMPTY_FILTERS, accept = true) {
   render(<Harness />);
   return userEvent.setup();
 }
+const waitForAmountDebounce = (ms = 550) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 function assertApplied(expected: FilterParams, ids?: string) {
   expect(JSON.parse(screen.getByTestId("state").textContent!)).toEqual(
     expected,
@@ -266,24 +268,138 @@ describe("controlled report filter interactions", () => {
     );
     assertDraft();
   });
-  it("only commits manual amount drafts with their dedicated Apply action", async () => {
+  it("debounces valid manual amount drafts without an Apply button", async () => {
+    vi.useRealTimers();
     const user = setup();
     await draft(user);
     assertApplied(EMPTY_FILTERS, "1,2,3");
-    await user.click(
-      screen.getByRole("button", { name: "Apply Amount Range" }),
-    );
+    expect(
+      screen.queryByRole("button", { name: "Apply Amount Range" }),
+    ).toBeNull();
+    await waitForAmountDebounce(350);
+    assertApplied(EMPTY_FILTERS, "1,2,3");
+    await waitForAmountDebounce(200);
     assertApplied({ ...EMPTY_FILTERS, minAmount: 17, maxAmount: 88 }, "1,2");
     expect(
       screen.getByRole("button", { name: "Choose Amount" }).textContent,
     ).toBe("Amount: Custom");
-    expect(
-      (
-        screen.getByRole("button", {
-          name: "Apply Amount Range",
-        }) as HTMLButtonElement
-      ).disabled,
-    ).toBe(true);
+    await waitForAmountDebounce();
+    assertApplied({ ...EMPTY_FILTERS, minAmount: 17, maxAmount: 88 }, "1,2");
+  });
+  it("restarts the amount debounce while typing", async () => {
+    vi.useRealTimers();
+    const user = setup();
+    await user.click(screen.getByRole("button", { name: "Show More Filters" }));
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "1");
+    await waitForAmountDebounce(300);
+    await user.type(screen.getByLabelText("Min Amount"), "7");
+    await waitForAmountDebounce(300);
+    assertApplied(EMPTY_FILTERS, "1,2,3");
+    await waitForAmountDebounce(250);
+    assertApplied({ ...EMPTY_FILTERS, minAmount: 17 });
+  });
+  it.each([
+    {
+      name: "invalid",
+      min: "one",
+      max: "88",
+      error: "Use a whole-dollar amount",
+    },
+    {
+      name: "incomplete",
+      min: "",
+      max: "88",
+      error: "Use a whole-dollar amount",
+    },
+    {
+      name: "reversed",
+      min: "88",
+      max: "17",
+      error: "Maximum must be at least the minimum",
+    },
+    {
+      name: "out-of-range",
+      min: "1000000",
+      max: "",
+      error: "Use an amount from $0 to $999,999",
+    },
+  ])(
+    "shows $name amount errors without changing applied filters",
+    async ({ min, max, error }) => {
+      vi.useRealTimers();
+      const user = setup({ ...EMPTY_FILTERS, minAmount: 10, maxAmount: 100 });
+      await user.click(
+        screen.getByRole("button", { name: "Show More Filters" }),
+      );
+      await user.clear(screen.getByLabelText("Min Amount"));
+      if (min) await user.type(screen.getByLabelText("Min Amount"), min);
+      await user.clear(screen.getByLabelText("Max Amount"));
+      if (max) await user.type(screen.getByLabelText("Max Amount"), max);
+      await waitForAmountDebounce();
+      assertApplied({ ...EMPTY_FILTERS, minAmount: 10, maxAmount: 100 }, "1,2");
+      expect(screen.getByText(error)).toBeTruthy();
+    },
+  );
+  it("cancels pending drafts when a preset or Clear Filters is used", async () => {
+    vi.useRealTimers();
+    const user = setup({ ...EMPTY_FILTERS, minAmount: 10, maxAmount: 100 });
+    await user.click(screen.getByRole("button", { name: "Show More Filters" }));
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "17");
+    await user.click(screen.getByRole("button", { name: "Choose Amount" }));
+    await user.click(screen.getByRole("menuitem", { name: "Up to $50" }));
+    await waitForAmountDebounce();
+    assertApplied({ ...EMPTY_FILTERS, minAmount: 0, maxAmount: 50 }, "1");
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "17");
+    await user.click(screen.getByRole("button", { name: "Clear Filters" }));
+    await waitForAmountDebounce();
+    assertApplied(EMPTY_FILTERS, "1,2,3");
+  });
+  it("preserves filters changed while an amount draft is pending", async () => {
+    vi.useRealTimers();
+    const user = setup();
+    await user.click(screen.getByRole("button", { name: "Show More Filters" }));
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "17");
+    await user.clear(screen.getByLabelText("Search Transactions"));
+    await user.type(screen.getByLabelText("Search Transactions"), "rent");
+    await waitForAmountDebounce();
+    assertApplied({ ...EMPTY_FILTERS, search: "rent", minAmount: 17 }, "3");
+  });
+  it("cancels pending drafts on external amount changes and unmount", async () => {
+    vi.useRealTimers();
+    const onChange = vi.fn();
+    const view = render(
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <FilterBar
+          availableTags={[]}
+          filters={EMPTY_FILTERS}
+          onChange={onChange}
+        />
+      </LocalizationProvider>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Show More Filters" }));
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "17");
+    view.rerender(
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <FilterBar
+          availableTags={[]}
+          filters={{ ...EMPTY_FILTERS, minAmount: 20 }}
+          onChange={onChange}
+        />
+      </LocalizationProvider>,
+    );
+    await waitForAmountDebounce();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.clear(screen.getByLabelText("Min Amount"));
+    await user.type(screen.getByLabelText("Min Amount"), "17");
+    view.unmount();
+    await waitForAmountDebounce();
+    expect(onChange).not.toHaveBeenCalled();
   });
   it("keeps manual dates labeled as custom without exposing a custom preset", async () => {
     const user = setup({

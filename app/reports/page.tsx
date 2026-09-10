@@ -94,7 +94,29 @@ interface TransactionsApiResponse {
   nextCursor?: string;
 }
 
-function getFilterTransactionLoadPlan(filters: FilterParams) {
+interface TransactionLoadPlan {
+  allHistory: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface DateSelection {
+  years: string[];
+  startDate: string | null;
+  endDate: string | null;
+}
+
+function getDateSelection(filters: FilterParams): DateSelection {
+  return {
+    years: [...filters.years],
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+  };
+}
+
+function getFilterTransactionLoadPlan(
+  filters: FilterParams,
+): TransactionLoadPlan {
   if (filters.years.length > 0) {
     const years = filters.years
       .map(Number)
@@ -123,7 +145,7 @@ function getFilterTransactionLoadPlan(filters: FilterParams) {
 function getInitialTransactionLoadPlan(
   storedFilters: FilterParams | null,
   legacyYears: string[],
-) {
+): TransactionLoadPlan {
   const filters = storedFilters ?? {
     ...EMPTY_FILTERS,
     years: legacyYears,
@@ -180,9 +202,10 @@ function isTransaction(value: unknown): value is Transaction {
 
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [resultsRefreshing, setResultsRefreshing] = useState(false);
+  const [hasRefreshedDateScope, setHasRefreshedDateScope] = useState(false);
   const [transactionsLoaded, setTransactionsLoaded] = useState(false);
-  const [allHistoryLoaded, setAllHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
@@ -216,6 +239,7 @@ const ReportsPageContent = () => {
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
   const loadRequestGeneration = useRef(0);
+  const lastSuccessfulDateSelection = useRef<DateSelection | null>(null);
   const importGeneration = authGeneration.current;
   const importScope = scope;
 
@@ -230,9 +254,11 @@ const ReportsPageContent = () => {
       clearTransactionCache(requestScope);
       setAllTransactions([]);
       setTransactionsLoaded(false);
-      setAllHistoryLoaded(false);
       setFiltersInitialized(false);
-      setLoading(false);
+      setInitialLoading(false);
+      setResultsRefreshing(false);
+      setHasRefreshedDateScope(false);
+      lastSuccessfulDateSelection.current = null;
       router.replace("/auth/login");
     },
     [router],
@@ -240,9 +266,16 @@ const ReportsPageContent = () => {
 
   const loadTransactions = useCallback(
     async (
-      force = false,
-      allHistory = allHistoryLoaded,
-      range?: { startDate?: string; endDate?: string },
+      plan: TransactionLoadPlan,
+      {
+        force = false,
+        initial = false,
+        dateSelection,
+      }: {
+        force?: boolean;
+        initial?: boolean;
+        dateSelection?: DateSelection;
+      } = {},
     ) => {
       if (!scope) {
         router.replace("/auth/login");
@@ -254,7 +287,11 @@ const ReportsPageContent = () => {
         currentTransactionScope() === scope &&
         authGeneration.current === loadGeneration &&
         loadRequestGeneration.current === requestGeneration;
-      setLoading(true);
+      if (initial) {
+        setInitialLoading(true);
+      } else {
+        setResultsRefreshing(true);
+      }
       setErrorMessage(null);
 
       try {
@@ -262,9 +299,9 @@ const ReportsPageContent = () => {
           scope,
           async (cursor) => {
             const params = new URLSearchParams({ limit: "200" });
-            if (!allHistory) {
-              if (range?.startDate) params.set("startDate", range.startDate);
-              if (range?.endDate) params.set("endDate", range.endDate);
+            if (!plan.allHistory) {
+              if (plan.startDate) params.set("startDate", plan.startDate);
+              if (plan.endDate) params.set("endDate", plan.endDate);
             }
             if (cursor) params.set("cursor", cursor);
             const res = await apiFetch(`/api/transactions?${params}`);
@@ -286,12 +323,12 @@ const ReportsPageContent = () => {
             };
           },
           {
-            force: force || allHistory,
-            maxPages: allHistory ? undefined : 1,
+            force: force || plan.allHistory,
+            maxPages: plan.allHistory ? undefined : 1,
             scope: {
-              allHistory,
-              startDate: allHistory ? undefined : range?.startDate,
-              endDate: allHistory ? undefined : range?.endDate,
+              allHistory: plan.allHistory,
+              startDate: plan.allHistory ? undefined : plan.startDate,
+              endDate: plan.allHistory ? undefined : plan.endDate,
             },
           },
         );
@@ -300,7 +337,10 @@ const ReportsPageContent = () => {
         if (isCurrentLoad()) {
           applyTransactions(transactions);
           setTransactionsLoaded(true);
-          setAllHistoryLoaded(allHistory);
+          if (dateSelection) {
+            lastSuccessfulDateSelection.current = dateSelection;
+            setHasRefreshedDateScope(true);
+          }
         }
       } catch (error) {
         if (!isCurrentLoad()) return;
@@ -316,11 +356,25 @@ const ReportsPageContent = () => {
             ? error.message
             : "Failed to load transactions",
         );
+        if (dateSelection && lastSuccessfulDateSelection.current) {
+          const successfulDateSelection = lastSuccessfulDateSelection.current;
+          setFilters((currentFilters) => ({
+            ...currentFilters,
+            years: [...successfulDateSelection.years],
+            startDate: successfulDateSelection.startDate,
+            endDate: successfulDateSelection.endDate,
+          }));
+        }
       } finally {
-        if (isCurrentLoad()) setLoading(false);
+        if (!isCurrentLoad()) return;
+        if (initial) {
+          setInitialLoading(false);
+        } else {
+          setResultsRefreshing(false);
+        }
       }
     },
-    [allHistoryLoaded, handleUnauthorized, router, scope],
+    [handleUnauthorized, router, scope],
   );
 
   const handleFiltersChange = (nextFilters: FilterParams) => {
@@ -337,7 +391,10 @@ const ReportsPageContent = () => {
       return;
     }
 
-    void loadTransactions(true, nextPlan.allHistory, nextPlan);
+    void loadTransactions(nextPlan, {
+      force: true,
+      dateSelection: getDateSelection(nextFilters),
+    });
   };
 
   useEffect(() => {
@@ -353,7 +410,7 @@ const ReportsPageContent = () => {
       storedFilters,
       getLastSelectedReportYears(),
     );
-    void loadTransactions(false, loadPlan.allHistory, loadPlan);
+    void loadTransactions(loadPlan, { initial: true });
   }, [authVersion, loadTransactions, router]);
 
   useEffect(() => {
@@ -361,11 +418,13 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache();
       setAllTransactions([]);
-      setLoading(false);
+      setInitialLoading(false);
+      setResultsRefreshing(false);
+      setHasRefreshedDateScope(false);
       setTransactionsLoaded(false);
-      setAllHistoryLoaded(false);
       setFiltersInitialized(false);
       setErrorMessage(null);
+      lastSuccessfulDateSelection.current = null;
       setAuthVersion((current) => current + 1);
     };
     window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
@@ -378,17 +437,17 @@ const ReportsPageContent = () => {
   }, []);
 
   useEffect(() => {
-    if (!transactionsLoaded || loading || filtersInitialized) return;
+    if (!transactionsLoaded || initialLoading || filtersInitialized) return;
 
-    setFilters(
-      initializeReportFilters(
-        allTransactions,
-        getLastSelectedReportFilters(),
-        getLastSelectedReportYears(),
-      ),
+    const initializedFilters = initializeReportFilters(
+      allTransactions,
+      getLastSelectedReportFilters(),
+      getLastSelectedReportYears(),
     );
+    setFilters(initializedFilters);
+    lastSuccessfulDateSelection.current = getDateSelection(initializedFilters);
     setFiltersInitialized(true);
-  }, [allTransactions, filtersInitialized, loading, transactionsLoaded]);
+  }, [allTransactions, filtersInitialized, initialLoading, transactionsLoaded]);
 
   useEffect(() => {
     if (!filtersInitialized) return;
@@ -437,7 +496,9 @@ const ReportsPageContent = () => {
         );
         upsertCachedTransaction(requestScope, saved, editTarget);
       } else {
-        await loadTransactions(true);
+        await loadTransactions(getFilterTransactionLoadPlan(filters), {
+          force: true,
+        });
       }
       setFormOpen(false);
       setEditTarget(undefined);
@@ -649,7 +710,12 @@ const ReportsPageContent = () => {
     [comparableTransactions],
   );
 
-  const isEmpty = !loading && allTransactions.length === 0;
+  const resultsLoading = initialLoading || resultsRefreshing;
+  const isEmpty =
+    !initialLoading &&
+    !resultsRefreshing &&
+    !hasRefreshedDateScope &&
+    allTransactions.length === 0;
 
   return (
     <Container
@@ -810,7 +876,7 @@ const ReportsPageContent = () => {
                 {errorMessage}
               </Alert>
             )}
-            {loading ? (
+            {initialLoading ? (
               <Skeleton
                 variant="rounded"
                 height={48}
@@ -823,7 +889,7 @@ const ReportsPageContent = () => {
                 onChange={handleFiltersChange}
               />
             )}
-            {loading ? (
+            {resultsLoading ? (
               <Box
                 sx={{
                   display: "grid",
@@ -922,7 +988,7 @@ const ReportsPageContent = () => {
                     },
                   ] as const
                 ).map((s) => (
-                  <StatCard key={s.label} {...s} loading={loading} />
+                  <StatCard key={s.label} {...s} loading={resultsLoading} />
                 ))}
               </Box>
             )}
@@ -950,7 +1016,7 @@ const ReportsPageContent = () => {
                     minWidth: 0,
                   }}
                 >
-                  {loading ? (
+                  {resultsLoading ? (
                     <SpendingBreakdownLoadingState />
                   ) : (
                     <Box
@@ -972,7 +1038,7 @@ const ReportsPageContent = () => {
                     minWidth: 0,
                   }}
                 >
-                  {loading ? (
+                  {resultsLoading ? (
                     <ChartLoadingState height={400} showLegend={false} />
                   ) : (
                     <TagBarChart
@@ -988,7 +1054,7 @@ const ReportsPageContent = () => {
                 headingId="reports-monthly-heading"
                 elevation={1}
               >
-                {loading ? (
+                {resultsLoading ? (
                   <ChartLoadingState height={360} legendItems={4} />
                 ) : (
                   <SpendingBarChart data={agg.timeseries} />
@@ -1030,7 +1096,21 @@ const ReportsPageContent = () => {
                 </ToggleButtonGroup>
               }
             >
-              {transactionsView === "table" ? (
+              {resultsLoading ? (
+                <Box
+                  aria-label="Loading transaction results"
+                  sx={{ display: "grid", gap: 1.25 }}
+                >
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <Skeleton
+                      key={`transaction-skeleton-${index}`}
+                      variant="rounded"
+                      height={40}
+                      sx={{ borderRadius: 1 }}
+                    />
+                  ))}
+                </Box>
+              ) : transactionsView === "table" ? (
                 <TransactionsTable
                   transactions={filtered}
                   activeTags={filters.tags}
@@ -1100,7 +1180,9 @@ const ReportsPageContent = () => {
             }
             return;
           }
-          void loadTransactions(true);
+          void loadTransactions(getFilterTransactionLoadPlan(filters), {
+            force: true,
+          });
         }}
       />
       <MonthComparisonModal
@@ -1122,7 +1204,7 @@ const ReportsPageContent = () => {
         className="yearly-report-dialog"
         aria-labelledby="yearly-report-heading"
       >
-        {!loading && (
+        {!resultsLoading && (
           <YearlyReport
             report={yearlyReport}
             availableYears={availableYears}

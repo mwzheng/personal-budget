@@ -12,16 +12,15 @@ describe("Reports loading contract", () => {
   it("forces all-history requests to bypass bounded cache data", () => {
     const source = readSource("app/reports/page.tsx");
 
-    expect(source).toContain("force: force || allHistory");
-    expect(source).toContain("maxPages: allHistory ? undefined : 1");
+    expect(source).toContain("force: force || plan.allHistory");
+    expect(source).toContain("maxPages: plan.allHistory ? undefined : 1");
   });
 
   it("loads all history when All Time becomes the active date range", () => {
     const source = readSource("app/reports/page.tsx");
 
-    expect(source).toContain(
-      "void loadTransactions(true, nextPlan.allHistory, nextPlan);",
-    );
+    expect(source).toContain("void loadTransactions(nextPlan, {");
+    expect(source).toContain("dateSelection: getDateSelection(nextFilters)");
     expect(source).not.toContain("Load all history");
     expect(source).not.toContain(
       "Showing the first page of current-year transactions",
@@ -32,7 +31,17 @@ describe("Reports loading contract", () => {
     const source = readSource("app/reports/page.tsx");
 
     expect(source).toContain("getInitialTransactionLoadPlan");
-    expect(source).toContain("if (range?.startDate)");
-    expect(source).toContain("if (range?.endDate)");
+    expect(source).toContain("if (plan.startDate)");
+    expect(source).toContain("if (plan.endDate)");
+  });
+
+  it("keeps filter controls mounted during date refreshes", () => {
+    const source = readSource("app/reports/page.tsx");
+
+    expect(source).toContain("const [initialLoading, setInitialLoading]");
+    expect(source).toContain("const [resultsRefreshing, setResultsRefreshing]");
+    expect(source).toContain("{initialLoading ? (");
+    expect(source).toContain("{resultsLoading ? (");
+    expect(source).toContain('aria-label="Loading transaction results"');
   });
 });

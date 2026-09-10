@@ -53,6 +53,16 @@ try {
   assert.equal(await evaluate(`Array.from(document.querySelectorAll("button"))
     .filter((button) => ["Clear all", "Reset"].includes(button.textContent.trim())).length`), 0,
   "Reports must not render duplicate clear actions");
+  // Apply an advanced filter so the active-filter chips are present while the
+  // toolbar is measured below. Category is the first advanced autocomplete.
+  await evaluate(`document.querySelector('[aria-controls="report-advanced-filters"]').click()`);
+  await waitFor(`document.querySelector("#report-advanced-filters").getBoundingClientRect().height > 0`);
+  await evaluate(`document.querySelector('#report-advanced-filters input[role="combobox"]').click()`);
+  await waitFor(`Array.from(document.querySelectorAll('[role="option"]'))
+    .some((option) => option.textContent.trim() === "Need")`);
+  await evaluate(`Array.from(document.querySelectorAll('[role="option"]'))
+    .find((option) => option.textContent.trim() === "Need").click()`);
+  await waitFor(`Boolean(document.querySelector('[aria-label="Active Report Filters"]'))`);
   // Seeded demo data exercises actual charts, transactions, and calendar events.
   for (const width of [320, 375, 768, 1024, 1440, 1920]) {
     await send("Emulation.setDeviceMetricsOverride", {
@@ -63,6 +73,29 @@ try {
       if (toggle.getAttribute("aria-expanded") !== "true") toggle.click();
     })()`);
     await waitFor(`document.querySelector("#report-advanced-filters").getBoundingClientRect().height > 0`);
+    const amountLayout = await evaluate(`(() => {
+      const fields = Array.from(
+        document.querySelectorAll('[data-testid="report-amount-filter"] .MuiFormControl-root'),
+      ).map((field) => field.getBoundingClientRect());
+      return {
+        applyButtons: Array.from(document.querySelectorAll("button"))
+          .filter((button) => button.textContent.trim() === "Apply Amount Range").length,
+        fields: fields.map(({ top, width, left, right }) => ({
+          top: Math.round(top), width: Math.round(width),
+          left: Math.round(left), right: Math.round(right),
+        })),
+      };
+    })()`);
+    assert.equal(amountLayout.applyButtons, 0,
+      `${width}px: manual amount filters must not render an Apply button`);
+    assert.equal(amountLayout.fields.length, 2,
+      `${width}px: amount filter must render two bounds`);
+    assert(amountLayout.fields.every((field) => field.top === amountLayout.fields[0].top),
+      `${width}px: amount bounds must remain aligned: ${JSON.stringify(amountLayout.fields)}`);
+    assert(amountLayout.fields.every((field) => field.width >= 80),
+      `${width}px: amount bounds must remain usable: ${JSON.stringify(amountLayout.fields)}`);
+    assert(Math.abs(amountLayout.fields[0].width - amountLayout.fields[1].width) <= 1,
+      `${width}px: amount bounds must be equally sized: ${JSON.stringify(amountLayout.fields)}`);
     const sectionPadding = await evaluate(`(() => [
       "report-filter-toolbar",
       "report-advanced-filter-panel",
@@ -86,18 +119,12 @@ try {
             '[data-testid="report-amount-filter"] .MuiFormControl-root',
           ),
         );
-        const apply = Array.from(
-          document.querySelectorAll("#report-advanced-filters button"),
-        ).find((button) => button.textContent.trim() === "Apply Amount Range");
         return {
           primary: primaryFields.slice(0, 4).map((field) => Math.round(field.getBoundingClientRect().top)),
           secondary: primaryFields.slice(4, 6).map((field) => Math.round(field.getBoundingClientRect().top)),
           amount: amountFields.map((field) => Math.round(field.getBoundingClientRect().top)),
-          apply: Math.round(apply.getBoundingClientRect().top),
           startDateWidth: Math.round(primaryFields[0].getBoundingClientRect().width),
           endDateWidth: Math.round(primaryFields[1].getBoundingClientRect().width),
-          applyWidth: Math.round(apply.getBoundingClientRect().width),
-          applyRight: Math.round(apply.getBoundingClientRect().right),
           amountActionsRight: Math.round(
             document.querySelector('[data-testid="report-amount-actions"]').getBoundingClientRect().right,
           ),
@@ -109,19 +136,35 @@ try {
       assert.equal(filterRows.amount.length, 2, "Amount filter must render two bounds");
       assert(filterRows.amount.every((top) => top === filterRows.amount[0]),
         `${width}px: amount controls must share a desktop row: ${filterRows.amount}`);
-      assert.equal(filterRows.apply, filterRows.amount[0],
-        `${width}px: Apply must share the amount-filter row`);
       assert(filterRows.startDateWidth >= 180 && filterRows.endDateWidth >= 180,
         `${width}px: date fields must be wide enough for complete values: ${JSON.stringify(filterRows)}`);
-      assert(filterRows.applyWidth < filterRows.startDateWidth && filterRows.applyWidth < filterRows.endDateWidth,
-        `${width}px: Apply must be narrower than both date fields: ${JSON.stringify(filterRows)}`);
-      assert.equal(filterRows.applyRight, filterRows.amountActionsRight,
-        `${width}px: Apply must align with the advanced-filter content edge`);
       assert.equal(filterRows.secondary.length, 2, "Advanced filters must render Category and Tags");
       assert(filterRows.secondary.every((top) => top === filterRows.secondary[0]),
         `${width}px: Category and Tags must share a desktop row: ${filterRows.secondary}`);
       assert(filterRows.secondary[0] > filterRows.primary[0],
         `${width}px: Category and Tags must be on the row below the range controls`);
+    }
+    if (width >= 1024) {
+      const chipRow = await evaluate(`(() => {
+        const toolbar = document.querySelector('[data-testid="report-filter-toolbar"]');
+        const chips = toolbar.querySelector('[aria-label="Active Report Filters"]');
+        const controls = [
+          toolbar.querySelector('input[placeholder="Name, note, or tag"]'),
+          toolbar.querySelector('[aria-label="Choose Date"]'),
+          toolbar.querySelector('[aria-label="Choose Amount"]'),
+          toolbar.querySelector('[aria-controls="report-advanced-filters"]'),
+          Array.from(toolbar.querySelectorAll('button'))
+            .find((button) => button.textContent.trim() === "Clear Filters"),
+        ];
+        return {
+          chipTop: Math.round(chips.getBoundingClientRect().top),
+          controlsBottom: Math.max(...controls.map(
+            (control) => Math.round(control.getBoundingClientRect().bottom),
+          )),
+        };
+      })()`);
+      assert(chipRow.chipTop > chipRow.controlsBottom,
+        `${width}px: active filters must begin below the toolbar controls: ${JSON.stringify(chipRow)}`);
     }
     for (const view of ["Table", "Calendar"]) {
       await evaluate(`document.querySelector('[aria-label="${view} view"]').click()`);

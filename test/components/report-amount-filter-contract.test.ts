@@ -50,7 +50,7 @@ describe("Report amount filter layout contract", () => {
     expect(filterBar).toContain('sx={{ width: "100%" }}');
     expect(filterBar).toContain('display: { xs: "grid", lg: "flex" }');
     expect(filterBar).toContain("flex: { lg: 1 }");
-    expect(filterBar).toContain('width: { xs: "100%", lg: "auto" }');
+    expect(filterBar).not.toContain("Apply Amount Range");
     expect(filterBar).toContain('lg: "repeat(10, minmax(0, 1fr))"');
     expect(filterBar).toContain('lg: "span 5"');
   });
