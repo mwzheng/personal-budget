@@ -30,13 +30,10 @@ export function AmountRangeFilter({
       aria-label="Amount Range"
       sx={{
         display: "grid",
-        gridTemplateColumns: {
-          xs: "repeat(2, minmax(0, 1fr))",
-          md: "170px auto 170px",
-        },
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
         gap: 1.25,
         alignItems: "center",
-        width: { xs: "100%", md: "fit-content" },
+        width: "100%",
         maxWidth: "100%",
         minWidth: 0,
       }}
@@ -53,16 +50,6 @@ export function AmountRangeFilter({
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
         }}
       />
-      <Box
-        aria-hidden
-        sx={{
-          display: { xs: "none", md: "block" },
-          color: "text.secondary",
-          textAlign: "center",
-        }}
-      >
-        to
-      </Box>
       <TextField
         label="Max Amount"
         size="small"

@@ -65,7 +65,6 @@ export const DATE_RANGE_PRESETS: Array<{
   { label: "Last Year", value: "last-year" },
   { label: "Last 90 Days", value: "last-90-days" },
   { label: "All Time", value: "all-time" },
-  { label: "Custom", value: "custom" },
 ];
 
 const DATE_RANGE_MENU_GROUPS: Array<{
@@ -84,7 +83,7 @@ const DATE_RANGE_MENU_GROUPS: Array<{
       "last-year",
     ],
   },
-  { label: "Other", presets: ["all-time", "custom"] },
+  { label: "Other", presets: ["all-time"] },
 ];
 
 const PRESET_LABELS = new Map(
@@ -99,7 +98,7 @@ function getSelectedDateRangePreset(
   if (!filters.startDate && !filters.endDate) return "all-time";
 
   for (const preset of DATE_RANGE_PRESETS) {
-    if (preset.value === "all-time" || preset.value === "custom") continue;
+    if (preset.value === "all-time") continue;
     const range = getReportDateRangePreset(preset.value);
     if (
       filters.startDate === range.startDate &&
@@ -124,7 +123,7 @@ function getAmountRangeMenuLabel(range: ReportAmountRange) {
   const preset = REPORT_AMOUNT_PRESETS.find((option) =>
     isSameReportAmountRange(option.range, range),
   );
-  return `Amount Range: ${preset?.label ?? "Custom"}`;
+  return `Amount: ${preset?.label ?? "Custom"}`;
 }
 
 export function FilterBar({ availableTags, filters, onChange }: Props) {
@@ -233,11 +232,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
   function handleDateRangePreset(preset: ReportDateRangePreset) {
     setDateRangeMenuAnchor(null);
 
-    if (preset === "custom") {
-      setExpanded(true);
-      return;
-    }
-
     const range = getReportDateRangePreset(preset);
     const nextStartDate = parseFilterDate(range.startDate);
     const nextEndDate = parseFilterDate(range.endDate);
@@ -310,11 +304,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       filters.search,
       range,
     );
-  }
-
-  function handleCustomAmountRange() {
-    setAmountRangeMenuAnchor(null);
-    setExpanded(true);
   }
 
   function handleMinAmountInputChange(value: string) {
@@ -434,11 +423,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       <Box
         data-testid="report-filter-toolbar"
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
-            sm: "minmax(0, 1fr) auto",
-          },
+          display: "flex",
+          flexWrap: "wrap",
           alignItems: "center",
           gap: 1.25,
           p: { xs: 2, sm: 2.5 },
@@ -453,7 +439,11 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           onChange={(event) =>
             onChange({ ...filters, search: event.target.value })
           }
-          sx={{ gridColumn: 1, minWidth: 0, width: "100%" }}
+          sx={{
+            flex: { xs: "1 1 100%", sm: "1 1 260px" },
+            minWidth: 0,
+            order: { xs: -1, sm: 0 },
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -478,8 +468,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             display: "flex",
             alignItems: "center",
             gap: 1.25,
-            flexWrap: "wrap",
-            gridColumn: { xs: 1, sm: 2 },
             maxWidth: "100%",
             minWidth: 0,
           }}
@@ -488,7 +476,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             variant="outlined"
             size="small"
             onClick={(event) => setDateRangeMenuAnchor(event.currentTarget)}
-            aria-label="Choose Date Range"
+            aria-label="Choose Date"
             aria-haspopup="menu"
             aria-expanded={Boolean(dateRangeMenuAnchor)}
             aria-controls={
@@ -496,16 +484,16 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             }
             sx={{ minHeight: 40, textTransform: "none" }}
           >
-            Date Range
+            Date
             {selectedDateRangePreset
-              ? `: ${PRESET_LABELS.get(selectedDateRangePreset)}`
+              ? `: ${selectedDateRangePreset === "custom" ? "Custom" : PRESET_LABELS.get(selectedDateRangePreset)}`
               : ""}
           </Button>
           <Button
             variant="outlined"
             size="small"
             onClick={(event) => setAmountRangeMenuAnchor(event.currentTarget)}
-            aria-label="Choose Amount Range"
+            aria-label="Choose Amount"
             aria-haspopup="menu"
             aria-expanded={Boolean(amountRangeMenuAnchor)}
             aria-controls={
@@ -515,6 +503,8 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           >
             {getAmountRangeMenuLabel(filters)}
           </Button>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
           <Badge
             badgeContent={activeFilterCount}
             color="primary"
@@ -549,7 +539,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           anchorEl={dateRangeMenuAnchor}
           open={Boolean(dateRangeMenuAnchor)}
           onClose={() => setDateRangeMenuAnchor(null)}
-          MenuListProps={{ "aria-label": "Report Date Range Options" }}
+          MenuListProps={{ "aria-label": "Report Date Options" }}
         >
           {DATE_RANGE_MENU_GROUPS.flatMap((group) => [
             <ListSubheader key={`${group.label}-heading`} disableSticky>
@@ -571,7 +561,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
           anchorEl={amountRangeMenuAnchor}
           open={Boolean(amountRangeMenuAnchor)}
           onClose={() => setAmountRangeMenuAnchor(null)}
-          MenuListProps={{ "aria-label": "Report Amount Range Options" }}
+          MenuListProps={{ "aria-label": "Report Amount Options" }}
         >
           {REPORT_AMOUNT_PRESETS.map((preset) => (
             <MenuItem
@@ -582,16 +572,6 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               {preset.label}
             </MenuItem>
           ))}
-          <MenuItem
-            selected={
-              !REPORT_AMOUNT_PRESETS.some((preset) =>
-                isSameReportAmountRange(preset.range, filters),
-              )
-            }
-            onClick={handleCustomAmountRange}
-          >
-            Custom Range
-          </MenuItem>
         </Menu>
 
         {hasAdvancedAppliedFilters && (
@@ -666,30 +646,78 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               gridTemplateColumns: {
                 xs: "minmax(0, 1fr)",
                 sm: "repeat(2, minmax(0, 1fr))",
-                md: "170px 170px minmax(0, 1fr) minmax(0, 1fr)",
-                lg: "170px 170px minmax(180px, 1fr) minmax(180px, 1fr)",
+                lg: "repeat(10, minmax(0, 1fr))",
               },
               gap: 1.25,
               alignItems: "center",
               minWidth: 0,
             }}
           >
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={handleStartDateChange}
-              slotProps={{
-                textField: { size: "small", sx: { width: "100%" } },
+            <Box sx={{ gridColumn: { lg: "span 2" }, minWidth: 0 }}>
+              <DatePicker
+                label="Start Date"
+                value={startDate}
+                onChange={handleStartDateChange}
+                slotProps={{
+                  textField: { size: "small", sx: { width: "100%" } },
+                }}
+                sx={{ width: "100%" }}
+              />
+            </Box>
+            <Box sx={{ gridColumn: { lg: "span 2" }, minWidth: 0 }}>
+              <DatePicker
+                label="End Date"
+                value={endDate}
+                onChange={handleEndDateChange}
+                slotProps={{
+                  textField: { size: "small", sx: { width: "100%" } },
+                }}
+                sx={{ width: "100%" }}
+              />
+            </Box>
+            <Box
+              data-testid="report-amount-actions"
+              sx={{
+                gridColumn: { xs: "1 / -1", lg: "span 6" },
+                display: { xs: "grid", lg: "flex" },
+                gridTemplateColumns: {
+                  xs: "minmax(0, 1fr)",
+                },
+                gap: 1.25,
+                alignItems: { xs: "start", lg: "center" },
+                minWidth: 0,
               }}
-            />
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={handleEndDateChange}
-              slotProps={{
-                textField: { size: "small", sx: { width: "100%" } },
-              }}
-            />
+            >
+              <Box
+                sx={{
+                  gridColumn: { sm: "1 / -1" },
+                  flex: { lg: 1 },
+                  minWidth: 0,
+                }}
+              >
+                <AmountRangeFilter
+                  minAmountInput={minAmountInput}
+                  maxAmountInput={maxAmountInput}
+                  errors={amountErrors}
+                  onMinAmountChange={handleMinAmountInputChange}
+                  onMaxAmountChange={handleMaxAmountInputChange}
+                />
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleApplyAmountRange}
+                disabled={!hasPendingAmountChanges}
+                sx={{
+                  minHeight: 40,
+                  width: { xs: "100%", lg: "auto" },
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Apply Amount Range
+              </Button>
+            </Box>
             <Autocomplete
               multiple
               size="small"
@@ -701,7 +729,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               renderInput={(params) => (
                 <TextField {...params} label="Category" />
               )}
-              sx={{ minWidth: 0, width: "100%" }}
+              sx={{ gridColumn: { lg: "span 5" }, minWidth: 0, width: "100%" }}
               limitTags={2}
             />
             <Autocomplete
@@ -711,38 +739,9 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
               value={filters.tags}
               onChange={(_event, value) => handleTagsChange(value)}
               renderInput={(params) => <TextField {...params} label="Tags" />}
-              sx={{ minWidth: 0, width: "100%" }}
+              sx={{ gridColumn: { lg: "span 5" }, minWidth: 0, width: "100%" }}
               limitTags={2}
             />
-            <Box
-              data-testid="report-amount-actions"
-              sx={{
-                gridColumn: "1 / -1",
-                display: "grid",
-                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "auto auto" },
-                gap: 1.25,
-                alignItems: "start",
-                justifyContent: { md: "start" },
-                minWidth: 0,
-              }}
-            >
-              <AmountRangeFilter
-                minAmountInput={minAmountInput}
-                maxAmountInput={maxAmountInput}
-                errors={amountErrors}
-                onMinAmountChange={handleMinAmountInputChange}
-                onMaxAmountChange={handleMaxAmountInputChange}
-              />
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleApplyAmountRange}
-                disabled={!hasPendingAmountChanges}
-                sx={{ minHeight: 40, width: { xs: "100%", md: "auto" } }}
-              >
-                Apply Amount Range
-              </Button>
-            </Box>
           </Box>
         </Box>
       </Collapse>

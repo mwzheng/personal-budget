@@ -511,7 +511,6 @@ describe("comparable report periods", () => {
       "Last Year",
       "Last 90 Days",
       "All Time",
-      "Custom",
     ]);
   });
 });

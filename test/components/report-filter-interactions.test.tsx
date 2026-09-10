@@ -133,29 +133,28 @@ describe("controlled report filter interactions", () => {
       };
       const user = setup(initial);
       await draft(user);
-      await user.click(
-        screen.getByRole("button", { name: "Choose Date Range" }),
-      );
+      await user.click(screen.getByRole("button", { name: "Choose Date" }));
       await user.click(screen.getByRole("menuitem", { name: label }));
-      const expected =
-        value === "custom"
-          ? initial
-          : { ...initial, years: [], ...getReportDateRangePreset(value) };
+      const expected = {
+        ...initial,
+        years: [],
+        ...getReportDateRangePreset(value),
+      };
       assertApplied(expected);
       assertDraft();
       expect(
-        screen.getByRole("button", { name: "Choose Date Range" }).textContent,
-      ).toBe(value === "custom" ? "Date Range" : `Date Range: ${label}`);
+        screen.getByRole("button", { name: "Choose Date" }).textContent,
+      ).toBe(`Date: ${label}`);
     },
   );
   it("does not display a preset the parent declined to commit", async () => {
     const user = setup(EMPTY_FILTERS, false);
-    await user.click(screen.getByRole("button", { name: "Choose Date Range" }));
+    await user.click(screen.getByRole("button", { name: "Choose Date" }));
     await user.click(screen.getByRole("menuitem", { name: "Last Month" }));
     assertApplied(EMPTY_FILTERS, "1,2,3");
     expect(
-      screen.getByRole("button", { name: "Choose Date Range" }).textContent,
-    ).toBe("Date Range: All Time");
+      screen.getByRole("button", { name: "Choose Date" }).textContent,
+    ).toBe("Date: All Time");
   });
   it.each([
     {
@@ -233,9 +232,7 @@ describe("controlled report filter interactions", () => {
       };
       const user = setup(initial);
       await draft(user);
-      await user.click(
-        screen.getByRole("button", { name: "Choose Amount Range" }),
-      );
+      await user.click(screen.getByRole("button", { name: "Choose Amount" }));
       await user.click(screen.getByRole("menuitem", { name: label }));
       assertApplied({ ...initial, ...range });
       await user.click(screen.getByRole("button", { name: "Clear Filters" }));
@@ -278,11 +275,26 @@ describe("controlled report filter interactions", () => {
     );
     assertApplied({ ...EMPTY_FILTERS, minAmount: 17, maxAmount: 88 }, "1,2");
     expect(
+      screen.getByRole("button", { name: "Choose Amount" }).textContent,
+    ).toBe("Amount: Custom");
+    expect(
       (
         screen.getByRole("button", {
           name: "Apply Amount Range",
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
+  });
+  it("keeps manual dates labeled as custom without exposing a custom preset", async () => {
+    const user = setup({
+      ...EMPTY_FILTERS,
+      startDate: "2026-09-01",
+      endDate: "2026-09-02",
+    });
+    expect(
+      screen.getByRole("button", { name: "Choose Date" }).textContent,
+    ).toBe("Date: Custom");
+    await user.click(screen.getByRole("button", { name: "Choose Date" }));
+    expect(screen.queryByRole("menuitem", { name: "Custom" })).toBeNull();
   });
 });

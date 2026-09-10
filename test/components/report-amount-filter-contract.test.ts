@@ -19,13 +19,14 @@ describe("Report amount filter layout contract", () => {
     expect(source).not.toContain("<Chip");
   });
 
-  it("makes quick ranges available in the toolbar beside Date Range", () => {
+  it("makes quick ranges available in the toolbar beside Date", () => {
     const source = readSource("components/report/FilterBar.tsx");
 
-    expect(source).toContain('aria-label="Choose Amount Range"');
+    expect(source).toContain('aria-label="Choose Amount"');
     expect(source).toContain('id="report-amount-range-menu"');
     expect(source).toContain("REPORT_AMOUNT_PRESETS.map");
-    expect(source).toContain("Custom Range");
+    expect(source).not.toContain("Custom Range");
+    expect(source).toContain('aria-label="Choose Date"');
   });
 
   it("removes persistent amount helper copy from the filter bar", () => {
@@ -35,15 +36,22 @@ describe("Report amount filter layout contract", () => {
     expect(source).not.toContain("Whole dollars only");
   });
 
-  it("keeps desktop amount fields compact and mobile fields two-column", () => {
+  it("uses wide date wrappers and fluid amount fields in the first advanced-filter row", () => {
     const source = readSource("components/report/AmountRangeFilter.tsx");
 
-    expect(source).toContain('xs: "repeat(2, minmax(0, 1fr))"');
-    expect(source).toContain('md: "170px auto 170px"');
-    expect(source).toContain('width: { xs: "100%", md: "fit-content" }');
+    expect(source).toContain(
+      'gridTemplateColumns: "repeat(2, minmax(0, 1fr))"',
+    );
+    expect(source).toContain('width: "100%"');
 
     const filterBar = readSource("components/report/FilterBar.tsx");
     expect(filterBar).toContain('data-testid="report-amount-actions"');
-    expect(filterBar).toContain('md: "auto auto"');
+    expect(filterBar).toContain('gridColumn: { lg: "span 2" }');
+    expect(filterBar).toContain('sx={{ width: "100%" }}');
+    expect(filterBar).toContain('display: { xs: "grid", lg: "flex" }');
+    expect(filterBar).toContain("flex: { lg: 1 }");
+    expect(filterBar).toContain('width: { xs: "100%", lg: "auto" }');
+    expect(filterBar).toContain('lg: "repeat(10, minmax(0, 1fr))"');
+    expect(filterBar).toContain('lg: "span 5"');
   });
 });

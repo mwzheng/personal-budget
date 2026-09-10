@@ -80,7 +80,7 @@ try {
       const filterRows = await evaluate(`(() => {
         const primaryFields = Array.from(
           document.querySelectorAll("#report-advanced-filters .MuiFormControl-root"),
-        ).slice(0, 4);
+        );
         const amountFields = Array.from(
           document.querySelectorAll(
             '[data-testid="report-amount-filter"] .MuiFormControl-root',
@@ -90,9 +90,17 @@ try {
           document.querySelectorAll("#report-advanced-filters button"),
         ).find((button) => button.textContent.trim() === "Apply Amount Range");
         return {
-          primary: primaryFields.map((field) => Math.round(field.getBoundingClientRect().top)),
+          primary: primaryFields.slice(0, 4).map((field) => Math.round(field.getBoundingClientRect().top)),
+          secondary: primaryFields.slice(4, 6).map((field) => Math.round(field.getBoundingClientRect().top)),
           amount: amountFields.map((field) => Math.round(field.getBoundingClientRect().top)),
           apply: Math.round(apply.getBoundingClientRect().top),
+          startDateWidth: Math.round(primaryFields[0].getBoundingClientRect().width),
+          endDateWidth: Math.round(primaryFields[1].getBoundingClientRect().width),
+          applyWidth: Math.round(apply.getBoundingClientRect().width),
+          applyRight: Math.round(apply.getBoundingClientRect().right),
+          amountActionsRight: Math.round(
+            document.querySelector('[data-testid="report-amount-actions"]').getBoundingClientRect().right,
+          ),
         };
       })()`);
       assert.equal(filterRows.primary.length, 4, "Advanced filters must render four primary fields");
@@ -103,6 +111,17 @@ try {
         `${width}px: amount controls must share a desktop row: ${filterRows.amount}`);
       assert.equal(filterRows.apply, filterRows.amount[0],
         `${width}px: Apply must share the amount-filter row`);
+      assert(filterRows.startDateWidth >= 180 && filterRows.endDateWidth >= 180,
+        `${width}px: date fields must be wide enough for complete values: ${JSON.stringify(filterRows)}`);
+      assert(filterRows.applyWidth < filterRows.startDateWidth && filterRows.applyWidth < filterRows.endDateWidth,
+        `${width}px: Apply must be narrower than both date fields: ${JSON.stringify(filterRows)}`);
+      assert.equal(filterRows.applyRight, filterRows.amountActionsRight,
+        `${width}px: Apply must align with the advanced-filter content edge`);
+      assert.equal(filterRows.secondary.length, 2, "Advanced filters must render Category and Tags");
+      assert(filterRows.secondary.every((top) => top === filterRows.secondary[0]),
+        `${width}px: Category and Tags must share a desktop row: ${filterRows.secondary}`);
+      assert(filterRows.secondary[0] > filterRows.primary[0],
+        `${width}px: Category and Tags must be on the row below the range controls`);
     }
     for (const view of ["Table", "Calendar"]) {
       await evaluate(`document.querySelector('[aria-label="${view} view"]').click()`);
