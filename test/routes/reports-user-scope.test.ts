@@ -109,6 +109,57 @@ describe("reports routes user scoping", () => {
     });
   });
 
+  it("filters report transactions by an inclusive amount range", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-amount");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("exact", { amount: 100 }),
+      buildTransaction("fractional", { amount: 100.01 }),
+      buildTransaction("income", { amount: 50, category: "Income" }),
+    ]);
+
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?minAmount=50&maxAmount=100&pageSize=10",
+      ) as any,
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      totalCount: 2,
+      transactions: [
+        expect.objectContaining({ id: "exact" }),
+        expect.objectContaining({ id: "income" }),
+      ],
+    });
+  });
+
+  it("rejects invalid amount ranges before querying transactions", async () => {
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?minAmount=100&maxAmount=99",
+      ) as any,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.objectContaining({ code: "INVALID_AMOUNT_RANGE" }),
+    });
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
+  });
+
+  it("rejects reversed custom dates before querying transactions", async () => {
+    const response = await getReports(
+      new Request(
+        "http://localhost/api/reports?startDate=2026-02-01&endDate=2026-01-31",
+      ) as any,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "INVALID_DATE_RANGE" },
+    });
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
+  });
+
   it("requires a cursor rather than silently repeating page one for legacy page requests", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-page");
 
@@ -318,6 +369,39 @@ describe("reports routes user scoping", () => {
     expect(response.status).toBe(200);
     expect(csv).toContain('"Emergency Fund"');
     expect(csv).not.toContain('"Rent"');
+  });
+
+  it("exports only transactions in the selected amount range", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-amount-export");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("included", { name: "Exact", amount: 100 }),
+      buildTransaction("excluded", { name: "Fractional", amount: 100.01 }),
+    ]);
+
+    const response = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?minAmount=0&maxAmount=100",
+      ) as any,
+    );
+    const csv = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(csv).toContain('"Exact"');
+    expect(csv).not.toContain('"Fractional"');
+  });
+
+  it("rejects reversed custom dates for CSV export", async () => {
+    const response = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?startDate=2026-02-01&endDate=2026-01-31",
+      ) as any,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "INVALID_DATE_RANGE" },
+    });
+    expect(mockedGetUserTransactionsPaged).not.toHaveBeenCalled();
   });
 
   it("follows bounded DynamoDB cursors only for the complete CSV export", async () => {

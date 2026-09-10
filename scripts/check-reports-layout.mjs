@@ -53,6 +53,16 @@ try {
   assert.equal(await evaluate(`Array.from(document.querySelectorAll("button"))
     .filter((button) => ["Clear all", "Reset"].includes(button.textContent.trim())).length`), 0,
   "Reports must not render duplicate clear actions");
+  // Apply an advanced filter so the active-filter chips are present while the
+  // toolbar is measured below. Category is the first advanced autocomplete.
+  await evaluate(`document.querySelector('[aria-controls="report-advanced-filters"]').click()`);
+  await waitFor(`document.querySelector("#report-advanced-filters").getBoundingClientRect().height > 0`);
+  await evaluate(`document.querySelector('#report-advanced-filters input[role="combobox"]').click()`);
+  await waitFor(`Array.from(document.querySelectorAll('[role="option"]'))
+    .some((option) => option.textContent.trim() === "Need")`);
+  await evaluate(`Array.from(document.querySelectorAll('[role="option"]'))
+    .find((option) => option.textContent.trim() === "Need").click()`);
+  await waitFor(`Boolean(document.querySelector('[aria-label="Active Report Filters"]'))`);
   // Seeded demo data exercises actual charts, transactions, and calendar events.
   for (const width of [320, 375, 768, 1024, 1440, 1920]) {
     await send("Emulation.setDeviceMetricsOverride", {
@@ -63,6 +73,80 @@ try {
       if (toggle.getAttribute("aria-expanded") !== "true") toggle.click();
     })()`);
     await waitFor(`document.querySelector("#report-advanced-filters").getBoundingClientRect().height > 0`);
+    const rangeLayout = await evaluate(`(() => {
+      const group = (testId) => {
+        const element = document.querySelector('[data-testid="' + testId + '"]');
+        const fields = Array.from(element.querySelectorAll('.MuiFormControl-root'))
+          .map((field) => field.getBoundingClientRect());
+        const connector = element.querySelector('[data-testid$="range-connector"]')
+          .getBoundingClientRect();
+        const bounds = element.getBoundingClientRect();
+        return {
+          hasLegend: Boolean(element.querySelector('legend')),
+          bounds: {
+            top: Math.round(bounds.top), bottom: Math.round(bounds.bottom), left: Math.round(bounds.left),
+            width: Math.round(bounds.width), right: Math.round(bounds.right),
+          },
+          fields: fields.map(({ top, width }) => ({ top: Math.round(top), width: Math.round(width) })),
+          connector: {
+            top: Math.round(connector.top), bottom: Math.round(connector.bottom),
+            width: Math.round(connector.width), height: Math.round(connector.height),
+          },
+        };
+      };
+      return {
+        applyButtons: Array.from(document.querySelectorAll("button"))
+          .filter((button) => button.textContent.trim() === "Apply Amount Range").length,
+        date: group('report-date-range-group'),
+        amount: group('report-amount-range-group'),
+        categoryTop: Math.round(
+          document.querySelector('#report-advanced-filters .MuiAutocomplete-root')
+            .getBoundingClientRect().top,
+        ),
+      };
+    })()`);
+    assert.equal(rangeLayout.applyButtons, 0,
+      `${width}px: manual amount filters must not render an Apply button`);
+    for (const range of [rangeLayout.date, rangeLayout.amount]) {
+      assert.equal(range.hasLegend, false,
+        `${width}px: paired ranges must not render visible group captions`);
+      assert.equal(range.fields.length, 2, `${width}px: each range must render two fields`);
+      assert(range.fields.every((field) => field.width >= 80),
+        `${width}px: range inputs must remain usable: ${JSON.stringify(range)}`);
+      assert(range.bounds.right <= width, `${width}px: range group must not overflow: ${JSON.stringify(range)}`);
+      assert(range.connector.width > 0 && range.connector.height > 0,
+        `${width}px: range connector must remain visible: ${JSON.stringify(range.connector)}`);
+    }
+    if (width >= 1200) {
+      assert.equal(rangeLayout.date.bounds.top, rangeLayout.amount.bounds.top,
+        `${width}px: range panels must share the desktop row`);
+      assert(Math.abs(rangeLayout.date.bounds.width - rangeLayout.amount.bounds.width) <= 1,
+        `${width}px: range panels must have equal desktop widths: ${JSON.stringify(rangeLayout)}`);
+      assert(Math.abs(rangeLayout.amount.bounds.left - rangeLayout.date.bounds.right - 32) <= 1,
+        `${width}px: paired ranges need a 32px desktop center gap: ${JSON.stringify(rangeLayout)}`);
+      assert(rangeLayout.date.fields.every((field) => field.top === rangeLayout.date.fields[0].top)
+        && rangeLayout.amount.fields.every((field) => field.top === rangeLayout.amount.fields[0].top),
+      `${width}px: paired range fields must remain horizontal`);
+      assert(rangeLayout.categoryTop > rangeLayout.date.bounds.top,
+        `${width}px: Category and Tags must remain below the range panels`);
+    } else if (width >= 600) {
+      assert(rangeLayout.amount.bounds.top > rangeLayout.date.bounds.top,
+        `${width}px: range panels must stack at medium widths`);
+      assert(rangeLayout.amount.bounds.top - rangeLayout.date.bounds.bottom >= 20
+        && rangeLayout.amount.bounds.top - rangeLayout.date.bounds.bottom <= 24,
+      `${width}px: stacked range groups need a 20–24px gap: ${JSON.stringify(rangeLayout)}`);
+      assert(rangeLayout.date.fields.every((field) => field.top === rangeLayout.date.fields[0].top)
+        && rangeLayout.amount.fields.every((field) => field.top === rangeLayout.amount.fields[0].top),
+      `${width}px: paired range fields must remain horizontal at medium widths`);
+    } else {
+      assert(rangeLayout.amount.bounds.top - rangeLayout.date.bounds.bottom >= 20
+        && rangeLayout.amount.bounds.top - rangeLayout.date.bounds.bottom <= 24,
+      `${width}px: stacked range groups need a 20–24px gap: ${JSON.stringify(rangeLayout)}`);
+      for (const range of [rangeLayout.date, rangeLayout.amount]) {
+        assert(range.fields[0].top < range.connector.top && range.connector.bottom < range.fields[1].top,
+          `${width}px: stacked fields must retain the visible to connector: ${JSON.stringify(range)}`);
+      }
+    }
     const sectionPadding = await evaluate(`(() => [
       "report-filter-toolbar",
       "report-advanced-filter-panel",
@@ -76,24 +160,27 @@ try {
       assert(padding.every((value) => value === padding[0]),
         `${width}px: filter section padding must be uniform: ${padding}`);
     }
-    if (width >= 1440) {
-      const filterRows = await evaluate(`(() => {
-        const fields = Array.from(
-          document.querySelectorAll("#report-advanced-filters .MuiFormControl-root"),
-        );
-        const apply = Array.from(
-          document.querySelectorAll("#report-advanced-filters button"),
-        ).find((button) => button.textContent.trim() === "Apply");
+    if (width >= 1024) {
+      const chipRow = await evaluate(`(() => {
+        const toolbar = document.querySelector('[data-testid="report-filter-toolbar"]');
+        const chips = toolbar.querySelector('[aria-label="Active Report Filters"]');
+        const controls = [
+          toolbar.querySelector('input[placeholder="Name, note, or tag"]'),
+          toolbar.querySelector('[aria-label="Choose Date"]'),
+          toolbar.querySelector('[aria-label="Choose Amount"]'),
+          toolbar.querySelector('[aria-controls="report-advanced-filters"]'),
+          Array.from(toolbar.querySelectorAll('button'))
+            .find((button) => button.textContent.trim() === "Clear Filters"),
+        ];
         return {
-          fields: fields.map((field) => Math.round(field.getBoundingClientRect().top)),
-          apply: Math.round(apply.getBoundingClientRect().top),
+          chipTop: Math.round(chips.getBoundingClientRect().top),
+          controlsBottom: Math.max(...controls.map(
+            (control) => Math.round(control.getBoundingClientRect().bottom),
+          )),
         };
       })()`);
-      assert.equal(filterRows.fields.length, 4, "Advanced filters must render four fields");
-      assert(filterRows.fields.every((top) => top === filterRows.fields[0]),
-        `${width}px: advanced fields must share a desktop row: ${filterRows.fields}`);
-      assert.equal(filterRows.apply, filterRows.fields[0],
-        `${width}px: Apply must share the advanced-filter row`);
+      assert(chipRow.chipTop > chipRow.controlsBottom,
+        `${width}px: active filters must begin below the toolbar controls: ${JSON.stringify(chipRow)}`);
     }
     for (const view of ["Table", "Calendar"]) {
       await evaluate(`document.querySelector('[aria-label="${view} view"]').click()`);

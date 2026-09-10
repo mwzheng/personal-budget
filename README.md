@@ -28,7 +28,7 @@ or System; the choice is saved locally and System follows the device setting.
 
 ## APIs (local)
 
-- `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `categories`, `tags`, `search`.
+- `GET /api/reports` — (Authenticated) Returns the current user's filtered transactions and aggregates. Supports query params: `pageSize`, `page`, `startDate`, `endDate`, `categories`, `tags`, `search`, `minAmount`, and `maxAmount` (whole-dollar, inclusive bounds from 0 through 999,999).
 - `POST /api/reports/import` — (Authenticated) Accepts `text/csv` or `{ csv }` JSON payloads and imports rows into the signed-in user's account only. Supports both the expense schema (`Name,Amount,Category,Date,Notes,Payment Method,Tags`) and the income schema (`Source,Amount,Pay Date`).
 - `GET /api/reports/export` — (Authenticated) Exports only the signed-in user's filtered transactions as CSV.
 - `GET /api/transactions` — (Authenticated) Lists transactions for the current user.

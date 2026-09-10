@@ -24,6 +24,7 @@ import {
   getAvailableReportYears,
   resolveDefaultReportYears,
 } from "@/lib/utils/aggregations";
+import { DEFAULT_REPORT_AMOUNT_RANGE } from "@/lib/utils/reportAmount";
 
 export type TransactionsViewMode = "table" | "calendar";
 
@@ -43,6 +44,7 @@ export const EMPTY_FILTERS: FilterParams = {
   categories: [],
   tags: [],
   search: "",
+  ...DEFAULT_REPORT_AMOUNT_RANGE,
 };
 
 export const PAGE_TITLE_ID = "reports-page-title";
@@ -66,20 +68,21 @@ export function initializeReportFilters(
   legacyYears: string[],
 ): FilterParams {
   if (storedFilters) {
+    const completeStoredFilters = { ...EMPTY_FILTERS, ...storedFilters };
     const availableYears = new Set(getAvailableReportYears(transactions));
     const availableTags = new Set(getAllTags(transactions));
-    const restoredYears = storedFilters.years.filter((year) =>
+    const restoredYears = completeStoredFilters.years.filter((year) =>
       availableYears.has(year),
     );
     const years =
-      storedFilters.years.length > 0 && restoredYears.length === 0
+      completeStoredFilters.years.length > 0 && restoredYears.length === 0
         ? resolveDefaultReportYears(transactions, [])
         : restoredYears;
 
     return {
-      ...storedFilters,
+      ...completeStoredFilters,
       years,
-      tags: storedFilters.tags.filter((tag) => availableTags.has(tag)),
+      tags: completeStoredFilters.tags.filter((tag) => availableTags.has(tag)),
     };
   }
 

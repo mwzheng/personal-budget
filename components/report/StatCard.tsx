@@ -26,6 +26,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
         py: { xs: 1.5, sm: 2 },
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
         gap: 0.5,
         minWidth: 0,
         overflow: "hidden",
@@ -34,7 +35,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ lineHeight: 1.2 }}
+        sx={{ lineHeight: 1.2, textAlign: "center" }}
       >
         {label}
       </Typography>
@@ -45,7 +46,12 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
           <Typography
             variant="h6"
             fontWeight={700}
-            sx={{ color, lineHeight: 1.2, overflowWrap: "anywhere" }}
+            sx={{
+              color,
+              lineHeight: 1.2,
+              overflowWrap: "anywhere",
+              textAlign: "center",
+            }}
           >
             {value}
           </Typography>
@@ -54,6 +60,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
               sx={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 0.5,
                 minHeight: 16,
               }}
@@ -69,6 +76,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
                   color: trend.color,
                   lineHeight: 1.2,
                   fontSize: "0.6875rem",
+                  textAlign: "center",
                 }}
               >
                 {trend.text}

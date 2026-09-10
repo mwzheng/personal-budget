@@ -14,6 +14,7 @@ import {
 import type { Transaction } from "../../lib/types/types";
 import {
   buildComparablePeriodFilters,
+  EMPTY_FILTERS,
   initializeReportFilters,
 } from "../../lib/utils/reportUtils";
 import { DATE_RANGE_PRESETS } from "../../components/report/FilterBar";
@@ -86,6 +87,7 @@ describe("reports year helpers", () => {
 
   it("filters transactions by multiple selected years", () => {
     const filtered = filterTransactions(transactions, {
+      ...EMPTY_FILTERS,
       years: ["2024", "2022"],
       startDate: null,
       endDate: null,
@@ -133,6 +135,7 @@ describe("reports year helpers", () => {
         buildTransaction("income", "2025-01-04", { category: "Income" }),
       ],
       {
+        ...EMPTY_FILTERS,
         years: [],
         startDate: null,
         endDate: null,
@@ -201,6 +204,7 @@ describe("reports year helpers", () => {
 
   it("filters out all transactions when no year matches the selected years", () => {
     const filtered = filterTransactions(transactions, {
+      ...EMPTY_FILTERS,
       years: ["2099"],
       startDate: null,
       endDate: null,
@@ -214,6 +218,7 @@ describe("reports year helpers", () => {
 
   it("returns all transactions when no filter criteria are specified", () => {
     const filtered = filterTransactions(transactions, {
+      ...EMPTY_FILTERS,
       years: [],
       startDate: null,
       endDate: null,
@@ -223,6 +228,82 @@ describe("reports year helpers", () => {
     });
 
     expect(filtered).toHaveLength(transactions.length);
+  });
+
+  it("filters every category by inclusive whole-dollar boundaries without rounding transactions", () => {
+    const filtered = filterTransactions(
+      [
+        buildTransaction("exact", "2025-01-01", { amount: 100 }),
+        buildTransaction("fractional", "2025-01-02", { amount: 100.01 }),
+        buildTransaction("income", "2025-01-03", {
+          amount: 75,
+          category: "Income",
+        }),
+      ],
+      {
+        years: [],
+        startDate: null,
+        endDate: null,
+        categories: [],
+        tags: [],
+        search: "",
+        minAmount: 0,
+        maxAmount: 100,
+      },
+    );
+
+    expect(filtered.map((transaction) => transaction.id)).toEqual([
+      "exact",
+      "income",
+    ]);
+  });
+
+  it("combines filter types with AND and uses OR within categories and tags", () => {
+    const candidates = [
+      buildTransaction("all-match", "2025-01-01", {
+        name: "Morning Coffee",
+        amount: 50,
+        category: "Need",
+        tags: ["food"],
+      }),
+      buildTransaction("category-or", "2025-01-31", {
+        name: "Coffee Grinder",
+        amount: 100,
+        category: "Want",
+        tags: ["kitchen"],
+      }),
+      buildTransaction("wrong-category", "2025-01-15", {
+        name: "Coffee Deposit",
+        amount: 75,
+        category: "Saving",
+        tags: ["food"],
+      }),
+      buildTransaction("wrong-tag", "2025-01-15", {
+        name: "Coffee Beans",
+        amount: 75,
+        category: "Need",
+        tags: ["office"],
+      }),
+      buildTransaction("wrong-search", "2025-01-15", {
+        name: "Tea",
+        amount: 75,
+        category: "Need",
+        tags: ["food"],
+      }),
+    ];
+
+    const filtered = filterTransactions(candidates, {
+      ...EMPTY_FILTERS,
+      startDate: "2025-01-01",
+      endDate: "2025-01-31",
+      categories: ["Need", "Want"],
+      tags: ["food", "kitchen"],
+      search: "COFFEE",
+      minAmount: 50,
+      maxAmount: 100,
+    });
+
+    expect(filtered.map(({ id }) => id)).toEqual(["all-match", "category-or"]);
   });
 });
 
@@ -237,6 +318,7 @@ describe("report filter initialization", () => {
       initializeReportFilters(
         transactions,
         {
+          ...EMPTY_FILTERS,
           years: ["2024", "2022"],
           startDate: null,
           endDate: null,
@@ -253,6 +335,8 @@ describe("report filter initialization", () => {
       categories: ["Need"],
       tags: ["groceries"],
       search: "coffee",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 
@@ -261,6 +345,7 @@ describe("report filter initialization", () => {
       initializeReportFilters(
         transactions,
         {
+          ...EMPTY_FILTERS,
           years: [],
           startDate: "2024-01-01",
           endDate: "2024-03-31",
@@ -277,6 +362,8 @@ describe("report filter initialization", () => {
       categories: ["Income"],
       tags: [],
       search: "paycheck",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 
@@ -290,6 +377,8 @@ describe("report filter initialization", () => {
       categories: [],
       tags: [],
       search: "",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 
@@ -298,6 +387,7 @@ describe("report filter initialization", () => {
       initializeReportFilters(
         transactions,
         {
+          ...EMPTY_FILTERS,
           years: [],
           startDate: null,
           endDate: null,
@@ -314,6 +404,8 @@ describe("report filter initialization", () => {
       categories: [],
       tags: [],
       search: "",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 
@@ -322,6 +414,7 @@ describe("report filter initialization", () => {
       initializeReportFilters(
         transactions,
         {
+          ...EMPTY_FILTERS,
           years: ["2022"],
           startDate: null,
           endDate: null,
@@ -338,6 +431,8 @@ describe("report filter initialization", () => {
       categories: [],
       tags: [],
       search: "",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 });
@@ -372,6 +467,8 @@ describe("comparable report periods", () => {
     categories: [],
     tags: [],
     search: "",
+    minAmount: 0,
+    maxAmount: 999_999,
   });
 
   it("compares this month with the previous full calendar month", () => {
@@ -414,7 +511,6 @@ describe("comparable report periods", () => {
       "Last Year",
       "Last 90 Days",
       "All Time",
-      "Custom",
     ]);
   });
 });

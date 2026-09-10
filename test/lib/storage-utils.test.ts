@@ -77,6 +77,8 @@ describe("storage complete report filter preference", () => {
       categories: ["Need", "Need", "Income"],
       tags: [" groceries ", "groceries", "work"],
       search: "  coffee  ",
+      minAmount: 50,
+      maxAmount: 500,
     });
 
     expect(getLastSelectedReportFilters()).toEqual({
@@ -86,6 +88,8 @@ describe("storage complete report filter preference", () => {
       categories: ["Need", "Income"],
       tags: ["groceries", "work"],
       search: "coffee",
+      minAmount: 50,
+      maxAmount: 500,
     });
   });
 
@@ -99,6 +103,8 @@ describe("storage complete report filter preference", () => {
       categories: [],
       tags: [],
       search: "",
+      minAmount: 0,
+      maxAmount: 999_999,
     });
 
     expect(getLastSelectedReportFilters()).toEqual({
@@ -108,6 +114,30 @@ describe("storage complete report filter preference", () => {
       categories: [],
       tags: [],
       search: "",
+      minAmount: 0,
+      maxAmount: 999_999,
+    });
+  });
+
+  it("migrates version-one preferences with the default amount range", () => {
+    window.localStorage.setItem(
+      "personal-budget-report-filters",
+      JSON.stringify({
+        version: 1,
+        filters: {
+          years: [],
+          startDate: null,
+          endDate: null,
+          categories: [],
+          tags: [],
+          search: "",
+        },
+      }),
+    );
+
+    expect(getLastSelectedReportFilters()).toMatchObject({
+      minAmount: 0,
+      maxAmount: 999_999,
     });
   });
 

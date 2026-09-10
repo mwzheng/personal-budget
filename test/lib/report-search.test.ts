@@ -9,6 +9,8 @@ const filters: FilterParams = {
   categories: ["Need"],
   tags: ["home"],
   search: "cOfFeE",
+  minAmount: 0,
+  maxAmount: 999_999,
 };
 const transaction: Transaction = {
   id: "name",

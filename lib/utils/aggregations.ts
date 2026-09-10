@@ -103,6 +103,9 @@ export function filterTransactions(
   transactions: Transaction[],
   filters: FilterParams,
 ): Transaction[] {
+  const minAmount = filters.minAmount ?? 0;
+  const maxAmount = filters.maxAmount ?? Number.POSITIVE_INFINITY;
+
   return transactions.filter((t) => {
     if (
       filters.years.length > 0 &&
@@ -114,6 +117,10 @@ export function filterTransactions(
     if (filters.startDate && t.date < filters.startDate) return false;
 
     if (filters.endDate && t.date > filters.endDate) return false;
+
+    if (t.amount < minAmount || t.amount > maxAmount) {
+      return false;
+    }
 
     if (
       filters.categories.length > 0 &&

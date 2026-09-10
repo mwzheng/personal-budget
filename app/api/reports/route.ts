@@ -13,8 +13,13 @@ import {
   decodeCursor,
   encodeCursor,
   InvalidCursorError,
+  InvalidReportDateRangeError,
   resolveReportRange,
 } from "@/lib/api/reportRange";
+import {
+  InvalidReportAmountRangeError,
+  parseReportAmountRange,
+} from "@/lib/utils/reportAmount";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +34,7 @@ export async function GET(request: NextRequest) {
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
     const search = searchParams.get("search") ?? "";
+    const { minAmount, maxAmount } = parseReportAmountRange(searchParams);
     const pageSize = Math.min(
       200,
       Math.max(1, parseInt(searchParams.get("pageSize") ?? "100", 10)),
@@ -64,6 +70,8 @@ export async function GET(request: NextRequest) {
       categories,
       tags,
       search,
+      minAmount,
+      maxAmount,
     });
 
     const transactions = filtered;
@@ -89,6 +97,18 @@ export async function GET(request: NextRequest) {
     if (error instanceof InvalidCursorError) {
       return NextResponse.json(
         { error: { code: "INVALID_CURSOR", message: error.message } },
+        { status: 400 },
+      );
+    }
+    if (error instanceof InvalidReportDateRangeError) {
+      return NextResponse.json(
+        { error: { code: "INVALID_DATE_RANGE", message: error.message } },
+        { status: 400 },
+      );
+    }
+    if (error instanceof InvalidReportAmountRangeError) {
+      return NextResponse.json(
+        { error: { code: "INVALID_AMOUNT_RANGE", message: error.message } },
         { status: 400 },
       );
     }

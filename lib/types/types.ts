@@ -95,6 +95,8 @@ export interface FilterParams {
   categories: TransactionCategoryType[];
   tags: string[];
   search: string;
+  minAmount: number;
+  maxAmount: number;
 }
 
 // Note 10: A time-series groups financial data by month so charts can plot how
