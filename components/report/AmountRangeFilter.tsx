@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
 import {
   REPORT_AMOUNT_MAX,
@@ -30,7 +31,10 @@ export function AmountRangeFilter({
       aria-label="Amount Range"
       sx={{
         display: "grid",
-        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gridTemplateColumns: {
+          xs: "minmax(0, 1fr)",
+          sm: "minmax(0, 1fr) auto minmax(0, 1fr)",
+        },
         gap: 1.25,
         alignItems: "center",
         width: "100%",
@@ -50,6 +54,15 @@ export function AmountRangeFilter({
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
         }}
       />
+      <Typography
+        aria-hidden="true"
+        data-testid="report-amount-range-connector"
+        variant="body2"
+        color="text.secondary"
+        sx={{ justifySelf: "center", lineHeight: 1, py: 0.5 }}
+      >
+        to
+      </Typography>
       <TextField
         label="Max Amount"
         size="small"

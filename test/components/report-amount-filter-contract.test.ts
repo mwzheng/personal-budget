@@ -36,22 +36,23 @@ describe("Report amount filter layout contract", () => {
     expect(source).not.toContain("Whole dollars only");
   });
 
-  it("uses wide date wrappers and fluid amount fields in the first advanced-filter row", () => {
+  it("uses spaced paired ranges with responsive connectors", () => {
     const source = readSource("components/report/AmountRangeFilter.tsx");
 
-    expect(source).toContain(
-      'gridTemplateColumns: "repeat(2, minmax(0, 1fr))"',
-    );
+    expect(source).toContain('sm: "minmax(0, 1fr) auto minmax(0, 1fr)"');
+    expect(source).toContain('data-testid="report-amount-range-connector"');
+    expect(source).toContain(">\n        to\n      </Typography>");
     expect(source).toContain('width: "100%"');
 
     const filterBar = readSource("components/report/FilterBar.tsx");
-    expect(filterBar).toContain('data-testid="report-amount-actions"');
-    expect(filterBar).toContain('gridColumn: { lg: "span 2" }');
-    expect(filterBar).toContain('sx={{ width: "100%" }}');
-    expect(filterBar).toContain('display: { xs: "grid", lg: "flex" }');
-    expect(filterBar).toContain("flex: { lg: 1 }");
+    expect(filterBar).toContain('data-testid="report-date-range-group"');
+    expect(filterBar).toContain('data-testid="report-amount-range-group"');
+    expect(filterBar).toContain('data-testid="report-date-range-connector"');
+    expect(filterBar).toContain("gap: { xs: 2.5, lg: 4 }");
+    expect(filterBar).not.toContain('component="fieldset"');
+    expect(filterBar).not.toContain('component="legend"');
     expect(filterBar).not.toContain("Apply Amount Range");
-    expect(filterBar).toContain('lg: "repeat(10, minmax(0, 1fr))"');
-    expect(filterBar).toContain('lg: "span 5"');
+    expect(filterBar).toContain('lg: "repeat(2, minmax(0, 1fr))"');
+    expect(filterBar).toContain('sm: "repeat(2, minmax(0, 1fr))"');
   });
 });

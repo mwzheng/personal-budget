@@ -16,6 +16,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/Search";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Autocomplete from "@mui/material/Autocomplete";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -682,61 +683,66 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
             borderTop: (theme) => `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "minmax(0, 1fr)",
-                sm: "repeat(2, minmax(0, 1fr))",
-                lg: "repeat(10, minmax(0, 1fr))",
-              },
-              gap: 1.25,
-              alignItems: "center",
-              minWidth: 0,
-            }}
-          >
-            <Box sx={{ gridColumn: { lg: "span 2" }, minWidth: 0 }}>
-              <DatePicker
-                label="Start Date"
-                value={startDate}
-                onChange={handleStartDateChange}
-                slotProps={{
-                  textField: { size: "small", sx: { width: "100%" } },
-                }}
-                sx={{ width: "100%" }}
-              />
-            </Box>
-            <Box sx={{ gridColumn: { lg: "span 2" }, minWidth: 0 }}>
-              <DatePicker
-                label="End Date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                slotProps={{
-                  textField: { size: "small", sx: { width: "100%" } },
-                }}
-                sx={{ width: "100%" }}
-              />
-            </Box>
+          <Box sx={{ display: "grid", gap: 1.25, minWidth: 0 }}>
             <Box
-              data-testid="report-amount-actions"
               sx={{
-                gridColumn: { xs: "1 / -1", lg: "span 6" },
-                display: { xs: "grid", lg: "flex" },
+                display: "grid",
                 gridTemplateColumns: {
                   xs: "minmax(0, 1fr)",
+                  lg: "repeat(2, minmax(0, 1fr))",
                 },
-                gap: 1.25,
-                alignItems: { xs: "start", lg: "center" },
+                gap: { xs: 2.5, lg: 4 },
                 minWidth: 0,
               }}
             >
-              <Box
-                sx={{
-                  gridColumn: { sm: "1 / -1" },
-                  flex: { lg: 1 },
-                  minWidth: 0,
-                }}
-              >
+              <Box data-testid="report-date-range-group" sx={{ minWidth: 0 }}>
+                <Box
+                  data-testid="report-date-range-fields"
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "minmax(0, 1fr)",
+                      sm: "minmax(0, 1fr) auto minmax(0, 1fr)",
+                    },
+                    gap: 1.25,
+                    alignItems: "center",
+                    minWidth: 0,
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <DatePicker
+                      label="Start Date"
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      slotProps={{
+                        textField: { size: "small", sx: { width: "100%" } },
+                      }}
+                      sx={{ width: "100%" }}
+                    />
+                  </Box>
+                  <Typography
+                    aria-hidden="true"
+                    data-testid="report-date-range-connector"
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ justifySelf: "center", lineHeight: 1, py: 0.5 }}
+                  >
+                    to
+                  </Typography>
+                  <Box sx={{ minWidth: 0 }}>
+                    <DatePicker
+                      label="End Date"
+                      value={endDate}
+                      onChange={handleEndDateChange}
+                      slotProps={{
+                        textField: { size: "small", sx: { width: "100%" } },
+                      }}
+                      sx={{ width: "100%" }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+              <Box data-testid="report-amount-range-group" sx={{ minWidth: 0 }}>
                 <AmountRangeFilter
                   minAmountInput={minAmountInput}
                   maxAmountInput={maxAmountInput}
@@ -746,30 +752,43 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 />
               </Box>
             </Box>
-            <Autocomplete
-              multiple
-              size="small"
-              options={TRANSACTION_CATEGORY_OPTIONS}
-              value={filters.categories}
-              onChange={(_event, value) =>
-                handleCategoriesChange(value as TransactionCategoryType[])
-              }
-              renderInput={(params) => (
-                <TextField {...params} label="Category" />
-              )}
-              sx={{ gridColumn: { lg: "span 5" }, minWidth: 0, width: "100%" }}
-              limitTags={2}
-            />
-            <Autocomplete
-              multiple
-              size="small"
-              options={availableTags}
-              value={filters.tags}
-              onChange={(_event, value) => handleTagsChange(value)}
-              renderInput={(params) => <TextField {...params} label="Tags" />}
-              sx={{ gridColumn: { lg: "span 5" }, minWidth: 0, width: "100%" }}
-              limitTags={2}
-            />
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "minmax(0, 1fr)",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: 1.25,
+                alignItems: "start",
+                minWidth: 0,
+              }}
+            >
+              <Autocomplete
+                multiple
+                size="small"
+                options={TRANSACTION_CATEGORY_OPTIONS}
+                value={filters.categories}
+                onChange={(_event, value) =>
+                  handleCategoriesChange(value as TransactionCategoryType[])
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Category" />
+                )}
+                sx={{ minWidth: 0, width: "100%" }}
+                limitTags={2}
+              />
+              <Autocomplete
+                multiple
+                size="small"
+                options={availableTags}
+                value={filters.tags}
+                onChange={(_event, value) => handleTagsChange(value)}
+                renderInput={(params) => <TextField {...params} label="Tags" />}
+                sx={{ minWidth: 0, width: "100%" }}
+                limitTags={2}
+              />
+            </Box>
           </Box>
         </Box>
       </Collapse>
