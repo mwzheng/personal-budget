@@ -1,6 +1,5 @@
-// Note 1: SpendingBarChart keeps income and savings as separate monthly bars
-// while splitting spending into stacked Need and Want segments. That preserves a
-// simple high-level comparison and still shows what the spending is made of.
+// Note 1: SpendingBarChart compares monthly income with a stacked total of needs,
+// wants, and savings so users can see how their income was allocated.
 "use client";
 
 import Box from "@mui/material/Box";
@@ -116,12 +115,12 @@ export function SpendingBarChart({ data }: Props) {
   const legendPayload = [
     { value: "Needs", color: CATEGORY_HEX_COLORS.Need },
     { value: "Wants", color: CATEGORY_HEX_COLORS.Want },
-    { value: "Income", color: SERVER_THEME_TOKENS.chart.palette[4] }, // cyan
     { value: "Savings", color: CATEGORY_HEX_COLORS.Saving },
+    { value: "Income", color: SERVER_THEME_TOKENS.chart.palette[4] }, // cyan
   ] as const;
 
   return (
-    <ChartWrapper title="Monthly Spending, Income & Savings">
+    <ChartWrapper title="Monthly Allocations vs Income">
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Box sx={{ width: "100%", height: 360 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -162,17 +161,37 @@ export function SpendingBarChart({ data }: Props) {
                       color: entry.color,
                     }));
 
+                  const amountFor = (dataKey: string) =>
+                    payload
+                      .filter((entry) => String(entry.dataKey) === dataKey)
+                      .reduce(
+                        (total, entry) => total + Number(entry.value ?? 0),
+                        0,
+                      );
+                  const incomeAmount = amountFor("incomeAmount");
+                  const allocationsAmount =
+                    amountFor("Need") + amountFor("Want") + amountFor("Saving");
+                  const difference =
+                    Math.round((incomeAmount - allocationsAmount) * 100) / 100;
+                  const summary =
+                    difference > 0
+                      ? `Underspent: ${formatCurrency(difference)}`
+                      : difference < 0
+                        ? `Overspent: ${formatCurrency(Math.abs(difference))}`
+                        : "Fully Spent";
+
                   return rows.length > 0 ? (
                     <ChartTooltipCard
                       title={typeof label === "string" ? label : undefined}
                       rows={rows}
+                      summary={summary}
                     />
                   ) : null;
                 }}
               />
               <Bar
                 dataKey="Need"
-                stackId="spending"
+                stackId="allocations"
                 fill={CATEGORY_HEX_COLORS.Need}
                 name="Needs"
                 animationDuration={1200}
@@ -184,14 +203,14 @@ export function SpendingBarChart({ data }: Props) {
                     typeof props.index === "number"
                       ? chartData[props.index]
                       : undefined;
-                  if (!entry || entry.Want > 0) {
+                  if (!entry || entry.Want > 0 || entry.Saving > 0) {
                     return EMPTY_SVG_LABEL;
                   }
 
                   return (
                     renderBarTotalLabel(
                       props,
-                      entry.spendingAmount,
+                      entry.Need + entry.Want + entry.Saving,
                       labelAngle,
                       labelFontSize,
                     ) ?? EMPTY_SVG_LABEL
@@ -200,11 +219,40 @@ export function SpendingBarChart({ data }: Props) {
               />
               <Bar
                 dataKey="Want"
-                stackId="spending"
+                stackId="allocations"
                 fill={CATEGORY_HEX_COLORS.Want}
                 name="Wants"
                 animationDuration={1200}
                 animationEasing="ease-out"
+                label={(
+                  props: ChartLabelPositionProps & { index?: number },
+                ) => {
+                  const entry =
+                    typeof props.index === "number"
+                      ? chartData[props.index]
+                      : undefined;
+                  if (!entry || entry.Want <= 0 || entry.Saving > 0) {
+                    return EMPTY_SVG_LABEL;
+                  }
+
+                  return (
+                    renderBarTotalLabel(
+                      props,
+                      entry.Need + entry.Want + entry.Saving,
+                      labelAngle,
+                      labelFontSize,
+                    ) ?? EMPTY_SVG_LABEL
+                  );
+                }}
+              />
+              <Bar
+                dataKey="Saving"
+                stackId="allocations"
+                fill={CATEGORY_HEX_COLORS.Saving}
+                name="Savings"
+                animationDuration={1200}
+                animationEasing="ease-out"
+                animationBegin={300}
                 radius={[4, 4, 0, 0]}
                 label={(
                   props: ChartLabelPositionProps & { index?: number },
@@ -213,14 +261,14 @@ export function SpendingBarChart({ data }: Props) {
                     typeof props.index === "number"
                       ? chartData[props.index]
                       : undefined;
-                  if (!entry || entry.Want <= 0) {
+                  if (!entry || entry.Saving <= 0) {
                     return EMPTY_SVG_LABEL;
                   }
 
                   return (
                     renderBarTotalLabel(
                       props,
-                      entry.spendingAmount,
+                      entry.Need + entry.Want + entry.Saving,
                       labelAngle,
                       labelFontSize,
                     ) ?? EMPTY_SVG_LABEL
@@ -250,35 +298,6 @@ export function SpendingBarChart({ data }: Props) {
                     renderBarTotalLabel(
                       props,
                       entry.incomeAmount,
-                      labelAngle,
-                      labelFontSize,
-                    ) ?? EMPTY_SVG_LABEL
-                  );
-                }}
-              />
-              <Bar
-                dataKey="Saving"
-                fill={CATEGORY_HEX_COLORS.Saving}
-                name="Savings"
-                animationDuration={1200}
-                animationEasing="ease-out"
-                animationBegin={300}
-                radius={[4, 4, 0, 0]}
-                label={(
-                  props: ChartLabelPositionProps & { index?: number },
-                ) => {
-                  const entry =
-                    typeof props.index === "number"
-                      ? chartData[props.index]
-                      : undefined;
-                  if (!entry) {
-                    return EMPTY_SVG_LABEL;
-                  }
-
-                  return (
-                    renderBarTotalLabel(
-                      props,
-                      entry.Saving,
                       labelAngle,
                       labelFontSize,
                     ) ?? EMPTY_SVG_LABEL
