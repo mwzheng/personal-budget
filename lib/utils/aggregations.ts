@@ -406,6 +406,27 @@ export function getAvailableMonths(transactions: Transaction[]): string[] {
   return Array.from(set).sort();
 }
 
+export function getMonthsInTransactionRange(
+  transactions: Transaction[],
+): string[] {
+  const months = getAvailableMonths(transactions);
+  if (months.length === 0) return [];
+
+  const [startYear, startMonth] = months[0].split("-").map(Number);
+  const [endYear, endMonth] = months[months.length - 1].split("-").map(Number);
+  const result: string[] = [];
+  const firstMonth = startYear * 12 + startMonth - 1;
+  const lastMonth = endYear * 12 + endMonth - 1;
+
+  for (let monthIndex = firstMonth; monthIndex <= lastMonth; monthIndex += 1) {
+    const year = Math.floor(monthIndex / 12);
+    const month = (monthIndex % 12) + 1;
+    result.push(`${year}-${String(month).padStart(2, "0")}`);
+  }
+
+  return result;
+}
+
 export function getMonthTransactions(
   transactions: Transaction[],
   period: string,

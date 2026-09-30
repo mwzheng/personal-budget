@@ -202,13 +202,13 @@ function isTransaction(value: unknown): value is Transaction {
 
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [yearlyReportTransactions, setYearlyReportTransactions] = useState<
+  const [comparisonTransactions, setComparisonTransactions] = useState<
     Transaction[] | null
   >(null);
-  const [yearlyReportLoading, setYearlyReportLoading] = useState(false);
-  const [yearlyReportLoadError, setYearlyReportLoadError] = useState<
-    string | null
-  >(null);
+  const [comparisonTransactionsLoading, setComparisonTransactionsLoading] =
+    useState(false);
+  const [comparisonTransactionsError, setComparisonTransactionsError] =
+    useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [resultsRefreshing, setResultsRefreshing] = useState(false);
   const [hasRefreshedDateScope, setHasRefreshedDateScope] = useState(false);
@@ -246,10 +246,13 @@ const ReportsPageContent = () => {
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
   const loadRequestGeneration = useRef(0);
-  const yearlyReportRequestGeneration = useRef(0);
+  const comparisonTransactionsRequestGeneration = useRef(0);
   const lastSuccessfulDateSelection = useRef<DateSelection | null>(null);
   const importGeneration = authGeneration.current;
   const importScope = scope;
+  const isComparisonTransactionsLoading =
+    comparisonTransactionsLoading ||
+    (comparisonTransactions === null && comparisonTransactionsError === null);
 
   const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
@@ -261,9 +264,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache(requestScope);
       setAllTransactions([]);
-      setYearlyReportTransactions(null);
-      setYearlyReportLoading(false);
-      setYearlyReportLoadError(null);
+      setComparisonTransactions(null);
+      setComparisonTransactionsLoading(false);
+      setComparisonTransactionsError(null);
       setTransactionsLoaded(false);
       setFiltersInitialized(false);
       setInitialLoading(false);
@@ -388,18 +391,25 @@ const ReportsPageContent = () => {
     [handleUnauthorized, router, scope],
   );
 
-  const loadYearlyReportTransactions = useCallback(async () => {
-    if (!scope || yearlyReportLoading || yearlyReportTransactions) return;
+  // Month and year comparisons use all account history, independent of report filters.
+  const loadComparisonTransactions = useCallback(async () => {
+    if (
+      !scope ||
+      comparisonTransactionsLoading ||
+      comparisonTransactions !== null
+    ) {
+      return;
+    }
 
     const loadGeneration = authGeneration.current;
-    const requestGeneration = ++yearlyReportRequestGeneration.current;
+    const requestGeneration = ++comparisonTransactionsRequestGeneration.current;
     const isCurrentLoad = () =>
       currentTransactionScope() === scope &&
       authGeneration.current === loadGeneration &&
-      yearlyReportRequestGeneration.current === requestGeneration;
+      comparisonTransactionsRequestGeneration.current === requestGeneration;
 
-    setYearlyReportLoading(true);
-    setYearlyReportLoadError(null);
+    setComparisonTransactionsLoading(true);
+    setComparisonTransactionsError(null);
 
     try {
       const transactions: Transaction[] = [];
@@ -428,7 +438,7 @@ const ReportsPageContent = () => {
         if (cursor) seenCursors.add(cursor);
       } while (cursor);
 
-      if (isCurrentLoad()) setYearlyReportTransactions(transactions);
+      if (isCurrentLoad()) setComparisonTransactions(transactions);
     } catch (error) {
       if (!isCurrentLoad()) return;
       if (
@@ -438,19 +448,19 @@ const ReportsPageContent = () => {
         handleUnauthorized(scope);
         return;
       }
-      setYearlyReportLoadError(
+      setComparisonTransactionsError(
         error instanceof Error
           ? error.message
-          : "Failed to load yearly report transactions",
+          : "Failed to load comparison transactions.",
       );
     } finally {
-      if (isCurrentLoad()) setYearlyReportLoading(false);
+      if (isCurrentLoad()) setComparisonTransactionsLoading(false);
     }
   }, [
+    comparisonTransactions,
+    comparisonTransactionsLoading,
     handleUnauthorized,
     scope,
-    yearlyReportLoading,
-    yearlyReportTransactions,
   ]);
 
   const handleFiltersChange = (nextFilters: FilterParams) => {
@@ -494,9 +504,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache();
       setAllTransactions([]);
-      setYearlyReportTransactions(null);
-      setYearlyReportLoading(false);
-      setYearlyReportLoadError(null);
+      setComparisonTransactions(null);
+      setComparisonTransactionsLoading(false);
+      setComparisonTransactionsError(null);
       setInitialLoading(false);
       setResultsRefreshing(false);
       setHasRefreshedDateScope(false);
@@ -573,7 +583,7 @@ const ReportsPageContent = () => {
         setAllTransactions((current) =>
           upsertTransactionInList(current, saved, editTarget),
         );
-        setYearlyReportTransactions((current) =>
+        setComparisonTransactions((current) =>
           current
             ? upsertTransactionInList(current, saved, editTarget)
             : current,
@@ -627,7 +637,7 @@ const ReportsPageContent = () => {
       setAllTransactions((current) =>
         removeTransactionFromList(current, removed),
       );
-      setYearlyReportTransactions((current) =>
+      setComparisonTransactions((current) =>
         current ? removeTransactionFromList(current, removed) : current,
       );
       removeCachedTransaction(scope, removed);
@@ -637,7 +647,7 @@ const ReportsPageContent = () => {
       setAllTransactions((current) =>
         upsertTransactionInList(current, restored),
       );
-      setYearlyReportTransactions((current) =>
+      setComparisonTransactions((current) =>
         current ? upsertTransactionInList(current, restored) : current,
       );
       upsertCachedTransaction(scope, restored);
@@ -742,8 +752,8 @@ const ReportsPageContent = () => {
   };
 
   const availableYears = useMemo(
-    () => getAvailableReportYears(yearlyReportTransactions ?? allTransactions),
-    [allTransactions, yearlyReportTransactions],
+    () => getAvailableReportYears(comparisonTransactions ?? allTransactions),
+    [allTransactions, comparisonTransactions],
   );
 
   const availableTags = useMemo(
@@ -764,8 +774,8 @@ const ReportsPageContent = () => {
   }, [availableYears, currentYear, transactionsLoaded]);
 
   const yearlyReport = useMemo(
-    () => buildYearlyReport(yearlyReportTransactions ?? [], selectedReportYear),
-    [selectedReportYear, yearlyReportTransactions],
+    () => buildYearlyReport(comparisonTransactions ?? [], selectedReportYear),
+    [selectedReportYear, comparisonTransactions],
   );
 
   const filtered = useMemo(
@@ -877,7 +887,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearlyReportOpen(true);
-                      void loadYearlyReportTransactions();
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -889,6 +899,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setCompareOpen(true);
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -900,7 +911,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearCompareOpen(true);
-                      void loadYearlyReportTransactions();
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -1265,7 +1276,7 @@ const ReportsPageContent = () => {
                 current,
               ),
             );
-            setYearlyReportTransactions((current) =>
+            setComparisonTransactions((current) =>
               current
                 ? imported.reduce(
                     (next, transaction) =>
@@ -1288,18 +1299,18 @@ const ReportsPageContent = () => {
       />
       <MonthComparisonModal
         open={compareOpen}
-        transactions={allTransactions}
+        transactions={comparisonTransactions ?? []}
+        loading={isComparisonTransactionsLoading}
+        error={comparisonTransactionsError}
+        onRetry={() => void loadComparisonTransactions()}
         onClose={() => setCompareOpen(false)}
       />
       <YearComparisonModal
         open={yearCompareOpen}
-        transactions={yearlyReportTransactions ?? []}
-        loading={
-          yearlyReportLoading ||
-          (yearlyReportTransactions === null && yearlyReportLoadError === null)
-        }
-        error={yearlyReportLoadError}
-        onRetry={() => void loadYearlyReportTransactions()}
+        transactions={comparisonTransactions ?? []}
+        loading={isComparisonTransactionsLoading}
+        error={comparisonTransactionsError}
+        onRetry={() => void loadComparisonTransactions()}
         onClose={() => setYearCompareOpen(false)}
       />
       <Dialog
@@ -1311,15 +1322,26 @@ const ReportsPageContent = () => {
         className="yearly-report-dialog"
         aria-labelledby="yearly-report-heading"
       >
-        {yearlyReportLoading ? (
+        {isComparisonTransactionsLoading ? (
           <Box sx={{ p: 3 }} aria-label="Loading yearly report">
             <Skeleton variant="rounded" height={480} />
           </Box>
-        ) : yearlyReportLoadError ? (
-          <Alert severity="error" sx={{ m: 3 }}>
-            {yearlyReportLoadError}
+        ) : comparisonTransactionsError ? (
+          <Alert
+            severity="error"
+            sx={{ m: 3 }}
+            action={
+              <Button
+                color="inherit"
+                onClick={() => void loadComparisonTransactions()}
+              >
+                Retry
+              </Button>
+            }
+          >
+            {comparisonTransactionsError}
           </Alert>
-        ) : yearlyReportTransactions ? (
+        ) : comparisonTransactions ? (
           <YearlyReport
             report={yearlyReport}
             availableYears={availableYears}
