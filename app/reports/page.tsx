@@ -202,6 +202,13 @@ function isTransaction(value: unknown): value is Transaction {
 
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [yearlyReportTransactions, setYearlyReportTransactions] = useState<
+    Transaction[] | null
+  >(null);
+  const [yearlyReportLoading, setYearlyReportLoading] = useState(false);
+  const [yearlyReportLoadError, setYearlyReportLoadError] = useState<
+    string | null
+  >(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [resultsRefreshing, setResultsRefreshing] = useState(false);
   const [hasRefreshedDateScope, setHasRefreshedDateScope] = useState(false);
@@ -239,6 +246,7 @@ const ReportsPageContent = () => {
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
   const loadRequestGeneration = useRef(0);
+  const yearlyReportRequestGeneration = useRef(0);
   const lastSuccessfulDateSelection = useRef<DateSelection | null>(null);
   const importGeneration = authGeneration.current;
   const importScope = scope;
@@ -253,6 +261,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache(requestScope);
       setAllTransactions([]);
+      setYearlyReportTransactions(null);
+      setYearlyReportLoading(false);
+      setYearlyReportLoadError(null);
       setTransactionsLoaded(false);
       setFiltersInitialized(false);
       setInitialLoading(false);
@@ -377,6 +388,71 @@ const ReportsPageContent = () => {
     [handleUnauthorized, router, scope],
   );
 
+  const loadYearlyReportTransactions = useCallback(async () => {
+    if (!scope || yearlyReportLoading || yearlyReportTransactions) return;
+
+    const loadGeneration = authGeneration.current;
+    const requestGeneration = ++yearlyReportRequestGeneration.current;
+    const isCurrentLoad = () =>
+      currentTransactionScope() === scope &&
+      authGeneration.current === loadGeneration &&
+      yearlyReportRequestGeneration.current === requestGeneration;
+
+    setYearlyReportLoading(true);
+    setYearlyReportLoadError(null);
+
+    try {
+      const transactions: Transaction[] = [];
+      let cursor: string | undefined;
+      const seenCursors = new Set<string>();
+
+      do {
+        const params = new URLSearchParams({ limit: "200" });
+        if (cursor) params.set("cursor", cursor);
+        const res = await apiFetch(`/api/transactions?${params}`);
+
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("Transaction request is unauthorized");
+        }
+
+        const data = (await res.json()) as TransactionsApiResponse;
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Failed to load transactions");
+        }
+
+        transactions.push(...(data.transactions ?? []));
+        cursor = data.hasMore ? data.nextCursor : undefined;
+        if (cursor && seenCursors.has(cursor)) {
+          throw new Error("Transaction pagination returned a repeated cursor");
+        }
+        if (cursor) seenCursors.add(cursor);
+      } while (cursor);
+
+      if (isCurrentLoad()) setYearlyReportTransactions(transactions);
+    } catch (error) {
+      if (!isCurrentLoad()) return;
+      if (
+        error instanceof Error &&
+        error.message === "Transaction request is unauthorized"
+      ) {
+        handleUnauthorized(scope);
+        return;
+      }
+      setYearlyReportLoadError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load yearly report transactions",
+      );
+    } finally {
+      if (isCurrentLoad()) setYearlyReportLoading(false);
+    }
+  }, [
+    handleUnauthorized,
+    scope,
+    yearlyReportLoading,
+    yearlyReportTransactions,
+  ]);
+
   const handleFiltersChange = (nextFilters: FilterParams) => {
     const previousPlan = getFilterTransactionLoadPlan(filters);
     const nextPlan = getFilterTransactionLoadPlan(nextFilters);
@@ -418,6 +494,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache();
       setAllTransactions([]);
+      setYearlyReportTransactions(null);
+      setYearlyReportLoading(false);
+      setYearlyReportLoadError(null);
       setInitialLoading(false);
       setResultsRefreshing(false);
       setHasRefreshedDateScope(false);
@@ -494,6 +573,11 @@ const ReportsPageContent = () => {
         setAllTransactions((current) =>
           upsertTransactionInList(current, saved, editTarget),
         );
+        setYearlyReportTransactions((current) =>
+          current
+            ? upsertTransactionInList(current, saved, editTarget)
+            : current,
+        );
         upsertCachedTransaction(requestScope, saved, editTarget);
       } else {
         await loadTransactions(getFilterTransactionLoadPlan(filters), {
@@ -543,12 +627,18 @@ const ReportsPageContent = () => {
       setAllTransactions((current) =>
         removeTransactionFromList(current, removed),
       );
+      setYearlyReportTransactions((current) =>
+        current ? removeTransactionFromList(current, removed) : current,
+      );
       removeCachedTransaction(scope, removed);
     },
     onRestored: (restored) => {
       if (!scope) return;
       setAllTransactions((current) =>
         upsertTransactionInList(current, restored),
+      );
+      setYearlyReportTransactions((current) =>
+        current ? upsertTransactionInList(current, restored) : current,
       );
       upsertCachedTransaction(scope, restored);
     },
@@ -652,8 +742,8 @@ const ReportsPageContent = () => {
   };
 
   const availableYears = useMemo(
-    () => getAvailableReportYears(allTransactions),
-    [allTransactions],
+    () => getAvailableReportYears(yearlyReportTransactions ?? allTransactions),
+    [allTransactions, yearlyReportTransactions],
   );
 
   const availableTags = useMemo(
@@ -674,8 +764,8 @@ const ReportsPageContent = () => {
   }, [availableYears, currentYear, transactionsLoaded]);
 
   const yearlyReport = useMemo(
-    () => buildYearlyReport(allTransactions, selectedReportYear),
-    [allTransactions, selectedReportYear],
+    () => buildYearlyReport(yearlyReportTransactions ?? [], selectedReportYear),
+    [selectedReportYear, yearlyReportTransactions],
   );
 
   const filtered = useMemo(
@@ -787,6 +877,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearlyReportOpen(true);
+                      void loadYearlyReportTransactions();
                     }}
                   >
                     <ListItemText
@@ -1173,6 +1264,15 @@ const ReportsPageContent = () => {
                 current,
               ),
             );
+            setYearlyReportTransactions((current) =>
+              current
+                ? imported.reduce(
+                    (next, transaction) =>
+                      upsertTransactionInList(next, transaction),
+                    current,
+                  )
+                : current,
+            );
             if (importScope) {
               for (const transaction of imported) {
                 upsertCachedTransaction(importScope, transaction);
@@ -1204,14 +1304,22 @@ const ReportsPageContent = () => {
         className="yearly-report-dialog"
         aria-labelledby="yearly-report-heading"
       >
-        {!resultsLoading && (
+        {yearlyReportLoading ? (
+          <Box sx={{ p: 3 }} aria-label="Loading yearly report">
+            <Skeleton variant="rounded" height={480} />
+          </Box>
+        ) : yearlyReportLoadError ? (
+          <Alert severity="error" sx={{ m: 3 }}>
+            {yearlyReportLoadError}
+          </Alert>
+        ) : yearlyReportTransactions ? (
           <YearlyReport
             report={yearlyReport}
             availableYears={availableYears}
             currentYear={currentYear}
             onYearChange={setSelectedReportYear}
           />
-        )}
+        ) : null}
       </Dialog>
       <Fab
         data-testid="reports-add-transaction-fab"

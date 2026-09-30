@@ -33,7 +33,6 @@ export function YearSelector({
       {years.map((year) => (
         <MenuItem key={year} value={year}>
           {year}
-          {year === String(currentYear) ? " (current year)" : ""}
         </MenuItem>
       ))}
     </TextField>
