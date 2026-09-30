@@ -900,6 +900,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearCompareOpen(true);
+                      void loadYearlyReportTransactions();
                     }}
                   >
                     <ListItemText
@@ -1292,7 +1293,13 @@ const ReportsPageContent = () => {
       />
       <YearComparisonModal
         open={yearCompareOpen}
-        transactions={allTransactions}
+        transactions={yearlyReportTransactions ?? []}
+        loading={
+          yearlyReportLoading ||
+          (yearlyReportTransactions === null && yearlyReportLoadError === null)
+        }
+        error={yearlyReportLoadError}
+        onRetry={() => void loadYearlyReportTransactions()}
         onClose={() => setYearCompareOpen(false)}
       />
       <Dialog

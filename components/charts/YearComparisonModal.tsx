@@ -1,9 +1,12 @@
 "use client";
 
 import CloseIcon from "@mui/icons-material/Close";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -64,10 +67,16 @@ function YearSelector({
 export function YearComparisonModal({
   open,
   transactions,
+  loading,
+  error,
+  onRetry,
   onClose,
 }: {
   open: boolean;
   transactions: Transaction[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onClose: () => void;
 }) {
   const years = useMemo(
@@ -218,67 +227,93 @@ export function YearComparisonModal({
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 2.5, px: { xs: 2, sm: 3 } }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "center",
-            alignItems: "center",
-            gap: { xs: 1.5, sm: 3 },
-            mb: 1.5,
-          }}
-        >
-          <YearSelector
-            label="Previous Year"
-            value={previousYear}
-            years={years}
-            onChange={setPreviousYear}
-          />
-          <Typography variant="body2" color="text.secondary">
-            vs
+        {loading ? (
+          <Box
+            sx={{ py: 8, display: "flex", justifyContent: "center" }}
+            aria-label="Loading yearly comparison"
+          >
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={onRetry}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        ) : years.length === 0 ? (
+          <Typography color="text.secondary" textAlign="center" sx={{ py: 8 }}>
+            Add transactions to compare yearly spending.
           </Typography>
-          <YearSelector
-            label="Current Year"
-            value={currentYear}
-            years={years}
-            onChange={setCurrentYear}
-          />
-        </Box>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          textAlign="center"
-          sx={{ mb: 3 }}
-        >
-          {scopeText}
-        </Typography>
-        <ComparisonSummaryCards
-          metrics={metrics}
-          previousLabel="Previous Year"
-          currentLabel="Current Year"
-        />
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Typography variant="subtitle2" fontWeight={600} mb={1}>
-              Expense Category Comparison
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                justifyContent: "center",
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 3 },
+                mb: 1.5,
+              }}
+            >
+              <YearSelector
+                label="Previous Year"
+                value={previousYear}
+                years={years}
+                onChange={setPreviousYear}
+              />
+              <Typography variant="body2" color="text.secondary">
+                vs
+              </Typography>
+              <YearSelector
+                label="Current Year"
+                value={currentYear}
+                years={years}
+                onChange={setCurrentYear}
+              />
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+              sx={{ mb: 3 }}
+            >
+              {scopeText}
             </Typography>
-            <ComparisonBarChart
-              prevMonth={comparison.previousYear}
-              currMonth={comparison.currentYear}
-              emptyMessage="No category data for the selected years"
-            />
-          </CardContent>
-        </Card>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2 }}>
-            <TagsComparison
-              previous={comparison.previousYear}
-              current={comparison.currentYear}
+            <ComparisonSummaryCards
+              metrics={metrics}
               previousLabel="Previous Year"
               currentLabel="Current Year"
             />
-          </CardContent>
-        </Card>
+            <Card variant="outlined" sx={{ mb: 3 }}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant="subtitle2" fontWeight={600} mb={1}>
+                  Expense Category Comparison
+                </Typography>
+                <ComparisonBarChart
+                  prevMonth={comparison.previousYear}
+                  currMonth={comparison.currentYear}
+                  emptyMessage="No category data for the selected years"
+                />
+              </CardContent>
+            </Card>
+            <Card variant="outlined">
+              <CardContent sx={{ p: 2 }}>
+                <TagsComparison
+                  previous={comparison.previousYear}
+                  current={comparison.currentYear}
+                  previousLabel="Previous Year"
+                  currentLabel="Current Year"
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
