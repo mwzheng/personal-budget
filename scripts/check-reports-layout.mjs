@@ -43,7 +43,8 @@ const waitFor = async (expression) => {
 try {
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
-    source: "sessionStorage.setItem('porridge-budget-demo-session', 'true')",
+    source: `sessionStorage.setItem('porridge-budget-demo-session', 'true');
+      localStorage.setItem('pb:theme-mode', 'light');`,
   });
   await send("Page.navigate", { url: `${appUrl}/reports` });
   await waitFor(`Boolean(document.querySelector('input[placeholder="Name, note, or tag"]'))`);
@@ -188,6 +189,20 @@ try {
         ? 'Boolean(document.querySelector(".MuiTablePagination-root"))'
         : 'Boolean(document.querySelector(".fc-daygrid-body"))');
       await pause(1500);
+      if (view === "Calendar") {
+        const categoryContrast = await evaluate(`(() => {
+          const category = document.querySelector('.transaction-calendar__event-category');
+          if (!category) return null;
+          const style = getComputedStyle(category);
+          return { color: style.color, backgroundColor: style.backgroundColor };
+        })()`);
+        assert(categoryContrast, "Calendar must render a transaction category chip");
+        assert.notEqual(
+          categoryContrast.color,
+          "rgb(248, 250, 252)",
+          `Light-mode category chips must not use the event's light foreground: ${JSON.stringify(categoryContrast)}`,
+        );
+      }
       const bounds = await evaluate(`(() => {
         window.scrollTo(100000, 100000);
         const root = document.documentElement;

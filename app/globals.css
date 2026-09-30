@@ -170,7 +170,7 @@ th[data-numeric="true"] {
 .transaction-calendar__event-category {
   background: color-mix(in srgb, var(--pb-surface-page) 58%, transparent);
   border-radius: 3px;
-  color: inherit;
+  color: var(--pb-text-primary);
   font-weight: 600;
   padding: 0.08rem 0.45rem;
   white-space: nowrap;
