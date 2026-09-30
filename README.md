@@ -2,6 +2,28 @@
 
 Porridge Budget is a personal budgeting application built with TypeScript, Next.js, and serverless backends. The app helps track income, expenses, budgets, long-term progress, and investment planning with CSV import/export, month- and year-over-year comparisons, and interactive charts that can be downloaded as PNG images.
 
+## Screenshots
+
+The screenshots below use the app's seeded demo data.
+
+### Reports
+
+Review spending by category and tag, compare monthly totals, and manage transactions in one view.
+
+![Porridge Budget Reports page](docs/screenshots/reports.png)
+
+### Budget Planner
+
+Build a monthly budget, compare planned spending with recorded activity, and inspect the budget flow.
+
+![Porridge Budget Budget Planner page](docs/screenshots/budget.png)
+
+### Progress Tracker
+
+Track savings goals, milestones, salary history, and retirement balances over time.
+
+![Porridge Budget Progress Tracker page](docs/screenshots/progress.png)
+
 ## Tech Stack
 
 - **Frontend:** Next.js (React) with TypeScript
