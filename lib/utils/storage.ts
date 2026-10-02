@@ -29,6 +29,8 @@ const REPORT_FILTERS_STORAGE_KEY = "personal-budget-report-filters";
 const REPORT_FILTERS_STORAGE_VERSION = 2;
 const REPORT_TRANSACTIONS_VIEW_STORAGE_KEY =
   "personal-budget-last-report-transactions-view";
+const REPORT_TAG_EXCLUSIONS_STORAGE_PREFIX =
+  "personal-budget-report-tag-exclusions";
 
 type ReportTransactionsViewPreference = "table" | "calendar";
 
@@ -215,6 +217,45 @@ export function clearLastSelectedReportFilters(): void {
     localStorage.removeItem(REPORT_FILTERS_STORAGE_KEY);
   } catch {
     // Ignore unavailable browser storage.
+  }
+}
+
+export function getExcludedReportTags(scope: string | null): string[] {
+  if (typeof window === "undefined" || !scope) return [];
+
+  try {
+    const key = `${REPORT_TAG_EXCLUSIONS_STORAGE_PREFIX}:${encodeURIComponent(scope)}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      !Array.isArray(parsed) ||
+      !parsed.every((tag) => typeof tag === "string")
+    ) {
+      return [];
+    }
+    return [...new Set(parsed.filter((tag) => tag.length > 0))];
+  } catch {
+    return [];
+  }
+}
+
+export function setExcludedReportTags(
+  scope: string | null,
+  tags: string[],
+): void {
+  if (typeof window === "undefined" || !scope) return;
+
+  try {
+    const key = `${REPORT_TAG_EXCLUSIONS_STORAGE_PREFIX}:${encodeURIComponent(scope)}`;
+    const normalized = [...new Set(tags.filter((tag) => tag.length > 0))];
+    if (normalized.length === 0) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, JSON.stringify(normalized));
+    }
+  } catch {
+    // Ignore unavailable browser storage and quota failures.
   }
 }
 

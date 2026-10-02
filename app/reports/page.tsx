@@ -48,6 +48,7 @@ import {
 import {
   filterTransactions,
   aggregateTransactions,
+  buildTagDiagramData,
   getAllTags,
   getAvailableReportYears,
   buildYearlyReport,
@@ -56,8 +57,10 @@ import {
   getLastSelectedReportFilters,
   getLastSelectedReportTransactionsView,
   getLastSelectedReportYears,
+  getExcludedReportTags,
   setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
+  setExcludedReportTags,
 } from "@/lib/utils/storage";
 import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
@@ -83,6 +86,7 @@ import {
 import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
 import { TagBarChart } from "@/components/charts/TagBarChart";
+import { TagChartSettings } from "@/components/charts/TagChartSettings";
 import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
 import { YearComparisonModal } from "@/components/charts/YearComparisonModal";
 
@@ -228,6 +232,10 @@ const ReportsPageContent = () => {
   );
   const [transactionsView, setTransactionsView] =
     useState<TransactionsViewMode>("table");
+  const [tagExclusionPreference, setTagExclusionPreference] = useState<{
+    scope: string | null;
+    tags: string[];
+  } | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -526,6 +534,10 @@ const ReportsPageContent = () => {
   }, []);
 
   useEffect(() => {
+    setTagExclusionPreference({ scope, tags: getExcludedReportTags(scope) });
+  }, [authVersion, scope]);
+
+  useEffect(() => {
     if (!transactionsLoaded || initialLoading || filtersInitialized) return;
 
     const initializedFilters = initializeReportFilters(
@@ -757,9 +769,19 @@ const ReportsPageContent = () => {
   );
 
   const availableTags = useMemo(
-    () => getAllTags(allTransactions),
-    [allTransactions],
+    () => getAllTags(comparisonTransactions ?? allTransactions),
+    [allTransactions, comparisonTransactions],
   );
+
+  const excludedTags =
+    scope && tagExclusionPreference?.scope === scope
+      ? tagExclusionPreference.tags
+      : [];
+
+  const handleExcludedTagsChange = (tags: string[]) => {
+    setTagExclusionPreference({ scope, tags });
+    setExcludedReportTags(scope, tags);
+  };
 
   const currentYear = new Date().getFullYear();
 
@@ -787,6 +809,15 @@ const ReportsPageContent = () => {
     () =>
       filtered.length > 0 ? aggregateTransactions(filtered) : EMPTY_AGGREGATES,
     [filtered],
+  );
+
+  const allTagChartData = useMemo(
+    () => buildTagDiagramData(filtered),
+    [filtered],
+  );
+  const tagChartData = useMemo(
+    () => allTagChartData.filter((entry) => !excludedTags.includes(entry.name)),
+    [allTagChartData, excludedTags],
   );
 
   const comparableFilters = useMemo(
@@ -1132,6 +1163,22 @@ const ReportsPageContent = () => {
                 <SectionCard
                   title="Top Tags"
                   headingId="reports-tags-heading"
+                  action={
+                    <TagChartSettings
+                      availableTags={availableTags}
+                      excludedTags={excludedTags}
+                      onChange={handleExcludedTagsChange}
+                      onOpen={() => {
+                        if (
+                          comparisonTransactions === null &&
+                          !comparisonTransactionsLoading
+                        ) {
+                          void loadComparisonTransactions();
+                        }
+                      }}
+                      loadingTags={comparisonTransactionsLoading}
+                    />
+                  }
                   elevation={1}
                   sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
                   contentSx={{
@@ -1145,9 +1192,14 @@ const ReportsPageContent = () => {
                     <ChartLoadingState height={400} showLegend={false} />
                   ) : (
                     <TagBarChart
-                      data={agg.tagDiagramData}
+                      data={tagChartData}
                       activeTags={filters.tags}
                       onTagClick={handleQuickTagFilter}
+                      emptyMessage={
+                        allTagChartData.length > 0
+                          ? "All tags are excluded"
+                          : undefined
+                      }
                     />
                   )}
                 </SectionCard>

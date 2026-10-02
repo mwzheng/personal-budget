@@ -203,22 +203,7 @@ export function aggregateTransactions(
     a.period.localeCompare(b.period),
   );
 
-  const tagMap: Record<string, number> = {};
-
-  for (const t of transactions) {
-    if (isIncomeTransaction(t)) {
-      continue;
-    }
-
-    for (const tag of t.tags) {
-      tagMap[tag] = (tagMap[tag] || 0) + t.amount;
-    }
-  }
-
-  const tagDiagramData = Object.entries(tagMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 15);
+  const tagDiagramData = buildTagDiagramData(transactions).slice(0, 15);
 
   return {
     totalAmount,
@@ -228,6 +213,27 @@ export function aggregateTransactions(
     timeseries,
     tagDiagramData,
   };
+}
+
+export function buildTagDiagramData(
+  transactions: Transaction[],
+  excludedTags: string[] = [],
+): TagDataPoint[] {
+  const excluded = new Set(excludedTags);
+  const tagMap = new Map<string, number>();
+
+  for (const transaction of transactions) {
+    if (isIncomeTransaction(transaction)) continue;
+
+    for (const tag of transaction.tags) {
+      if (excluded.has(tag)) continue;
+      tagMap.set(tag, (tagMap.get(tag) ?? 0) + transaction.amount);
+    }
+  }
+
+  return Array.from(tagMap, ([name, value]) => ({ name, value })).sort(
+    (a, b) => b.value - a.value,
+  );
 }
 
 export function getAllTags(transactions: Transaction[]): string[] {
