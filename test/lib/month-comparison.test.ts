@@ -5,6 +5,7 @@ import {
   buildMonthSummary,
   getAvailableMonths,
   getDefaultComparisonMonths,
+  getMonthsInTransactionRange,
   getMonthTransactions,
   rankComparisonTags,
 } from "../../lib/utils/aggregations";
@@ -42,6 +43,23 @@ describe("getAvailableMonths", () => {
 
   it("returns empty array for no transactions", () => {
     expect(getAvailableMonths([])).toEqual([]);
+  });
+});
+
+describe("getMonthsInTransactionRange", () => {
+  it("fills gaps between the earliest and latest transaction months", () => {
+    const txns = [tx("first", "2024-11-15"), tx("last", "2025-02-10")];
+
+    expect(getMonthsInTransactionRange(txns)).toEqual([
+      "2024-11",
+      "2024-12",
+      "2025-01",
+      "2025-02",
+    ]);
+  });
+
+  it("returns an empty array when there are no transactions", () => {
+    expect(getMonthsInTransactionRange([])).toEqual([]);
   });
 });
 
