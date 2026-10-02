@@ -1163,6 +1163,7 @@ const ReportsPageContent = () => {
                 <SectionCard
                   title="Top Tags"
                   headingId="reports-tags-heading"
+                  titleAlign="center"
                   action={
                     <TagChartSettings
                       availableTags={availableTags}

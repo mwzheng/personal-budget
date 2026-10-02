@@ -30,13 +30,16 @@ export function TagChartSettings({
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [search, setSearch] = useState("");
   const isOpen = Boolean(anchor);
-  const tags = useMemo(
-    () =>
-      [...new Set([...availableTags, ...excludedTags])].sort((a, b) =>
-        a.localeCompare(b),
-      ),
-    [availableTags, excludedTags],
-  );
+  const tags = useMemo(() => {
+    const allTags = new Set([...availableTags, ...excludedTags]);
+    const selectedTags = [...new Set(excludedTags)];
+    const selected = new Set(selectedTags);
+    const unselectedTags = [...allTags]
+      .filter((tag) => !selected.has(tag))
+      .sort((a, b) => a.localeCompare(b));
+
+    return [...selectedTags, ...unselectedTags];
+  }, [availableTags, excludedTags]);
   const visibleTags = tags.filter((tag) =>
     tag.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
@@ -46,7 +49,7 @@ export function TagChartSettings({
     onChange(
       excluded.has(tag)
         ? excludedTags.filter((excludedTag) => excludedTag !== tag)
-        : [...excludedTags, tag],
+        : [tag, ...excludedTags],
     );
   };
 

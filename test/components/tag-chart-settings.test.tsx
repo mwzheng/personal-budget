@@ -27,7 +27,30 @@ describe("Top Tags settings", () => {
     await user.click(
       screen.getByRole("checkbox", { name: "Exclude rent from Top Tags" }),
     );
-    expect(onChange).toHaveBeenLastCalledWith(["old tag", "rent"]);
+    expect(onChange).toHaveBeenLastCalledWith(["rent", "old tag"]);
+  });
+
+  it("lists excluded tags first in most-recent selection order", async () => {
+    const user = userEvent.setup();
+    render(
+      <TagChartSettings
+        availableTags={["beta", "alpha", "rent"]}
+        excludedTags={["rent"]}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Top Tags settings" }));
+
+    expect(
+      screen
+        .getAllByRole("checkbox")
+        .map((checkbox) => checkbox.getAttribute("aria-label")),
+    ).toEqual([
+      "Exclude rent from Top Tags",
+      "Exclude alpha from Top Tags",
+      "Exclude beta from Top Tags",
+    ]);
   });
 
   it("clears all exclusions", async () => {
