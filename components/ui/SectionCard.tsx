@@ -14,7 +14,7 @@ export interface SectionCardProps {
   sx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
   headingId?: string;
-  /** Controls the horizontal alignment of a title when no action is present. */
+  /** Controls the horizontal alignment of a title. */
   titleAlign?: "left" | "center";
   /** Optional decorative texture applied to the card surface only. */
   texture?: "none" | "blue" | "violet";
@@ -53,7 +53,9 @@ export default function SectionCard({
       {hasHeader && (
         <Box
           sx={{
-            display: "flex",
+            display: titleAlign === "center" && action ? "grid" : "flex",
+            gridTemplateColumns:
+              titleAlign === "center" && action ? "1fr auto 1fr" : undefined,
             alignItems: "flex-start",
             justifyContent: "space-between",
             flexWrap: "wrap",
@@ -71,6 +73,7 @@ export default function SectionCard({
               sx={{
                 minWidth: 0,
                 margin: !action && titleAlign === "center" ? "auto" : undefined,
+                gridColumn: titleAlign === "center" && action ? 2 : undefined,
               }}
             >
               <Typography
@@ -95,6 +98,8 @@ export default function SectionCard({
             <Box
               sx={{
                 flexShrink: 0,
+                gridColumn: titleAlign === "center" ? 3 : undefined,
+                justifySelf: titleAlign === "center" ? "end" : undefined,
                 display: "flex",
                 alignItems: "center",
                 minWidth: 0,

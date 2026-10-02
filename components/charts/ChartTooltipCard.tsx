@@ -19,9 +19,10 @@ interface ChartTooltipRow {
 interface Props {
   title?: string;
   rows: ChartTooltipRow[];
+  summary?: string;
 }
 
-export function ChartTooltipCard({ title, rows }: Props) {
+export function ChartTooltipCard({ title, rows, summary }: Props) {
   if (!rows.length) {
     return null;
   }
@@ -85,6 +86,22 @@ export function ChartTooltipCard({ title, rows }: Props) {
           </Stack>
         ))}
       </Stack>
+      {summary ? (
+        <Typography
+          variant="caption"
+          sx={{
+            display: "block",
+            mt: 0.75,
+            pt: 0.75,
+            borderTop: 1,
+            borderColor: "divider",
+            color: "text.primary",
+            fontWeight: 700,
+          }}
+        >
+          {summary}
+        </Typography>
+      ) : null}
     </Box>
   );
 }

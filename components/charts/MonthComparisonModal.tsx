@@ -1,9 +1,12 @@
 "use client";
 
 import CloseIcon from "@mui/icons-material/Close";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -25,8 +28,8 @@ import {
 } from "@/components/charts/ComparisonDetails";
 import {
   buildMonthComparison,
-  getAvailableMonths,
   getDefaultComparisonMonths,
+  getMonthsInTransactionRange,
 } from "@/lib/utils/aggregations";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 import type { Transaction } from "@/lib/types/types";
@@ -58,6 +61,17 @@ function MonthSelector({
       <Select
         value={value}
         label={label}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: {
+                xs: "min(300px, 45vh)",
+                sm: "min(360px, 50vh)",
+              },
+              overflowY: "auto",
+            },
+          },
+        }}
         onChange={(event) => onChange(event.target.value)}
       >
         {months.map((month) => (
@@ -73,14 +87,20 @@ function MonthSelector({
 export function MonthComparisonModal({
   open,
   transactions,
+  loading,
+  error,
+  onRetry,
   onClose,
 }: {
   open: boolean;
   transactions: Transaction[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onClose: () => void;
 }) {
   const months = useMemo(
-    () => getAvailableMonths(transactions),
+    () => getMonthsInTransactionRange(transactions),
     [transactions],
   );
   const [previousMonth, setPreviousMonth] = useState(
@@ -193,58 +213,94 @@ export function MonthComparisonModal({
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 2.5, px: { xs: 2, sm: 3 } }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "center",
-            alignItems: "center",
-            gap: { xs: 1.5, sm: 3 },
-            mb: 3,
-          }}
-        >
-          <MonthSelector
-            label="Previous Month"
-            value={previousMonth}
-            months={months}
-            onChange={setPreviousMonth}
-          />
-          <Typography variant="body2" color="text.secondary">
-            vs
+        {loading ? (
+          <Box
+            role="status"
+            aria-label="Loading monthly comparison"
+            sx={{ display: "flex", justifyContent: "center", py: 8 }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" onClick={onRetry}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        ) : months.length === 0 ? (
+          <Typography color="text.secondary" textAlign="center" py={5}>
+            Add transactions to compare months.
           </Typography>
-          <MonthSelector
-            label="Current Month"
-            value={currentMonth}
-            months={months}
-            onChange={setCurrentMonth}
-          />
-        </Box>
-        <ComparisonSummaryCards
-          metrics={metrics}
-          previousLabel="Previous Month"
-          currentLabel="Current Month"
-        />
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Typography variant="subtitle2" fontWeight={600} mb={1}>
-              Expense Category Comparison
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                justifyContent: "center",
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 3 },
+                mb: 1,
+              }}
+            >
+              <MonthSelector
+                label="Previous Month"
+                value={previousMonth}
+                months={months}
+                onChange={setPreviousMonth}
+              />
+              <Typography variant="body2" color="text.secondary">
+                vs
+              </Typography>
+              <MonthSelector
+                label="Current Month"
+                value={currentMonth}
+                months={months}
+                onChange={setCurrentMonth}
+              />
+            </Box>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+              textAlign="center"
+              mb={3}
+            >
+              Uses your full transaction history, regardless of report filters.
             </Typography>
-            <ComparisonBarChart
-              prevMonth={comparison.prevMonth}
-              currMonth={comparison.currMonth}
-            />
-          </CardContent>
-        </Card>
-        <Card variant="outlined">
-          <CardContent sx={{ p: 2 }}>
-            <TagsComparison
-              previous={comparison.prevMonth}
-              current={comparison.currMonth}
+            <ComparisonSummaryCards
+              metrics={metrics}
               previousLabel="Previous Month"
               currentLabel="Current Month"
             />
-          </CardContent>
-        </Card>
+            <Card variant="outlined" sx={{ mb: 3 }}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant="subtitle2" fontWeight={600} mb={1}>
+                  Expense Category Comparison
+                </Typography>
+                <ComparisonBarChart
+                  prevMonth={comparison.prevMonth}
+                  currMonth={comparison.currMonth}
+                />
+              </CardContent>
+            </Card>
+            <Card variant="outlined">
+              <CardContent sx={{ p: 2 }}>
+                <TagsComparison
+                  previous={comparison.prevMonth}
+                  current={comparison.currMonth}
+                  previousLabel="Previous Month"
+                  currentLabel="Current Month"
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

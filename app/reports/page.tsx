@@ -48,6 +48,7 @@ import {
 import {
   filterTransactions,
   aggregateTransactions,
+  buildTagDiagramData,
   getAllTags,
   getAvailableReportYears,
   buildYearlyReport,
@@ -56,8 +57,10 @@ import {
   getLastSelectedReportFilters,
   getLastSelectedReportTransactionsView,
   getLastSelectedReportYears,
+  getExcludedReportTags,
   setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
+  setExcludedReportTags,
 } from "@/lib/utils/storage";
 import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
@@ -83,6 +86,7 @@ import {
 import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
 import { TagBarChart } from "@/components/charts/TagBarChart";
+import { TagChartSettings } from "@/components/charts/TagChartSettings";
 import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
 import { YearComparisonModal } from "@/components/charts/YearComparisonModal";
 
@@ -202,6 +206,13 @@ function isTransaction(value: unknown): value is Transaction {
 
 const ReportsPageContent = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [comparisonTransactions, setComparisonTransactions] = useState<
+    Transaction[] | null
+  >(null);
+  const [comparisonTransactionsLoading, setComparisonTransactionsLoading] =
+    useState(false);
+  const [comparisonTransactionsError, setComparisonTransactionsError] =
+    useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [resultsRefreshing, setResultsRefreshing] = useState(false);
   const [hasRefreshedDateScope, setHasRefreshedDateScope] = useState(false);
@@ -221,6 +232,10 @@ const ReportsPageContent = () => {
   );
   const [transactionsView, setTransactionsView] =
     useState<TransactionsViewMode>("table");
+  const [tagExclusionPreference, setTagExclusionPreference] = useState<{
+    scope: string | null;
+    tags: string[];
+  } | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -239,9 +254,13 @@ const ReportsPageContent = () => {
   const scope = currentTransactionScope();
   const authGeneration = useRef(0);
   const loadRequestGeneration = useRef(0);
+  const comparisonTransactionsRequestGeneration = useRef(0);
   const lastSuccessfulDateSelection = useRef<DateSelection | null>(null);
   const importGeneration = authGeneration.current;
   const importScope = scope;
+  const isComparisonTransactionsLoading =
+    comparisonTransactionsLoading ||
+    (comparisonTransactions === null && comparisonTransactionsError === null);
 
   const applyTransactions = (transactions: Transaction[]) => {
     setAllTransactions(transactions);
@@ -253,6 +272,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache(requestScope);
       setAllTransactions([]);
+      setComparisonTransactions(null);
+      setComparisonTransactionsLoading(false);
+      setComparisonTransactionsError(null);
       setTransactionsLoaded(false);
       setFiltersInitialized(false);
       setInitialLoading(false);
@@ -377,6 +399,78 @@ const ReportsPageContent = () => {
     [handleUnauthorized, router, scope],
   );
 
+  // Month and year comparisons use all account history, independent of report filters.
+  const loadComparisonTransactions = useCallback(async () => {
+    if (
+      !scope ||
+      comparisonTransactionsLoading ||
+      comparisonTransactions !== null
+    ) {
+      return;
+    }
+
+    const loadGeneration = authGeneration.current;
+    const requestGeneration = ++comparisonTransactionsRequestGeneration.current;
+    const isCurrentLoad = () =>
+      currentTransactionScope() === scope &&
+      authGeneration.current === loadGeneration &&
+      comparisonTransactionsRequestGeneration.current === requestGeneration;
+
+    setComparisonTransactionsLoading(true);
+    setComparisonTransactionsError(null);
+
+    try {
+      const transactions: Transaction[] = [];
+      let cursor: string | undefined;
+      const seenCursors = new Set<string>();
+
+      do {
+        const params = new URLSearchParams({ limit: "200" });
+        if (cursor) params.set("cursor", cursor);
+        const res = await apiFetch(`/api/transactions?${params}`);
+
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("Transaction request is unauthorized");
+        }
+
+        const data = (await res.json()) as TransactionsApiResponse;
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Failed to load transactions");
+        }
+
+        transactions.push(...(data.transactions ?? []));
+        cursor = data.hasMore ? data.nextCursor : undefined;
+        if (cursor && seenCursors.has(cursor)) {
+          throw new Error("Transaction pagination returned a repeated cursor");
+        }
+        if (cursor) seenCursors.add(cursor);
+      } while (cursor);
+
+      if (isCurrentLoad()) setComparisonTransactions(transactions);
+    } catch (error) {
+      if (!isCurrentLoad()) return;
+      if (
+        error instanceof Error &&
+        error.message === "Transaction request is unauthorized"
+      ) {
+        handleUnauthorized(scope);
+        return;
+      }
+      setComparisonTransactionsError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load comparison transactions.",
+      );
+    } finally {
+      if (isCurrentLoad()) setComparisonTransactionsLoading(false);
+    }
+  }, [
+    comparisonTransactions,
+    comparisonTransactionsLoading,
+    handleUnauthorized,
+    scope,
+  ]);
+
   const handleFiltersChange = (nextFilters: FilterParams) => {
     const previousPlan = getFilterTransactionLoadPlan(filters);
     const nextPlan = getFilterTransactionLoadPlan(nextFilters);
@@ -418,6 +512,9 @@ const ReportsPageContent = () => {
       authGeneration.current += 1;
       clearTransactionCache();
       setAllTransactions([]);
+      setComparisonTransactions(null);
+      setComparisonTransactionsLoading(false);
+      setComparisonTransactionsError(null);
       setInitialLoading(false);
       setResultsRefreshing(false);
       setHasRefreshedDateScope(false);
@@ -435,6 +532,10 @@ const ReportsPageContent = () => {
   useEffect(() => {
     setTransactionsView(getLastSelectedReportTransactionsView());
   }, []);
+
+  useEffect(() => {
+    setTagExclusionPreference({ scope, tags: getExcludedReportTags(scope) });
+  }, [authVersion, scope]);
 
   useEffect(() => {
     if (!transactionsLoaded || initialLoading || filtersInitialized) return;
@@ -494,6 +595,11 @@ const ReportsPageContent = () => {
         setAllTransactions((current) =>
           upsertTransactionInList(current, saved, editTarget),
         );
+        setComparisonTransactions((current) =>
+          current
+            ? upsertTransactionInList(current, saved, editTarget)
+            : current,
+        );
         upsertCachedTransaction(requestScope, saved, editTarget);
       } else {
         await loadTransactions(getFilterTransactionLoadPlan(filters), {
@@ -543,12 +649,18 @@ const ReportsPageContent = () => {
       setAllTransactions((current) =>
         removeTransactionFromList(current, removed),
       );
+      setComparisonTransactions((current) =>
+        current ? removeTransactionFromList(current, removed) : current,
+      );
       removeCachedTransaction(scope, removed);
     },
     onRestored: (restored) => {
       if (!scope) return;
       setAllTransactions((current) =>
         upsertTransactionInList(current, restored),
+      );
+      setComparisonTransactions((current) =>
+        current ? upsertTransactionInList(current, restored) : current,
       );
       upsertCachedTransaction(scope, restored);
     },
@@ -652,14 +764,24 @@ const ReportsPageContent = () => {
   };
 
   const availableYears = useMemo(
-    () => getAvailableReportYears(allTransactions),
-    [allTransactions],
+    () => getAvailableReportYears(comparisonTransactions ?? allTransactions),
+    [allTransactions, comparisonTransactions],
   );
 
   const availableTags = useMemo(
-    () => getAllTags(allTransactions),
-    [allTransactions],
+    () => getAllTags(comparisonTransactions ?? allTransactions),
+    [allTransactions, comparisonTransactions],
   );
+
+  const excludedTags =
+    scope && tagExclusionPreference?.scope === scope
+      ? tagExclusionPreference.tags
+      : [];
+
+  const handleExcludedTagsChange = (tags: string[]) => {
+    setTagExclusionPreference({ scope, tags });
+    setExcludedReportTags(scope, tags);
+  };
 
   const currentYear = new Date().getFullYear();
 
@@ -674,8 +796,8 @@ const ReportsPageContent = () => {
   }, [availableYears, currentYear, transactionsLoaded]);
 
   const yearlyReport = useMemo(
-    () => buildYearlyReport(allTransactions, selectedReportYear),
-    [allTransactions, selectedReportYear],
+    () => buildYearlyReport(comparisonTransactions ?? [], selectedReportYear),
+    [selectedReportYear, comparisonTransactions],
   );
 
   const filtered = useMemo(
@@ -687,6 +809,15 @@ const ReportsPageContent = () => {
     () =>
       filtered.length > 0 ? aggregateTransactions(filtered) : EMPTY_AGGREGATES,
     [filtered],
+  );
+
+  const allTagChartData = useMemo(
+    () => buildTagDiagramData(filtered),
+    [filtered],
+  );
+  const tagChartData = useMemo(
+    () => allTagChartData.filter((entry) => !excludedTags.includes(entry.name)),
+    [allTagChartData, excludedTags],
   );
 
   const comparableFilters = useMemo(
@@ -787,6 +918,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearlyReportOpen(true);
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -798,6 +930,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setCompareOpen(true);
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -809,6 +942,7 @@ const ReportsPageContent = () => {
                     onClick={() => {
                       setExploreMenuAnchor(null);
                       setYearCompareOpen(true);
+                      void loadComparisonTransactions();
                     }}
                   >
                     <ListItemText
@@ -1029,6 +1163,23 @@ const ReportsPageContent = () => {
                 <SectionCard
                   title="Top Tags"
                   headingId="reports-tags-heading"
+                  titleAlign="center"
+                  action={
+                    <TagChartSettings
+                      availableTags={availableTags}
+                      excludedTags={excludedTags}
+                      onChange={handleExcludedTagsChange}
+                      onOpen={() => {
+                        if (
+                          comparisonTransactions === null &&
+                          !comparisonTransactionsLoading
+                        ) {
+                          void loadComparisonTransactions();
+                        }
+                      }}
+                      loadingTags={comparisonTransactionsLoading}
+                    />
+                  }
                   elevation={1}
                   sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
                   contentSx={{
@@ -1042,9 +1193,14 @@ const ReportsPageContent = () => {
                     <ChartLoadingState height={400} showLegend={false} />
                   ) : (
                     <TagBarChart
-                      data={agg.tagDiagramData}
+                      data={tagChartData}
                       activeTags={filters.tags}
                       onTagClick={handleQuickTagFilter}
+                      emptyMessage={
+                        allTagChartData.length > 0
+                          ? "All tags are excluded"
+                          : undefined
+                      }
                     />
                   )}
                 </SectionCard>
@@ -1173,6 +1329,15 @@ const ReportsPageContent = () => {
                 current,
               ),
             );
+            setComparisonTransactions((current) =>
+              current
+                ? imported.reduce(
+                    (next, transaction) =>
+                      upsertTransactionInList(next, transaction),
+                    current,
+                  )
+                : current,
+            );
             if (importScope) {
               for (const transaction of imported) {
                 upsertCachedTransaction(importScope, transaction);
@@ -1187,12 +1352,18 @@ const ReportsPageContent = () => {
       />
       <MonthComparisonModal
         open={compareOpen}
-        transactions={allTransactions}
+        transactions={comparisonTransactions ?? []}
+        loading={isComparisonTransactionsLoading}
+        error={comparisonTransactionsError}
+        onRetry={() => void loadComparisonTransactions()}
         onClose={() => setCompareOpen(false)}
       />
       <YearComparisonModal
         open={yearCompareOpen}
-        transactions={allTransactions}
+        transactions={comparisonTransactions ?? []}
+        loading={isComparisonTransactionsLoading}
+        error={comparisonTransactionsError}
+        onRetry={() => void loadComparisonTransactions()}
         onClose={() => setYearCompareOpen(false)}
       />
       <Dialog
@@ -1204,14 +1375,33 @@ const ReportsPageContent = () => {
         className="yearly-report-dialog"
         aria-labelledby="yearly-report-heading"
       >
-        {!resultsLoading && (
+        {isComparisonTransactionsLoading ? (
+          <Box sx={{ p: 3 }} aria-label="Loading yearly report">
+            <Skeleton variant="rounded" height={480} />
+          </Box>
+        ) : comparisonTransactionsError ? (
+          <Alert
+            severity="error"
+            sx={{ m: 3 }}
+            action={
+              <Button
+                color="inherit"
+                onClick={() => void loadComparisonTransactions()}
+              >
+                Retry
+              </Button>
+            }
+          >
+            {comparisonTransactionsError}
+          </Alert>
+        ) : comparisonTransactions ? (
           <YearlyReport
             report={yearlyReport}
             availableYears={availableYears}
             currentYear={currentYear}
             onYearChange={setSelectedReportYear}
           />
-        )}
+        ) : null}
       </Dialog>
       <Fab
         data-testid="reports-add-transaction-fab"

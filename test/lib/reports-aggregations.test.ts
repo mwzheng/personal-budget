@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getReportDateRangePreset,
   aggregateTransactions,
+  buildTagDiagramData,
   createYearDateRange,
   filterTransactions,
   getAvailableReportYears,
@@ -304,6 +305,26 @@ describe("reports year helpers", () => {
     });
 
     expect(filtered.map(({ id }) => id)).toEqual(["all-match", "category-or"]);
+  });
+});
+
+describe("Top Tags chart data", () => {
+  it("excludes selected tags before ranking so lower-ranked tags fill the chart", () => {
+    const transactions = Array.from({ length: 12 }, (_, index) =>
+      buildTransaction(`tag-${index}`, "2025-01-01", {
+        amount: 120 - index * 10,
+        tags: [`tag-${index}`],
+      }),
+    );
+
+    expect(
+      buildTagDiagramData(transactions, ["tag-0", "tag-1"]).slice(0, 10),
+    ).toEqual(
+      Array.from({ length: 10 }, (_, index) => ({
+        name: `tag-${index + 2}`,
+        value: 100 - index * 10,
+      })),
+    );
   });
 });
 

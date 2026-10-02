@@ -25,9 +25,15 @@ interface Props {
   data: TagDataPoint[];
   activeTags?: string[];
   onTagClick?: (tag: string) => void;
+  emptyMessage?: string;
 }
 
-export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
+export function TagBarChart({
+  data,
+  activeTags = [],
+  onTagClick,
+  emptyMessage = "No tag data for selected filters",
+}: Props) {
   const SERVER_THEME_TOKENS = useChartTheme();
   const visibleData = data.slice(0, 10);
 
@@ -44,7 +50,7 @@ export function TagBarChart({ data, activeTags = [], onTagClick }: Props) {
           color: "text.secondary",
         }}
       >
-        No tag data for selected filters
+        {emptyMessage}
       </Box>
     );
   }
