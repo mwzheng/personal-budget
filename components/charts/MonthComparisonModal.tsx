@@ -28,7 +28,6 @@ import {
 } from "@/components/charts/ComparisonDetails";
 import {
   buildMonthComparison,
-  getAvailableMonths,
   getDefaultComparisonMonths,
   getMonthsInTransactionRange,
 } from "@/lib/utils/aggregations";
@@ -46,13 +45,11 @@ function MonthSelector({
   label,
   value,
   months,
-  monthsWithTransactions,
   onChange,
 }: {
   label: string;
   value: string;
   months: string[];
-  monthsWithTransactions: Set<string>;
   onChange: (period: string) => void;
 }) {
   return (
@@ -64,12 +61,22 @@ function MonthSelector({
       <Select
         value={value}
         label={label}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              maxHeight: {
+                xs: "min(300px, 45vh)",
+                sm: "min(360px, 50vh)",
+              },
+              overflowY: "auto",
+            },
+          },
+        }}
         onChange={(event) => onChange(event.target.value)}
       >
         {months.map((month) => (
           <MenuItem key={month} value={month}>
             {formatMonthLabel(month)}
-            {!monthsWithTransactions.has(month) ? " (no transactions)" : ""}
           </MenuItem>
         ))}
       </Select>
@@ -94,10 +101,6 @@ export function MonthComparisonModal({
 }) {
   const months = useMemo(
     () => getMonthsInTransactionRange(transactions),
-    [transactions],
-  );
-  const monthsWithTransactions = useMemo(
-    () => new Set(getAvailableMonths(transactions)),
     [transactions],
   );
   const [previousMonth, setPreviousMonth] = useState(
@@ -249,7 +252,6 @@ export function MonthComparisonModal({
                 label="Previous Month"
                 value={previousMonth}
                 months={months}
-                monthsWithTransactions={monthsWithTransactions}
                 onChange={setPreviousMonth}
               />
               <Typography variant="body2" color="text.secondary">
@@ -259,7 +261,6 @@ export function MonthComparisonModal({
                 label="Current Month"
                 value={currentMonth}
                 months={months}
-                monthsWithTransactions={monthsWithTransactions}
                 onChange={setCurrentMonth}
               />
             </Box>
