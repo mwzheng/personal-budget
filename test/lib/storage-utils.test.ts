@@ -76,6 +76,7 @@ describe("storage complete report filter preference", () => {
       endDate: null,
       categories: ["Need", "Need", "Income"],
       tags: [" groceries ", "groceries", "work"],
+      excludedTags: [" travel ", "travel"],
       search: "  coffee  ",
       minAmount: 50,
       maxAmount: 500,
@@ -87,6 +88,7 @@ describe("storage complete report filter preference", () => {
       endDate: null,
       categories: ["Need", "Income"],
       tags: ["groceries", "work"],
+      excludedTags: ["travel"],
       search: "coffee",
       minAmount: 50,
       maxAmount: 500,
@@ -102,6 +104,7 @@ describe("storage complete report filter preference", () => {
       endDate: null,
       categories: [],
       tags: [],
+      excludedTags: [],
       search: "",
       minAmount: 0,
       maxAmount: 999_999,
@@ -113,6 +116,7 @@ describe("storage complete report filter preference", () => {
       endDate: null,
       categories: [],
       tags: [],
+      excludedTags: [],
       search: "",
       minAmount: 0,
       maxAmount: 999_999,
@@ -136,6 +140,7 @@ describe("storage complete report filter preference", () => {
     );
 
     expect(getLastSelectedReportFilters()).toMatchObject({
+      excludedTags: [],
       minAmount: 0,
       maxAmount: 999_999,
     });

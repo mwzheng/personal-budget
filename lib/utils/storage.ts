@@ -80,6 +80,10 @@ function normalizeReportFilters(value: unknown): FilterParams | null {
     /^\d{4}$/.test(year),
   );
   const tags = normalizeUniqueStrings(filters.tags, (tag) => tag.length > 0);
+  const excludedTags =
+    filters.excludedTags === undefined
+      ? []
+      : normalizeUniqueStrings(filters.excludedTags, (tag) => tag.length > 0);
   const categories = normalizeUniqueStrings(
     filters.categories,
     isTransactionCategory,
@@ -89,6 +93,7 @@ function normalizeReportFilters(value: unknown): FilterParams | null {
   if (
     !years ||
     !tags ||
+    !excludedTags ||
     !categories ||
     typeof filters.search !== "string" ||
     !(
@@ -120,6 +125,7 @@ function normalizeReportFilters(value: unknown): FilterParams | null {
     endDate,
     categories,
     tags,
+    excludedTags,
     search: filters.search.trim(),
     minAmount,
     maxAmount,

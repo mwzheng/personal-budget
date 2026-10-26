@@ -69,6 +69,7 @@ function setup(initial: FilterParams = EMPTY_FILTERS, accept = true) {
                 years: [...next.years],
                 categories: [...next.categories],
                 tags: [...next.tags],
+                excludedTags: [...next.excludedTags],
               });
           }}
         />
@@ -167,7 +168,7 @@ describe("controlled report filter interactions", () => {
     },
     {
       field: "tags" as const,
-      label: "Tags",
+      label: "Include tags",
       values: ["home", "trip"],
       chip: "Tag",
     },
@@ -184,6 +185,7 @@ describe("controlled report filter interactions", () => {
         endDate: "2026-12-31",
         categories: field === "tags" ? ["Need", "Want"] : [],
         tags: field === "categories" ? ["home", "trip"] : [],
+        excludedTags: [],
       };
       const user = setup(initial);
       await draft(user);
@@ -202,6 +204,18 @@ describe("controlled report filter interactions", () => {
       assertDraft();
     },
   );
+  it("applies and removes excluded tags without changing included tags", async () => {
+    const initial = { ...EMPTY_FILTERS, tags: ["home"] };
+    const user = setup(initial);
+
+    await user.click(screen.getByRole("button", { name: "Show More Filters" }));
+    await user.click(screen.getByRole("combobox", { name: "Exclude tags" }));
+    await user.click(screen.getByRole("option", { name: "home" }));
+    assertApplied({ ...initial, excludedTags: ["home"] }, "");
+
+    await removeChip(user, "Exclude tag: home");
+    assertApplied(initial, "1,3");
+  });
   it("removes year chips and clears search without losing other filters or drafts", async () => {
     const initial = {
       ...EMPTY_FILTERS,

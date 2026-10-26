@@ -43,6 +43,7 @@ export const EMPTY_FILTERS: FilterParams = {
   endDate: null,
   categories: [],
   tags: [],
+  excludedTags: [],
   search: "",
   ...DEFAULT_REPORT_AMOUNT_RANGE,
 };
@@ -83,6 +84,9 @@ export function initializeReportFilters(
       ...completeStoredFilters,
       years,
       tags: completeStoredFilters.tags.filter((tag) => availableTags.has(tag)),
+      excludedTags: completeStoredFilters.excludedTags.filter((tag) =>
+        availableTags.has(tag),
+      ),
     };
   }
 

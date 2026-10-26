@@ -159,6 +159,7 @@ function getInitialTransactionLoadPlan(
   const hasOtherFilter =
     filters.categories.length > 0 ||
     filters.tags.length > 0 ||
+    filters.excludedTags.length > 0 ||
     Boolean(filters.search);
 
   if (!hasDateOrYearFilter && !hasOtherFilter && !storedFilters) {
@@ -721,6 +722,8 @@ const ReportsPageContent = () => {
       if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+      if (filters.excludedTags.length > 0)
+        params.set("excludedTags", filters.excludedTags.join(","));
       if (filters.search) params.set("search", filters.search);
       if (filters.minAmount !== DEFAULT_REPORT_AMOUNT_RANGE.minAmount)
         params.set("minAmount", String(filters.minAmount));
@@ -773,10 +776,13 @@ const ReportsPageContent = () => {
     [allTransactions, comparisonTransactions],
   );
 
-  const excludedTags =
-    scope && tagExclusionPreference?.scope === scope
-      ? tagExclusionPreference.tags
-      : [];
+  const excludedTags = useMemo(
+    () =>
+      scope && tagExclusionPreference?.scope === scope
+        ? tagExclusionPreference.tags
+        : [],
+    [scope, tagExclusionPreference],
+  );
 
   const handleExcludedTagsChange = (tags: string[]) => {
     setTagExclusionPreference({ scope, tags });

@@ -94,6 +94,7 @@ export interface FilterParams {
   endDate: string | null;
   categories: TransactionCategoryType[];
   tags: string[];
+  excludedTags: string[];
   search: string;
   minAmount: number;
   maxAmount: number;

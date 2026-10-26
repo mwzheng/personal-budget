@@ -236,6 +236,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     count += filters.years.length;
     count += filters.categories.length;
     count += filters.tags.length;
+    count += filters.excludedTags.length;
     if (filters.search) count += 1;
     if (!isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE))
       count += 1;
@@ -248,6 +249,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     filters.years.length > 0 ||
     filters.categories.length > 0 ||
     filters.tags.length > 0 ||
+    filters.excludedTags.length > 0 ||
     !isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE);
   const hasClearableFilters =
     activeFilterCount > 0 ||
@@ -263,6 +265,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     tags: string[],
     q: string,
     amountRange: ReportAmountRange = filters,
+    excludedTags: string[] = filters.excludedTags,
   ) {
     onChange({
       years,
@@ -270,6 +273,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       endDate: ed ? format(ed, "yyyy-MM-dd") : null,
       categories,
       tags,
+      excludedTags,
       search: q,
       minAmount: amountRange.minAmount,
       maxAmount: amountRange.maxAmount,
@@ -414,6 +418,19 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
     );
   }
 
+  function handleExcludedTagsChange(nextTags: string[]) {
+    applyFilters(
+      filters.years,
+      parseFilterDate(filters.startDate),
+      parseFilterDate(filters.endDate),
+      filters.categories,
+      filters.tags,
+      filters.search,
+      filters,
+      nextTags,
+    );
+  }
+
   function handleRemoveAmount() {
     cancelAmountDebounce();
     setMinAmountInput(String(DEFAULT_REPORT_AMOUNT_RANGE.minAmount));
@@ -454,6 +471,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
       endDate: null,
       categories: [],
       tags: [],
+      excludedTags: [],
       search: "",
       ...DEFAULT_REPORT_AMOUNT_RANGE,
     });
@@ -661,6 +679,18 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 onDelete={() => handleRemoveTag(tag)}
               />
             ))}
+            {filters.excludedTags.map((tag) => (
+              <Chip
+                key={`excluded-tag-${tag}`}
+                label={`Exclude tag: ${tag}`}
+                size="small"
+                onDelete={() =>
+                  handleExcludedTagsChange(
+                    filters.excludedTags.filter((item) => item !== tag),
+                  )
+                }
+              />
+            ))}
             {!isSameReportAmountRange(filters, DEFAULT_REPORT_AMOUNT_RANGE) && (
               <Chip
                 key="amount"
@@ -742,7 +772,22 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                   </Box>
                 </Box>
               </Box>
-              <Box data-testid="report-amount-range-group" sx={{ minWidth: 0 }}>
+              <Box
+                data-testid="report-amount-range-group"
+                sx={{
+                  minWidth: 0,
+                  borderTop: {
+                    xs: (theme) => `1px solid ${theme.palette.divider}`,
+                    lg: 0,
+                  },
+                  borderLeft: {
+                    xs: 0,
+                    lg: (theme) => `1px solid ${theme.palette.divider}`,
+                  },
+                  pt: { xs: 2.5, lg: 0 },
+                  pl: { xs: 0, lg: 4 },
+                }}
+              >
                 <AmountRangeFilter
                   minAmountInput={minAmountInput}
                   maxAmountInput={maxAmountInput}
@@ -757,7 +802,7 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "minmax(0, 1fr)",
-                  sm: "repeat(2, minmax(0, 1fr))",
+                  sm: "repeat(3, minmax(0, 1fr))",
                 },
                 gap: 1.25,
                 alignItems: "start",
@@ -784,7 +829,21 @@ export function FilterBar({ availableTags, filters, onChange }: Props) {
                 options={availableTags}
                 value={filters.tags}
                 onChange={(_event, value) => handleTagsChange(value)}
-                renderInput={(params) => <TextField {...params} label="Tags" />}
+                renderInput={(params) => (
+                  <TextField {...params} label="Include tags" />
+                )}
+                sx={{ minWidth: 0, width: "100%" }}
+                limitTags={2}
+              />
+              <Autocomplete
+                multiple
+                size="small"
+                options={availableTags}
+                value={filters.excludedTags}
+                onChange={(_event, value) => handleExcludedTagsChange(value)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Exclude tags" />
+                )}
                 sx={{ minWidth: 0, width: "100%" }}
                 limitTags={2}
               />

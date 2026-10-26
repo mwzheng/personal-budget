@@ -242,6 +242,9 @@ export async function handleTransactionRoutes(
     const tags = (url.searchParams.get("tags") || "")
       .split(",")
       .filter(Boolean);
+    const excludedTags = (url.searchParams.get("excludedTags") || "")
+      .split(",")
+      .filter(Boolean);
     let amountRange;
     try {
       validateReportDateRange(url.searchParams);
@@ -277,6 +280,7 @@ export async function handleTransactionRoutes(
       endDate: url.searchParams.get("endDate"),
       categories,
       tags,
+      excludedTags,
       search: url.searchParams.get("search") ?? "",
       ...amountRange,
     });

@@ -285,6 +285,36 @@ describe("reports routes user scoping", () => {
     });
   });
 
+  it("excludes tagged transactions from report results and CSV exports", async () => {
+    mockedGetRequestUserId.mockResolvedValue("user-excluded-tags");
+    mockedGetUserTransactions.mockResolvedValue([
+      buildTransaction("included", { name: "Groceries", tags: ["food"] }),
+      buildTransaction("excluded", {
+        name: "Restaurant",
+        tags: ["food", "dining"],
+      }),
+    ]);
+
+    const reportsResponse = await getReports(
+      new Request(
+        "http://localhost/api/reports?tags=food&excludedTags=dining&pageSize=10",
+      ) as any,
+    );
+    const exportResponse = await exportReports(
+      new Request(
+        "http://localhost/api/reports/export?tags=food&excludedTags=dining",
+      ) as any,
+    );
+
+    await expect(reportsResponse.json()).resolves.toMatchObject({
+      totalCount: 1,
+      transactions: [expect.objectContaining({ id: "included" })],
+    });
+    const csv = await exportResponse.text();
+    expect(csv).toContain('"Groceries"');
+    expect(csv).not.toContain('"Restaurant"');
+  });
+
   it("supports income category filters and income-aware aggregates on the reports route", async () => {
     mockedGetRequestUserId.mockResolvedValue("user-income");
     mockedGetUserTransactions.mockResolvedValue([
