@@ -90,7 +90,27 @@ describe("buildYearlyReport", () => {
       savingsRate: 20,
       transactionCount: 4,
       averageMonthlySpending: 400 / 12,
+      averageMonthlySavings: 200 / 12,
     });
+  });
+
+  it("calculates average monthly savings through the current month", () => {
+    const report = buildYearlyReport(
+      [
+        transaction("january-saving", "2026-01-05", {
+          amount: 100,
+          category: "Saving",
+        }),
+        transaction("march-saving", "2026-03-05", {
+          amount: 200,
+          category: "Saving",
+        }),
+      ],
+      2026,
+      new Date(2026, 2, 15),
+    );
+
+    expect(report.averageMonthlySavings).toBe(100);
   });
 
   it("uses stable empty fallbacks when income and selected-year activity are absent", () => {

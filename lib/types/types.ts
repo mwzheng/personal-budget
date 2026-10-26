@@ -156,6 +156,7 @@ export interface YearlyReport {
   totalByCategoryType: ReportsCategoryTotals;
   transactionCount: number;
   averageMonthlySpending: number;
+  averageMonthlySavings: number;
   /** Percentage of income saved, or null when there is no income. */
   savingsRate: number | null;
   highestSpendMonth: YearlyReportMonth | null;

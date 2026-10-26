@@ -392,6 +392,8 @@ export function buildYearlyReport(
     totalByCategoryType,
     transactionCount,
     averageMonthlySpending: monthCount > 0 ? spendingAmount / monthCount : 0,
+    averageMonthlySavings:
+      monthCount > 0 ? totalByCategoryType.Saving / monthCount : 0,
     savingsRate:
       incomeAmount > 0
         ? (totalByCategoryType.Saving / incomeAmount) * 100
