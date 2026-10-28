@@ -43,26 +43,26 @@ export const CREATOR_PROFILE = {
   name: "Mickey",
   role: "Full Stack Software Engineer",
   experienceSummary:
-    "5+ years of experience, currently working full time, and passionate about building tools that help people budget smarter.",
+    "5+ years of experience, currently working full time, and interested in building useful tools for everyday life.",
   bio: [
     "I'm a full stack software engineer who likes building practical tools around real workflows.",
 
-    `${APP_NAME} started as a hobby project to simplify my budgeting process. I was managing everything across spreadsheets and notes, and wanted something that kept the intentionality without the context switching.`,
+    `${APP_NAME} started as a way to grow as a developer while building a budgeting tool I would use myself.`,
   ],
   links: CREATOR_SOCIAL_LINK_LIST,
 } satisfies CreatorProfile;
 
 export const APP_PHILOSOPHY_PRINCIPLES = [
-  "Keep each budget entry intentional instead of passively synced.",
-  "Build tools that support reflection, not just automation.",
-  "Maintain clarity across daily spending and long-term goals.",
+  "Enter transactions yourself or import them from a CSV file.",
+  "Compare your spending with your plans.",
+  "Track savings goals alongside everyday spending.",
 ] as const;
 
 export const ABOUT_PAGE_CONTENT = {
   hero: {
     eyebrow: "About",
     title: `Why ${APP_NAME} Exists`,
-    summary: `I built ${APP_NAME} to turn a scattered budgeting workflow into one focused app.`,
+    summary: `I built ${APP_NAME} to make it easier to track spending and plan for the future.`,
   },
   creator: CREATOR_PROFILE,
   summary: [
@@ -108,28 +108,28 @@ export const ABOUT_PAGE_CONTENT = {
       id: "origin-story",
       heading: "Origin Story",
       paragraphs: [
-        "I was already tracking spending manually before building this. Spreadsheets for transactions, notes for planning, and a growing sense that switching between them was slowing me down.",
-        "I built Porridge Budget to consolidate that workflow without losing the intentionality. The goal was one app that kept manual tracking deliberate, not buried under automatic syncing.",
+        "I tracked my spending in spreadsheets and kept planning notes elsewhere. Switching between them made it harder to see everything in one place.",
+        "I built Porridge Budget to bring that work together and to learn as a developer. I wanted a tool I would use myself, and one that could help others get started with budgeting and financial planning.",
       ],
     },
     {
       id: "manual-entry",
       heading: "Mindful Manual Entry",
       paragraphs: [
-        "Most budgeting tools prioritize bank aggregation. This one prioritizes manual entry because it creates a moment of review and keeps spending visible.",
-        "CSV imports are supported for convenience, but the product still assumes you want to stay close to your data.",
+        "You can enter income and expenses yourself, or import transactions from a CSV file. The app does not connect to your bank.",
+        "Reports show where your money went, and the budget planner lets you compare planned amounts with recorded transactions.",
       ],
       highlights: [
-        "Manual entry is a feature, not a fallback.",
-        "Consolidation should reduce tab-switching, not awareness.",
+        "Record income and expenses at your own pace.",
+        "Review spending and plans in one place.",
       ],
     },
     {
       id: "product-direction",
       heading: "Product Direction",
       paragraphs: [
-        "I want the app to feel personal and focused. Reports, budgets, and progress views should support deliberate planning, not endless configuration.",
-        "New features should make the workflow more efficient without removing the sense of ownership that comes from staying involved in the process.",
+        "You can also track salary and retirement savings, set milestones, and explore financial independence scenarios.",
+        "This is a free personal project that I continue to improve.",
       ],
     },
   ],

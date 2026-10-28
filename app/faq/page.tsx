@@ -54,8 +54,14 @@ function formatFaqCategoryLabel(category: string) {
 export default function FaqPage() {
   const { hero, items } = FAQ_PAGE_CONTENT;
 
-  const firstItemId = items[0]?.id;
-  const categories = Array.from(new Set(items.map((item) => item.category)));
+  const categories = [
+    "workflow",
+    "features",
+    "data",
+    "philosophy",
+    "creator",
+  ] as const;
+  const firstItemId = items.find((item) => item.category === categories[0])?.id;
 
   const faqStructuredData = {
     "@context": "https://schema.org",
@@ -192,8 +198,7 @@ export default function FaqPage() {
               color="text.secondary"
               sx={{ maxWidth: 480, lineHeight: 1.7 }}
             >
-              We&rsquo;re here to help. Reach out and we&rsquo;ll get back to
-              you.
+              Have a question or suggestion? Send me a message.
             </Typography>
             <Button variant="contained" size="large" href="/about">
               Contact Us

@@ -19,14 +19,14 @@ export const FAQ_ITEMS = [
     category: "philosophy",
     question: `Why build ${APP_NAME}?`,
     answer:
-      "I was already tracking spending manually across multiple tools. I built this to consolidate that workflow without losing the clarity that comes from staying close to your data.",
+      "I was already tracking spending manually across multiple tools. I built this to bring my budgeting into one place and learn as a developer while making a tool I would use.",
   },
   {
     id: "why-no-auto-imports",
     category: "philosophy",
     question: "Why not connect banks and import everything automatically?",
     answer:
-      "Automatic imports make it easy to stop paying attention. This app prioritizes manual entry so each expense gets a moment of review, keeping spending decisions visible.",
+      "The app does not connect to banks. You can enter transactions yourself or import them from a CSV file, then review them in Reports.",
   },
   {
     id: "bank-credentials",
@@ -36,11 +36,18 @@ export const FAQ_ITEMS = [
       "No. The app is built around manual entry and CSV imports, not live bank connections.",
   },
   {
+    id: "data-storage",
+    category: "data",
+    question: "Where is my data stored?",
+    answer:
+      "When you use an account, the app stores your financial data in AWS DynamoDB and uses AWS Cognito for sign-in. Demo data stays in your browser. Avoid entering passwords, account numbers, bank credentials, or other sensitive information.",
+  },
+  {
     id: "manual-vs-csv",
     category: "workflow",
     question: "Is everything manual, or can I use CSV files?",
     answer:
-      "Manual entry is preferred, but CSV imports are supported for convenience. Either way, the goal is to stay close to the data.",
+      "You can do either. Expense CSV files need Name, Amount, Category, and Date columns. Income files need Source, Amount, and Pay Date. Expense files can also include Notes, Payment Method, and Tags.",
   },
   {
     id: "what-can-i-track",
@@ -54,21 +61,21 @@ export const FAQ_ITEMS = [
     category: "features",
     question: "Can I try it before creating an account?",
     answer:
-      "Yes. Demo mode lets you explore the workflow before committing to a real account.",
+      "Yes. Choose Continue with Demo on the sign-in page to explore with sample data. Demo edits are stored in your browser and cleared when you sign out or start a new demo session. Saving FIRE scenarios is not available in demo mode.",
   },
   {
     id: "export-data",
     category: "data",
     question: "Can I export my data?",
     answer:
-      "Yes. Data portability matters. You can export your data at any time.",
+      "You can export filtered transactions from Reports as a CSV file and export the active budget from the Budget Planner. These exports do not include all data in your account.",
   },
   {
     id: "fire-calculator",
     category: "features",
     question: "What is the FIRE calculator?",
     answer:
-      "FIRE stands for Financial Independence, Retire Early. The calculator projects investment growth, compares scenarios, and estimates time to reach your independence number.",
+      "FIRE stands for Financial Independence, Retire Early. The calculator projects investment growth and estimates how long it may take to reach your financial independence goal. Results depend on your assumptions and can differ from actual outcomes. They are estimates, not financial advice.",
   },
   {
     id: "month-comparison",
@@ -82,7 +89,7 @@ export const FAQ_ITEMS = [
     category: "features",
     question: "What does the progress page track?",
     answer:
-      "Salary history, retirement contributions, and financial milestones in one workspace with charts and year-aware views.",
+      "Savings Progress tracks your retirement savings goal, recorded balances, and milestones. Salary History is a separate page for salary entries and year-over-year comparisons.",
   },
 ] as const satisfies readonly FaqItem[];
 
