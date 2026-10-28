@@ -8,6 +8,7 @@ const filters: FilterParams = {
   endDate: "2026-09-30",
   categories: ["Need"],
   tags: ["home"],
+  excludedTags: [],
   search: "cOfFeE",
   minAmount: 0,
   maxAmount: 999_999,
@@ -59,6 +60,23 @@ describe("report search scope", () => {
     expect(
       filterTransactions(transactions, { ...filters, years: ["2025"] }),
     ).toEqual([]);
+  });
+
+  it("excludes transactions with excluded tags, even when an included tag matches", () => {
+    const excluded = {
+      ...transaction,
+      id: "excluded",
+      tags: ["home", "trip"],
+    };
+    const included = { ...transaction, id: "included", tags: ["home"] };
+
+    expect(
+      filterTransactions([excluded, included], {
+        ...filters,
+        search: "",
+        excludedTags: ["trip"],
+      }).map(({ id }) => id),
+    ).toEqual(["included"]);
   });
 
   it("clearing search retains other constraints and supports no matches", () => {

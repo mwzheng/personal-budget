@@ -215,13 +215,6 @@ export function BudgetList({
           disabled={loading}
           size="small"
           sx={{ minWidth: { sm: 260 }, flex: 1 }}
-          helperText={
-            loading
-              ? "Loading saved budgets…"
-              : activeBudget
-                ? `Editing saved budget: ${activeBudget.name}`
-                : "New budget draft — save it to add it here."
-          }
           slotProps={{
             inputLabel: { shrink: true },
             select: { displayEmpty: true },
@@ -248,7 +241,10 @@ export function BudgetList({
         <Stack
           direction="row"
           spacing={1}
-          sx={{ alignSelf: { xs: "flex-end", sm: "flex-start" } }}
+          sx={{
+            alignSelf: { xs: "flex-end", sm: "center" },
+            height: 40,
+          }}
         >
           <Button
             size="small"
@@ -262,7 +258,7 @@ export function BudgetList({
             }
             disabled={!activeBudget || loading}
             onClick={(event) => setExportAnchor(event.currentTarget)}
-            sx={{ height: 36, whiteSpace: "nowrap" }}
+            sx={{ height: 40, whiteSpace: "nowrap" }}
           >
             Export
           </Button>
@@ -274,6 +270,7 @@ export function BudgetList({
                 : "Delete active saved budget"
             }
             tone="danger"
+            sx={{ height: 40, width: 40 }}
             disabled={!activeBudget || loading}
             onClick={() => {
               const budgetId = activeBudget && getUsableBudgetId(activeBudget);
@@ -294,12 +291,8 @@ export function BudgetList({
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={() => handleExport("json")}>
-          JSON (importable)
-        </MenuItem>
-        <MenuItem onClick={() => handleExport("csv")}>
-          CSV (view in spreadsheet)
-        </MenuItem>
+        <MenuItem onClick={() => handleExport("json")}>JSON</MenuItem>
+        <MenuItem onClick={() => handleExport("csv")}>CSV</MenuItem>
       </Menu>
 
       <ConfirmDialog

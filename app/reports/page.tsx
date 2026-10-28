@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizeTransactionCategory } from "@/lib/utils/transaction-categories";
+
 import AddIcon from "@mui/icons-material/Add";
 import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -10,7 +12,10 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import { ActualVsBudget } from "@/components/budget/ActualVsBudget";
 import Fab from "@mui/material/Fab";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
@@ -57,10 +62,8 @@ import {
   getLastSelectedReportFilters,
   getLastSelectedReportTransactionsView,
   getLastSelectedReportYears,
-  getExcludedReportTags,
   setLastSelectedReportFilters,
   setLastSelectedReportTransactionsView,
-  setExcludedReportTags,
 } from "@/lib/utils/storage";
 import { FilterParams, Transaction } from "@/lib/types/types";
 import { formatCurrency } from "@/lib/utils/format";
@@ -79,14 +82,10 @@ import {
   PAGE_DESCRIPTION_ID,
   TransactionsViewMode,
   buildQuickTagFilters,
-  buildComparablePeriodFilters,
-  buildStatTrend,
   initializeReportFilters,
 } from "@/lib/utils/reportUtils";
 import { SpendingPieChart } from "@/components/charts/SpendingPieChart";
 import { SpendingBarChart } from "@/components/charts/SpendingBarChart";
-import { TagBarChart } from "@/components/charts/TagBarChart";
-import { TagChartSettings } from "@/components/charts/TagChartSettings";
 import { MonthComparisonModal } from "@/components/charts/MonthComparisonModal";
 import { YearComparisonModal } from "@/components/charts/YearComparisonModal";
 
@@ -159,6 +158,7 @@ function getInitialTransactionLoadPlan(
   const hasOtherFilter =
     filters.categories.length > 0 ||
     filters.tags.length > 0 ||
+    filters.excludedTags.length > 0 ||
     Boolean(filters.search);
 
   if (!hasDateOrYearFilter && !hasOtherFilter && !storedFilters) {
@@ -205,6 +205,9 @@ function isTransaction(value: unknown): value is Transaction {
 }
 
 const ReportsPageContent = () => {
+  const [breakdownMode, setBreakdownMode] = useState<"category" | "tag">(
+    "category",
+  );
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [comparisonTransactions, setComparisonTransactions] = useState<
     Transaction[] | null
@@ -232,15 +235,12 @@ const ReportsPageContent = () => {
   );
   const [transactionsView, setTransactionsView] =
     useState<TransactionsViewMode>("table");
-  const [tagExclusionPreference, setTagExclusionPreference] = useState<{
-    scope: string | null;
-    tags: string[];
-  } | null>(null);
   const [detailTarget, setDetailTarget] = useState<Transaction | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [yearCompareOpen, setYearCompareOpen] = useState(false);
   const [yearlyReportOpen, setYearlyReportOpen] = useState(false);
+  const [actualBudgetOpen, setActualBudgetOpen] = useState(false);
   const [exploreMenuAnchor, setExploreMenuAnchor] =
     useState<HTMLElement | null>(null);
   const [dataMenuAnchor, setDataMenuAnchor] = useState<HTMLElement | null>(
@@ -534,10 +534,6 @@ const ReportsPageContent = () => {
   }, []);
 
   useEffect(() => {
-    setTagExclusionPreference({ scope, tags: getExcludedReportTags(scope) });
-  }, [authVersion, scope]);
-
-  useEffect(() => {
     if (!transactionsLoaded || initialLoading || filtersInitialized) return;
 
     const initializedFilters = initializeReportFilters(
@@ -721,6 +717,8 @@ const ReportsPageContent = () => {
       if (filters.categories.length > 0)
         params.set("categories", filters.categories.join(","));
       if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+      if (filters.excludedTags.length > 0)
+        params.set("excludedTags", filters.excludedTags.join(","));
       if (filters.search) params.set("search", filters.search);
       if (filters.minAmount !== DEFAULT_REPORT_AMOUNT_RANGE.minAmount)
         params.set("minAmount", String(filters.minAmount));
@@ -773,16 +771,6 @@ const ReportsPageContent = () => {
     [allTransactions, comparisonTransactions],
   );
 
-  const excludedTags =
-    scope && tagExclusionPreference?.scope === scope
-      ? tagExclusionPreference.tags
-      : [];
-
-  const handleExcludedTagsChange = (tags: string[]) => {
-    setTagExclusionPreference({ scope, tags });
-    setExcludedReportTags(scope, tags);
-  };
-
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
@@ -815,31 +803,24 @@ const ReportsPageContent = () => {
     () => buildTagDiagramData(filtered),
     [filtered],
   );
-  const tagChartData = useMemo(
-    () => allTagChartData.filter((entry) => !excludedTags.includes(entry.name)),
-    [allTagChartData, excludedTags],
-  );
-
-  const comparableFilters = useMemo(
-    () => buildComparablePeriodFilters(filters),
-    [filters],
-  );
-
-  const comparableTransactions = useMemo(
-    () =>
-      comparableFilters
-        ? filterTransactions(allTransactions, comparableFilters)
-        : [],
-    [allTransactions, comparableFilters],
-  );
-
-  const comparableAgg = useMemo(
-    () =>
-      comparableTransactions.length > 0
-        ? aggregateTransactions(comparableTransactions)
-        : null,
-    [comparableTransactions],
-  );
+  const breakdownTags = useMemo(() => {
+    const untagged = filtered.reduce(
+      (total, transaction) =>
+        normalizeTransactionCategory(transaction.category) !== "Income" &&
+        transaction.tags.length === 0
+          ? total + transaction.amount
+          : total,
+      0,
+    );
+    return untagged > 0
+      ? [...allTagChartData, { name: "Untagged", value: untagged }]
+      : allTagChartData;
+  }, [filtered, allTagChartData]);
+  const expenseCount = filtered.filter(
+    (transaction) =>
+      normalizeTransactionCategory(transaction.category) !== "Income",
+  ).length;
+  const expenseTotal = agg.spendingAmount + agg.totalByCategoryType.Saving;
 
   const resultsLoading = initialLoading || resultsRefreshing;
   const isEmpty =
@@ -851,11 +832,11 @@ const ReportsPageContent = () => {
   return (
     <Container
       component="main"
-      maxWidth="xl"
+      maxWidth={false}
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
       className="reports-page"
-      sx={{ py: { xs: 3, md: 4 }, minWidth: 0, maxWidth: "100%" }}
+      sx={{ py: { xs: 3, md: 4 }, minWidth: 0, maxWidth: WORKSPACE_MAX_WIDTH }}
     >
       <PageHeader
         title="Reports"
@@ -864,130 +845,137 @@ const ReportsPageContent = () => {
         descriptionId={PAGE_DESCRIPTION_ID}
         sx={{ mb: 3 }}
         action={
-          !isEmpty ? (
-            <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
-              <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
-                <Button
-                  id="reports-explore-menu-button"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AssessmentOutlinedIcon />}
-                  endIcon={<ExpandMoreIcon />}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    exploreMenuAnchor ? "reports-explore-menu" : undefined
-                  }
-                  aria-expanded={exploreMenuAnchor ? "true" : undefined}
-                  onClick={(event) => setExploreMenuAnchor(event.currentTarget)}
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: { xs: "100%", sm: "auto" },
+          <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
+              <Button
+                id="reports-explore-menu-button"
+                variant="outlined"
+                size="small"
+                startIcon={<AssessmentOutlinedIcon />}
+                endIcon={<ExpandMoreIcon />}
+                aria-haspopup="menu"
+                aria-controls={
+                  exploreMenuAnchor ? "reports-explore-menu" : undefined
+                }
+                aria-expanded={exploreMenuAnchor ? "true" : undefined}
+                onClick={(event) => setExploreMenuAnchor(event.currentTarget)}
+                sx={{
+                  justifyContent: "flex-start",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                Explore Reports
+              </Button>
+              <Button
+                id="reports-data-menu-button"
+                variant="outlined"
+                size="small"
+                startIcon={<FileUploadOutlinedIcon />}
+                endIcon={<ExpandMoreIcon />}
+                aria-haspopup="menu"
+                aria-controls={dataMenuAnchor ? "reports-data-menu" : undefined}
+                aria-expanded={dataMenuAnchor ? "true" : undefined}
+                onClick={(event) => setDataMenuAnchor(event.currentTarget)}
+                sx={{
+                  justifyContent: "flex-start",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                Data
+              </Button>
+              <Menu
+                id="reports-explore-menu"
+                anchorEl={exploreMenuAnchor}
+                open={Boolean(exploreMenuAnchor)}
+                onClose={() => setExploreMenuAnchor(null)}
+                MenuListProps={{
+                  "aria-labelledby": "reports-explore-menu-button",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setActualBudgetOpen(true);
                   }}
                 >
-                  Explore Reports
-                </Button>
-                <Button
-                  id="reports-data-menu-button"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<FileUploadOutlinedIcon />}
-                  endIcon={<ExpandMoreIcon />}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    dataMenuAnchor ? "reports-data-menu" : undefined
-                  }
-                  aria-expanded={dataMenuAnchor ? "true" : undefined}
-                  onClick={(event) => setDataMenuAnchor(event.currentTarget)}
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: { xs: "100%", sm: "auto" },
+                  <ListItemText
+                    primary="Actual vs Budget"
+                    secondary="Compare spending with a saved budget"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setYearlyReportOpen(true);
+                    void loadComparisonTransactions();
                   }}
                 >
-                  Data
-                </Button>
-                <Menu
-                  id="reports-explore-menu"
-                  anchorEl={exploreMenuAnchor}
-                  open={Boolean(exploreMenuAnchor)}
-                  onClose={() => setExploreMenuAnchor(null)}
-                  MenuListProps={{
-                    "aria-labelledby": "reports-explore-menu-button",
+                  <ListItemText
+                    primary="Yearly Report"
+                    secondary="View your yearly spending overview"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setCompareOpen(true);
+                    void loadComparisonTransactions();
                   }}
                 >
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setYearlyReportOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Yearly Report"
-                      secondary="View your yearly spending overview"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setCompareOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Compare Months"
-                      secondary="Compare spending across two months"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setYearCompareOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Compare Years"
-                      secondary="Compare like-for-like yearly spending"
-                    />
-                  </MenuItem>
-                </Menu>
+                  <ListItemText
+                    primary="Compare Months"
+                    secondary="Compare spending across two months"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setYearCompareOpen(true);
+                    void loadComparisonTransactions();
+                  }}
+                >
+                  <ListItemText
+                    primary="Compare Years"
+                    secondary="Compare like-for-like yearly spending"
+                  />
+                </MenuItem>
+              </Menu>
 
-                <Menu
-                  id="reports-data-menu"
-                  anchorEl={dataMenuAnchor}
-                  open={Boolean(dataMenuAnchor)}
-                  onClose={() => setDataMenuAnchor(null)}
-                  MenuListProps={{
-                    "aria-labelledby": "reports-data-menu-button",
+              <Menu
+                id="reports-data-menu"
+                anchorEl={dataMenuAnchor}
+                open={Boolean(dataMenuAnchor)}
+                onClose={() => setDataMenuAnchor(null)}
+                MenuListProps={{
+                  "aria-labelledby": "reports-data-menu-button",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setDataMenuAnchor(null);
+                    setImportOpen(true);
                   }}
                 >
-                  <MenuItem
-                    onClick={() => {
-                      setDataMenuAnchor(null);
-                      setImportOpen(true);
-                    }}
-                  >
-                    <ListItemText
-                      primary="Import CSV"
-                      secondary="Add transactions from a CSV file"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    disabled={filtered.length === 0}
-                    onClick={() => {
-                      setDataMenuAnchor(null);
-                      void handleExport();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Export Filtered Data"
-                      secondary="Download the current filtered transactions"
-                    />
-                  </MenuItem>
-                </Menu>
-              </Stack>
-            </Box>
-          ) : undefined
+                  <ListItemText
+                    primary="Import CSV"
+                    secondary="Add transactions from a CSV file"
+                  />
+                </MenuItem>
+                <MenuItem
+                  disabled={filtered.length === 0}
+                  onClick={() => {
+                    setDataMenuAnchor(null);
+                    void handleExport();
+                  }}
+                >
+                  <ListItemText
+                    primary="Export Filtered Data"
+                    secondary="Download the current filtered transactions"
+                  />
+                </MenuItem>
+              </Menu>
+            </Stack>
+          </Box>
         }
       />
       {isEmpty ? (
@@ -1063,62 +1051,34 @@ const ReportsPageContent = () => {
                     {
                       label: "Income",
                       value: formatCurrency(agg.incomeAmount),
-                      color: "primary.main",
-                      trend: comparableAgg
-                        ? buildStatTrend(
-                            agg.incomeAmount,
-                            comparableAgg.incomeAmount,
-                            true,
-                          )
-                        : null,
+                      color: "text.primary",
+                      foot: "In the selected period",
                     },
                     {
                       label: "Spending",
-                      value: formatCurrency(agg.spendingAmount),
+                      value: formatCurrency(expenseTotal),
                       color: "text.primary",
-                      trend: comparableAgg
-                        ? buildStatTrend(
-                            agg.spendingAmount,
-                            comparableAgg.spendingAmount,
-                            false,
-                          )
-                        : null,
+                      foot: `${expenseCount} matching ${expenseCount === 1 ? "expense" : "expenses"}`,
                     },
                     {
-                      label: "Needs",
-                      value: formatCurrency(agg.totalByCategoryType.Need),
-                      color: "error.main",
-                      trend: comparableAgg
-                        ? buildStatTrend(
-                            agg.totalByCategoryType.Need,
-                            comparableAgg.totalByCategoryType.Need,
-                            false,
-                          )
-                        : null,
+                      label: "Net",
+                      value: formatCurrency(agg.incomeAmount - expenseTotal),
+                      color: "text.primary",
+                      foot: "Income less spending",
                     },
                     {
-                      label: "Wants",
-                      value: formatCurrency(agg.totalByCategoryType.Want),
-                      color: "info.main",
-                      trend: comparableAgg
-                        ? buildStatTrend(
-                            agg.totalByCategoryType.Want,
-                            comparableAgg.totalByCategoryType.Want,
-                            false,
-                          )
-                        : null,
+                      label: "Transactions",
+                      value: String(filtered.length),
+                      color: "text.primary",
+                      foot: "Matching the current filters",
                     },
                     {
-                      label: "Savings",
-                      value: formatCurrency(agg.totalByCategoryType.Saving),
-                      color: "success.main",
-                      trend: comparableAgg
-                        ? buildStatTrend(
-                            agg.totalByCategoryType.Saving,
-                            comparableAgg.totalByCategoryType.Saving,
-                            true,
-                          )
-                        : null,
+                      label: "Average expense",
+                      value: formatCurrency(
+                        expenseCount ? expenseTotal / expenseCount : 0,
+                      ),
+                      color: "text.primary",
+                      foot: "Per matching expense",
                     },
                   ] as const
                 ).map((s) => (
@@ -1126,13 +1086,25 @@ const ReportsPageContent = () => {
                 ))}
               </Box>
             )}
-            <Stack spacing={3} mb={3}>
+            <Stack
+              spacing={3}
+              mb={3}
+              sx={{
+                "& > .MuiPaper-root, & > .MuiBox-root > .MuiPaper-root": {
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2.5,
+                  boxShadow: "0 12px 30px rgba(35, 43, 39, 0.045)",
+                },
+              }}
+            >
               <Box
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
                     xs: "minmax(0, 1fr)",
-                    md: "minmax(0, 5fr) minmax(0, 7fr)",
+                    md: "minmax(0, 320px) minmax(0, 1fr)",
+                    lg: "minmax(0, 360px) minmax(0, 1fr)",
                   },
                   gap: 3,
                   minWidth: 0,
@@ -1140,6 +1112,27 @@ const ReportsPageContent = () => {
               >
                 <SectionCard
                   title="Breakdown"
+                  titleAlign="left"
+                  headerSx={{
+                    alignItems: "center",
+                    flexWrap: "nowrap",
+                    gap: 1,
+                    px: 2,
+                  }}
+                  action={
+                    <ToggleButtonGroup
+                      exclusive
+                      size="small"
+                      value={breakdownMode}
+                      onChange={(_event, value) => {
+                        if (value) setBreakdownMode(value);
+                      }}
+                      aria-label="Breakdown by"
+                    >
+                      <ToggleButton value="category">Category</ToggleButton>
+                      <ToggleButton value="tag">Tags</ToggleButton>
+                    </ToggleButtonGroup>
+                  }
                   headingId="reports-breakdown-heading"
                   elevation={1}
                   sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
@@ -1154,68 +1147,34 @@ const ReportsPageContent = () => {
                     <SpendingBreakdownLoadingState />
                   ) : (
                     <Box
-                      sx={{ flex: 1, display: "flex", alignItems: "center" }}
+                      sx={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        transform: "translateY(8px)",
+                      }}
                     >
-                      <SpendingPieChart data={agg.totalByCategoryType} />
+                      <SpendingPieChart
+                        data={agg.totalByCategoryType}
+                        tags={breakdownTags}
+                        mode={breakdownMode}
+                      />
                     </Box>
                   )}
                 </SectionCard>
                 <SectionCard
-                  title="Top Tags"
-                  headingId="reports-tags-heading"
-                  titleAlign="center"
-                  action={
-                    <TagChartSettings
-                      availableTags={availableTags}
-                      excludedTags={excludedTags}
-                      onChange={handleExcludedTagsChange}
-                      onOpen={() => {
-                        if (
-                          comparisonTransactions === null &&
-                          !comparisonTransactionsLoading
-                        ) {
-                          void loadComparisonTransactions();
-                        }
-                      }}
-                      loadingTags={comparisonTransactionsLoading}
-                    />
-                  }
+                  title="Monthly Overview"
+                  titleAlign="left"
+                  headingId="reports-monthly-heading"
                   elevation={1}
-                  sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
-                  contentSx={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: 0,
-                  }}
                 >
                   {resultsLoading ? (
-                    <ChartLoadingState height={400} showLegend={false} />
+                    <ChartLoadingState height={420} legendItems={4} />
                   ) : (
-                    <TagBarChart
-                      data={tagChartData}
-                      activeTags={filters.tags}
-                      onTagClick={handleQuickTagFilter}
-                      emptyMessage={
-                        allTagChartData.length > 0
-                          ? "All tags are excluded"
-                          : undefined
-                      }
-                    />
+                    <SpendingBarChart data={agg.timeseries} />
                   )}
                 </SectionCard>
               </Box>
-              <SectionCard
-                title="Monthly Overview"
-                headingId="reports-monthly-heading"
-                elevation={1}
-              >
-                {resultsLoading ? (
-                  <ChartLoadingState height={360} legendItems={4} />
-                ) : (
-                  <SpendingBarChart data={agg.timeseries} />
-                )}
-              </SectionCard>
             </Stack>
             <SectionCard
               title="Transactions"
@@ -1367,6 +1326,19 @@ const ReportsPageContent = () => {
         onClose={() => setYearCompareOpen(false)}
       />
       <Dialog
+        open={actualBudgetOpen}
+        onClose={() => setActualBudgetOpen(false)}
+        fullWidth
+        maxWidth="md"
+        scroll="paper"
+        aria-labelledby="actual-budget-heading"
+      >
+        {actualBudgetOpen && <ActualVsBudget />}
+        <DialogActions>
+          <Button onClick={() => setActualBudgetOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
         open={yearlyReportOpen}
         onClose={() => setYearlyReportOpen(false)}
         fullWidth
@@ -1424,7 +1396,7 @@ const ReportsPageContent = () => {
           minWidth: { xs: 56, sm: 0 },
           height: 56,
           px: { xs: 0, sm: 2 },
-          borderRadius: { xs: "50%", sm: 7 },
+          borderRadius: { xs: "50%", sm: 1.5 },
         }}
       >
         <AddIcon sx={{ mr: { xs: 0, sm: 1 } }} />

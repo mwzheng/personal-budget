@@ -108,7 +108,7 @@ export default function SalaryChart({
 
   return (
     <ChartWrapper title="Salary History">
-      <Box sx={{ width: "100%", height: "100%", minHeight: 320, mx: "auto" }}>
+      <Box sx={{ width: "100%", height: 320, mx: "auto" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}

@@ -65,7 +65,7 @@ describe("Top Tags settings", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Top Tags settings" }));
-    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    await user.click(screen.getByRole("button", { name: "Clear All" }));
 
     expect(onChange).toHaveBeenLastCalledWith([]);
   });

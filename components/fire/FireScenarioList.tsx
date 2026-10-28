@@ -14,12 +14,12 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Grid from "@mui/material/Grid";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EmptyState from "@/components/ui/EmptyState";
+import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import { generateProjection } from "@/lib/utils/fire";
@@ -175,16 +175,16 @@ export default function FireScenarioList({
                         pr: 0.5,
                       }}
                     >
-                      <IconButton
-                        size="small"
+                      <ActionIconButton
+                        tooltip={`Delete ${s.name}`}
+                        tone="danger"
                         onClick={(event) => {
                           event.stopPropagation();
                           requestDelete(s);
                         }}
-                        aria-label={`Delete ${s.name}`}
                       >
                         <DeleteOutlineIcon fontSize="small" />
-                      </IconButton>
+                      </ActionIconButton>
                     </Box>
                   </Stack>
                 </Card>
@@ -203,7 +203,11 @@ export default function FireScenarioList({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancelDelete} disabled={isDeleting}>
+          <Button
+            variant="outlined"
+            onClick={cancelDelete}
+            disabled={isDeleting}
+          >
             Cancel
           </Button>
           <Button

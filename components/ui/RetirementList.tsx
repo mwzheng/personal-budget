@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import RetirementForm from "@/components/forms/RetirementForm";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
-import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
@@ -114,26 +113,22 @@ export default function RetirementList({
 
   return (
     <Box>
-      <SectionHeader
-        title="Retirement Accounts"
-        sx={{ mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            Add Entry
-          </Button>
-        }
-      />
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setEditing(null);
+            setDialogOpen(true);
+          }}
+        >
+          Add Retirement
+        </Button>
+      </Box>
 
       {dialogOpen ? (
         <ProgressEntryDialog
           open={dialogOpen}
-          title={editing ? "Edit Retirement Entry" : "Add Retirement Entry"}
+          title={editing ? "Edit Retirement" : "Add Retirement"}
           onClose={closeDialog}
         >
           <RetirementForm

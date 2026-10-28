@@ -1,6 +1,6 @@
 # AWS usage and safety controls
 
-The application uses DynamoDB `Query` operations for collection reads. Transaction and report routes require a date range, return an opaque cursor, and never use `Scan`. CSV imports use `BatchWriteItem` in groups of at most 25 with bounded retries; a row appears in `importedCount` only after DynamoDB acknowledges it. Re-imports preserve parser-provided stable IDs but are not server-side deduplicated when the source omits an ID.
+The application uses DynamoDB `Query` operations for collection reads. Transaction and report routes return an opaque cursor and never use `Scan`. Reports default to the current calendar year, accept explicit years or date boundaries, and allow `allHistory=true`. Transaction listing accepts optional date boundaries. Follow `nextCursor` while `hasMore` is true. Report totals and aggregates cover the filtered cursor page. CSV imports use `BatchWriteItem` in groups of at most 25 with bounded retries; a row appears in `importedCount` only after DynamoDB acknowledges it. Re-imports preserve parser-provided stable IDs but are not server-side deduplicated when the source omits an ID.
 
 `DYNAMODB_USERS_TABLE` is required for profile storage. It intentionally has no fallback to `DYNAMODB_TABLE`.
 

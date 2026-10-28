@@ -287,7 +287,9 @@ export function TransactionForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
           <Button variant="contained" type="submit">
             {submitLabel}
           </Button>

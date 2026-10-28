@@ -88,21 +88,23 @@ export function getSankeyLayoutMetrics(data: SankeyData): SankeyLayoutMetrics {
   const nodeSpacing =
     maxNodesInLayer >= 12 ? 8 : maxNodesInLayer >= 8 ? 10 : 12;
   const nodeInnerPadding = 0;
-  const height = Math.min(
-    600,
-    Math.max(320, 120 + maxNodesInLayer * 30 + Math.max(maxDepth - 3, 0) * 12),
+  const height = Math.max(
+    400,
+    120 + maxNodesInLayer * 34 + Math.max(maxDepth - 3, 0) * 12,
   );
-  const rightMargin = Math.min(240, Math.max(100, 60 + maxLabelLength * 5));
+  const rightMargin = Math.min(
+    220,
+    Math.max(150, 35 + Math.min(maxLabelLength, 18) * 10),
+  );
   const leftMargin = Math.min(
-    120,
-    Math.max(50, Math.round(rightMargin * (maxDepth >= 4 ? 0.5 : 0.42))),
+    210,
+    Math.max(120, 35 + Math.min(maxLabelLength, 18) * 10),
   );
   const chartMaxWidth = Math.min(
     1100,
     Math.max(600, 500 + maxDepth * 80 + maxLabelLength * 5),
   );
-  const labelFontSize =
-    maxLabelLength > 20 ? 10 : maxLabelLength > 14 ? 11 : 12;
+  const labelFontSize = 15;
 
   return {
     height,

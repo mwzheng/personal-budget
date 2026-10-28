@@ -8,61 +8,62 @@
 import type { ReactNode } from "react";
 import IconButton, { type IconButtonProps } from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { alpha, type SxProps, type Theme } from "@mui/material/styles";
+import { type SxProps, type Theme } from "@mui/material/styles";
+import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 
 type ActionIconButtonTone = "default" | "danger";
 
 const BASE_ACTION_ICON_BUTTON_SX: SxProps<Theme> = {
   width: 32,
   height: 32,
-  borderRadius: 1.25,
+  borderRadius: "4px",
   border: "1px solid",
   backgroundColor: "background.paper",
 };
 
 const DEFAULT_ACTION_ICON_BUTTON_SX: SxProps<Theme> = (theme) => ({
-  borderColor: theme.palette.divider,
-  color: theme.palette.text.secondary,
+  borderColor: "var(--mui-palette-divider)",
+  color: "var(--mui-palette-text-secondary)",
   transition: theme.transitions.create([
     "background-color",
     "border-color",
     "color",
   ]),
   "&:hover": {
-    borderColor: theme.palette.action.active,
-    backgroundColor: theme.palette.action.hover,
-    color: theme.palette.text.primary,
+    borderColor: "var(--mui-palette-action-active)",
+    backgroundColor: "var(--mui-palette-action-hover)",
+    color: "var(--mui-palette-text-primary)",
   },
   "&.Mui-focusVisible": {
-    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.18)}`,
+    boxShadow: "0 0 0 2px rgba(var(--mui-palette-error-mainChannel) / 0.18)",
   },
   "&.Mui-disabled": {
-    borderColor: theme.palette.action.disabledBackground,
-    color: theme.palette.action.disabled,
-    backgroundColor: theme.palette.action.hover,
+    borderColor: "var(--mui-palette-action-disabledBackground)",
+    color: "var(--mui-palette-action-disabled)",
+    backgroundColor: "var(--mui-palette-action-hover)",
   },
 });
 
 const DANGER_ACTION_ICON_BUTTON_SX: SxProps<Theme> = (theme) => ({
-  borderColor: alpha(theme.palette.error.main, 0.32),
-  color: theme.palette.error.main,
+  borderColor: "rgba(var(--mui-palette-error-mainChannel) / 0.32)",
+  color: "var(--mui-palette-error-main)",
   transition: theme.transitions.create([
     "background-color",
     "border-color",
     "color",
   ]),
   "&:hover": {
-    borderColor: theme.palette.error.main,
-    backgroundColor: alpha(theme.palette.error.main, 0.08),
-    color: theme.palette.error.dark,
+    borderColor: "var(--mui-palette-error-main)",
+    backgroundColor: "rgba(var(--mui-palette-error-mainChannel) / 0.08)",
+    color: "var(--mui-palette-error-main)",
   },
   "&.Mui-focusVisible": {
-    boxShadow: `0 0 0 2px ${alpha(theme.palette.error.main, 0.18)}`,
+    boxShadow: SERVER_THEME_TOKENS.focus.ring,
   },
   "&.Mui-disabled": {
-    borderColor: theme.palette.action.disabledBackground,
-    color: theme.palette.action.disabled,
-    backgroundColor: theme.palette.action.hover,
+    borderColor: "var(--mui-palette-action-disabledBackground)",
+    color: "var(--mui-palette-action-disabled)",
+    backgroundColor: "var(--mui-palette-action-hover)",
   },
 });
 

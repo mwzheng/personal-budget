@@ -140,7 +140,7 @@ const appTheme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 6,
   },
   components: {
     MuiCssBaseline: {
@@ -171,7 +171,7 @@ const appTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          borderRadius: 12,
+          borderRadius: 6,
           // Note 5: Subtle border gives cards visual separation without heavy shadows
           border: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
           transition:
@@ -188,7 +188,7 @@ const appTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           textTransform: "none" as const,
           fontWeight: 600,
           letterSpacing: "0.01em",
@@ -198,15 +198,19 @@ const appTheme = createTheme({
           },
         },
         contained: {
-          color: "var(--mui-palette-primary-contrastText)",
-          backgroundColor: SERVER_THEME_TOKENS.palette.primary,
           boxShadow: SERVER_THEME_TOKENS.shadow.low,
           "&:hover": {
-            backgroundColor: SERVER_THEME_TOKENS.palette.primaryLight,
             boxShadow: SERVER_THEME_TOKENS.shadow.medium,
           },
         },
-        outlined: {
+        containedPrimary: {
+          color: "var(--mui-palette-primary-contrastText)",
+          backgroundColor: SERVER_THEME_TOKENS.palette.primary,
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.palette.primaryLight,
+          },
+        },
+        outlinedPrimary: {
           borderColor: SERVER_THEME_TOKENS.border.strong,
           "&:hover": {
             borderColor: SERVER_THEME_TOKENS.palette.primary,
@@ -223,7 +227,7 @@ const appTheme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           transition: "all 0.15s ease-in-out",
           "&:hover": {
             backgroundColor: SERVER_THEME_TOKENS.surface.selected,
@@ -237,8 +241,9 @@ const appTheme = createTheme({
     MuiToggleButton: {
       styleOverrides: {
         root: {
+          borderRadius: 4,
           textTransform: "none" as const,
-          fontWeight: 500,
+          fontWeight: 600,
           borderColor: SERVER_THEME_TOKENS.border.standard,
           "&.Mui-selected": {
             backgroundColor: SERVER_THEME_TOKENS.surface.selected,
@@ -256,8 +261,14 @@ const appTheme = createTheme({
     },
     MuiDialog: {
       styleOverrides: {
+        root: {
+          "& .MuiBackdrop-root": {
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+          },
+        },
         paper: {
-          borderRadius: 16,
+          borderRadius: 8,
           border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
           boxShadow: SERVER_THEME_TOKENS.shadow.dialog,
           backgroundImage: "none",
@@ -295,7 +306,7 @@ const appTheme = createTheme({
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           border: "1px solid",
           // Note 6: MUI automatically sets borderColor based on severity via the theme
         },
@@ -317,7 +328,7 @@ const appTheme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 8,
+            borderRadius: 4,
             transition:
               "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
             "& fieldset": {
@@ -339,7 +350,7 @@ const appTheme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           fontWeight: 500,
           transition: "all 0.15s ease-in-out",
           "&.MuiChip-clickable:hover": {
@@ -423,7 +434,7 @@ const appTheme = createTheme({
           color: SERVER_THEME_TOKENS.text.primary,
           backgroundColor: SERVER_THEME_TOKENS.surface.overlay,
           border: `1px solid ${SERVER_THEME_TOKENS.border.standard}`,
-          borderRadius: 6,
+          borderRadius: 4,
           boxShadow: SERVER_THEME_TOKENS.shadow.medium,
           fontSize: "0.8125rem",
           fontWeight: 500,
@@ -483,7 +494,7 @@ const appTheme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           transition: "background-color 0.15s ease-in-out",
           "&:hover": {
             backgroundColor: SERVER_THEME_TOKENS.surface.raised,
@@ -503,7 +514,7 @@ const appTheme = createTheme({
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           margin: "2px 4px",
           padding: "8px 12px",
           transition: "background-color 0.15s ease-in-out",
@@ -525,7 +536,7 @@ const appTheme = createTheme({
     MuiSelect: {
       styleOverrides: {
         select: {
-          borderRadius: 8,
+          borderRadius: 4,
         },
       },
     },

@@ -5,6 +5,7 @@
 "use client";
 
 import { StatusAlert } from "@/components/ui/StatusAlert";
+import HeaderInfo from "@/components/ui/HeaderInfo";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { Transaction } from "@/lib/types/types";
 import CloseIcon from "@mui/icons-material/Close";
@@ -180,13 +181,14 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           pb: 1,
         }}
       >
-        <Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <Typography variant="h6" fontWeight={700} component="span">
             Import CSV
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Preview transactions before importing them into your account.
-          </Typography>
+          <HeaderInfo
+            title="Import CSV"
+            description="Preview transactions before importing them into your account."
+          />
         </Box>
         <IconButton
           aria-label="Close import dialog"
@@ -271,7 +273,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Expense template
+                    Expense Template
                   </Button>
                   <Button
                     component="a"
@@ -281,7 +283,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Income template
+                    Income Template
                   </Button>
                 </Stack>
                 <Box
@@ -433,7 +435,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Expense template
+                    Expense Template
                   </Button>
                   <Button
                     component="a"
@@ -443,7 +445,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Income template
+                    Income Template
                   </Button>
                 </Stack>
               </CardContent>
@@ -646,7 +648,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           <Button
             onClick={handleClose}
             disabled={isParsing || confirming}
-            color="inherit"
+            variant="outlined"
           >
             Cancel
           </Button>

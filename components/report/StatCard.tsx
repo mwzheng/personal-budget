@@ -1,6 +1,3 @@
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
@@ -10,14 +7,10 @@ export interface StatCardProps {
   value: string;
   color: string;
   loading: boolean;
-  trend?: {
-    direction: "up" | "down" | null;
-    text: string;
-    color: string;
-  } | null;
+  foot?: string;
 }
 
-const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
+const StatCard = ({ label, value, color, loading, foot }: StatCardProps) => {
   return (
     <Paper
       variant="outlined"
@@ -26,7 +19,9 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
         py: { xs: 1.5, sm: 2 },
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
+        borderRadius: 2.5,
+        boxShadow: "0 12px 30px rgba(35, 43, 39, 0.045)",
         gap: 0.5,
         minWidth: 0,
         overflow: "hidden",
@@ -35,7 +30,7 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ lineHeight: 1.2, textAlign: "center" }}
+        sx={{ lineHeight: 1.2, textAlign: "left" }}
       >
         {label}
       </Typography>
@@ -50,38 +45,19 @@ const StatCard = ({ label, value, color, loading, trend }: StatCardProps) => {
               color,
               lineHeight: 1.2,
               overflowWrap: "anywhere",
-              textAlign: "center",
+              textAlign: "left",
             }}
           >
             {value}
           </Typography>
-          {trend && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 0.5,
-                minHeight: 16,
-              }}
+          {foot && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ lineHeight: 1.2, textAlign: "left" }}
             >
-              {trend.direction === "up" ? (
-                <ArrowUpwardIcon sx={{ fontSize: 12, color: trend.color }} />
-              ) : trend.direction === "down" ? (
-                <ArrowDownwardIcon sx={{ fontSize: 12, color: trend.color }} />
-              ) : null}
-              <Typography
-                variant="caption"
-                sx={{
-                  color: trend.color,
-                  lineHeight: 1.2,
-                  fontSize: "0.6875rem",
-                  textAlign: "center",
-                }}
-              >
-                {trend.text}
-              </Typography>
-            </Box>
+              {foot}
+            </Typography>
           )}
         </>
       )}

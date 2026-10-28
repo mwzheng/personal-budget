@@ -27,7 +27,7 @@ export const HOME_PAGE_CONTENT = {
       id: "budget",
       title: "Budgets & Sankey",
       description:
-        "Build and save budgets with flexible categories. Preview pie charts and Sankey graphs.",
+        "Build and save budgets with flexible categories. Preview your budget flow.",
       supportingCopy: "Thoughtful planning for flexible budget categories.",
     },
     {

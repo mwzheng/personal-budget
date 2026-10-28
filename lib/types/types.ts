@@ -94,6 +94,7 @@ export interface FilterParams {
   endDate: string | null;
   categories: TransactionCategoryType[];
   tags: string[];
+  excludedTags: string[];
   search: string;
   minAmount: number;
   maxAmount: number;
@@ -155,6 +156,7 @@ export interface YearlyReport {
   totalByCategoryType: ReportsCategoryTotals;
   transactionCount: number;
   averageMonthlySpending: number;
+  averageMonthlySavings: number;
   /** Percentage of income saved, or null when there is no income. */
   savingsRate: number | null;
   highestSpendMonth: YearlyReportMonth | null;

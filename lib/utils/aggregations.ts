@@ -105,6 +105,7 @@ export function filterTransactions(
 ): Transaction[] {
   const minAmount = filters.minAmount ?? 0;
   const maxAmount = filters.maxAmount ?? Number.POSITIVE_INFINITY;
+  const excludedTags = filters.excludedTags ?? [];
 
   return transactions.filter((t) => {
     if (
@@ -134,6 +135,7 @@ export function filterTransactions(
       !filters.tags.some((tag) => t.tags.includes(tag))
     )
       return false;
+    if (excludedTags.some((tag) => t.tags.includes(tag))) return false;
     if (filters.search) {
       const q = filters.search.toLowerCase();
 
@@ -390,6 +392,8 @@ export function buildYearlyReport(
     totalByCategoryType,
     transactionCount,
     averageMonthlySpending: monthCount > 0 ? spendingAmount / monthCount : 0,
+    averageMonthlySavings:
+      monthCount > 0 ? totalByCategoryType.Saving / monthCount : 0,
     savingsRate:
       incomeAmount > 0
         ? (totalByCategoryType.Saving / incomeAmount) * 100

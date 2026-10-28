@@ -21,8 +21,8 @@ const AboutCTA = () => (
           clutter&mdash;just clarity.
         </Typography>
         <Stack direction="row" spacing={2}>
-          <Button variant="contained" size="large" href={ROUTE_PATHS.register}>
-            Get Started
+          <Button variant="contained" size="large" href={ROUTE_PATHS.login}>
+            Sign In
           </Button>
           <Button variant="outlined" size="large" href={ROUTE_PATHS.home}>
             Learn More

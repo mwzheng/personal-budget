@@ -50,7 +50,7 @@ export default function SalaryForm({
   };
 
   return (
-    <Box component="form" onSubmit={submit} sx={{ maxWidth: 480 }}>
+    <Box component="form" onSubmit={submit} sx={{ width: "100%", pt: 1 }}>
       <Stack spacing={2}>
         <TextField
           label="Year"

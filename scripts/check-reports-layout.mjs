@@ -48,6 +48,16 @@ try {
   });
   await send("Page.navigate", { url: `${appUrl}/reports` });
   await waitFor(`Boolean(document.querySelector('input[placeholder="Name, note, or tag"]'))`);
+  await waitFor(`Boolean(document.querySelector('[aria-label="Download Spending Breakdown chart as PNG"]'))`);
+  await waitFor(`Boolean(document.querySelector('.recharts-pie-sector path'))`);
+  const pieBounds = await evaluate(`(() => {
+    const chart = document.querySelector('[aria-label="Download Spending Breakdown chart as PNG"]')
+      .parentElement.querySelector('.recharts-surface');
+    const bounds = chart?.getBoundingClientRect();
+    return { width: bounds?.width ?? 0, height: bounds?.height ?? 0 };
+  })()`);
+  assert(pieBounds.width > 0 && pieBounds.height > 0,
+    `Spending pie chart must have visible dimensions: ${JSON.stringify(pieBounds)}`);
   const clearActionCount = await evaluate(`Array.from(document.querySelectorAll("button"))
     .filter((button) => button.textContent.trim() === "Clear Filters").length`);
   assert.equal(clearActionCount, 1, "Reports must render one Clear filters action");

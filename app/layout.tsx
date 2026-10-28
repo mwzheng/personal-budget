@@ -11,11 +11,9 @@ import {
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Open_Sans, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
-import Box from "@mui/material/Box";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { getGoogleAnalyticsBootstrapConfig } from "@/lib/analytics/google-analytics";
-import { AppNav } from "@/components/AppNav";
-import { Footer } from "@/components/Footer";
+import { AppFrame } from "@/components/AppFrame";
 import { APP_NAME, PAGE_TITLES } from "@/lib/content/page-titles";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -59,7 +57,7 @@ const ROOT_METADATA_DESCRIPTION =
 // reads it at build time and injects the equivalent `<meta>` and `<title>` tags
 // into the `<head>` of every page that does not override them with its own
 // `metadata` export. No explicit `<head>` element is needed in JSX.
-// Note 2.1: The `icons` property uses the same 🥣 bowl icon as the AppNav for
+// Note 2.1: The `icons` property uses the same bowl-and-progress mark as the AppNav for
 // a consistent visual identity across the app and browser tab.
 export const metadata: Metadata = {
   title: { template: "%s - Porridge Budget", default: "Porridge Budget" },
@@ -268,28 +266,7 @@ export default function RootLayout({
           )}
 
           <Providers>
-            {/* Note 7: The app shell uses a column flex layout so the footer can
-                sit after the page content on every route while still staying at
-                the bottom of short signed-out pages. */}
-            <Box
-              sx={{
-                minHeight: "100dvh",
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                minWidth: 0,
-                overflowX: "clip",
-              }}
-            >
-              <AppNav />
-              <Box
-                component="div"
-                sx={{ flexGrow: 1, minWidth: 0, maxWidth: "100%" }}
-              >
-                {children}
-              </Box>
-              <Footer />
-            </Box>
+            <AppFrame>{children}</AppFrame>
           </Providers>
         </AppRouterCacheProvider>
       </body>

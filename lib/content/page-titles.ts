@@ -11,7 +11,6 @@ export const ROUTE_PATHS = {
   faq: "/faq",
   contact: "/contact",
   login: "/auth/login",
-  register: "/auth/register",
   callback: "/auth/callback",
   signout: "/auth/signout",
   reports: "/reports",
@@ -27,7 +26,6 @@ export const PAGE_TITLE_KEYS = {
   FAQ: "faq",
   CONTACT: "contact",
   LOGIN: "login",
-  REGISTER: "register",
   CALLBACK: "callback",
   SIGNOUT: "signout",
   REPORTS: "reports",
@@ -71,12 +69,6 @@ export const PAGE_TITLES = {
     description:
       "Sign in to review budgets, reports, and other personal finance progress.",
   },
-  [PAGE_TITLE_KEYS.REGISTER]: {
-    route: ROUTE_PATHS.register,
-    title: `Create account - ${APP_NAME}`,
-    description:
-      "Create an account to start tracking money with a more intentional workflow.",
-  },
   [PAGE_TITLE_KEYS.CALLBACK]: {
     route: ROUTE_PATHS.callback,
     title: `Completing sign in - ${APP_NAME}`,
@@ -100,7 +92,7 @@ export const PAGE_TITLES = {
     route: ROUTE_PATHS.budget,
     title: `Budget - ${APP_NAME}`,
     description:
-      "Plan monthly expenses and visualize your budget with pie charts and flow diagrams.",
+      "Plan monthly expenses and visualize your budget with a flow diagram.",
     requiresAuth: true,
   },
   [PAGE_TITLE_KEYS.PROGRESS]: {
@@ -131,7 +123,6 @@ export const LIVE_SIGNED_OUT_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.ABOUT,
   PAGE_TITLE_KEYS.FAQ,
   PAGE_TITLE_KEYS.LOGIN,
-  PAGE_TITLE_KEYS.REGISTER,
   PAGE_TITLE_KEYS.CALLBACK,
   PAGE_TITLE_KEYS.SIGNOUT,
 ] as const;
@@ -156,7 +147,6 @@ export const LIVE_PAGE_TITLE_KEYS = [
   PAGE_TITLE_KEYS.ABOUT,
   PAGE_TITLE_KEYS.FAQ,
   PAGE_TITLE_KEYS.LOGIN,
-  PAGE_TITLE_KEYS.REGISTER,
   PAGE_TITLE_KEYS.CALLBACK,
   PAGE_TITLE_KEYS.SIGNOUT,
   PAGE_TITLE_KEYS.REPORTS,

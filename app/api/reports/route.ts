@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
     );
     const tagsParam = searchParams.get("tags");
     const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
+    const excludedTagsParam = searchParams.get("excludedTags");
+    const excludedTags = excludedTagsParam
+      ? excludedTagsParam.split(",").filter(Boolean)
+      : [];
     const search = searchParams.get("search") ?? "";
     const { minAmount, maxAmount } = parseReportAmountRange(searchParams);
     const pageSize = Math.min(
@@ -69,6 +73,7 @@ export async function GET(request: NextRequest) {
       endDate,
       categories,
       tags,
+      excludedTags,
       search,
       minAmount,
       maxAmount,

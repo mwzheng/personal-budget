@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Box,
   Button,
@@ -9,318 +8,234 @@ import {
   LinearProgress,
   Skeleton,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
-import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import {
+  computeGoalProgress,
   getLatestRetirementTotal,
-  getLatestSalary,
 } from "@/lib/progress/progress-summary";
-import type {
-  MilestoneEntry,
-  RetirementEntry,
-  SalaryEntry,
-} from "@/lib/types/types";
+import type { MilestoneEntry, RetirementEntry } from "@/lib/types/types";
 
 interface Props {
   goalTargetAmount: number | null;
-  latestEnd: number | null;
-  salaryEntries: SalaryEntry[];
   retirementEntries: RetirementEntry[];
   milestones: MilestoneEntry[];
   onEditGoal: () => void;
+  onAddMilestone: () => void;
   loading?: boolean;
 }
 
-interface StatProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-  backgroundColor: string;
-  loading?: boolean;
-}
-
-const EMPTY = "—";
-
-function formatAmount(value: number | null): string {
-  return value === null ? EMPTY : `$${value.toLocaleString()}`;
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-  color,
-  backgroundColor,
-  loading = false,
-}: StatProps) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-      <Box
-        aria-hidden="true"
-        sx={{
-          width: 40,
-          height: 40,
-          flexShrink: 0,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: "50%",
-          color,
-          bgcolor: backgroundColor,
-          "& svg": { fontSize: 22 },
-        }}
-      >
-        {icon}
-      </Box>
-      <Box sx={{ minWidth: 0 }}>
-        {loading ? (
-          <Skeleton width={82} height={28} />
-        ) : (
-          <Typography variant="h6" fontWeight={700} lineHeight={1.2} noWrap>
-            {value}
-          </Typography>
-        )}
-        <Typography variant="body2" color="text.secondary" noWrap>
-          {label}
-        </Typography>
-      </Box>
-    </Box>
-  );
-}
+const formatAmount = (value: number) => `$${value.toLocaleString()}`;
 
 export default function GoalHero({
   goalTargetAmount,
-  latestEnd,
-  salaryEntries,
   retirementEntries,
   milestones,
   onEditGoal,
+  onAddMilestone,
   loading = false,
 }: Props) {
-  const theme = useTheme();
-  const totalSaved = latestEnd ?? getLatestRetirementTotal(retirementEntries);
-  const latestSalary = getLatestSalary(salaryEntries);
-  const yearsTracked = retirementEntries.length;
-  const remaining =
-    goalTargetAmount !== null && totalSaved !== null
-      ? Math.max(goalTargetAmount - totalSaved, 0)
-      : null;
-  const nextMilestone = milestones
-    .filter((milestone) => totalSaved === null || milestone.amount > totalSaved)
-    .sort((left, right) => left.amount - right.amount)[0];
-  const percentage =
-    goalTargetAmount !== null && goalTargetAmount > 0 && totalSaved !== null
-      ? Math.min(Math.max((totalSaved / goalTargetAmount) * 100, 0), 100)
-      : null;
+  const entries = [...retirementEntries].sort((a, b) => b.year - a.year);
+  const latest = entries[0];
+  const previous = entries[1];
+  const totalSaved = getLatestRetirementTotal(retirementEntries);
+  const { rawPct, clampedPct } = computeGoalProgress(
+    totalSaved,
+    goalTargetAmount,
+  );
+  const reached =
+    totalSaved !== null &&
+    goalTargetAmount !== null &&
+    totalSaved >= goalTargetAmount;
+  const nextMilestone =
+    totalSaved === null
+      ? undefined
+      : milestones
+          .filter((m) => m.amount > totalSaved)
+          .sort((a, b) => a.amount - b.amount)[0];
+  const change =
+    latest && previous ? latest.endAmount - previous.endAmount : null;
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          md: "minmax(0, 1.25fr) minmax(300px, .75fr)",
-        },
-        gap: 2.25,
-      }}
-    >
-      <Card
-        elevation={1}
+    <Card elevation={1} sx={{ overflow: "hidden" }}>
+      <CardContent
         sx={{
-          position: "relative",
-          overflow: "hidden",
-          bgcolor: "background.paper",
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            width: 240,
-            height: 240,
-            right: -70,
-            top: -100,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
-            borderRadius: "50%",
-            pointerEvents: "none",
-          },
+          p: { xs: 2.5, md: 4 },
+          "&:last-child": { pb: { xs: 2.5, md: 4 } },
         }}
       >
-        <CardContent
+        <Box
           sx={{
-            p: { xs: 2.5, sm: 3 },
-            "&:last-child": { pb: { xs: 2.5, sm: 3 } },
-          }}
-        >
-          <Typography
-            variant="overline"
-            color="primary.light"
-            fontWeight={700}
-            letterSpacing="0.1em"
-          >
-            Primary Goal · Financial Progress
-          </Typography>
-          <Typography
-            component="h2"
-            variant="h4"
-            fontWeight={700}
-            sx={{ mt: 0.5 }}
-          >
-            {goalTargetAmount !== null
-              ? `${formatAmount(goalTargetAmount)} Savings Target`
-              : "Set Your Financial Goal"}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Keep building the habit. Your progress and history are tracked here.
-          </Typography>
-
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              gap: 2,
-              mt: 4,
-              mb: 1,
-            }}
-          >
-            <Box>
-              <Typography variant="h3" fontWeight={800} lineHeight={1}>
-                {formatAmount(totalSaved)}
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                saved so far
-              </Typography>
-            </Box>
-            <Typography color="primary.main" fontWeight={700}>
-              {percentage !== null
-                ? `${percentage.toFixed(0)}% complete`
-                : "Not started"}
-            </Typography>
-          </Box>
-
-          <LinearProgress
-            variant="determinate"
-            value={percentage ?? 0}
-            aria-label="Financial goal progress"
-            sx={{
-              height: 10,
-              borderRadius: 999,
-              bgcolor: alpha(theme.palette.primary.main, 0.14),
-              "& .MuiLinearProgress-bar": { borderRadius: 999 },
-            }}
-          />
-
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: { xs: 2, sm: 3 },
-              mt: 2,
-            }}
-          >
-            <Box>
-              <Typography fontWeight={700}>
-                {formatAmount(remaining)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                remaining
-              </Typography>
-            </Box>
-            <Box>
-              <Typography fontWeight={700}>{yearsTracked || EMPTY}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                years tracked
-              </Typography>
-            </Box>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={onEditGoal}
-              sx={{ ml: { sm: "auto" }, alignSelf: "center" }}
-            >
-              {goalTargetAmount === null ? "Set goal" : "Edit goal"}
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Card
-        elevation={1}
-        sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-      >
-        <CardContent
-          sx={{
-            p: { xs: 2.5, sm: 3 },
-            flex: 1,
             display: "flex",
-            flexDirection: "column",
-            "&:last-child": { pb: { xs: 2.5, sm: 3 } },
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2.5,
-            }}
-          >
-            <Typography component="h2" variant="h6" fontWeight={600}>
-              At a Glance
+          <Box>
+            <Typography
+              variant="overline"
+              color="primary.main"
+              fontWeight={700}
+              letterSpacing="0.1em"
+            >
+              Retirement savings
             </Typography>
+            <Typography component="h2" variant="h5" fontWeight={700}>
+              Your Savings Goal
+            </Typography>
+          </Box>
+          <Button variant="outlined" onClick={onEditGoal}>
+            {goalTargetAmount === null ? "Set Goal" : "Edit Goal"}
+          </Button>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "minmax(0, 1.3fr) minmax(240px, 0.7fr)",
+            },
+            gap: { xs: 3, md: 5 },
+            mt: 3,
+          }}
+        >
+          <Box>
             <Typography variant="body2" color="text.secondary">
-              Overview
+              {latest ? `${latest.year} balance` : "Latest recorded balance"}
             </Typography>
+            {loading && totalSaved === null ? (
+              <Skeleton width={180} height={55} />
+            ) : (
+              <Typography
+                variant="h3"
+                fontWeight={700}
+                sx={{ mt: 0.5, overflowWrap: "anywhere" }}
+              >
+                {totalSaved === null ? "—" : formatAmount(totalSaved)}
+              </Typography>
+            )}
+            {change !== null && latest && previous && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {change > 0 ? "+" : change < 0 ? "−" : ""}
+                {formatAmount(Math.abs(change))} from {previous.year} to{" "}
+                {latest.year}
+              </Typography>
+            )}
+            {totalSaved === null && !loading && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Add a retirement balance to track your progress.
+                </Typography>
+                <Button href="#retirement-history" size="small" sx={{ px: 0 }}>
+                  Add Retirement
+                </Button>
+              </Box>
+            )}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 2,
+                mt: 3,
+                mb: 1,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {reached
+                  ? "Goal reached"
+                  : goalTargetAmount === null
+                    ? "Set a goal to track your progress"
+                    : totalSaved === null
+                      ? "Add a balance to track your progress"
+                      : "Progress toward your goal"}
+              </Typography>
+              {rawPct !== null && (
+                <Typography
+                  variant="body2"
+                  color="primary.main"
+                  fontWeight={700}
+                >
+                  {Number(rawPct.toFixed(2))}%
+                </Typography>
+              )}
+            </Box>
+            {clampedPct !== null && (
+              <LinearProgress
+                variant="determinate"
+                value={clampedPct}
+                aria-label="Savings goal progress"
+                sx={{
+                  height: 10,
+                  borderRadius: 99,
+                  "& .MuiLinearProgress-bar": { borderRadius: 99 },
+                }}
+              />
+            )}
           </Box>
           <Box
             sx={{
-              flex: 1,
+              p: 2.5,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.07),
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gridTemplateRows: { xs: "auto", sm: "repeat(2, minmax(0, 1fr))" },
-              alignItems: "center",
-              alignContent: "stretch",
-              gap: { xs: 2.5, sm: 3 },
+              gap: 2,
             }}
           >
-            <Stat
-              icon={<SavingsOutlinedIcon />}
-              label="Total saved"
-              value={formatAmount(totalSaved)}
-              color={theme.palette.primary.light}
-              backgroundColor={alpha(theme.palette.primary.main, 0.14)}
-              loading={loading}
-            />
-            <Stat
-              icon={<TrendingUpOutlinedIcon />}
-              label="Latest salary"
-              value={formatAmount(latestSalary)}
-              color={theme.palette.warning.main}
-              backgroundColor={alpha(theme.palette.warning.main, 0.14)}
-              loading={loading}
-            />
-            <Stat
-              icon={<CalendarMonthOutlinedIcon />}
-              label="Years tracked"
-              value={yearsTracked ? String(yearsTracked) : EMPTY}
-              color={theme.palette.info.main}
-              backgroundColor={alpha(theme.palette.info.main, 0.14)}
-              loading={loading}
-            />
-            <Stat
-              icon={<FlagOutlinedIcon />}
-              label="Next milestone"
-              value={formatAmount(nextMilestone?.amount ?? null)}
-              color={theme.palette.secondary.main}
-              backgroundColor={alpha(theme.palette.secondary.main, 0.14)}
-              loading={loading}
-            />
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
+            >
+              <Typography color="text.secondary">Goal</Typography>
+              <Typography fontWeight={700}>
+                {goalTargetAmount === null
+                  ? "—"
+                  : formatAmount(goalTargetAmount)}
+              </Typography>
+            </Box>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
+            >
+              <Typography color="text.secondary">
+                {reached ? "Above goal" : "Remaining"}
+              </Typography>
+              <Typography fontWeight={700}>
+                {goalTargetAmount === null || totalSaved === null
+                  ? "—"
+                  : formatAmount(Math.abs(goalTargetAmount - totalSaved))}
+              </Typography>
+            </Box>
+            <Box sx={{ borderTop: 1, borderColor: "divider", pt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Next milestone
+              </Typography>
+              {nextMilestone ? (
+                <>
+                  <Typography variant="h6" fontWeight={700}>
+                    {formatAmount(nextMilestone.amount)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatAmount(nextMilestone.amount - totalSaved!)} to go
+                  </Typography>
+                </>
+              ) : milestones.length === 0 ? (
+                <>
+                  <Typography fontWeight={600}>No milestones yet</Typography>
+                  <Button size="small" onClick={onAddMilestone} sx={{ px: 0 }}>
+                    Add Milestone
+                  </Button>
+                </>
+              ) : totalSaved === null ? (
+                <Typography fontWeight={600}>
+                  Add a balance to see your next milestone
+                </Typography>
+              ) : (
+                <Typography fontWeight={600}>All milestones reached</Typography>
+              )}
+            </Box>
           </Box>
-        </CardContent>
-      </Card>
-    </Box>
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

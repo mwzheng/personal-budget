@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Container from "@mui/material/Container";
+import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import FireCalculator from "@/components/fire/FireCalculator";
 
 export const metadata: Metadata = {
@@ -12,9 +13,9 @@ export default function Page() {
   return (
     <Container
       component="main"
-      maxWidth="xl"
+      maxWidth={false}
       aria-label="FIRE calculator"
-      sx={{ py: 4 }}
+      sx={{ py: 4, maxWidth: WORKSPACE_MAX_WIDTH }}
     >
       <FireCalculator />
     </Container>

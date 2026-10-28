@@ -97,9 +97,9 @@ describe("appearance tokens", () => {
     );
     expect(SERVER_THEME_TOKENS.surface.card).toBe("var(--pb-surface-card)");
     expect(DARK_THEME_TOKENS.surface.card).toMatch(/^#/);
-    expect(LIGHT_THEME_TOKENS.surface.card).toBe("#FFFFFF");
-    expect(light).toContain("--pb-palette-primary: #087F75;");
-    expect(light).toContain("--pb-palette-primaryLight: #0A9689;");
-    expect(dark).toContain("--pb-palette-primary: #36D9C5;");
+    expect(LIGHT_THEME_TOKENS.surface.card).toBe("#FFFEFA");
+    expect(light).toContain("--pb-palette-primary: #31775D;");
+    expect(light).toContain("--pb-palette-primaryLight: #3D8669;");
+    expect(dark).toContain("--pb-palette-primary: #8DC9A8;");
   });
 });

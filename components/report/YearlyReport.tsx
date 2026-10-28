@@ -147,11 +147,7 @@ export function YearlyReport({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: {
-                  xs: "repeat(2, minmax(0, 1fr))",
-                  sm: "repeat(3, minmax(0, 1fr))",
-                  lg: "repeat(6, minmax(0, 1fr))",
-                },
+                gridTemplateColumns: "repeat(auto-fit, minmax(8.5rem, 1fr))",
                 gap: 1.5,
               }}
             >
@@ -193,6 +189,12 @@ export function YearlyReport({
                 label="Avg. monthly spending"
                 value={formatCurrency(report.averageMonthlySpending)}
                 color="text.primary"
+                loading={false}
+              />
+              <StatCard
+                label="Avg. monthly savings"
+                value={formatCurrency(report.averageMonthlySavings)}
+                color="#15803D"
                 loading={false}
               />
             </Box>

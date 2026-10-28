@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
+import HeaderInfo from "./HeaderInfo";
 
 export interface SectionCardProps {
   title?: string;
@@ -13,6 +14,7 @@ export interface SectionCardProps {
   elevation?: 0 | 1 | 2;
   sx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
+  headerSx?: SxProps<Theme>;
   headingId?: string;
   /** Controls the horizontal alignment of a title. */
   titleAlign?: "left" | "center";
@@ -28,6 +30,7 @@ export default function SectionCard({
   elevation = 1,
   sx,
   contentSx,
+  headerSx,
   headingId,
   titleAlign = "center",
   texture = "none",
@@ -52,23 +55,32 @@ export default function SectionCard({
     >
       {hasHeader && (
         <Box
-          sx={{
-            display: titleAlign === "center" && action ? "grid" : "flex",
-            gridTemplateColumns:
-              titleAlign === "center" && action ? "1fr auto 1fr" : undefined,
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 2,
-            px: { xs: 2.5, sm: 3 },
-            pt: { xs: 2.5, sm: 3 },
-            pb: 2,
-            borderBottom: (theme) =>
-              title ? `1px solid ${theme.palette.divider}` : "none",
-          }}
+          sx={[
+            {
+              display: titleAlign === "center" && action ? "grid" : "flex",
+              gridTemplateColumns:
+                titleAlign === "center" && action ? "1fr auto 1fr" : undefined,
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 2,
+              px: { xs: 2.5, sm: 3 },
+              pt: { xs: 2.5, sm: 3 },
+              pb: 2,
+              borderBottom: (theme) =>
+                title ? `1px solid ${theme.palette.divider}` : "none",
+            },
+            ...(Array.isArray(headerSx)
+              ? headerSx
+              : headerSx
+                ? [headerSx]
+                : []),
+          ]}
         >
           {title ? (
             <Stack
+              direction="row"
+              alignItems="center"
               spacing={0.5}
               sx={{
                 minWidth: 0,
@@ -86,9 +98,7 @@ export default function SectionCard({
                 {title}
               </Typography>
               {description ? (
-                <Typography variant="body2" color="text.secondary">
-                  {description}
-                </Typography>
+                <HeaderInfo title={title} description={description} />
               ) : null}
             </Stack>
           ) : (

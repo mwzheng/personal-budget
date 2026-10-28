@@ -35,6 +35,24 @@ function createBudgetFlow(valueScale = 1): SankeyData {
 }
 
 describe("getSankeyLayoutMetrics", () => {
+  it("grows beyond 600 pixels for a dense layer", () => {
+    const data: SankeyData = {
+      nodes: [
+        { id: "income", label: "Income" },
+        ...Array.from({ length: 30 }, (_, index) => ({
+          id: `expense:${index}`,
+          label: `Expense ${index}`,
+        })),
+      ],
+      links: Array.from({ length: 30 }, (_, index) => ({
+        source: "income",
+        target: `expense:${index}`,
+        value: 100,
+      })),
+    };
+
+    expect(getSankeyLayoutMetrics(data).height).toBeGreaterThan(600);
+  });
   it("keeps node width bounded even when flow values are much larger", () => {
     const normalMetrics = getSankeyLayoutMetrics(createBudgetFlow(1));
     const largeMetrics = getSankeyLayoutMetrics(createBudgetFlow(100));
@@ -43,7 +61,9 @@ describe("getSankeyLayoutMetrics", () => {
     expect(largeMetrics.nodeThickness).toBeLessThanOrEqual(12);
     expect(largeMetrics.nodeSpacing).toBeLessThanOrEqual(12);
     expect(largeMetrics.leftMargin).toBeGreaterThanOrEqual(40);
-    expect(largeMetrics.rightMargin).toBeGreaterThan(largeMetrics.leftMargin);
+    expect(largeMetrics.rightMargin).toBeGreaterThanOrEqual(
+      largeMetrics.leftMargin,
+    );
   });
 
   it("keeps dense layers readable without runaway height or spacing", () => {
@@ -92,7 +112,7 @@ describe("getSankeyLayoutMetrics", () => {
 
     const metrics = getSankeyLayoutMetrics(longLabelData);
 
-    expect(metrics.labelFontSize).toBe(10);
+    expect(metrics.labelFontSize).toBeGreaterThanOrEqual(15);
     expect(metrics.leftMargin).toBeGreaterThanOrEqual(40);
     expect(metrics.rightMargin).toBeLessThanOrEqual(240);
   });

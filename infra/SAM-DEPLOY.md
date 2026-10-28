@@ -11,7 +11,7 @@ This document covers everything needed to provision (or redeploy) the AWS infras
 | Cognito User Pool  | `CognitoUserPool`         | `personal-budget-infra-dev-userpool`     |
 | Cognito App Client | `CognitoUserPoolClient`   | `personal-budget-infra-dev-client`       |
 
-Stack outputs (`UserPoolId`, `UserPoolClientId`, `TransactionsTableName`) are printed after every deploy and can be viewed at any time with:
+Stack outputs (`UserPoolId`, `UserPoolClientId`, `TransactionsTableName`, `UsersTableName`, `LambdaExecutionRoleArn`) are printed after every deploy and can be viewed at any time with:
 
 ```bash
 aws cloudformation describe-stacks \
@@ -135,12 +135,19 @@ Copy the stack outputs into `.env.local` at the repository root:
 # .env.local
 NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
 NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_COGNITO_DOMAIN=https://your-domain.auth.us-east-1.amazoncognito.com
+COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
+COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
 DYNAMODB_TABLE=personal-budget-infra-dev-transactions
 DYNAMODB_USERS_TABLE=personal-budget-infra-dev-users
 AWS_REGION=us-east-1
 ```
 
 ---
+
+The template creates a public app client without a secret. It does not create a hosted UI domain or configure OAuth flows, scopes, callback URLs, or sign-out URLs. Configure authorization-code grant with `openid profile email`, a hosted domain, and the app origins before hosted sign-in will work. For local development, allow `http://localhost:3000/auth/callback` and sign-out to `http://localhost:3000/auth/login`. See [authentication setup](../app/auth/README.md).
+
+`DYNAMODB_USERS_TABLE` is required for profile storage and has no fallback to the transactions table. The template does not provision an SES identity or the Next.js host. Configure contact email variables and SES separately if using the contact form.
 
 ## CI / GitHub Actions (OIDC)
 

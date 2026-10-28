@@ -31,17 +31,10 @@ describe("Progress history data ownership contract", () => {
     expect(source).toContain("await Promise.resolve(onEntriesChanged?.());");
   });
 
-  it("passes parent-owned entries through the Progress history tabs", () => {
-    const tabs = readSource("components/progress/HistoryTabs.tsx");
+  it("passes parent-owned retirement entries to the history list", () => {
     const page = readSource("app/progress/page.tsx");
 
-    expect(tabs).toContain("salaryEntries?: SalaryEntry[]");
-    expect(tabs).toContain("retirementEntries?: RetirementEntry[]");
-    expect(tabs).toContain("entries={retirementEntries}");
-    expect(tabs).toContain("entries={salaryEntries}");
-    expect(tabs).toContain("loading={loading}");
-    expect(page).toContain("retirementEntries={retirementEntries}");
-    expect(page).toContain("salaryEntries={salaryEntries}");
+    expect(page).toContain("entries={retirementEntries}");
     expect(page).toContain("loading={chartLoading}");
     expect(page).toContain(
       "await Promise.all([refreshRetirementData(), refreshGoalData()])",

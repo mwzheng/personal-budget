@@ -22,9 +22,11 @@ import {
   type ComparisonRow,
 } from "@/lib/budget/comparison";
 import { loadMonthlyTransactions } from "@/lib/budget/loadMonthlyTransactions";
-import type { BudgetDraft } from "@/lib/utils/budget-normalizer";
-import { CATEGORY_COLORS } from "@/lib/utils/budget-planner";
+import { normalizeBudgetForEditor } from "@/lib/utils/budget-normalizer";
+import { apiFetch } from "@/lib/api/apiFetch";
+import { CATEGORY_COLORS, sortSavedBudgets } from "@/lib/utils/budget-planner";
 import { formatCurrency } from "@/lib/utils/format";
+import HeaderInfo from "@/components/ui/HeaderInfo";
 
 function monthStart(value = new Date()) {
   return new Date(value.getFullYear(), value.getMonth(), 1);
@@ -102,17 +104,12 @@ function ComparisonLine({
   );
 }
 
-export function ActualVsBudget({
-  savedBudgets,
-  activeBudget,
-  activeBudgetId,
-  onBudgetSelect,
-}: {
-  savedBudgets: SavedBudget[];
-  activeBudget: BudgetDraft;
-  activeBudgetId: string | null;
-  onBudgetSelect: (budget: SavedBudget) => void;
-}) {
+export function ActualVsBudget() {
+  const [savedBudgets, setSavedBudgets] = useState<SavedBudget[]>([]);
+  const [activeBudgetId, setActiveBudgetId] = useState<string | null>(null);
+  const [budgetLoading, setBudgetLoading] = useState(true);
+  const [budgetError, setBudgetError] = useState<string | null>(null);
+  const [budgetRefresh, setBudgetRefresh] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(monthStart);
   const month = monthPeriod(selectedMonth);
   const [scope, setScope] = useState<string | null>(null);
@@ -126,17 +123,15 @@ export function ActualVsBudget({
   const generation = useRef(0);
   const scopeRef = useRef<string | null>(null);
   const budgets = useMemo(
-    () =>
-      [...savedBudgets]
-        .filter((budget) => budget.budgetId)
-        .sort((a, b) =>
-          (b.updatedAt ?? b.createdAt ?? "").localeCompare(
-            a.updatedAt ?? a.createdAt ?? "",
-          ),
-        ),
+    () => sortSavedBudgets(savedBudgets.filter((budget) => budget.budgetId)),
     [savedBudgets],
   );
-  const selectedBudget = activeBudgetId ? activeBudget : null;
+  const selectedSavedBudget = budgets.find(
+    (budget) => budget.budgetId === activeBudgetId,
+  );
+  const selectedBudget = selectedSavedBudget
+    ? normalizeBudgetForEditor(selectedSavedBudget)
+    : null;
   const hasBudget = Boolean(selectedBudget);
 
   useEffect(() => {
@@ -146,6 +141,9 @@ export function ActualVsBudget({
         scopeRef.current = next;
         generation.current += 1;
         setLoad(null);
+        setSavedBudgets([]);
+        setActiveBudgetId(null);
+        setBudgetError(null);
         setSelectedMonth(monthStart());
         setScope(next);
       }
@@ -164,6 +162,44 @@ export function ActualVsBudget({
       window.removeEventListener("focus", focus);
     };
   }, []);
+  useEffect(() => {
+    if (!scope) return;
+    const controller = new AbortController();
+    setBudgetLoading(true);
+    setBudgetError(null);
+    setSavedBudgets([]);
+    setActiveBudgetId(null);
+    apiFetch("/api/budgets", { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(
+            data?.error?.message ?? "Failed to load saved budgets.",
+          );
+        return Array.isArray(data) ? data : (data?.budgets ?? []);
+      })
+      .then((data: SavedBudget[]) => {
+        if (controller.signal.aborted || currentTransactionScope() !== scope)
+          return;
+        const sorted = sortSavedBudgets(
+          data.filter((budget) => budget.budgetId),
+        );
+        setSavedBudgets(sorted);
+        setActiveBudgetId(sorted[0]?.budgetId ?? null);
+        setBudgetLoading(false);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || currentTransactionScope() !== scope)
+          return;
+        setBudgetError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load saved budgets.",
+        );
+        setBudgetLoading(false);
+      });
+    return () => controller.abort();
+  }, [scope, budgetRefresh]);
   useEffect(() => {
     const request = ++generation.current;
     const controller = new AbortController();
@@ -214,13 +250,49 @@ export function ActualVsBudget({
       aria-labelledby="actual-budget-heading"
       sx={{ p: { xs: 2, sm: 3 }, mt: 3 }}
     >
-      <Typography id="actual-budget-heading" variant="h5" mb={1}>
-        Actual vs Budget
-      </Typography>
-      <Typography color="text.secondary" variant="body2" mb={2}>
-        Uses the active budget amounts and recorded transactions.
-      </Typography>
-      {!selectedBudget ? (
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Box />
+        <Typography id="actual-budget-heading" variant="h5" textAlign="center">
+          Actual vs Budget
+        </Typography>
+        <Box>
+          <HeaderInfo
+            title="Actual vs Budget"
+            description="Uses saved budget amounts and recorded transactions."
+          />
+        </Box>
+      </Box>
+      {budgetLoading && scope ? (
+        <Box role="status">
+          <LinearProgress />
+          <Typography mt={1}>Loading saved budgets…</Typography>
+        </Box>
+      ) : budgetError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button
+              color="inherit"
+              onClick={() => setBudgetRefresh((value) => value + 1)}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {budgetError}
+        </Alert>
+      ) : !scope ? (
+        <Typography color="text.secondary">
+          Sign in to load saved budgets.
+        </Typography>
+      ) : !selectedBudget ? (
         <Typography color="text.secondary">
           Save your first budget to compare recorded activity with your monthly
           plan.
@@ -236,7 +308,7 @@ export function ActualVsBudget({
                 const budget = budgets.find(
                   (candidate) => candidate.budgetId === event.target.value,
                 );
-                if (budget) onBudgetSelect(budget);
+                if (budget) setActiveBudgetId(budget.budgetId ?? null);
               }}
               size="small"
               sx={{ flex: 1, minWidth: 0 }}

@@ -1,28 +1,17 @@
 import type { Metadata } from "next";
 import NextLink from "next/link";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import CheckIcon from "@mui/icons-material/Check";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import { NotFoundHomeRedirect } from "@/components/NotFoundHomeRedirect";
 import { ROUTE_PATHS } from "@/lib/content/page-titles";
-import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
-
-const NOT_FOUND_PAGE_DESCRIPTION =
-  "The requested page could not be found. Return to the Porridge Budget home page to keep browsing.";
-const NOT_FOUND_PANEL_BACKGROUND = `radial-gradient(circle at top, ${`color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 20%, transparent)`} 0%, ${`color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.backgroundPaper} 98%, transparent)`} 46%, ${
-  SERVER_THEME_TOKENS.palette.backgroundPaper
-} 100%)`;
-const NOT_FOUND_PANEL_BORDER = `color-mix(in srgb, ${SERVER_THEME_TOKENS.palette.primary} 28%, transparent)`;
-const NOT_FOUND_CODE_COLOR = SERVER_THEME_TOKENS.text.disabled;
 
 export const metadata: Metadata = {
   title: "Page not found",
-  description: NOT_FOUND_PAGE_DESCRIPTION,
+  description:
+    "The requested page could not be found. Return to the Porridge Budget home page to keep browsing.",
   robots: {
     index: false,
     follow: false,
@@ -31,72 +20,77 @@ export const metadata: Metadata = {
 
 export default function NotFoundPage() {
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 10, md: 14 } }}>
-      <Paper
-        component="section"
-        variant="outlined"
-        aria-labelledby="not-found-title"
+    <Container
+      component="main"
+      maxWidth={false}
+      sx={{
+        minHeight: "60vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: { xs: 2.75, md: 7.25 },
+        py: 6,
+      }}
+    >
+      <Box
         sx={{
-          overflow: "hidden",
-          p: { xs: 3, sm: 4, md: 5 },
-          borderColor: NOT_FOUND_PANEL_BORDER,
-          background: NOT_FOUND_PANEL_BACKGROUND,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          maxWidth: 520,
+          mx: "auto",
+          textAlign: "center",
         }}
       >
-        <Stack spacing={3.5} alignItems="flex-start">
-          <Box
-            aria-hidden="true"
-            sx={{
-              fontSize: { xs: "4rem", md: "5rem" },
-              fontWeight: 700,
-              lineHeight: 1,
-              letterSpacing: 6,
-              color: NOT_FOUND_CODE_COLOR,
-            }}
-          >
-            404
-          </Box>
-
-          <Stack spacing={1.5}>
-            <Typography
-              variant="overline"
-              color="primary.light"
-              sx={{ letterSpacing: 1.3 }}
-            >
-              Page Not Found
-            </Typography>
-            <Typography
-              id="not-found-title"
-              component="h1"
-              variant="h3"
-              sx={{ maxWidth: 560 }}
-            >
-              We Couldn’t Find That Page.
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ maxWidth: 640, lineHeight: 1.8 }}
-            >
-              The page may have moved, the address may be mistyped, or the link
-              may no longer exist. We’ll send you back to the home page
-              automatically so you can keep browsing.
-            </Typography>
-          </Stack>
-
-          <NotFoundHomeRedirect />
-
-          <Button
-            component={NextLink}
-            href={ROUTE_PATHS.home}
-            variant="contained"
-            size="large"
-            startIcon={<ArrowBackRoundedIcon />}
-          >
-            Back to home
-          </Button>
-        </Stack>
-      </Paper>
+        <Box
+          aria-hidden="true"
+          sx={{
+            width: 56,
+            height: 56,
+            mb: "18px",
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "50%",
+            bgcolor: "action.selected",
+            color: "primary.main",
+          }}
+        >
+          <CheckIcon />
+        </Box>
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{ fontSize: 12, fontWeight: 700, letterSpacing: ".13em" }}
+        >
+          Porridge Budget
+        </Typography>
+        <Typography
+          component="h1"
+          sx={{
+            my: 1,
+            fontFamily: "Georgia, serif",
+            fontSize: { xs: 36, sm: 42 },
+            fontWeight: 500,
+            lineHeight: 1.2,
+          }}
+        >
+          We couldn&apos;t find that page
+        </Typography>
+        <Typography
+          color="text.secondary"
+          sx={{ maxWidth: 410, mb: "22px", fontSize: 16 }}
+        >
+          The address may be out of date, or the page may have moved.
+        </Typography>
+        <Button
+          component={NextLink}
+          href={ROUTE_PATHS.home}
+          variant="contained"
+          sx={{ minHeight: 40, px: "15px", fontSize: 14 }}
+        >
+          Go to Home
+        </Button>
+      </Box>
     </Container>
   );
 }

@@ -116,7 +116,7 @@ export default function MilestoneForm({
   };
 
   return (
-    <Box component="form" onSubmit={submit} sx={{ maxWidth: 480, pt: 1 }}>
+    <Box component="form" onSubmit={submit} sx={{ width: "100%", pt: 1 }}>
       <Stack spacing={2}>
         <TextField
           label="Amount"

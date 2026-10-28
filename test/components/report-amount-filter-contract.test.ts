@@ -53,6 +53,6 @@ describe("Report amount filter layout contract", () => {
     expect(filterBar).not.toContain('component="legend"');
     expect(filterBar).not.toContain("Apply Amount Range");
     expect(filterBar).toContain('lg: "repeat(2, minmax(0, 1fr))"');
-    expect(filterBar).toContain('sm: "repeat(2, minmax(0, 1fr))"');
+    expect(filterBar).toContain('sm: "repeat(3, minmax(0, 1fr))"');
   });
 });

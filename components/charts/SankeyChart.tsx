@@ -8,9 +8,17 @@
 import { ResponsiveSankey } from "@nivo/sankey";
 import { alpha, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import CloseIcon from "@mui/icons-material/Close";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useMemo } from "react";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useMemo, useState } from "react";
 
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
@@ -24,11 +32,9 @@ interface Props {
 
 const MAX_LABEL_CHARS = 18;
 
-function truncateLabel(node: { label?: string }) {
+function truncateLabel(node: { label?: string }, maxChars: number) {
   const label = node.label ?? "";
-  return label.length > MAX_LABEL_CHARS
-    ? `${label.slice(0, MAX_LABEL_CHARS - 1)}…`
-    : label;
+  return label.length > maxChars ? `${label.slice(0, maxChars - 1)}…` : label;
 }
 
 function getNodeColor(node: { id: string | number; color?: string }): string {
@@ -37,7 +43,13 @@ function getNodeColor(node: { id: string | number; color?: string }): string {
 
 export function SankeyChart({ data }: Props) {
   const theme = useTheme();
+  const compact = useMediaQuery(theme.breakpoints.down("sm"));
+  const [expanded, setExpanded] = useState(false);
   const metrics = useMemo(() => getSankeyLayoutMetrics(data), [data]);
+  const fullLabels = useMemo(
+    () => new Map(data.nodes.map((node) => [node.id, node.label ?? node.id])),
+    [data],
+  );
   const labelOutlineColor = alpha(
     theme.palette.background.paper,
     theme.palette.mode === "dark" ? 0.94 : 0.96,
@@ -65,110 +77,143 @@ export function SankeyChart({ data }: Props) {
     );
   }
 
-  return (
-    <ChartWrapper title="Budget Flow">
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+  const renderChart = () => (
+    <Box sx={{ width: "100%", minWidth: 0 }}>
+      <div
+        style={{
+          height: metrics.height,
+          width: "100%",
         }}
       >
-        <div
-          style={{
-            height: metrics.height,
-            width: "100%",
-            maxWidth: metrics.chartMaxWidth,
-            margin: "0 auto",
+        <ResponsiveSankey
+          data={data}
+          margin={{
+            top: 24,
+            right: compact ? 85 : metrics.rightMargin,
+            bottom: 24,
+            left: compact ? 85 : metrics.leftMargin,
           }}
-        >
-          <ResponsiveSankey
-            data={data}
-            margin={{
-              top: 8,
-              right: metrics.rightMargin,
-              bottom: 8,
-              left: metrics.leftMargin,
-            }}
-            align="justify"
-            sort="input"
-            label={truncateLabel as never}
-            colors={getNodeColor}
-            valueFormat={formatCurrencyWhole}
-            nodeOpacity={0.96}
-            nodeThickness={metrics.nodeThickness}
-            nodeInnerPadding={metrics.nodeInnerPadding}
-            nodeSpacing={metrics.nodeSpacing}
-            nodeBorderWidth={0}
-            linkOpacity={0.72}
-            linkHoverOpacity={0.94}
-            linkHoverOthersOpacity={0.12}
-            enableLinkGradient
-            labelPosition="outside"
-            labelOrientation="horizontal"
-            labelPadding={10}
-            nodeTooltip={({ node }) => (
-              <ChartTooltipCard
-                title={node.label}
-                rows={[
-                  {
-                    label: "Amount",
-                    value: formatCurrencyWhole(Number(node.value ?? 0)),
-                    color: getNodeColor(node),
-                  },
-                  ...(node.kind === "path"
-                    ? [
-                        {
-                          label: "Branch",
-                          value: "Intermediate path node",
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-            )}
-            linkTooltip={({ link }) => (
-              <ChartTooltipCard
-                title={`${link.source.label} -> ${link.target.label}`}
-                rows={[
-                  {
-                    label: "Flow",
-                    value: formatCurrencyWhole(Number(link.value ?? 0)),
-                    color: link.color,
-                  },
-                ]}
-              />
-            )}
-            theme={{
+          align="justify"
+          sort="input"
+          label={
+            ((node: { label?: string }) =>
+              truncateLabel(node, compact ? 8 : MAX_LABEL_CHARS)) as never
+          }
+          colors={getNodeColor}
+          valueFormat={formatCurrencyWhole}
+          nodeOpacity={0.96}
+          nodeThickness={metrics.nodeThickness}
+          nodeInnerPadding={metrics.nodeInnerPadding}
+          nodeSpacing={metrics.nodeSpacing}
+          nodeBorderWidth={0}
+          linkOpacity={0.72}
+          linkHoverOpacity={0.94}
+          linkHoverOthersOpacity={0.12}
+          enableLinkGradient
+          labelPosition="outside"
+          labelOrientation="horizontal"
+          labelPadding={10}
+          labelTextColor={theme.palette.text.primary}
+          nodeTooltip={({ node }) => (
+            <ChartTooltipCard
+              title={fullLabels.get(String(node.id)) ?? node.label}
+              rows={[
+                {
+                  label: "Amount",
+                  value: formatCurrencyWhole(Number(node.value ?? 0)),
+                  color: getNodeColor(node),
+                },
+                ...(node.kind === "path"
+                  ? [
+                      {
+                        label: "Branch",
+                        value: "Intermediate path node",
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          )}
+          linkTooltip={({ link }) => (
+            <ChartTooltipCard
+              title={`${fullLabels.get(String(link.source.id)) ?? link.source.label} -> ${fullLabels.get(String(link.target.id)) ?? link.target.label}`}
+              rows={[
+                {
+                  label: "Flow",
+                  value: formatCurrencyWhole(Number(link.value ?? 0)),
+                  color: link.color,
+                },
+              ]}
+            />
+          )}
+          theme={{
+            text: {
+              fill: theme.palette.text.primary,
+              fontSize: compact ? 14 : metrics.labelFontSize,
+              fontWeight: 700,
+            },
+            labels: {
               text: {
                 fill: theme.palette.text.primary,
-                fontSize: metrics.labelFontSize,
+                fontSize: compact ? 14 : metrics.labelFontSize,
                 fontWeight: 700,
+                paintOrder: "stroke",
+                stroke: labelOutlineColor,
+                strokeWidth: 4,
+                strokeLinejoin: "round",
+                pointerEvents: "none",
               },
-              labels: {
-                text: {
-                  fill: theme.palette.text.primary,
-                  fontSize: metrics.labelFontSize,
-                  fontWeight: 800,
-                  paintOrder: "stroke",
-                  stroke: labelOutlineColor,
-                  strokeWidth: 4,
-                  strokeLinejoin: "round",
-                  pointerEvents: "none",
-                },
+            },
+            tooltip: {
+              container: {
+                background: "transparent",
+                boxShadow: "none",
               },
-              tooltip: {
-                container: {
-                  background: "transparent",
-                  boxShadow: "none",
-                },
-              },
-            }}
-          />
-        </div>
-      </Box>
-    </ChartWrapper>
+            },
+          }}
+        />
+      </div>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ position: "relative", width: "100%", minWidth: 0 }}>
+      <ChartWrapper title="Budget Flow">{renderChart()}</ChartWrapper>
+      <Tooltip title="Expand chart">
+        <IconButton
+          size="small"
+          aria-label="Expand Budget Flow chart"
+          onClick={() => setExpanded(true)}
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 40,
+            bgcolor: "background.paper",
+            color: "text.secondary",
+          }}
+        >
+          <OpenInFullIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      <Dialog
+        open={expanded}
+        onClose={() => setExpanded(false)}
+        maxWidth="xl"
+        fullWidth
+        aria-labelledby="budget-flow-dialog-title"
+      >
+        <DialogTitle id="budget-flow-dialog-title" sx={{ pr: 7 }}>
+          Budget Flow
+          <IconButton
+            aria-label="Close expanded chart"
+            onClick={() => setExpanded(false)}
+            sx={{ position: "absolute", right: 16, top: 12 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>{renderChart()}</DialogContent>
+      </Dialog>
+    </Box>
   );
 }
