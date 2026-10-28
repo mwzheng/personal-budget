@@ -198,15 +198,19 @@ const appTheme = createTheme({
           },
         },
         contained: {
-          color: "var(--mui-palette-primary-contrastText)",
-          backgroundColor: SERVER_THEME_TOKENS.palette.primary,
           boxShadow: SERVER_THEME_TOKENS.shadow.low,
           "&:hover": {
-            backgroundColor: SERVER_THEME_TOKENS.palette.primaryLight,
             boxShadow: SERVER_THEME_TOKENS.shadow.medium,
           },
         },
-        outlined: {
+        containedPrimary: {
+          color: "var(--mui-palette-primary-contrastText)",
+          backgroundColor: SERVER_THEME_TOKENS.palette.primary,
+          "&:hover": {
+            backgroundColor: SERVER_THEME_TOKENS.palette.primaryLight,
+          },
+        },
+        outlinedPrimary: {
           borderColor: SERVER_THEME_TOKENS.border.strong,
           "&:hover": {
             borderColor: SERVER_THEME_TOKENS.palette.primary,
@@ -237,8 +241,9 @@ const appTheme = createTheme({
     MuiToggleButton: {
       styleOverrides: {
         root: {
+          borderRadius: 4,
           textTransform: "none" as const,
-          fontWeight: 500,
+          fontWeight: 600,
           borderColor: SERVER_THEME_TOKENS.border.standard,
           "&.Mui-selected": {
             backgroundColor: SERVER_THEME_TOKENS.surface.selected,

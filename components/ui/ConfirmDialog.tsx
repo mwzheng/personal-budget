@@ -77,7 +77,7 @@ export function ConfirmDialog({
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={loading}>
+        <Button variant="outlined" onClick={onClose} disabled={loading}>
           {cancelLabel}
         </Button>
         <Button

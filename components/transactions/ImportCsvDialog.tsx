@@ -648,7 +648,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
           <Button
             onClick={handleClose}
             disabled={isParsing || confirming}
-            color="inherit"
+            variant="outlined"
           >
             Cancel
           </Button>

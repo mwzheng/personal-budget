@@ -15,6 +15,12 @@ _Avoid_: Omitted tag
 **Savings**:
 Money set aside for future use.
 
+**Savings goal**:
+The target retirement savings balance used to measure financial progress.
+
+**Savings milestone**:
+A recorded savings amount with a date or other context that marks an achievement or a target. Its current status depends on whether the latest retirement balance meets that amount.
+
 **Budget**:
 A plan that assigns expected income to planned spending and savings for a period.
 _Avoid_: Actual spending, transaction history

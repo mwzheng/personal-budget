@@ -99,7 +99,7 @@ export default function MilestonesList({
   return (
     <Box
       sx={{
-        maxHeight: { xs: 360, sm: 440, md: 520 },
+        maxHeight: { xs: 360, lg: 240 },
         overflowY: "auto",
         pr: 0.5,
       }}
@@ -173,7 +173,7 @@ export default function MilestonesList({
                     )}
                   </Box>
 
-                  <Box sx={{ pb: isLast ? 0 : 2.5, flexGrow: 1, minWidth: 0 }}>
+                  <Box sx={{ pb: isLast ? 0 : 1.5, flexGrow: 1, minWidth: 0 }}>
                     {elapsedLabel ? (
                       <Typography
                         variant="caption"
