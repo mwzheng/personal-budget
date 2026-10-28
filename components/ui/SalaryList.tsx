@@ -1,7 +1,5 @@
-// Note 1: SalaryList is the top-level orchestrator for the salary history page.
-// It manages the list of entries, the add/edit form visibility. The chart has
-// been moved to the consolidated ProgressCharts tabbed panel so this component
-// is a pure CRUD/data section.
+// Note 1: SalaryList orchestrates the salary page's history chart and CRUD
+// section, including add/edit form visibility.
 "use client";
 
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
@@ -23,12 +21,14 @@ import {
   TableRow,
 } from "@mui/material";
 import SalaryForm from "@/components/forms/SalaryForm";
+import SalaryChart from "@/components/charts/SalaryChart";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { SectionHeader } from "@/components/progress/SectionHeader";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { StatusAlert } from "@/components/ui/StatusAlert";
+import SectionCard from "@/components/ui/SectionCard";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type { SalaryEntry } from "@/lib/types/types";
 
@@ -59,7 +59,11 @@ export default function SalaryList({
   showSectionHeader = true,
 }: Props) {
   const [localEntries, setLocalEntries] = useState<SalaryEntry[]>([]);
-  const [localLoading, setLocalLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(true);
+  const loading =
+    controlledEntries === undefined
+      ? localLoading
+      : (controlledLoading ?? false);
   // Note 2: `editing` holds the full salary object being edited, or `null` when
   // the form is in "create new" mode. Passing it as `defaultEntry` pre-fills the
   // SalaryForm fields when the user clicks Edit.
@@ -164,6 +168,18 @@ export default function SalaryList({
         <StatusAlert message={error} onClose={() => setError(null)} />
       ) : null}
 
+      <SectionCard
+        title="Salary Progression"
+        description="See how your annual salary and year-over-year growth have changed."
+        headingId="salary-chart-heading"
+        sx={{ mb: 3 }}
+      >
+        <SalaryChart
+          data={controlledEntries ?? localEntries}
+          loading={loading}
+        />
+      </SectionCard>
+
       {/* Compact history table keeps the dashboard scan-friendly while the row
           actions preserve the existing edit/delete workflows. */}
       <TableContainer sx={{ overflowX: "auto" }}>
@@ -243,8 +259,7 @@ export default function SalaryList({
         </Table>
       </TableContainer>
 
-      {(controlledEntries ?? localEntries).length === 0 &&
-      !(controlledLoading ?? localLoading) ? (
+      {(controlledEntries ?? localEntries).length === 0 && !loading ? (
         <EmptyState
           icon={<TrendingUpOutlinedIcon />}
           message="No salary history yet."

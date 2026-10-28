@@ -7,12 +7,12 @@ import Grid from "@mui/material/Grid";
 import GoalHero from "@/components/progress/GoalHero";
 import GoalEditor from "@/components/progress/GoalEditor";
 import MilestoneForm from "@/components/forms/MilestoneForm";
-import HistoryTabs from "@/components/progress/HistoryTabs";
 import MilestonesList from "@/components/progress/MilestonesList";
 import ProgressCharts from "@/components/progress/ProgressCharts";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
+import RetirementList from "@/components/ui/RetirementList";
 import { apiFetch } from "@/lib/api/apiFetch";
 import type {
   MilestoneEntry,
@@ -130,10 +130,6 @@ export default function Page() {
     setGoalRefreshTrigger((t) => t + 1);
   }, [refreshGoalData, refreshRetirementData]);
 
-  const handleSalaryEntriesChanged = useCallback(async () => {
-    await refreshSalaryData();
-  }, [refreshSalaryData]);
-
   useEffect(() => {
     void refreshChartData();
     void refreshMilestones();
@@ -219,7 +215,7 @@ export default function Page() {
         <Grid item xs={12} md={8}>
           <SectionCard
             title="Progress Over Time"
-            description="Savings and salary growth in one view"
+            description="Track your retirement savings over time"
             headingId="progress-charts-heading"
             elevation={1}
             sx={{ height: "100%", display: "flex", flexDirection: "column" }}
@@ -231,7 +227,6 @@ export default function Page() {
             }}
           >
             <ProgressCharts
-              salaryEntries={salaryEntries}
               retirementEntries={retirementEntries}
               loading={chartLoading}
               error={chartError}
@@ -262,17 +257,15 @@ export default function Page() {
         {/* History — full width */}
         <Grid item xs={12}>
           <SectionCard
-            title="Career & Savings History"
-            description="Use your history to understand the story behind the progress."
+            title="Retirement History"
+            description="Review and update your retirement account balances."
             headingId="progress-history-heading"
             elevation={1}
           >
-            <HistoryTabs
-              retirementEntries={retirementEntries}
-              salaryEntries={salaryEntries}
+            <RetirementList
+              entries={retirementEntries}
               loading={chartLoading}
-              onRetirementEntriesChanged={handleRetirementEntriesChanged}
-              onSalaryEntriesChanged={handleSalaryEntriesChanged}
+              onEntriesChanged={handleRetirementEntriesChanged}
             />
           </SectionCard>
         </Grid>

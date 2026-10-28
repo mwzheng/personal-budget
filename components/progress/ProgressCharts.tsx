@@ -1,19 +1,15 @@
-// Note 1: ProgressCharts is now a pure view over parent-owned salary and
-// retirement data. Lifting the fetch up keeps refresh behavior explicit and lets
-// the same year filter drive multiple charts consistently.
+// Note 1: ProgressCharts is a pure view over parent-owned retirement data.
 //
-// Note 2: Two tabs consolidate chart content in one panel — Retirement Growth
-// shows end-of-year retirement totals and Salary Progression delegates to the
-// reusable SalaryChart. Only the active tab panel is mounted to avoid Recharts
-// stale-size issues inside hidden containers.
+// Note 2: This panel shows end-of-year retirement totals. Salary progression
+// lives on the salary page alongside its history table.
 //
 // Note 3: Milestone markers can optionally be rendered on the retirement chart
 // when the milestones prop is provided. Each marker appears as a small diamond
 // on the data line at the year the milestone amount is closest to.
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
+import React, { useMemo } from "react";
+import { Box, Typography, useTheme } from "@mui/material";
 import {
   ResponsiveContainer,
   Area,
@@ -31,12 +27,7 @@ import {
 import { ChartLoadingState } from "@/components/charts/ChartLoadingState";
 import { ChartTooltipCard } from "@/components/charts/ChartTooltipCard";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
-import SalaryChart from "@/components/charts/SalaryChart";
-import type {
-  MilestoneEntry,
-  RetirementEntry,
-  SalaryEntry,
-} from "@/lib/types/types";
+import type { MilestoneEntry, RetirementEntry } from "@/lib/types/types";
 
 interface RetirementChartRow {
   year: string;
@@ -44,7 +35,6 @@ interface RetirementChartRow {
 }
 
 interface Props {
-  salaryEntries: SalaryEntry[];
   retirementEntries: RetirementEntry[];
   loading?: boolean;
   error?: string | null;
@@ -60,8 +50,6 @@ type ProgressTooltipEntry = NonNullable<
   ProgressTooltipProps["payload"]
 >[number];
 
-const TAB_RETIREMENT = 0;
-const TAB_SALARY = 1;
 const CHART_HEIGHT = 320;
 
 /** Map milestones to chart data points. For each milestone, find the retirement
@@ -95,7 +83,6 @@ function buildMilestoneMarkers(
 }
 
 export default function ProgressCharts({
-  salaryEntries,
   retirementEntries,
   loading = false,
   error = null,
@@ -103,7 +90,6 @@ export default function ProgressCharts({
   milestones = [],
 }: Props) {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(TAB_RETIREMENT);
 
   // Note 3: Compact Y-axis labels keep tick text short on small viewports.
   // Recharts passes the raw numeric value; we convert to $K or $M notation.
@@ -161,158 +147,110 @@ export default function ProgressCharts({
         minHeight: 0,
       }}
     >
-      <Tabs
-        value={activeTab}
-        onChange={(_, newValue: number) => setActiveTab(newValue)}
-        variant="scrollable"
-        scrollButtons="auto"
-        sx={{
-          mb: 2,
-          minHeight: 40,
-          bgcolor: "background.paper",
-          borderRadius: 1,
-          p: 0.5,
-          "& .MuiTabs-indicator": { display: "none" },
-          "& .MuiTab-root": {
-            minHeight: 36,
-            borderRadius: 0.75,
-            textTransform: "none",
-            fontWeight: 500,
-            "&.Mui-selected": {
-              bgcolor: "action.selected",
-              color: "text.primary",
-            },
-          },
-        }}
-      >
-        <Tab label="Savings" id="chart-tab-0" aria-controls="chart-panel-0" />
-        <Tab label="Salary" id="chart-tab-1" aria-controls="chart-panel-1" />
-      </Tabs>
-
-      {/* Retirement Growth panel */}
-      {activeTab === TAB_RETIREMENT && (
-        <Box
-          role="tabpanel"
-          id="chart-panel-0"
-          aria-labelledby="chart-tab-0"
-          sx={{ width: "100%", flex: 1, minHeight: CHART_HEIGHT }}
-        >
-          {loading ? (
-            <ChartLoadingState height={CHART_HEIGHT} showLegend={false} />
-          ) : error ? (
-            <Box
-              sx={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                px: 2,
-              }}
-            >
-              <Typography color="error.main">{error}</Typography>
-            </Box>
-          ) : retirementData.length === 0 ? (
-            <Box
-              sx={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                px: 2,
-              }}
-            >
-              <Typography color="text.secondary">
-                Add retirement history to see growth over time.
-              </Typography>
-            </Box>
-          ) : (
-            <ChartWrapper title="Savings Progress">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={retirementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis
-                    type="number"
-                    tickFormatter={formatYAxis}
-                    domain={[
-                      0,
-                      (dataMax: number) =>
-                        Math.ceil(
-                          Math.max(dataMax, goalTargetAmount ?? dataMax) * 1.1,
-                        ),
-                    ]}
-                    width={60}
+      <Box sx={{ width: "100%", flex: 1, minHeight: CHART_HEIGHT }}>
+        {loading ? (
+          <ChartLoadingState height={CHART_HEIGHT} showLegend={false} />
+        ) : error ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              px: 2,
+            }}
+          >
+            <Typography color="error.main">{error}</Typography>
+          </Box>
+        ) : retirementData.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              px: 2,
+            }}
+          >
+            <Typography color="text.secondary">
+              Add retirement history to see growth over time.
+            </Typography>
+          </Box>
+        ) : (
+          <ChartWrapper title="Savings Progress">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={retirementData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis
+                  type="number"
+                  tickFormatter={formatYAxis}
+                  domain={[
+                    0,
+                    (dataMax: number) =>
+                      Math.ceil(
+                        Math.max(dataMax, goalTargetAmount ?? dataMax) * 1.1,
+                      ),
+                  ]}
+                  width={60}
+                />
+                <Tooltip content={tooltipContent} />
+                <Legend />
+                {goalTargetAmount != null && (
+                  <ReferenceLine
+                    y={goalTargetAmount}
+                    stroke={theme.palette.success.main}
+                    strokeDasharray="6 3"
+                    label={{
+                      value: "Goal",
+                      position: "insideTopRight",
+                      fill: theme.palette.success.main,
+                      fontSize: 12,
+                    }}
                   />
-                  <Tooltip content={tooltipContent} />
-                  <Legend />
-                  {goalTargetAmount != null && (
-                    <ReferenceLine
-                      y={goalTargetAmount}
-                      stroke={theme.palette.success.main}
-                      strokeDasharray="6 3"
-                      label={{
-                        value: "Goal",
-                        position: "insideTopRight",
-                        fill: theme.palette.success.main,
-                        fontSize: 12,
-                      }}
-                    />
-                  )}
-                  <Area
-                    type="monotone"
-                    dataKey="retirement"
-                    name="Retirement balance area"
-                    legendType="none"
-                    stroke="none"
-                    fill={theme.palette.primary.main}
-                    fillOpacity={0.16}
-                    isAnimationActive={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="retirement"
-                    name="Retirement balance"
-                    stroke={theme.palette.primary.main}
+                )}
+                <Area
+                  type="monotone"
+                  dataKey="retirement"
+                  name="Retirement balance area"
+                  legendType="none"
+                  stroke="none"
+                  fill={theme.palette.primary.main}
+                  fillOpacity={0.16}
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="retirement"
+                  name="Retirement balance"
+                  stroke={theme.palette.primary.main}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  dot
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+                {/* Milestone markers — small diamonds on the line */}
+                {milestoneMarkers.map((marker) => (
+                  <ReferenceDot
+                    key={`milestone-${marker.year}-${marker.retirement}`}
+                    x={marker.year}
+                    y={marker.retirement}
+                    r={5}
+                    fill={theme.palette.secondary.main}
+                    stroke={theme.palette.background.paper}
                     strokeWidth={2}
-                    strokeLinecap="round"
-                    dot
-                    activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
-                    animationDuration={1500}
-                    animationEasing="ease-in-out"
+                    isFront
                   />
-                  {/* Milestone markers — small diamonds on the line */}
-                  {milestoneMarkers.map((marker) => (
-                    <ReferenceDot
-                      key={`milestone-${marker.year}-${marker.retirement}`}
-                      x={marker.year}
-                      y={marker.retirement}
-                      r={5}
-                      fill={theme.palette.secondary.main}
-                      stroke={theme.palette.background.paper}
-                      strokeWidth={2}
-                      isFront
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartWrapper>
-          )}
-        </Box>
-      )}
-
-      {/* Salary Progression panel — delegates to reusable SalaryChart */}
-      {activeTab === TAB_SALARY && (
-        <Box
-          role="tabpanel"
-          id="chart-panel-1"
-          aria-labelledby="chart-tab-1"
-          sx={{ flex: 1, minHeight: CHART_HEIGHT }}
-        >
-          <SalaryChart data={salaryEntries} loading={loading} />
-        </Box>
-      )}
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        )}
+      </Box>
     </Box>
   );
 }
