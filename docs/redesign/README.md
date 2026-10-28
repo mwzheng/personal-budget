@@ -1,5 +1,7 @@
 # Porridge Budget redesign prototype
 
+These documents describe exploratory prototype work. They are not the current production feature guide. Some earlier descriptions keep salary within Progress; the live app now has a dedicated Salary History page and a retirement-focused Savings Progress page. See the [app README](../../README.md) for current behavior.
+
 Start with [the shared redesign brief](porridge-budget-redesign-brief.md), then review the [sidebar workspace plan](plan-sidebar-workspace.md):
 
 - [Sidebar workspace](plan-sidebar-workspace.md), `/prototypes/sidebar-workspace`

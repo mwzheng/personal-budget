@@ -5,7 +5,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
@@ -74,39 +73,54 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-      <Paper
-        variant="outlined"
-        sx={{ p: { xs: 4, sm: 5 }, borderRadius: 3, textAlign: "center" }}
-      >
-        <Stack spacing={3} alignItems="center">
-          {error ? (
-            <>
-              <Typography variant="h4" fontWeight={700}>
-                Sign-In Failed
-              </Typography>
-              <Alert severity="error" sx={{ width: "100%", textAlign: "left" }}>
-                {error}
-              </Alert>
-              <Button variant="contained" href="/auth/login">
-                Back to Sign In
-              </Button>
-            </>
-          ) : (
-            <>
-              <Box>
-                <CircularProgress size={48} />
-              </Box>
-              <Typography variant="h5" fontWeight={700}>
-                Finishing Sign-In
-              </Typography>
-              <Typography color="text.secondary">
-                Completing your sign-in and preparing your session.
-              </Typography>
-            </>
-          )}
-        </Stack>
-      </Paper>
+    <Container maxWidth="sm" sx={{ pt: "10vh", pb: 6, textAlign: "center" }}>
+      <Stack spacing={2} alignItems="center" role="status" aria-live="polite">
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "50%",
+            bgcolor: "action.selected",
+            color: "primary.main",
+          }}
+        >
+          {error ? "!" : <CircularProgress size={28} />}
+        </Box>
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{ fontSize: 10, fontWeight: 700, letterSpacing: ".13em" }}
+        >
+          Porridge Budget
+        </Typography>
+        <Typography
+          component="h1"
+          sx={{
+            fontFamily: "Georgia, serif",
+            fontSize: 34,
+            fontWeight: 500,
+            lineHeight: 1.2,
+          }}
+        >
+          {error ? "Sign in failed" : "Finishing sign in"}
+        </Typography>
+        {error ? (
+          <>
+            <Alert severity="error" sx={{ width: "100%", textAlign: "left" }}>
+              {error}
+            </Alert>
+            <Button variant="contained" href="/auth/login">
+              Back to sign in
+            </Button>
+          </>
+        ) : (
+          <Typography color="text.secondary" variant="body2">
+            Completing your sign-in and preparing your session.
+          </Typography>
+        )}
+      </Stack>
     </Container>
   );
 }

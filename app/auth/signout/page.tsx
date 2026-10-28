@@ -1,12 +1,11 @@
 "use client";
 
-// Note 1: Demo sign-out clears browser-local sample data immediately and skips the
-// hosted Cognito logout redirect unless a real Cognito session existed. That keeps
-// demo users from bouncing through the identity provider for a session that never
-// left the browser in the first place.
-import React, { useEffect } from "react";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import CheckIcon from "@mui/icons-material/Check";
+import { useState } from "react";
 
 import { clearDemoStore } from "@/lib/demo/demoData";
 import {
@@ -16,63 +15,83 @@ import {
 } from "@/lib/auth/cognitoClient";
 
 export default function SignOutPage() {
-  useEffect(() => {
+  const [signingOut, setSigningOut] = useState(false);
+
+  const signOut = () => {
+    setSigningOut(true);
     const hadRealCognitoSession = hasStoredCognitoTokens();
     clearCognitoTokens();
     clearDemoStore();
 
-    const redirectToLogin = () => {
-      // Use full navigation to force a reload and ensure all auth state is reset.
-      window.location.href = "/auth/login";
-    };
-
     const logoutUrl = hadRealCognitoSession
       ? getCognitoLogoutUrl(window.location.origin)
       : null;
-    if (logoutUrl) {
-      window.location.href = logoutUrl;
-    } else {
-      redirectToLogin();
-    }
-  }, []);
+    window.location.href = logoutUrl || "/auth/login";
+  };
 
   return (
-    <Box
+    <Container
+      maxWidth="sm"
       sx={{
+        minHeight: "60vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "60vh",
-        py: 8,
+        py: 6,
+        textAlign: "center",
       }}
     >
       <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          p: { xs: 4, sm: 6 },
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 3,
-          textAlign: "center",
-          maxWidth: 360,
-          width: "100%",
-        }}
+        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
-        <Box sx={{ mb: 0.5 }}>
-          <span style={{ fontSize: 40 }} role="img" aria-label="waving hand">
-            👋
-          </span>
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            mb: "18px",
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "50%",
+            bgcolor: "action.selected",
+            color: "primary.main",
+          }}
+        >
+          <CheckIcon />
         </Box>
-        <Typography variant="h5" fontWeight={700}>
-          Signing Out…
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{ fontSize: 12, fontWeight: 700, letterSpacing: ".13em" }}
+        >
+          Porridge Budget
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          You&apos;ll be redirected in a moment.
+        <Typography
+          component="h1"
+          sx={{
+            my: 1,
+            fontFamily: "Georgia, serif",
+            fontSize: { xs: 36, sm: 42 },
+            fontWeight: 500,
+            lineHeight: 1.2,
+          }}
+        >
+          Sign Out
         </Typography>
+        <Typography
+          color="text.secondary"
+          sx={{ maxWidth: 410, mb: "22px", fontSize: 16 }}
+        >
+          {signingOut
+            ? "You will be redirected in a moment."
+            : "You are about to end your session."}
+        </Typography>
+        <Button variant="contained" onClick={signOut} disabled={signingOut}>
+          {signingOut ? "Signing Out..." : "Sign Out"}
+        </Button>
+        <Button href="/reports" disabled={signingOut} sx={{ mt: "10px" }}>
+          Stay Signed In
+        </Button>
       </Box>
-    </Box>
+    </Container>
   );
 }

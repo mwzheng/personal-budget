@@ -59,6 +59,7 @@ export default function LoginPage() {
         minHeight: "calc(100vh - 128px)",
         display: "flex",
         alignItems: "center",
+        justifyContent: "center",
         py: 6,
       }}
     >
@@ -74,7 +75,7 @@ export default function LoginPage() {
             variant="h4"
             fontWeight={800}
             align="center"
-            sx={{ letterSpacing: "-0.02em" }}
+            sx={{ letterSpacing: "-0.02em", fontSize: { xs: 36, sm: 42 } }}
           >
             Welcome Back
           </Typography>
@@ -118,11 +119,11 @@ export default function LoginPage() {
             {/* Demo option */}
             <Box sx={{ p: 3, bgcolor: "background.default" }}>
               <Stack spacing={2}>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                     Try the Demo
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body1" color="text.secondary">
                     Explore with seeded sample data. No account needed. Changes
                     are not saved.
                   </Typography>

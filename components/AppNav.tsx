@@ -96,7 +96,6 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
               </Link>
             ),
           )}
-          <Link href="/auth/login">Sign in</Link>
           <AppearanceMenu />
         </Box>
       </Box>
