@@ -139,7 +139,7 @@ export default function LoginPage() {
                   onClick={demoSignIn}
                   disabled={demoBusy}
                 >
-                  {demoBusy ? "Starting demo…" : "Continue with demo"}
+                  {demoBusy ? "Starting Demo…" : "Continue with Demo"}
                 </Button>
               </Stack>
             </Box>

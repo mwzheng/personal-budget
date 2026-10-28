@@ -30,8 +30,8 @@ export const CONTACT_SECTION_CONTENT = {
     title: "Send A Message",
     description:
       "Direct questions about the product, workflow feedback, or a quick hello.",
-    submitLabel: "Send message",
-    submittingLabel: "Sending message…",
+    submitLabel: "Send Message",
+    submittingLabel: "Sending Message…",
     privacyNote:
       "Your email address is only used to deliver this message and make a reply possible. Please avoid sending any sensitive information through this form.",
     validationMessage: "Please review the highlighted fields and try again.",

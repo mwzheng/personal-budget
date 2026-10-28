@@ -172,7 +172,7 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
           size="small"
           sx={{ textTransform: "none" }}
         >
-          Sign out
+          Sign Out
         </Button>
         <AppearanceMenu />
       </Box>

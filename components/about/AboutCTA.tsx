@@ -22,7 +22,7 @@ const AboutCTA = () => (
         </Typography>
         <Stack direction="row" spacing={2}>
           <Button variant="contained" size="large" href={ROUTE_PATHS.login}>
-            Sign in
+            Sign In
           </Button>
           <Button variant="outlined" size="large" href={ROUTE_PATHS.home}>
             Learn More

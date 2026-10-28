@@ -121,14 +121,14 @@ export default function RetirementList({
             setDialogOpen(true);
           }}
         >
-          Add retirement entry
+          Add Retirement
         </Button>
       </Box>
 
       {dialogOpen ? (
         <ProgressEntryDialog
           open={dialogOpen}
-          title={editing ? "Edit Retirement Entry" : "Add Retirement Entry"}
+          title={editing ? "Edit Retirement" : "Add Retirement"}
           onClose={closeDialog}
         >
           <RetirementForm

@@ -197,7 +197,7 @@ export default function Page() {
                 size="small"
                 onClick={() => setMilestoneDialogOpen(true)}
               >
-                Add milestone
+                Add Milestone
               </Button>
             </Box>
             <MilestonesList

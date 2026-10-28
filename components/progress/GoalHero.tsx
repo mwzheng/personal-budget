@@ -87,7 +87,7 @@ export default function GoalHero({
             </Typography>
           </Box>
           <Button variant="outlined" onClick={onEditGoal}>
-            {goalTargetAmount === null ? "Set goal" : "Edit goal"}
+            {goalTargetAmount === null ? "Set Goal" : "Edit Goal"}
           </Button>
         </Box>
         <Box
@@ -129,7 +129,7 @@ export default function GoalHero({
                   Add a retirement balance to track your progress.
                 </Typography>
                 <Button href="#retirement-history" size="small" sx={{ px: 0 }}>
-                  Add retirement entry
+                  Add Retirement
                 </Button>
               </Box>
             )}
@@ -222,7 +222,7 @@ export default function GoalHero({
                 <>
                   <Typography fontWeight={600}>No milestones yet</Typography>
                   <Button size="small" onClick={onAddMilestone} sx={{ px: 0 }}>
-                    Add milestone
+                    Add Milestone
                   </Button>
                 </>
               ) : totalSaved === null ? (

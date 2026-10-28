@@ -273,7 +273,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Expense template
+                    Expense Template
                   </Button>
                   <Button
                     component="a"
@@ -283,7 +283,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Income template
+                    Income Template
                   </Button>
                 </Stack>
                 <Box
@@ -435,7 +435,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Expense template
+                    Expense Template
                   </Button>
                   <Button
                     component="a"
@@ -445,7 +445,7 @@ export function ImportCsvDialog({ open, onClose, onImported }: Props) {
                     startIcon={<DownloadOutlinedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                   >
-                    Income template
+                    Income Template
                   </Button>
                 </Stack>
               </CardContent>

@@ -93,7 +93,7 @@ export default function NotFoundPage() {
             size="large"
             startIcon={<ArrowBackRoundedIcon />}
           >
-            Back to home
+            Back to Home
           </Button>
         </Stack>
       </Paper>

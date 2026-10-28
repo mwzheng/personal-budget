@@ -93,7 +93,7 @@ export function TagChartSettings({
             disabled={excludedTags.length === 0}
             onClick={() => onChange([])}
           >
-            Clear all
+            Clear All
           </Button>
         </Box>
         <TextField

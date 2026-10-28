@@ -46,7 +46,7 @@ export default function FireNextMoveCard({ scenario, summary }: Props) {
             endIcon={<ArrowForwardIcon />}
             sx={{ alignSelf: "flex-start", mt: "auto" }}
           >
-            Review assumptions
+            Review Assumptions
           </Button>
         </Stack>
       </CardContent>
