@@ -22,7 +22,6 @@ const workspace = [
   ["FIRE", "/fire"],
 ] as const;
 const information = [
-  ["Home", "/"],
   ["About", "/about"],
   ["FAQ", "/faq"],
 ] as const;

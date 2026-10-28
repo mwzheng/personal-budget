@@ -26,7 +26,7 @@ export function Footer() {
         borderTop: `1px solid ${SERVER_THEME_TOKENS.border.subtle}`,
       }}
     >
-      <Container maxWidth="xl" sx={{ py: 1 }}>
+      <Container maxWidth="xl" sx={{ pt: 1.5, pb: 1 }}>
         <Stack
           direction="row"
           justifyContent="space-between"
