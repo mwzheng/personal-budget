@@ -2,7 +2,7 @@
 
 This document collects candidate product ideas for Porridge Budget that fit the
 manual-first budgeting philosophy. These are not committed roadmap items yet;
-they are options to evaluate after the current testing and tooling follow-ups.
+they are options for future planning.
 
 ## Highest-priority candidates
 
@@ -71,7 +71,7 @@ they are options to evaluate after the current testing and tooling follow-ups.
 
 ## Selection criteria
 
-Use the following questions when deciding which idea to promote into `plan.md`:
+Use the following questions when deciding which idea to schedule for implementation:
 
 - Does it strengthen the manual-first workflow instead of hiding the data?
 - Does it improve clarity, reflection, or ownership for the user?

@@ -1,4 +1,4 @@
-# Personal budget
+# Personal Budget
 
 Terms for planning monthly money, recording transactions, and reviewing financial progress.
 
@@ -36,3 +36,9 @@ _Avoid_: Actual, transaction amount
 **Actual amount**:
 The amount represented by recorded transactions for a category and period.
 _Avoid_: Planned amount
+
+**Flow path**:
+The ordered groups that place a planned expense within a budget flow. The expense name identifies the final item within those groups.
+
+**Comparison inclusion**:
+Whether a planned expense contributes to an actual-versus-budget comparison. An excluded expense remains part of the budget and its flow.
