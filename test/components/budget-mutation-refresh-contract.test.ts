@@ -36,17 +36,4 @@ describe("Budget mutation refresh contract", () => {
       stateUpdaters?.every((updater) => !updater.includes("onBudgetsLoaded")),
     ).toBe(true);
   });
-
-  it("keeps the allocation and comparison sections on the same active budget", () => {
-    const page = readSource("app/budget/page.tsx");
-    const comparison = readSource("components/budget/ActualVsBudget.tsx");
-
-    expect(page).toContain("activeBudget={draft}");
-    expect(page).toContain("activeBudgetId={editingBudgetId}");
-    expect(page).toContain("onBudgetSelect={editBudget}");
-    expect(comparison).toContain(
-      "const selectedBudget = activeBudgetId ? activeBudget : null;",
-    );
-    expect(comparison).toContain("if (budget) onBudgetSelect(budget);");
-  });
 });

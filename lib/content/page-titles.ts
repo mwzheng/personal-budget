@@ -92,7 +92,7 @@ export const PAGE_TITLES = {
     route: ROUTE_PATHS.budget,
     title: `Budget - ${APP_NAME}`,
     description:
-      "Plan monthly expenses and visualize your budget with pie charts and flow diagrams.",
+      "Plan monthly expenses and visualize your budget with a flow diagram.",
     requiresAuth: true,
   },
   [PAGE_TITLE_KEYS.PROGRESS]: {

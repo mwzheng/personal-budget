@@ -14,6 +14,8 @@ import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import { ActualVsBudget } from "@/components/budget/ActualVsBudget";
 import Fab from "@mui/material/Fab";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
@@ -238,6 +240,7 @@ const ReportsPageContent = () => {
   const [compareOpen, setCompareOpen] = useState(false);
   const [yearCompareOpen, setYearCompareOpen] = useState(false);
   const [yearlyReportOpen, setYearlyReportOpen] = useState(false);
+  const [actualBudgetOpen, setActualBudgetOpen] = useState(false);
   const [exploreMenuAnchor, setExploreMenuAnchor] =
     useState<HTMLElement | null>(null);
   const [dataMenuAnchor, setDataMenuAnchor] = useState<HTMLElement | null>(
@@ -842,130 +845,137 @@ const ReportsPageContent = () => {
         descriptionId={PAGE_DESCRIPTION_ID}
         sx={{ mb: 3 }}
         action={
-          !isEmpty ? (
-            <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
-              <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
-                <Button
-                  id="reports-explore-menu-button"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AssessmentOutlinedIcon />}
-                  endIcon={<ExpandMoreIcon />}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    exploreMenuAnchor ? "reports-explore-menu" : undefined
-                  }
-                  aria-expanded={exploreMenuAnchor ? "true" : undefined}
-                  onClick={(event) => setExploreMenuAnchor(event.currentTarget)}
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: { xs: "100%", sm: "auto" },
+          <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
+              <Button
+                id="reports-explore-menu-button"
+                variant="outlined"
+                size="small"
+                startIcon={<AssessmentOutlinedIcon />}
+                endIcon={<ExpandMoreIcon />}
+                aria-haspopup="menu"
+                aria-controls={
+                  exploreMenuAnchor ? "reports-explore-menu" : undefined
+                }
+                aria-expanded={exploreMenuAnchor ? "true" : undefined}
+                onClick={(event) => setExploreMenuAnchor(event.currentTarget)}
+                sx={{
+                  justifyContent: "flex-start",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                Explore Reports
+              </Button>
+              <Button
+                id="reports-data-menu-button"
+                variant="outlined"
+                size="small"
+                startIcon={<FileUploadOutlinedIcon />}
+                endIcon={<ExpandMoreIcon />}
+                aria-haspopup="menu"
+                aria-controls={dataMenuAnchor ? "reports-data-menu" : undefined}
+                aria-expanded={dataMenuAnchor ? "true" : undefined}
+                onClick={(event) => setDataMenuAnchor(event.currentTarget)}
+                sx={{
+                  justifyContent: "flex-start",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                Data
+              </Button>
+              <Menu
+                id="reports-explore-menu"
+                anchorEl={exploreMenuAnchor}
+                open={Boolean(exploreMenuAnchor)}
+                onClose={() => setExploreMenuAnchor(null)}
+                MenuListProps={{
+                  "aria-labelledby": "reports-explore-menu-button",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setActualBudgetOpen(true);
                   }}
                 >
-                  Explore Reports
-                </Button>
-                <Button
-                  id="reports-data-menu-button"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<FileUploadOutlinedIcon />}
-                  endIcon={<ExpandMoreIcon />}
-                  aria-haspopup="menu"
-                  aria-controls={
-                    dataMenuAnchor ? "reports-data-menu" : undefined
-                  }
-                  aria-expanded={dataMenuAnchor ? "true" : undefined}
-                  onClick={(event) => setDataMenuAnchor(event.currentTarget)}
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: { xs: "100%", sm: "auto" },
+                  <ListItemText
+                    primary="Actual vs Budget"
+                    secondary="Compare spending with a saved budget"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setYearlyReportOpen(true);
+                    void loadComparisonTransactions();
                   }}
                 >
-                  Data
-                </Button>
-                <Menu
-                  id="reports-explore-menu"
-                  anchorEl={exploreMenuAnchor}
-                  open={Boolean(exploreMenuAnchor)}
-                  onClose={() => setExploreMenuAnchor(null)}
-                  MenuListProps={{
-                    "aria-labelledby": "reports-explore-menu-button",
+                  <ListItemText
+                    primary="Yearly Report"
+                    secondary="View your yearly spending overview"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setCompareOpen(true);
+                    void loadComparisonTransactions();
                   }}
                 >
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setYearlyReportOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Yearly Report"
-                      secondary="View your yearly spending overview"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setCompareOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Compare Months"
-                      secondary="Compare spending across two months"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setExploreMenuAnchor(null);
-                      setYearCompareOpen(true);
-                      void loadComparisonTransactions();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Compare Years"
-                      secondary="Compare like-for-like yearly spending"
-                    />
-                  </MenuItem>
-                </Menu>
+                  <ListItemText
+                    primary="Compare Months"
+                    secondary="Compare spending across two months"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setExploreMenuAnchor(null);
+                    setYearCompareOpen(true);
+                    void loadComparisonTransactions();
+                  }}
+                >
+                  <ListItemText
+                    primary="Compare Years"
+                    secondary="Compare like-for-like yearly spending"
+                  />
+                </MenuItem>
+              </Menu>
 
-                <Menu
-                  id="reports-data-menu"
-                  anchorEl={dataMenuAnchor}
-                  open={Boolean(dataMenuAnchor)}
-                  onClose={() => setDataMenuAnchor(null)}
-                  MenuListProps={{
-                    "aria-labelledby": "reports-data-menu-button",
+              <Menu
+                id="reports-data-menu"
+                anchorEl={dataMenuAnchor}
+                open={Boolean(dataMenuAnchor)}
+                onClose={() => setDataMenuAnchor(null)}
+                MenuListProps={{
+                  "aria-labelledby": "reports-data-menu-button",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setDataMenuAnchor(null);
+                    setImportOpen(true);
                   }}
                 >
-                  <MenuItem
-                    onClick={() => {
-                      setDataMenuAnchor(null);
-                      setImportOpen(true);
-                    }}
-                  >
-                    <ListItemText
-                      primary="Import CSV"
-                      secondary="Add transactions from a CSV file"
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    disabled={filtered.length === 0}
-                    onClick={() => {
-                      setDataMenuAnchor(null);
-                      void handleExport();
-                    }}
-                  >
-                    <ListItemText
-                      primary="Export Filtered Data"
-                      secondary="Download the current filtered transactions"
-                    />
-                  </MenuItem>
-                </Menu>
-              </Stack>
-            </Box>
-          ) : undefined
+                  <ListItemText
+                    primary="Import CSV"
+                    secondary="Add transactions from a CSV file"
+                  />
+                </MenuItem>
+                <MenuItem
+                  disabled={filtered.length === 0}
+                  onClick={() => {
+                    setDataMenuAnchor(null);
+                    void handleExport();
+                  }}
+                >
+                  <ListItemText
+                    primary="Export Filtered Data"
+                    secondary="Download the current filtered transactions"
+                  />
+                </MenuItem>
+              </Menu>
+            </Stack>
+          </Box>
         }
       />
       {isEmpty ? (
@@ -1315,6 +1325,19 @@ const ReportsPageContent = () => {
         onRetry={() => void loadComparisonTransactions()}
         onClose={() => setYearCompareOpen(false)}
       />
+      <Dialog
+        open={actualBudgetOpen}
+        onClose={() => setActualBudgetOpen(false)}
+        fullWidth
+        maxWidth="md"
+        scroll="paper"
+        aria-labelledby="actual-budget-heading"
+      >
+        {actualBudgetOpen && <ActualVsBudget />}
+        <DialogActions>
+          <Button onClick={() => setActualBudgetOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={yearlyReportOpen}
         onClose={() => setYearlyReportOpen(false)}

@@ -21,9 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AllocationBar } from "@/components/budget/AllocationBar";
-import { ActualVsBudget } from "@/components/budget/ActualVsBudget";
 import { BudgetForm } from "@/components/budget/BudgetForm";
-import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
 import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
@@ -155,7 +153,6 @@ export default function BudgetPage() {
   const [draft, setDraft] = useState<BudgetDraft>(createDefaultBudgetDraft);
   const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [budgetsReloadKey, setBudgetsReloadKey] = useState(0);
-  const [savedBudgets, setSavedBudgets] = useState<SavedBudget[]>([]);
   const [savedBudget, setSavedBudget] = useState<SavedBudget | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -176,12 +173,9 @@ export default function BudgetPage() {
     }
   }, [router]);
 
-  // Saved budgets belong to the current account. Clearing this page-local
-  // collection immediately avoids briefly comparing a new account's activity
-  // with the previous account's plan while BudgetList reloads its collection.
+  // Reload saved budget controls when the account changes.
   useEffect(() => {
     const clearAccountBudgetState = () => {
-      setSavedBudgets([]);
       setSavedBudget(null);
       setBudgetsReloadKey((current) => current + 1);
     };
@@ -243,7 +237,6 @@ export default function BudgetPage() {
   }, []);
 
   const handleBudgetsLoaded = useCallback((budgets: SavedBudget[]) => {
-    setSavedBudgets(budgets);
     if (hasAutoLoadedLatestBudget.current) {
       return;
     }
@@ -329,9 +322,6 @@ export default function BudgetPage() {
   }
 
   function handleBudgetDeleted(budgetId: string) {
-    setSavedBudgets((current) =>
-      current.filter((budget) => budget.budgetId !== budgetId),
-    );
     setSavedBudget((current) =>
       current?.budgetId === budgetId ? null : current,
     );
@@ -366,20 +356,11 @@ export default function BudgetPage() {
     >
       <PageHeader
         title="Budget Planner"
-        description="Plan monthly expenses and visualize your budget with pie charts and flow diagrams."
+        description="Plan monthly expenses and visualize your budget with a flow diagram."
         headingId={PAGE_TITLE_ID}
         descriptionId={PAGE_DESCRIPTION_ID}
         sx={{ mb: 3 }}
       />
-
-      <Box sx={{ mb: 3 }}>
-        <AllocationBar
-          categoryTotals={insights.categoryTotals}
-          monthlyIncome={insights.monthlyIncome}
-          leftoverSavings={insights.leftoverSavings}
-          overspending={insights.overspending}
-        />
-      </Box>
 
       <Box
         sx={{
@@ -434,38 +415,35 @@ export default function BudgetPage() {
         />
       </Box>
 
+      <Box sx={{ mb: 3 }}>
+        <AllocationBar
+          categoryTotals={insights.categoryTotals}
+          monthlyIncome={insights.monthlyIncome}
+          leftoverSavings={insights.leftoverSavings}
+          overspending={insights.overspending}
+        />
+      </Box>
+
       <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
         <Grid
           item
           xs={12}
-          md={8}
           sx={{
-            display: { xs: "none", md: "flex" },
+            display: "flex",
             flexDirection: "column",
             minHeight: 480,
           }}
         >
           <SectionCard
-            title="Budget Flow"
+            title="Budget"
             sx={{ flex: 1, display: "flex", flexDirection: "column" }}
-            contentSx={{ flex: 1, position: "relative", overflow: "hidden" }}
+            contentSx={{ flex: 1, minWidth: 0 }}
           >
             {isLoading ? (
               <Skeleton variant="rectangular" height={320} />
             ) : (
               <SankeyChart data={insights.sankeyData} />
             )}
-          </SectionCard>
-        </Grid>
-
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{ display: "flex", flexDirection: "column", minHeight: 480 }}
-        >
-          <SectionCard title="Expense Breakdown" sx={{ flexGrow: 1 }}>
-            <BudgetSummary insights={insights} isLoading={isLoading} />
           </SectionCard>
         </Grid>
 
@@ -490,14 +468,6 @@ export default function BudgetPage() {
           </SectionCard>
         </Grid>
       </Grid>
-      <Box sx={{ mt: 3 }}>
-        <ActualVsBudget
-          savedBudgets={savedBudgets}
-          activeBudget={draft}
-          activeBudgetId={editingBudgetId}
-          onBudgetSelect={editBudget}
-        />
-      </Box>
     </Container>
   );
 }
