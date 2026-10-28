@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#1a1a1a"/>
-  <text x="50" y="70" font-size="70" font-family="Arial, sans-serif" text-anchor="middle" dominant-baseline="middle" fill="#FEBE66">🥣</text>
+  <style>path { stroke: #31775D; } @media (prefers-color-scheme: dark) { path { stroke: #8DC9A8; } }</style>
+  <path d="M18 45h64c-2 21-14 32-32 32S20 66 18 45Z" fill="none" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M30 37l12-10 10 6 17-14M59 19h10v10" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

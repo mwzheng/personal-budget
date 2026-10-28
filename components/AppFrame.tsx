@@ -40,7 +40,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       <Box component="div" sx={{ flexGrow: 1, minWidth: 0, maxWidth: "100%" }}>
         {children}
       </Box>
-      {!isPrototype && <Footer loggedIn={loggedIn} />}
+      {!isPrototype && <Footer />}
     </Box>
   );
 }

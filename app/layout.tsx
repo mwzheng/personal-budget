@@ -57,7 +57,7 @@ const ROOT_METADATA_DESCRIPTION =
 // reads it at build time and injects the equivalent `<meta>` and `<title>` tags
 // into the `<head>` of every page that does not override them with its own
 // `metadata` export. No explicit `<head>` element is needed in JSX.
-// Note 2.1: The `icons` property uses the same 🥣 bowl icon as the AppNav for
+// Note 2.1: The `icons` property uses the same bowl-and-progress mark as the AppNav for
 // a consistent visual identity across the app and browser tab.
 export const metadata: Metadata = {
   title: { template: "%s - Porridge Budget", default: "Porridge Budget" },

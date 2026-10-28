@@ -1137,7 +1137,12 @@ const ReportsPageContent = () => {
                     <SpendingBreakdownLoadingState />
                   ) : (
                     <Box
-                      sx={{ flex: 1, display: "flex", alignItems: "center" }}
+                      sx={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        transform: "translateY(8px)",
+                      }}
                     >
                       <SpendingPieChart
                         data={agg.totalByCategoryType}

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { BrandMark } from "@/components/BrandMark";
 import { AppearanceMenu } from "@/components/AppearanceMenu";
 import { FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
 import { SERVER_THEME_TOKENS as tokens } from "@/lib/theme/server-theme-tokens";
@@ -52,12 +54,16 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
           component={Link}
           href="/"
           sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
             color: "text.primary",
             textDecoration: "none",
             fontFamily: "Georgia, serif",
             fontWeight: 700,
           }}
         >
+          <BrandMark />
           Porridge Budget
         </Box>
         <Box
@@ -80,15 +86,17 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
             },
           }}
         >
-          {FOOTER_PUBLIC_LINKS.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={pathname === href ? "page" : undefined}
-            >
-              {label}
-            </Link>
-          ))}
+          {FOOTER_PUBLIC_LINKS.filter(({ href }) => href !== "/").map(
+            ({ label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={pathname === href ? "page" : undefined}
+              >
+                {label}
+              </Link>
+            ),
+          )}
           <Link href="/auth/login">Sign in</Link>
           <AppearanceMenu />
         </Box>
@@ -130,21 +138,7 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
             fontSize: 18,
           }}
         >
-          <Box
-            component="span"
-            sx={{
-              display: "grid",
-              placeItems: "center",
-              width: 36,
-              height: 36,
-              borderRadius: 2,
-              bgcolor: tokens.surface.selected,
-              color: "primary.main",
-              fontSize: 24,
-            }}
-          >
-            P
-          </Box>
+          <BrandMark size={36} />
           Porridge Budget
         </Box>
         {mobile && (
@@ -172,17 +166,15 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
           gap: 1,
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1.5,
-            flexWrap: "wrap",
-            fontSize: 13,
-            "& a": { color: "text.secondary" },
-          }}
+        <Button
+          component={Link}
+          href="/auth/signout"
+          variant="outlined"
+          size="small"
+          sx={{ textTransform: "none" }}
         >
-          <Link href="/auth/signout">Sign out</Link>
-        </Box>
+          Sign out
+        </Button>
         <AppearanceMenu />
       </Box>
     </Box>
@@ -217,12 +209,16 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
           component={Link}
           href="/"
           sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
             color: "text.primary",
             textDecoration: "none",
             fontFamily: "Georgia, serif",
             fontWeight: 700,
           }}
         >
+          <BrandMark />
           Porridge Budget
         </Box>
         <IconButton

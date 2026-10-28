@@ -1,4 +1,3 @@
-import HeaderInfo from "@/components/ui/HeaderInfo";
 import type { Metadata } from "next";
 import Script from "next/script";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
@@ -14,6 +13,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import Typography from "@mui/material/Typography";
 
 import HomeHeroActions from "@/components/home/HomeHeroActions";
+import { BrandMark } from "@/components/BrandMark";
 import { HOME_PAGE_CONTENT } from "@/lib/content/home";
 import {
   APP_NAME,
@@ -204,7 +204,8 @@ export default function Home() {
             >
               {hero.eyebrow}
             </Typography>
-            <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Stack alignItems="center" spacing={1}>
+              <BrandMark size={88} />
               <Typography
                 id="home-hero-title"
                 variant="h1"
@@ -217,7 +218,13 @@ export default function Home() {
               >
                 {hero.title}
               </Typography>
-              <HeaderInfo title={hero.title} description={hero.summary} />
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ maxWidth: 600, lineHeight: 1.75 }}
+              >
+                {hero.summary}
+              </Typography>
             </Stack>
             <HomeHeroActions />
           </Stack>
