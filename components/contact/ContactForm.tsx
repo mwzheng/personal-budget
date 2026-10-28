@@ -1,5 +1,7 @@
 "use client";
 
+import HeaderInfo from "@/components/ui/HeaderInfo";
+
 /**
  * Note 1: The page itself stays server-rendered for fast content delivery, while
  * this component owns the interactive validation and submission lifecycle.
@@ -182,11 +184,16 @@ export function ContactForm({ form }: { form: ContactFormContent }) {
           onSubmit={handleSubmit}
           sx={{ height: "100%" }}
         >
-          <Stack spacing={1} sx={{ mb: 2 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.5}
+            sx={{ mb: 2 }}
+          >
             <Typography variant="h4" fontWeight={700}>
               {form.title}
             </Typography>
-            <Typography color="text.secondary">{form.description}</Typography>
+            <HeaderInfo title={form.title} description={form.description} />
           </Stack>
 
           {status ? (

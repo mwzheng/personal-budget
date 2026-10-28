@@ -3,11 +3,12 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
+import HeaderInfo from "./HeaderInfo";
 
 export interface PageHeaderProps {
   /** Primary page heading shown as the h1 for the current page. */
   title: string;
-  /** Optional supporting copy shown below the title. */
+  /** Optional supporting copy shown in an info tooltip. */
   description?: string;
   /** Optional action area for buttons or other controls. */
   action?: ReactNode;
@@ -53,19 +54,26 @@ export default function PageHeader({
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
-      <Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
         <Typography id={headingId} component="h1" variant="h5" fontWeight={700}>
           {title}
         </Typography>
         {description ? (
-          <Typography
+          <HeaderInfo title={title} description={description} />
+        ) : null}
+        {description && descriptionId ? (
+          <Box
             id={descriptionId}
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 0.5 }}
+            sx={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+              clip: "rect(0, 0, 0, 0)",
+            }}
           >
             {description}
-          </Typography>
+          </Box>
         ) : null}
       </Box>
 

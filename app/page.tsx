@@ -1,3 +1,4 @@
+import HeaderInfo from "@/components/ui/HeaderInfo";
 import type { Metadata } from "next";
 import Script from "next/script";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
@@ -203,31 +204,21 @@ export default function Home() {
             >
               {hero.eyebrow}
             </Typography>
-            <Typography
-              id="home-hero-title"
-              variant="h1"
-              component="h1"
-              sx={{
-                fontSize: { xs: "2.75rem", sm: "3.5rem", md: "4.5rem" },
-                letterSpacing: "-0.05em",
-                color: "text.primary",
-              }}
-            >
-              {hero.title}
-            </Typography>
-            <Typography
-              variant="h5"
-              component="p"
-              color="text.secondary"
-              sx={{
-                maxWidth: 600,
-                lineHeight: 1.7,
-                fontSize: { xs: "1rem", md: "1.25rem" },
-                fontWeight: 400,
-              }}
-            >
-              {hero.summary}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Typography
+                id="home-hero-title"
+                variant="h1"
+                component="h1"
+                sx={{
+                  fontSize: { xs: "2.75rem", sm: "3.5rem", md: "4.5rem" },
+                  letterSpacing: "-0.05em",
+                  color: "text.primary",
+                }}
+              >
+                {hero.title}
+              </Typography>
+              <HeaderInfo title={hero.title} description={hero.summary} />
+            </Stack>
             <HomeHeroActions />
           </Stack>
         </Container>
@@ -238,7 +229,7 @@ export default function Home() {
         sx={{ pb: 10 }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={3} justifyContent="center" sx={{ px: 12 }}>
+          <Grid container spacing={3} justifyContent="center">
             {features.map((feature) => {
               return <FeatureCard key={feature.id} feature={feature} />;
             })}

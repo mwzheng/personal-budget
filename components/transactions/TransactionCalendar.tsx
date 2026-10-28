@@ -4,9 +4,16 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import Box from "@mui/material/Box";
+import Popper from "@mui/material/Popper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useRef, type ComponentProps } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 
 import type { Transaction } from "@/lib/types/types";
 import {
@@ -36,6 +43,14 @@ export function TransactionCalendar({
   onDaySelect,
 }: Props) {
   const calendarRef = useRef<FullCalendar | null>(null);
+  const focusListeners = useRef(
+    new WeakMap<HTMLElement, { focus: () => void; blur: () => void }>(),
+  );
+  const [tooltip, setTooltip] = useState<{
+    anchor: HTMLElement;
+    details: TransactionCalendarEventDetails;
+    color: string;
+  } | null>(null);
   const events = useMemo(
     () => mapTransactionsToCalendarEvents(transactions),
     [transactions],
@@ -80,6 +95,7 @@ export function TransactionCalendar({
   ) => {
     const details = clickInfo.event
       .extendedProps as TransactionCalendarEventDetails;
+    setTooltip(null);
     onTransactionSelect(details.transaction);
   };
 
@@ -127,6 +143,20 @@ export function TransactionCalendar({
           events={events}
           dateClick={(clickInfo) => onDaySelect(clickInfo.dateStr)}
           eventClick={handleEventClick}
+          eventMouseEnter={({ el, event }) =>
+            setTooltip({
+              anchor: el,
+              details: event.extendedProps as TransactionCalendarEventDetails,
+              color: getComputedStyle(el).borderLeftColor,
+            })
+          }
+          eventMouseLeave={({ el }) =>
+            setTooltip((current) =>
+              current?.anchor === el && document.activeElement !== el
+                ? null
+                : current,
+            )
+          }
           eventContent={(eventInfo) => {
             const details = eventInfo.event
               .extendedProps as TransactionCalendarEventDetails;
@@ -135,26 +165,9 @@ export function TransactionCalendar({
               <Box className="transaction-calendar__event-content">
                 <Box
                   component="span"
-                  className="transaction-calendar__event-meta"
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", lg: "row" },
-                    alignItems: "flex-start",
-                    gap: 0.5,
-                  }}
+                  className="transaction-calendar__event-amount"
                 >
-                  <Box
-                    component="span"
-                    className="transaction-calendar__event-amount"
-                  >
-                    {details.amountLabel}
-                  </Box>
-                  <Box
-                    component="span"
-                    className="transaction-calendar__event-category"
-                  >
-                    {details.categoryLabel}
-                  </Box>
+                  {details.amountLabel}
                 </Box>
                 <Box
                   component="span"
@@ -168,10 +181,94 @@ export function TransactionCalendar({
           eventDidMount={(mountInfo) => {
             const details = mountInfo.event
               .extendedProps as TransactionCalendarEventDetails;
-            mountInfo.el.setAttribute("aria-label", details.accessibilityLabel);
-            mountInfo.el.setAttribute("title", details.accessibilityLabel);
+            const { transaction } = details;
+            mountInfo.el.setAttribute(
+              "aria-label",
+              [
+                details.accessibilityLabel,
+                transaction.tags.length
+                  ? `Tags: ${transaction.tags.join(", ")}.`
+                  : "",
+                transaction.notes ? `Note: ${transaction.notes}` : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+            );
+            const focus = () =>
+              setTooltip({
+                anchor: mountInfo.el,
+                details,
+                color: getComputedStyle(mountInfo.el).borderLeftColor,
+              });
+            const blur = () =>
+              setTooltip((current) =>
+                current?.anchor === mountInfo.el ? null : current,
+              );
+            focusListeners.current.set(mountInfo.el, { focus, blur });
+            mountInfo.el.addEventListener("focus", focus);
+            mountInfo.el.addEventListener("blur", blur);
+          }}
+          eventWillUnmount={({ el }) => {
+            const listeners = focusListeners.current.get(el);
+            if (listeners) {
+              el.removeEventListener("focus", listeners.focus);
+              el.removeEventListener("blur", listeners.blur);
+              focusListeners.current.delete(el);
+            }
+            setTooltip((current) => (current?.anchor === el ? null : current));
           }}
         />
+        <Popper
+          open={Boolean(tooltip)}
+          anchorEl={tooltip?.anchor}
+          placement="top-start"
+          modifiers={[{ name: "offset", options: { offset: [0, 7] } }]}
+          sx={{ zIndex: 1500, pointerEvents: "none" }}
+        >
+          {tooltip && (
+            <Box
+              aria-hidden="true"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "3px",
+                width: "max-content",
+                maxWidth: "min(250px, 70vw)",
+                p: "8px 10px",
+                border: "1px solid",
+                borderColor: "divider",
+                borderLeft: `3px solid ${tooltip.color}`,
+                borderRadius: "4px",
+                bgcolor: "background.paper",
+                boxShadow: "0 5px 18px rgba(15,25,18,.2)",
+                color: "text.primary",
+                fontSize: "11px",
+                lineHeight: 1.55,
+                overflowWrap: "anywhere",
+              }}
+            >
+              <Box component="strong" sx={{ fontSize: "12px" }}>
+                {tooltip.details.transactionName}
+              </Box>
+              <span>
+                <b>Amount:</b> {tooltip.details.amountLabel}
+              </span>
+              <span>
+                <b>Category:</b> {tooltip.details.categoryLabel}
+              </span>
+              {tooltip.details.transaction.tags.length > 0 && (
+                <span>
+                  <b>Tags:</b> {tooltip.details.transaction.tags.join(", ")}
+                </span>
+              )}
+              {tooltip.details.transaction.notes && (
+                <span>
+                  <b>Note:</b> {tooltip.details.transaction.notes}
+                </span>
+              )}
+            </Box>
+          )}
+        </Popper>
       </Box>
     </Stack>
   );

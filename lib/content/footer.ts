@@ -40,11 +40,6 @@ export const FOOTER_ACCOUNT_LINKS = [
     href: ROUTE_PATHS.login,
     description: PAGE_TITLES[PAGE_TITLE_KEYS.LOGIN].description,
   },
-  {
-    label: "Create account",
-    href: ROUTE_PATHS.register,
-    description: PAGE_TITLES[PAGE_TITLE_KEYS.REGISTER].description,
-  },
 ] as const satisfies readonly LinkDefinition<AppRoute>[];
 
 export const FOOTER_NAVIGATION_GROUPS = [

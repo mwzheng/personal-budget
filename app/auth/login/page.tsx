@@ -1,5 +1,7 @@
 "use client";
 
+import HeaderInfo from "@/components/ui/HeaderInfo";
+
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -61,7 +63,13 @@ export default function LoginPage() {
       }}
     >
       <Box sx={{ width: "100%" }}>
-        <Stack spacing={1} alignItems="center" sx={{ mb: 3 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ mb: 3 }}
+        >
           <Typography
             variant="h4"
             fontWeight={800}
@@ -70,9 +78,10 @@ export default function LoginPage() {
           >
             Welcome Back
           </Typography>
-          <Typography variant="body1" color="text.secondary" align="center">
-            Sign in to access your budget data.
-          </Typography>
+          <HeaderInfo
+            title="Welcome Back"
+            description="Sign in to access your budget data."
+          />
         </Stack>
 
         <Paper elevation={1} sx={{ overflow: "hidden" }}>
@@ -92,7 +101,16 @@ export default function LoginPage() {
                   fullWidth
                   disabled={!cognitoConfigured}
                 >
-                  Sign in with account
+                  Sign In
+                </SignInButton>
+                <SignInButton
+                  mode="signup"
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  disabled={!cognitoConfigured}
+                >
+                  Create Account
                 </SignInButton>
               </Stack>
             </Box>

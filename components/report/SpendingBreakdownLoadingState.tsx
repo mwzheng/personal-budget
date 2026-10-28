@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import Stack from "@mui/material/Stack";
 
 const SpendingBreakdownLoadingState = () => {
   return (
@@ -28,23 +27,6 @@ const SpendingBreakdownLoadingState = () => {
           height={220}
         />
       </Box>
-      <Stack
-        direction="row"
-        justifyContent="center"
-        spacing={2.5}
-        useFlexGap
-        flexWrap="wrap"
-      >
-        {Array.from({ length: 3 }, (_, index) => (
-          <Box
-            key={`spending-breakdown-loading-${index}`}
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <Skeleton variant="circular" width={12} height={12} />
-            <Skeleton variant="text" width={72} />
-          </Box>
-        ))}
-      </Stack>
     </Box>
   );
 };

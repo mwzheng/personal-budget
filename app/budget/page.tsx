@@ -10,6 +10,7 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import WarningIcon from "@mui/icons-material/Warning";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
@@ -358,10 +359,10 @@ export default function BudgetPage() {
   return (
     <Container
       component="main"
-      maxWidth="xl"
+      maxWidth={false}
       aria-labelledby={PAGE_TITLE_ID}
       aria-describedby={PAGE_DESCRIPTION_ID}
-      sx={{ py: { xs: 4, md: 5 } }}
+      sx={{ py: { xs: 4, md: 5 }, maxWidth: WORKSPACE_MAX_WIDTH }}
     >
       <PageHeader
         title="Budget Planner"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Container from "@mui/material/Container";
+import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import SalaryList from "@/components/ui/SalaryList";
 
 export const metadata: Metadata = {
@@ -14,9 +15,9 @@ export default function Page() {
   return (
     <Container
       component="main"
-      maxWidth="xl"
+      maxWidth={false}
       aria-label="Salary history"
-      sx={{ py: 4 }}
+      sx={{ py: 4, maxWidth: WORKSPACE_MAX_WIDTH }}
     >
       <SalaryList />
     </Container>

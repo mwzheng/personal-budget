@@ -1,6 +1,6 @@
 # Personal budget
 
-Terms for categorizing transactions and filtering report results.
+Terms for planning monthly money, recording transactions, and reviewing financial progress.
 
 ## Language
 
@@ -14,3 +14,19 @@ _Avoid_: Omitted tag
 
 **Savings**:
 Money set aside for future use.
+
+**Budget**:
+A plan that assigns expected income to planned spending and savings for a period.
+_Avoid_: Actual spending, transaction history
+
+**Transaction**:
+A recorded movement of money, such as income or an expense, with a date and category.
+_Avoid_: Budget item, planned amount
+
+**Planned amount**:
+The amount assigned to an income or expense category in a budget.
+_Avoid_: Actual, transaction amount
+
+**Actual amount**:
+The amount represented by recorded transactions for a category and period.
+_Avoid_: Planned amount

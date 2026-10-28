@@ -11,53 +11,53 @@ import { alpha } from "@mui/material/styles";
  */
 export const DARK_THEME_TOKENS = {
   palette: {
-    primary: "#36D9C5",
-    primaryLight: "#86FFF0",
-    primaryDark: "#159E98",
+    primary: "#8DC9A8",
+    primaryLight: "#B6D3BD",
+    primaryDark: "#609276",
     secondary: "#55C7E8",
     success: "#55D68A",
     warning: "#F2B35D",
     danger: "#FF7B82",
-    backgroundDefault: "#06111B",
-    backgroundPaper: "#0B1B26",
+    backgroundDefault: "#171D1A",
+    backgroundPaper: "#202824",
   },
   // Semantic surface layers for the dark Dithered composition.
   surface: {
-    page: "#06111B",
-    card: "#0B1B26",
-    raised: "#102632",
-    overlay: "#142F3A",
-    selected: alpha("#36D9C5", 0.14),
-    selectedHover: alpha("#36D9C5", 0.22),
+    page: "#171D1A",
+    card: "#202824",
+    raised: "#29352E",
+    overlay: "#27312C",
+    selected: alpha("#8DC9A8", 0.14),
+    selectedHover: alpha("#8DC9A8", 0.22),
   },
   border: {
-    subtle: "#17313B",
-    standard: "#24505A",
-    strong: "#3A6B72",
-    focus: "#86FFF0",
+    subtle: "#354139",
+    standard: "#52645A",
+    strong: "#71877A",
+    focus: "#B6D3BD",
   },
   text: {
-    primary: "#E6F4F2",
-    secondary: "#A9C6C8",
-    disabled: "#6D8B91",
-    hint: "#A9C6C8",
+    primary: "#EDF2EE",
+    secondary: "#B2BEB5",
+    disabled: "#8D9C92",
+    hint: "#B2BEB5",
   },
   // 8-color accessible palette for dark-mode data visualization.
   // Colors are ordered by perceptual distinctiveness for sequential series.
   chart: {
     palette: [
-      "#36D9C5", // teal
+      "#8DC9A8", // teal
       "#55C7E8", // cyan
       "#55D68A", // green
       "#F2B35D", // amber
       "#BBA7FF", // violet
       "#FF9F70", // orange
       "#FF7B82", // red
-      "#A9C6C8", // muted
+      "#B2BEB5", // muted
     ] as readonly string[],
-    axis: "#A9C6C8",
-    grid: "#17313B",
-    tooltip: "#142F3A",
+    axis: "#B2BEB5",
+    grid: "#354139",
+    tooltip: "#27312C",
   },
   shadow: {
     low: "0 2px 8px rgba(0, 0, 0, 0.18)",
@@ -67,7 +67,7 @@ export const DARK_THEME_TOKENS = {
     dialog: "0 20px 60px rgba(0, 0, 0, 0.45)",
   },
   focus: {
-    ring: "0 0 0 3px rgba(134, 255, 240, 0.34)",
+    ring: "0 0 0 3px rgba(182, 211, 189, 0.34)",
   },
   // Consistent spacing constants for sections and page layout.
   spacing: {
@@ -80,52 +80,52 @@ export const DARK_THEME_TOKENS = {
 export const LIGHT_THEME_TOKENS = {
   ...DARK_THEME_TOKENS,
   palette: {
-    primary: "#087F75",
-    primaryLight: "#0A9689",
-    primaryDark: "#05655E",
+    primary: "#31775D",
+    primaryLight: "#3D8669",
+    primaryDark: "#285F49",
     secondary: "#087A98",
     success: "#237A46",
     warning: "#965C08",
     danger: "#BB343F",
-    backgroundDefault: "#F3F7F7",
-    backgroundPaper: "#FFFFFF",
+    backgroundDefault: "#F4F3EE",
+    backgroundPaper: "#FFFEFA",
   },
   surface: {
-    page: "#F3F7F7",
-    card: "#FFFFFF",
-    raised: "#E9F0F0",
-    overlay: "#FFFFFF",
-    selected: "rgba(8,127,117,0.10)",
-    selectedHover: "rgba(8,127,117,0.17)",
+    page: "#F4F3EE",
+    card: "#FFFEFA",
+    raised: "#EEF1EB",
+    overlay: "#FFFEFA",
+    selected: "rgba(49,119,93,0.10)",
+    selectedHover: "rgba(49,119,93,0.17)",
   },
   border: {
-    subtle: "#D6E2E2",
-    standard: "#B7CDCD",
-    strong: "#789C9F",
-    focus: "#087F75",
+    subtle: "#E4E7DF",
+    standard: "#BCCBC0",
+    strong: "#81998A",
+    focus: "#31775D",
   },
   text: {
-    primary: "#172F35",
-    secondary: "#47646B",
+    primary: "#232B27",
+    secondary: "#53645A",
     disabled: "#627C82",
-    hint: "#47646B",
+    hint: "#53645A",
   },
   chart: {
     palette: [
-      "#087F75",
+      "#31775D",
       "#087A98",
       "#237A46",
       "#965C08",
       "#7352B3",
       "#B45620",
       "#BB343F",
-      "#47646B",
+      "#53645A",
     ] as readonly string[],
-    axis: "#47646B",
-    grid: "#D6E2E2",
-    tooltip: "#FFFFFF",
+    axis: "#53645A",
+    grid: "#E4E7DF",
+    tooltip: "#FFFEFA",
   },
-  focus: { ring: "0 0 0 3px rgba(8,127,117,0.25)" },
+  focus: { ring: "0 0 0 3px rgba(49,119,93,0.25)" },
 };
 
 // CSS variables allow Server Components to follow appearance without hydration

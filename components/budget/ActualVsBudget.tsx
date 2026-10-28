@@ -25,6 +25,7 @@ import { loadMonthlyTransactions } from "@/lib/budget/loadMonthlyTransactions";
 import type { BudgetDraft } from "@/lib/utils/budget-normalizer";
 import { CATEGORY_COLORS } from "@/lib/utils/budget-planner";
 import { formatCurrency } from "@/lib/utils/format";
+import HeaderInfo from "@/components/ui/HeaderInfo";
 
 function monthStart(value = new Date()) {
   return new Date(value.getFullYear(), value.getMonth(), 1);
@@ -214,12 +215,15 @@ export function ActualVsBudget({
       aria-labelledby="actual-budget-heading"
       sx={{ p: { xs: 2, sm: 3 }, mt: 3 }}
     >
-      <Typography id="actual-budget-heading" variant="h5" mb={1}>
-        Actual vs Budget
-      </Typography>
-      <Typography color="text.secondary" variant="body2" mb={2}>
-        Uses the active budget amounts and recorded transactions.
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={0.5} mb={2}>
+        <Typography id="actual-budget-heading" variant="h5">
+          Actual vs Budget
+        </Typography>
+        <HeaderInfo
+          title="Actual vs Budget"
+          description="Uses the active budget amounts and recorded transactions."
+        />
+      </Stack>
       {!selectedBudget ? (
         <Typography color="text.secondary">
           Save your first budget to compare recorded activity with your monthly

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Button, Container } from "@mui/material";
+import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import Grid from "@mui/material/Grid";
 import GoalHero from "@/components/progress/GoalHero";
 import GoalEditor from "@/components/progress/GoalEditor";
@@ -140,7 +141,11 @@ export default function Page() {
   }, [refreshChartData, refreshMilestones, refreshGoalData]);
 
   return (
-    <Container component="main" maxWidth="xl" sx={{ py: { xs: 4, md: 5 } }}>
+    <Container
+      component="main"
+      maxWidth={false}
+      sx={{ py: { xs: 4, md: 5 }, maxWidth: WORKSPACE_MAX_WIDTH }}
+    >
       <PageHeader
         title="Your Path to Financial Freedom"
         description="Track the goal, career, and milestones that shape your long-term progress."

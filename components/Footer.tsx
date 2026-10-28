@@ -10,9 +10,6 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
-import { useEffect, useState } from "react";
-
-import { isAuthenticated } from "@/lib/auth/cognitoClient";
 import { FOOTER_CONTENT, FOOTER_PUBLIC_LINKS } from "@/lib/content/footer";
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
 import type {
@@ -155,15 +152,10 @@ function FooterSocialGroup({
   );
 }
 
-export function Footer() {
-  const [loggedIn, setLoggedIn] = useState(false);
+export function Footer({ loggedIn }: { loggedIn: boolean }) {
   const currentYear = new Date().getFullYear();
   const homeHref = FOOTER_PUBLIC_LINKS[0]?.href ?? "/";
   const { brandName, tagline, navigationGroups, socialLinks } = FOOTER_CONTENT;
-
-  useEffect(() => {
-    setLoggedIn(isAuthenticated());
-  }, []);
 
   return (
     <Box

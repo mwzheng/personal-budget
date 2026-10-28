@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ComparisonBarChart } from "@/components/charts/ComparisonBarChart";
 import {
-  ComparisonSummaryCards,
+  ChangeIndicator,
   TagsComparison,
   type ComparisonMetric,
 } from "@/components/charts/ComparisonDetails";
@@ -30,6 +30,7 @@ import {
   getDefaultComparisonYears,
 } from "@/lib/utils/aggregations";
 import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import { formatCurrency } from "@/lib/utils/format";
 import type { Transaction } from "@/lib/types/types";
 
 function YearSelector({
@@ -46,7 +47,7 @@ function YearSelector({
   return (
     <FormControl
       size="small"
-      sx={{ width: { xs: "100%", sm: 180 }, maxWidth: { xs: 320, sm: "none" } }}
+      sx={{ flex: { xs: 1, sm: "none" }, minWidth: 0, width: { sm: 180 } }}
     >
       <InputLabel>{label}</InputLabel>
       <Select
@@ -196,8 +197,9 @@ export function YearComparisonModal({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth={false}
       fullWidth
+      PaperProps={{ sx: { width: "min(1500px, calc(100% - 32px))", m: 2 } }}
       aria-labelledby="year-comparison-title"
     >
       <DialogTitle
@@ -206,15 +208,10 @@ export function YearComparisonModal({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          pb: 1,
+          pb: 2,
         }}
       >
-        <Typography
-          variant="h6"
-          fontWeight={700}
-          component="span"
-          sx={{ margin: "auto" }}
-        >
+        <Typography variant="h6" fontWeight={700} component="span">
           Yearly Comparison
         </Typography>
         <IconButton
@@ -254,24 +251,28 @@ export function YearComparisonModal({
             <Box
               sx={{
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                gap: { xs: 1.5, sm: 3 },
+                gap: 1.5,
                 mb: 1.5,
               }}
             >
               <YearSelector
-                label="Previous Year"
+                label="Compare From"
                 value={previousYear}
                 years={years}
                 onChange={setPreviousYear}
               />
-              <Typography variant="body2" color="text.secondary">
-                vs
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
+                to
               </Typography>
               <YearSelector
-                label="Current Year"
+                label="Compare To"
                 value={currentYear}
                 years={years}
                 onChange={setCurrentYear}
@@ -281,37 +282,165 @@ export function YearComparisonModal({
               variant="body2"
               color="text.secondary"
               textAlign="center"
-              sx={{ mb: 3 }}
+              sx={{ mb: 1 }}
             >
               {scopeText}
             </Typography>
-            <ComparisonSummaryCards
-              metrics={metrics}
-              previousLabel="Previous Year"
-              currentLabel="Current Year"
-            />
-            <Card variant="outlined" sx={{ mb: 3 }}>
-              <CardContent sx={{ p: 2 }}>
-                <Typography variant="subtitle2" fontWeight={600} mb={1}>
-                  Expense Category Comparison
-                </Typography>
-                <ComparisonBarChart
-                  prevMonth={comparison.previousYear}
-                  currMonth={comparison.currentYear}
-                  emptyMessage="No category data for the selected years"
-                />
-              </CardContent>
-            </Card>
-            <Card variant="outlined">
-              <CardContent sx={{ p: 2 }}>
-                <TagsComparison
-                  previous={comparison.previousYear}
-                  current={comparison.currentYear}
-                  previousLabel="Previous Year"
-                  currentLabel="Current Year"
-                />
-              </CardContent>
-            </Card>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "minmax(0, 1fr)",
+                  md: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: 2,
+                alignItems: "start",
+              }}
+            >
+              <Card variant="outlined">
+                <CardContent
+                  sx={{
+                    p: { xs: 2, sm: 2.5 },
+                    "&:last-child": { pb: { xs: 2, sm: 2.5 } },
+                  }}
+                >
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Comparison Overview
+                  </Typography>
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Box
+                      component="table"
+                      sx={{
+                        width: "100%",
+                        minWidth: 500,
+                        borderCollapse: "collapse",
+                        fontVariantNumeric: "tabular-nums",
+                        "& th, & td": {
+                          py: 0.75,
+                          px: 1,
+                          borderBottom: 1,
+                          borderColor: "divider",
+                        },
+                        "& tr:last-of-type td": { borderBottom: 0 },
+                        "& th:not(:first-of-type), & td:not(:first-of-type)": {
+                          textAlign: "right",
+                        },
+                      }}
+                    >
+                      <Box component="thead">
+                        <Box component="tr" sx={{ color: "text.secondary" }}>
+                          <Box
+                            component="th"
+                            scope="col"
+                            sx={{
+                              textAlign: "left",
+                              typography: "caption",
+                              fontWeight: 600,
+                            }}
+                          >
+                            Metric
+                          </Box>
+                          <Box
+                            component="th"
+                            scope="col"
+                            sx={{ typography: "caption", fontWeight: 600 }}
+                          >
+                            {String(previousYear)}
+                          </Box>
+                          <Box
+                            component="th"
+                            scope="col"
+                            sx={{ typography: "caption", fontWeight: 600 }}
+                          >
+                            {String(currentYear)}
+                          </Box>
+                          <Box
+                            component="th"
+                            scope="col"
+                            sx={{ typography: "caption", fontWeight: 600 }}
+                          >
+                            Change
+                          </Box>
+                        </Box>
+                      </Box>
+                      <Box component="tbody">
+                        {metrics.map((metric) => (
+                          <Box component="tr" key={metric.key}>
+                            <Box
+                              component="td"
+                              sx={{ typography: "body2", fontWeight: 600 }}
+                            >
+                              {metric.label}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                typography: "body2",
+                                color: "text.secondary",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {metric.previousDisplay ??
+                                (metric.formatter ?? formatCurrency)(
+                                  metric.previous,
+                                )}
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                typography: "body2",
+                                fontWeight: 700,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {metric.currentDisplay ??
+                                (metric.formatter ?? formatCurrency)(
+                                  metric.current,
+                                )}
+                            </Box>
+                            <Box component="td">
+                              <ChangeIndicator
+                                value={metric.change}
+                                positiveIsFavorable={metric.positiveIsFavorable}
+                                suffix={metric.changeSuffix}
+                              />
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+              <Card
+                variant="outlined"
+                sx={{ gridColumn: { md: "1 / -1" }, gridRow: 1 }}
+              >
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={600} mb={1}>
+                    Category Breakdown
+                  </Typography>
+                  <ComparisonBarChart
+                    prevMonth={comparison.previousYear}
+                    currMonth={comparison.currentYear}
+                    emptyMessage="No category data for the selected years"
+                    height={220}
+                  />
+                </CardContent>
+              </Card>
+              <Card variant="outlined">
+                <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ overflowX: "auto", "& > div": { minWidth: 440 } }}>
+                    <TagsComparison
+                      previous={comparison.previousYear}
+                      current={comparison.currentYear}
+                      previousLabel={String(previousYear)}
+                      currentLabel={String(currentYear)}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </>
         )}
       </DialogContent>

@@ -38,6 +38,7 @@ interface Props {
   prevMonth: ComparisonSummary;
   currMonth: ComparisonSummary;
   emptyMessage?: string;
+  height?: number;
 }
 
 const CATEGORIES = ["Need", "Want", "Saving"] as const;
@@ -55,6 +56,7 @@ export function ComparisonBarChart({
   prevMonth,
   currMonth,
   emptyMessage = "No category data for the selected periods",
+  height = 280,
 }: Props) {
   const SERVER_THEME_TOKENS = useChartTheme();
   const labelA = formatPeriod(prevMonth.period);
@@ -79,7 +81,7 @@ export function ComparisonBarChart({
           textAlign: "center",
           py: 5,
           color: "text.secondary",
-          height: 280,
+          height,
         }}
       >
         {emptyMessage}
@@ -94,7 +96,7 @@ export function ComparisonBarChart({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Box sx={{ width: "100%", height: 280 }}>
+      <Box sx={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

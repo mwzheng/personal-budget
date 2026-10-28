@@ -16,19 +16,6 @@ body {
 body {
   font-family: var(--font-open-sans), "Open Sans", sans-serif;
   background-color: var(--pb-surface-page);
-  background-image:
-    radial-gradient(
-      color-mix(in srgb, var(--pb-palette-primary) 4.5%, transparent) 0.7px,
-      transparent 0.8px
-    ),
-    radial-gradient(
-      color-mix(in srgb, var(--pb-palette-secondary) 2.5%, transparent) 0.7px,
-      transparent 0.8px
-    );
-  background-position:
-    0 0,
-    4px 4px;
-  background-size: 8px 8px;
 }
 
 h1,
@@ -137,51 +124,59 @@ th[data-numeric="true"] {
 }
 .transaction-calendar .fc .fc-event {
   border: 0;
+  border-left: 3px solid var(--calendar-event-color);
+  border-left-color: var(--calendar-event-color) !important;
   border-radius: 4px;
+  background: color-mix(
+    in srgb,
+    var(--calendar-event-color) 14%,
+    var(--pb-surface-card)
+  ) !important;
+  color: var(--pb-text-primary) !important;
   cursor: pointer;
-  padding: 0.35rem 0.5rem;
+  padding: 4px 5px;
+}
+.transaction-calendar__event--need {
+  --calendar-event-color: #31775d;
+}
+.transaction-calendar__event--want {
+  --calendar-event-color: #7296bd;
+}
+.transaction-calendar__event--saving {
+  --calendar-event-color: #d4a45a;
+}
+.transaction-calendar__event--income {
+  --calendar-event-color: #6db9bd;
+}
+[data-mui-color-scheme="dark"] .transaction-calendar__event--need {
+  --calendar-event-color: #8dc9a8;
+}
+[data-mui-color-scheme="dark"] .transaction-calendar__event--want {
+  --calendar-event-color: #96b5d6;
+}
+[data-mui-color-scheme="dark"] .transaction-calendar__event--saving {
+  --calendar-event-color: #dfb86f;
 }
 .transaction-calendar .fc .fc-event-main {
   padding: 0;
+  color: inherit;
 }
 .transaction-calendar__event-content {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  line-height: 1.25;
-  min-width: 0;
-}
-.transaction-calendar__event-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  justify-content: space-between;
+  line-height: 1.5;
   min-width: 0;
 }
 .transaction-calendar__event-amount {
-  font-family: var(--font-ibm-plex-mono);
-  font-size: 0.92rem;
+  font-size: 18px;
   font-weight: 700;
 }
-.transaction-calendar__event-category,
 .transaction-calendar__event-name {
-  font-size: 0.87rem;
-}
-.transaction-calendar__event-category {
-  background: color-mix(in srgb, var(--pb-surface-page) 58%, transparent);
-  border-radius: 3px;
-  color: var(--pb-text-primary);
-  font-weight: 600;
-  padding: 0.08rem 0.45rem;
-  white-space: nowrap;
-}
-.transaction-calendar__event-name {
+  color: var(--pb-text-secondary);
+  font-size: 15px;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  word-break: break-word;
+  white-space: nowrap;
 }
 .transaction-calendar .fc .fc-popover {
   background: var(--pb-surface-overlay);

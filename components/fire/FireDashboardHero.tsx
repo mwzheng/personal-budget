@@ -7,6 +7,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import HeaderInfo from "@/components/ui/HeaderInfo";
 import { formatCurrencyWhole } from "@/lib/utils/format";
 import { formatFireDateLabel } from "@/lib/utils/fire";
 import { SERVER_THEME_TOKENS } from "@/lib/theme/server-theme-tokens";
@@ -82,12 +83,12 @@ export default function FireDashboardHero({ scenario, summary, rows }: Props) {
           <Typography variant="overline" color="text.secondary">
             {scenario.name} · {statusLabel.label}
           </Typography>
-          <Typography variant="h4" fontWeight={700}>
-            {headline}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {description}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="h4" fontWeight={700}>
+              {headline}
+            </Typography>
+            <HeaderInfo title={headline} description={description} />
+          </Stack>
           <Box sx={{ mt: 1 }}>
             <Stack
               direction="row"
