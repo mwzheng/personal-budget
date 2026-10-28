@@ -1,6 +1,6 @@
 # Screenshot Capture
 
-The README images show the live app at a 1440px desktop width in Light mode. The capture script resets seeded browser demo data before each page and saves full-page PNGs for Reports, Budget Planner, Savings Progress, Salary History, and FIRE Calculator. It does not capture the redesign prototype.
+The README images show the live app at a 1440px desktop width in Light mode. The capture script resets seeded browser demo data before each page and saves full-page PNGs for Reports, Budget Planner, Savings Progress, Salary History, and FIRE Calculator.
 
 Use Node.js 22 or later for the built-in WebSocket client. Install dependencies with `pnpm install`, then start the app:
 

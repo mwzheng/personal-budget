@@ -162,7 +162,7 @@ require a fresh login in the normal case.
 
 ## Contributing
 
-This is a personal project; contributions and suggestions are welcome. Keep documentation and screenshots in sync with user-visible changes. See [candidate product ideas](docs/future-feature-ideas.md) and [redesign prototype notes](docs/redesign/README.md) for exploratory work.
+This is a personal project; contributions and suggestions are welcome. Keep documentation and screenshots in sync with user-visible changes. See [candidate product ideas](docs/future-feature-ideas.md) for exploratory work.
 
 ## Acknowledgements
 
