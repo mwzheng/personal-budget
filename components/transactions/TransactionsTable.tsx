@@ -18,6 +18,7 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
+import { darken } from "@mui/material/styles";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
@@ -173,9 +174,11 @@ export function TransactionsTable({
                         label={t.category}
                         size="small"
                         sx={{
-                          backgroundColor:
+                          backgroundColor: darken(
                             TRANSACTION_CATEGORY_HEX_COLORS[t.category],
-                          color: "#111",
+                            0.4,
+                          ),
+                          color: "#fff",
                         }}
                       />
                     </TableCell>
