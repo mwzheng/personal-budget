@@ -31,7 +31,10 @@ import {
   getDefaultComparisonMonths,
   getMonthsInTransactionRange,
 } from "@/lib/utils/aggregations";
-import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import {
+  CATEGORY_HEX_COLORS,
+  TRANSACTION_CATEGORY_HEX_COLORS,
+} from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import type { Transaction } from "@/lib/types/types";
 
@@ -135,7 +138,7 @@ export function MonthComparisonModal({
       previous: comparison.prevMonth.incomeAmount,
       current: comparison.currMonth.incomeAmount,
       change: comparison.changes.incomeAmount,
-      color: "#26a69a",
+      color: TRANSACTION_CATEGORY_HEX_COLORS.Income,
       positiveIsFavorable: true,
     },
     {

@@ -24,7 +24,7 @@ import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { useEffect, useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { Transaction } from "@/lib/types/types";
-import { TRANSACTION_CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
+import { TRANSACTION_CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 
 type SortField = "date" | "name" | "amount" | "category";
 type SortDir = "asc" | "desc";
@@ -172,7 +172,11 @@ export function TransactionsTable({
                       <Chip
                         label={t.category}
                         size="small"
-                        color={TRANSACTION_CATEGORY_CHIP_COLORS[t.category]}
+                        sx={{
+                          backgroundColor:
+                            TRANSACTION_CATEGORY_HEX_COLORS[t.category],
+                          color: "#111",
+                        }}
                       />
                     </TableCell>
                     <TableCell>{t.paymentMethod}</TableCell>

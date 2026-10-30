@@ -106,8 +106,8 @@ describe("transaction calendar helpers", () => {
       },
     });
     expect(events[3]).toMatchObject({
-      backgroundColor: "#26a69a",
-      borderColor: "#26a69a",
+      backgroundColor: "#ab47bc",
+      borderColor: "#ab47bc",
       classNames: [
         "transaction-calendar__event",
         "transaction-calendar__event--income",

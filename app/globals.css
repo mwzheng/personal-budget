@@ -137,25 +137,16 @@ th[data-numeric="true"] {
   padding: 4px 5px;
 }
 .transaction-calendar__event--need {
-  --calendar-event-color: #31775d;
+  --calendar-event-color: #ef5350;
 }
 .transaction-calendar__event--want {
-  --calendar-event-color: #7296bd;
+  --calendar-event-color: #42a5f5;
 }
 .transaction-calendar__event--saving {
-  --calendar-event-color: #d4a45a;
+  --calendar-event-color: #66bb6a;
 }
 .transaction-calendar__event--income {
-  --calendar-event-color: #6db9bd;
-}
-[data-mui-color-scheme="dark"] .transaction-calendar__event--need {
-  --calendar-event-color: #8dc9a8;
-}
-[data-mui-color-scheme="dark"] .transaction-calendar__event--want {
-  --calendar-event-color: #96b5d6;
-}
-[data-mui-color-scheme="dark"] .transaction-calendar__event--saving {
-  --calendar-event-color: #dfb86f;
+  --calendar-event-color: #ab47bc;
 }
 .transaction-calendar .fc .fc-event-main {
   padding: 0;
@@ -168,6 +159,7 @@ th[data-numeric="true"] {
   min-width: 0;
 }
 .transaction-calendar__event-amount {
+  color: var(--pb-text-primary);
   font-size: 18px;
   font-weight: 700;
 }

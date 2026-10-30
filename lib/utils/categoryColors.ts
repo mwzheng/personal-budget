@@ -37,7 +37,7 @@ export const TRANSACTION_CATEGORY_HEX_COLORS: Record<
   string
 > = {
   ...CATEGORY_HEX_COLORS,
-  Income: "#26a69a",
+  Income: "#ab47bc",
 };
 
 export const TRANSACTION_CATEGORY_CHIP_COLORS: Record<

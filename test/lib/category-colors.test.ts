@@ -63,7 +63,7 @@ describe("TRANSACTION_CATEGORY_HEX_COLORS", () => {
   it("extends expense colors with an income color", () => {
     expect(TRANSACTION_CATEGORY_HEX_COLORS).toMatchObject({
       ...CATEGORY_HEX_COLORS,
-      Income: "#26a69a",
+      Income: "#ab47bc",
     });
   });
 });

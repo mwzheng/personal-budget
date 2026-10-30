@@ -29,7 +29,10 @@ import {
   buildYearComparison,
   getDefaultComparisonYears,
 } from "@/lib/utils/aggregations";
-import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
+import {
+  CATEGORY_HEX_COLORS,
+  TRANSACTION_CATEGORY_HEX_COLORS,
+} from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import type { Transaction } from "@/lib/types/types";
 
@@ -115,7 +118,7 @@ export function YearComparisonModal({
       previous: comparison.previousYear.incomeAmount,
       current: comparison.currentYear.incomeAmount,
       change: comparison.changes.incomeAmount,
-      color: "#26a69a",
+      color: TRANSACTION_CATEGORY_HEX_COLORS.Income,
       positiveIsFavorable: true,
     },
     {
@@ -131,7 +134,7 @@ export function YearComparisonModal({
       previous: comparison.previousYear.savingsAmount,
       current: comparison.currentYear.savingsAmount,
       change: comparison.changes.savingsAmount,
-      color: "#15803D",
+      color: CATEGORY_HEX_COLORS.Saving,
       positiveIsFavorable: true,
     },
     {

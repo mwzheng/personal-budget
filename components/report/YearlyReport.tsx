@@ -25,8 +25,9 @@ import StatCard from "@/components/report/StatCard";
 import SectionCard from "@/components/ui/SectionCard";
 import type { YearlyReport as YearlyReportData } from "@/lib/types/types";
 import {
-  CATEGORY_CHIP_COLORS,
+  CATEGORY_HEX_COLORS,
   TAG_CHART_PALETTE,
+  TRANSACTION_CATEGORY_HEX_COLORS,
 } from "@/lib/utils/categoryColors";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatTransactionLongDate } from "@/lib/utils/transaction-calendar";
@@ -154,7 +155,7 @@ export function YearlyReport({
               <StatCard
                 label="Income"
                 value={formatCurrency(report.incomeAmount)}
-                color="#26a69a"
+                color={TRANSACTION_CATEGORY_HEX_COLORS.Income}
                 loading={false}
               />
               <StatCard
@@ -166,7 +167,7 @@ export function YearlyReport({
               <StatCard
                 label="Savings"
                 value={formatCurrency(report.savingsAmount)}
-                color="#15803D"
+                color={CATEGORY_HEX_COLORS.Saving}
                 loading={false}
               />
               <StatCard
@@ -194,7 +195,7 @@ export function YearlyReport({
               <StatCard
                 label="Avg. monthly savings"
                 value={formatCurrency(report.averageMonthlySavings)}
-                color="#15803D"
+                color={CATEGORY_HEX_COLORS.Saving}
                 loading={false}
               />
             </Box>
@@ -261,7 +262,10 @@ export function YearlyReport({
                       <Chip
                         size="small"
                         label={`${category}s`}
-                        color={CATEGORY_CHIP_COLORS[category]}
+                        sx={{
+                          backgroundColor: CATEGORY_HEX_COLORS[category],
+                          color: "#111",
+                        }}
                       />
                       <Typography className="financial-value">
                         {formatCurrency(report.totalByCategoryType[category])}

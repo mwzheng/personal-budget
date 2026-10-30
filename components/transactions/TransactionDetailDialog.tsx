@@ -23,10 +23,7 @@ import {
   formatTransactionAmount,
   formatTransactionLongDate,
 } from "@/lib/utils/transaction-calendar";
-import {
-  TRANSACTION_CATEGORY_CHIP_COLORS,
-  TRANSACTION_CATEGORY_HEX_COLORS,
-} from "@/lib/utils/categoryColors";
+import { TRANSACTION_CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 
 const EMPTY_VALUE_SX = {
   color: "text.secondary",
@@ -111,7 +108,11 @@ export function TransactionDetailDialog({
             <Chip
               label={transaction.category}
               size="small"
-              color={TRANSACTION_CATEGORY_CHIP_COLORS[transaction.category]}
+              sx={{
+                backgroundColor:
+                  TRANSACTION_CATEGORY_HEX_COLORS[transaction.category],
+                color: "#111",
+              }}
             />
           )}
         </DialogTitle>

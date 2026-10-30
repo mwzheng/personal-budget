@@ -12,11 +12,10 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
 import { useState } from "react";
 import { SankeyRequestBody, SankeyResponse } from "@/lib/types/types";
 import { apiFetch } from "@/lib/api/apiFetch";
-import { CATEGORY_CHIP_COLORS } from "@/lib/utils/categoryColors";
+import { CATEGORY_HEX_COLORS } from "@/lib/utils/categoryColors";
 
 interface Props {
   onResult: (response: SankeyResponse) => void;
@@ -38,18 +37,7 @@ const ROWS: SliderRow[] = [
 ];
 
 export function SankeyForm({ onResult }: Props) {
-  const theme = useTheme();
-  // Note 3: Derive theme-aware colors from the centralized chip color tokens
-  // so the palette follows light/dark mode while staying in sync with the rest
-  // of the app's category color assignments.
-  const rowColors = Object.fromEntries(
-    (
-      Object.entries(CATEGORY_CHIP_COLORS) as [
-        string,
-        "error" | "info" | "success",
-      ][]
-    ).map(([key, token]) => [key, theme.palette[token].main]),
-  );
+  const rowColors = CATEGORY_HEX_COLORS;
 
   const [monthlyIncome, setMonthlyIncome] = useState<number>(5000);
   const [incomeLabel, setIncomeLabel] = useState("Income");
