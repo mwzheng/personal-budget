@@ -26,6 +26,7 @@ interface RetirementQueryItem {
 }
 
 interface MilestoneQueryItem {
+  kind?: unknown;
   milestoneId?: unknown;
   amount?: unknown;
   year?: unknown;
@@ -143,6 +144,7 @@ export async function putMilestone(
   userId: string,
   m: {
     milestoneId?: string;
+    kind?: "achievement" | "target";
     amount: number;
     year?: number | null;
     month?: number | null;
@@ -160,6 +162,7 @@ export async function putMilestone(
     pk: `user#${userId}`,
     sk: `${SK_PREFIX.MILESTONE}${year}#${id}`,
     milestoneId: id,
+    ...(m.kind ? { kind: m.kind } : {}),
     amount: m.amount,
     year: m.year ?? null,
     month: m.month ?? null,
@@ -176,6 +179,7 @@ export async function updateMilestone(
   userId: string,
   milestone: {
     milestoneId: string;
+    kind?: "achievement" | "target";
     originalYear: number | null;
     amount: number;
     year?: number | null;
@@ -210,6 +214,7 @@ export async function updateMilestone(
     pk: `user#${userId}`,
     sk: `${SK_PREFIX.MILESTONE}${nextYear}#${milestone.milestoneId}`,
     milestoneId: milestone.milestoneId,
+    ...(milestone.kind ? { kind: milestone.kind } : {}),
     amount: milestone.amount,
     year: milestone.year ?? null,
     month: milestone.month ?? null,
@@ -286,6 +291,9 @@ export async function getUserMilestones(
   } while (lastKey);
   return items.map((item) => ({
     milestoneId: String(item.milestoneId || ""),
+    ...(item.kind === "achievement" || item.kind === "target"
+      ? { kind: item.kind }
+      : {}),
     amount: Number(item.amount || 0),
     year: typeof item.year === "number" ? item.year : null,
     month: typeof item.month === "number" ? item.month : null,

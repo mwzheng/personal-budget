@@ -18,8 +18,18 @@ Money set aside for future use.
 **Savings goal**:
 The target retirement savings balance used to measure financial progress.
 
+**Year-end retirement balance**:
+The total retirement savings balance at the end of a calendar year.
+_Avoid_: Annual contributions, amount saved that year
+
 **Savings milestone**:
-A recorded savings amount with a date or other context that marks an achievement or a target. Its current status depends on whether the latest retirement balance meets that amount.
+A retirement savings amount marking either an achieved milestone or a milestone target.
+
+**Achieved milestone**:
+A retirement savings milestone the user has reached, with a record of its month and year. It remains an achievement if the retirement balance later falls.
+
+**Milestone target**:
+A retirement savings amount the user intends to reach, optionally by a target month and year. Reaching its amount does not establish when the achievement happened.
 
 **Budget**:
 A plan that assigns expected income to planned spending and savings for a period.

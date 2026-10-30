@@ -7,7 +7,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
-import { Box, Chip, Skeleton, Stack, Typography } from "@mui/material";
+import { Box, Button, Chip, Skeleton, Stack, Typography } from "@mui/material";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import MilestoneForm from "@/components/forms/MilestoneForm";
@@ -37,6 +37,7 @@ interface Props {
   currentAmount?: number | null;
   /** Called after a milestone is deleted so the parent can refresh. */
   onMilestonesChanged?: () => void | Promise<void>;
+  onRecordAchievement?: (amount: number) => void;
 }
 
 function fmt(n: number): string {
@@ -48,6 +49,7 @@ export default function MilestonesList({
   loading = false,
   currentAmount = null,
   onMilestonesChanged,
+  onRecordAchievement,
 }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [editCandidate, setEditCandidate] = useState<MilestoneEntry | null>(
@@ -92,7 +94,12 @@ export default function MilestonesList({
   const timeline = buildMilestoneTimeline(milestones);
   const nextUnreachedId = sortMilestonesChronologically(milestones)
     .filter(
-      (milestone) => currentAmount === null || milestone.amount > currentAmount,
+      (milestone) =>
+        milestone.kind !== "achievement" &&
+        !milestones.some(
+          (m) => m.kind === "achievement" && m.amount === milestone.amount,
+        ) &&
+        (currentAmount === null || milestone.amount > currentAmount),
     )
     .sort((a, b) => a.amount - b.amount)[0]?.milestoneId;
 
@@ -131,8 +138,20 @@ export default function MilestonesList({
           <Box component="ol" sx={{ listStyle: "none", m: 0, p: 0 }}>
             {timeline.map(({ milestone: item, elapsedLabel }, index) => {
               const isLast = index === timeline.length - 1;
-              const reached =
-                currentAmount !== null && item.amount <= currentAmount;
+              const achieved =
+                item.kind === "achievement" ||
+                (item.kind === "target" &&
+                  milestones.some(
+                    (m) => m.kind === "achievement" && m.amount === item.amount,
+                  ));
+              const reached = item.kind
+                ? achieved
+                : currentAmount !== null && item.amount <= currentAmount;
+              const canRecord =
+                item.kind === "target" &&
+                !achieved &&
+                currentAmount !== null &&
+                currentAmount >= item.amount;
               const dateLabel = formatMilestoneDate(item);
               return (
                 <Box
@@ -238,6 +257,11 @@ export default function MilestonesList({
                                 variant="body2"
                                 color="text.secondary"
                               >
+                                {item.kind === "target"
+                                  ? "Target: "
+                                  : item.kind === "achievement"
+                                    ? "Reached: "
+                                    : ""}
                                 {dateLabel}
                               </Typography>
                             ) : null}
@@ -261,6 +285,14 @@ export default function MilestonesList({
                             {item.note}
                           </Typography>
                         ) : null}
+                        {canRecord && (
+                          <Button
+                            size="small"
+                            onClick={() => onRecordAchievement?.(item.amount)}
+                          >
+                            Record When Reached
+                          </Button>
+                        )}
                       </Stack>
 
                       <Stack direction="row" spacing={0.75}>
@@ -311,6 +343,7 @@ export default function MilestonesList({
         {editCandidate ? (
           <MilestoneForm
             existingMilestone={editCandidate}
+            milestones={milestones}
             onSaved={async () => {
               await onMilestonesChanged?.();
               setEditCandidate(null);

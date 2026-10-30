@@ -16,6 +16,10 @@ function getUserIdFromPayload(payload: Record<string, unknown>): string {
   return sub;
 }
 
+function isCompletedYear(year: number): boolean {
+  return Number.isInteger(year) && year >= 1 && year < new Date().getFullYear();
+}
+
 export async function GET(request: Request) {
   try {
     const payload = await getPayloadFromRequest(request);
@@ -53,6 +57,15 @@ export async function POST(request: Request) {
         { ok: false, error: "Missing year" },
         { status: 400 },
       );
+    if (!isCompletedYear(body.year))
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Retirement records can only be added for completed calendar years.",
+        },
+        { status: 400 },
+      );
     if (
       typeof body.startAmount !== "number" ||
       typeof body.endAmount !== "number"
@@ -81,6 +94,15 @@ export async function PUT(request: Request) {
     if (!body || !body.entryId || typeof body.year !== "number")
       return NextResponse.json(
         { ok: false, error: "Missing entryId/year" },
+        { status: 400 },
+      );
+    if (!isCompletedYear(body.year))
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Retirement records can only be saved for completed calendar years.",
+        },
         { status: 400 },
       );
     const updated = await putRetirement(userId, body);

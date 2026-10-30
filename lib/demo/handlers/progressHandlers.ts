@@ -264,12 +264,25 @@ async function handleMilestones(ctx: HandlerContext): Promise<Response | null> {
 
     const created: MilestoneEntry = {
       milestoneId: createDemoId("demo-milestone"),
+      kind: parsed.data.kind,
       amount: parsed.data.amount,
       year: parsed.data.year ?? null,
       month: parsed.data.month ?? null,
       age: parsed.data.age ?? null,
       note: parsed.data.note,
     };
+
+    if (
+      created.kind === "achievement" &&
+      getDemoStore().milestones.some(
+        (m) => m.kind === "achievement" && m.amount === created.amount,
+      )
+    ) {
+      return jsonResponse(
+        { ok: false, error: "An achievement for this amount already exists." },
+        { status: 409 },
+      );
+    }
 
     updateDemoStore((current) => ({
       ...current,
@@ -292,12 +305,27 @@ async function handleMilestones(ctx: HandlerContext): Promise<Response | null> {
 
     const updated: MilestoneEntry = {
       milestoneId: parsed.data.milestoneId,
+      kind: parsed.data.kind,
       amount: parsed.data.amount,
       year: parsed.data.year ?? null,
       month: parsed.data.month ?? null,
       age: parsed.data.age ?? null,
       note: parsed.data.note,
     };
+    if (
+      updated.kind === "achievement" &&
+      getDemoStore().milestones.some(
+        (m) =>
+          m.kind === "achievement" &&
+          m.amount === updated.amount &&
+          m.milestoneId !== updated.milestoneId,
+      )
+    ) {
+      return jsonResponse(
+        { ok: false, error: "An achievement for this amount already exists." },
+        { status: 409 },
+      );
+    }
     updateDemoStore((current) => ({
       ...current,
       milestones: current.milestones.map((entry) =>

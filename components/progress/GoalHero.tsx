@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  LinearProgress,
   Skeleton,
   Typography,
 } from "@mui/material";
@@ -21,7 +20,6 @@ interface Props {
   retirementEntries: RetirementEntry[];
   milestones: MilestoneEntry[];
   onEditGoal: () => void;
-  onAddMilestone: () => void;
   loading?: boolean;
 }
 
@@ -32,7 +30,6 @@ export default function GoalHero({
   retirementEntries,
   milestones,
   onEditGoal,
-  onAddMilestone,
   loading = false,
 }: Props) {
   const entries = [...retirementEntries].sort((a, b) => b.year - a.year);
@@ -51,7 +48,14 @@ export default function GoalHero({
     totalSaved === null
       ? undefined
       : milestones
-          .filter((m) => m.amount > totalSaved)
+          .filter(
+            (m) =>
+              m.kind !== "achievement" &&
+              !milestones.some(
+                (a) => a.kind === "achievement" && a.amount === m.amount,
+              ) &&
+              m.amount > totalSaved,
+          )
           .sort((a, b) => a.amount - b.amount)[0];
   const change =
     latest && previous ? latest.endAmount - previous.endAmount : null;
@@ -60,8 +64,8 @@ export default function GoalHero({
     <Card elevation={1} sx={{ overflow: "hidden" }}>
       <CardContent
         sx={{
-          p: { xs: 2.5, md: 4 },
-          "&:last-child": { pb: { xs: 2.5, md: 4 } },
+          p: { xs: 2.5, md: 3 },
+          "&:last-child": { pb: { xs: 2.5, md: 3 } },
         }}
       >
         <Box
@@ -73,19 +77,9 @@ export default function GoalHero({
             flexWrap: "wrap",
           }}
         >
-          <Box>
-            <Typography
-              variant="overline"
-              color="primary.main"
-              fontWeight={700}
-              letterSpacing="0.1em"
-            >
-              Retirement savings
-            </Typography>
-            <Typography component="h2" variant="h5" fontWeight={700}>
-              Your Savings Goal
-            </Typography>
-          </Box>
+          <Typography component="h2" variant="h5" fontWeight={700}>
+            Savings Goal
+          </Typography>
           <Button variant="outlined" onClick={onEditGoal}>
             {goalTargetAmount === null ? "Set Goal" : "Edit Goal"}
           </Button>
@@ -95,92 +89,124 @@ export default function GoalHero({
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              md: "minmax(0, 1.3fr) minmax(240px, 0.7fr)",
+              md: "minmax(0, 1fr) minmax(260px, 1fr)",
             },
-            gap: { xs: 3, md: 5 },
-            mt: 3,
+            gap: { xs: 2, md: 3 },
+            mt: 2,
+            alignItems: "center",
           }}
         >
           <Box>
-            <Typography variant="body2" color="text.secondary">
-              {latest ? `${latest.year} balance` : "Latest recorded balance"}
-            </Typography>
-            {loading && totalSaved === null ? (
-              <Skeleton width={180} height={55} />
-            ) : (
-              <Typography
-                variant="h3"
-                fontWeight={700}
-                sx={{ mt: 0.5, overflowWrap: "anywhere" }}
-              >
-                {totalSaved === null ? "—" : formatAmount(totalSaved)}
-              </Typography>
-            )}
-            {change !== null && latest && previous && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {change > 0 ? "+" : change < 0 ? "−" : ""}
-                {formatAmount(Math.abs(change))} from {previous.year} to{" "}
-                {latest.year}
-              </Typography>
-            )}
-            {totalSaved === null && !loading && (
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Add a retirement balance to track your progress.
-                </Typography>
-                <Button href="#retirement-history" size="small" sx={{ px: 0 }}>
-                  Add Retirement
-                </Button>
-              </Box>
-            )}
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                gap: 2,
-                mt: 3,
-                mb: 1,
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 3 },
+                minWidth: 0,
               }}
             >
-              <Typography variant="body2" color="text.secondary">
-                {reached
-                  ? "Goal reached"
-                  : goalTargetAmount === null
-                    ? "Set a goal to track your progress"
-                    : totalSaved === null
-                      ? "Add a balance to track your progress"
-                      : "Progress toward your goal"}
-              </Typography>
-              {rawPct !== null && (
-                <Typography
-                  variant="body2"
-                  color="primary.main"
-                  fontWeight={700}
-                >
-                  {Number(rawPct.toFixed(2))}%
-                </Typography>
-              )}
-            </Box>
-            {clampedPct !== null && (
-              <LinearProgress
-                variant="determinate"
-                value={clampedPct}
-                aria-label="Savings goal progress"
+              <Box
+                component="svg"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
                 sx={{
-                  height: 10,
-                  borderRadius: 99,
-                  "& .MuiLinearProgress-bar": { borderRadius: 99 },
+                  width: { xs: 88, sm: 140 },
+                  flexShrink: 0,
+                  color: "primary.main",
                 }}
-              />
-            )}
+              >
+                <defs>
+                  <clipPath id="savings-bowl">
+                    <path d="M18 45h64c-2 21-14 32-32 32S20 66 18 45Z" />
+                  </clipPath>
+                </defs>
+                {clampedPct !== null && (
+                  <rect
+                    x="18"
+                    y={77 - clampedPct * 0.32}
+                    width="64"
+                    height={clampedPct * 0.32}
+                    fill="currentColor"
+                    opacity="0.28"
+                    clipPath="url(#savings-bowl)"
+                  />
+                )}
+                <path
+                  d="M18 45h64c-2 21-14 32-32 32S20 66 18 45Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="7"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M30 37l12-10 10 6 17-14M59 19h10v10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {latest
+                    ? `${latest.year} year-end balance`
+                    : "Latest recorded balance"}
+                </Typography>
+                {loading && totalSaved === null ? (
+                  <Skeleton width={180} height={55} />
+                ) : (
+                  <Typography
+                    variant="h3"
+                    fontWeight={700}
+                    sx={{
+                      mt: 0.5,
+                      fontSize: { xs: "2rem", sm: "3rem" },
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {totalSaved === null ? "—" : formatAmount(totalSaved)}
+                  </Typography>
+                )}
+                {change !== null && latest && previous && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    {change > 0 ? "+" : change < 0 ? "−" : ""}
+                    {formatAmount(Math.abs(change))} from {previous.year} to{" "}
+                    {latest.year}
+                  </Typography>
+                )}
+                {totalSaved === null && !loading && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Add a retirement balance to track your progress.
+                    </Typography>
+                  </Box>
+                )}
+                {rawPct !== null && (
+                  <Typography
+                    variant="body2"
+                    color="primary.main"
+                    fontWeight={700}
+                    sx={{ mt: 1 }}
+                  >
+                    {Number(rawPct.toFixed(2))}% of goal
+                    {reached ? " · Goal reached" : ""}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
           </Box>
           <Box
             sx={{
-              p: 2.5,
+              p: 2,
               borderRadius: 2,
               bgcolor: (theme) => alpha(theme.palette.primary.main, 0.07),
               display: "grid",
-              gap: 2,
+              gap: 1,
             }}
           >
             <Box
@@ -205,7 +231,7 @@ export default function GoalHero({
                   : formatAmount(Math.abs(goalTargetAmount - totalSaved))}
               </Typography>
             </Box>
-            <Box sx={{ borderTop: 1, borderColor: "divider", pt: 2 }}>
+            <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1 }}>
               <Typography variant="body2" color="text.secondary">
                 Next milestone
               </Typography>
@@ -221,13 +247,22 @@ export default function GoalHero({
               ) : milestones.length === 0 ? (
                 <>
                   <Typography fontWeight={600}>No milestones yet</Typography>
-                  <Button size="small" onClick={onAddMilestone} sx={{ px: 0 }}>
-                    Add Milestone
-                  </Button>
                 </>
               ) : totalSaved === null ? (
                 <Typography fontWeight={600}>
                   Add a balance to see your next milestone
+                </Typography>
+              ) : milestones.some(
+                  (m) =>
+                    m.kind === "target" &&
+                    totalSaved !== null &&
+                    m.amount <= totalSaved &&
+                    !milestones.some(
+                      (a) => a.kind === "achievement" && a.amount === m.amount,
+                    ),
+                ) ? (
+                <Typography fontWeight={600}>
+                  Record when you reached your target
                 </Typography>
               ) : (
                 <Typography fontWeight={600}>All milestones reached</Typography>

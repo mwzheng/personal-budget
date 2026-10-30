@@ -7,7 +7,6 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Box,
-  Button,
   Chip,
   Typography,
   Stack,
@@ -38,6 +37,7 @@ interface Props {
   entries?: RetirementEntry[];
   loading?: boolean;
   onEntriesChanged?: () => void | Promise<void>;
+  addRequest?: number;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -48,12 +48,19 @@ export default function RetirementList({
   entries: controlledEntries,
   loading: controlledLoading,
   onEntriesChanged,
+  addRequest = 0,
 }: Props) {
   const [localEntries, setLocalEntries] = useState<RetirementEntry[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
   const [editing, setEditing] = useState<RetirementEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (addRequest > 0) {
+      setEditing(null);
+      setDialogOpen(true);
+    }
+  }, [addRequest]);
   const {
     candidate: deleteCandidate,
     requestDelete,
@@ -113,18 +120,6 @@ export default function RetirementList({
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
-        >
-          Add Retirement
-        </Button>
-      </Box>
-
       {dialogOpen ? (
         <ProgressEntryDialog
           open={dialogOpen}
@@ -133,6 +128,11 @@ export default function RetirementList({
         >
           <RetirementForm
             defaultEntry={editing || undefined}
+            latestEndAmount={
+              [...(controlledEntries ?? localEntries)].sort(
+                (a, b) => b.year - a.year,
+              )[0]?.endAmount
+            }
             onSaved={handleSaved}
             onCancel={closeDialog}
           />

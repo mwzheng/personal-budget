@@ -147,7 +147,9 @@ export default function ProgressCharts({
         minHeight: 0,
       }}
     >
-      <Box sx={{ width: "100%", flex: 1, minHeight: CHART_HEIGHT }}>
+      <Box
+        sx={{ width: "100%", height: CHART_HEIGHT, minHeight: CHART_HEIGHT }}
+      >
         {loading ? (
           <ChartLoadingState height={CHART_HEIGHT} showLegend={false} />
         ) : error ? (

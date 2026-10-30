@@ -18,6 +18,8 @@ import type { MilestoneEntry } from "@/lib/types/types";
 
 interface Props {
   existingMilestone?: MilestoneEntry;
+  defaultAmount?: number;
+  milestones?: MilestoneEntry[];
   onSaved?: () => void | Promise<void>;
   onCancel?: () => void;
 }
@@ -39,6 +41,8 @@ const MONTHS = [
 
 export default function MilestoneForm({
   existingMilestone,
+  defaultAmount,
+  milestones = [],
   onSaved,
   onCancel,
 }: Props) {
@@ -47,9 +51,17 @@ export default function MilestoneForm({
   const [month, setMonth] = useState("");
   const [age, setAge] = useState("");
   const [note, setNote] = useState("");
+  const [kind, setKind] = useState<"achievement" | "target">("achievement");
 
   useEffect(() => {
-    setAmount(existingMilestone ? String(existingMilestone.amount) : "");
+    setAmount(
+      existingMilestone
+        ? String(existingMilestone.amount)
+        : defaultAmount != null
+          ? String(defaultAmount)
+          : "",
+    );
+    setKind(existingMilestone?.kind ?? "achievement");
     setYear(
       existingMilestone?.year != null ? String(existingMilestone.year) : "",
     );
@@ -58,7 +70,7 @@ export default function MilestoneForm({
     );
     setAge(existingMilestone?.age != null ? String(existingMilestone.age) : "");
     setNote(existingMilestone?.note ?? "");
-  }, [existingMilestone]);
+  }, [existingMilestone, defaultAmount]);
 
   const {
     submit: apiSubmit,
@@ -69,8 +81,22 @@ export default function MilestoneForm({
     onSuccess: onSaved,
   });
 
-  const yearRequired = !existingMilestone || existingMilestone.year != null;
-  const monthRequired = !existingMilestone || existingMilestone.month != null;
+  const isLegacy = Boolean(existingMilestone && !existingMilestone.kind);
+  const yearRequired = isLegacy
+    ? existingMilestone?.year != null
+    : kind === "achievement";
+  const monthRequired = isLegacy
+    ? existingMilestone?.month != null
+    : kind === "achievement";
+  const duplicate =
+    !isLegacy &&
+    kind === "achievement" &&
+    milestones.some(
+      (m) =>
+        m.kind === "achievement" &&
+        m.amount === Number(amount) &&
+        m.milestoneId !== existingMilestone?.milestoneId,
+    );
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -90,6 +116,8 @@ export default function MilestoneForm({
           numericMonth < 1 ||
           numericMonth > 12)) ||
       (month && !year) ||
+      (!isLegacy && kind === "target" && Boolean(month) !== Boolean(year)) ||
+      duplicate ||
       loading
     ) {
       return;
@@ -100,6 +128,7 @@ export default function MilestoneForm({
       year: year ? numericYear : null,
       month: month ? numericMonth : null,
     };
+    if (!isLegacy) body.kind = kind;
 
     if (age) {
       body.age = Number(sanitizeNumberString(age));
@@ -118,6 +147,27 @@ export default function MilestoneForm({
   return (
     <Box component="form" onSubmit={submit} sx={{ width: "100%", pt: 1 }}>
       <Stack spacing={2}>
+        {!isLegacy && (
+          <FormControl fullWidth>
+            <InputLabel id="milestone-kind">Milestone Type</InputLabel>
+            <Select
+              labelId="milestone-kind"
+              label="Milestone Type"
+              value={kind}
+              onChange={(event) =>
+                setKind(event.target.value as "achievement" | "target")
+              }
+            >
+              <MenuItem value="achievement">Achievement</MenuItem>
+              <MenuItem value="target">Target</MenuItem>
+            </Select>
+          </FormControl>
+        )}
+        {duplicate && (
+          <Box sx={{ color: "error.main" }}>
+            An achievement for this amount already exists.
+          </Box>
+        )}
         <TextField
           label="Amount"
           value={amount}
@@ -136,7 +186,11 @@ export default function MilestoneForm({
           required={yearRequired}
           type="number"
           inputProps={{ min: 1, max: 9999 }}
-          helperText="Enter a four-digit calendar year."
+          helperText={
+            kind === "target" && !isLegacy
+              ? "Optional target year, paired with a month."
+              : "Enter the year reached."
+          }
         />
         <FormControl required={monthRequired} fullWidth>
           <InputLabel id="milestone-month-label">Month</InputLabel>
@@ -146,6 +200,7 @@ export default function MilestoneForm({
             value={month}
             onChange={(event) => setMonth(String(event.target.value))}
           >
+            {!monthRequired && <MenuItem value="">None</MenuItem>}
             {MONTHS.map((monthName, index) => (
               <MenuItem key={monthName} value={String(index + 1)}>
                 {monthName}
@@ -153,7 +208,9 @@ export default function MilestoneForm({
             ))}
           </Select>
           <FormHelperText>
-            Choose the month this milestone was reached.
+            {kind === "target" && !isLegacy
+              ? "Optional target month."
+              : "Choose the month this milestone was reached."}
           </FormHelperText>
         </FormControl>
         <TextField

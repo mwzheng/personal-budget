@@ -103,10 +103,10 @@ describe("milestone timeline helpers", () => {
     );
 
     expect(formSource).toContain(
-      "const yearRequired = !existingMilestone || existingMilestone.year != null;",
+      'const yearRequired = isLegacy ? existingMilestone?.year != null : kind === "achievement";',
     );
     expect(formSource).toContain(
-      "const monthRequired = !existingMilestone || existingMilestone.month != null;",
+      'const monthRequired = isLegacy ? existingMilestone?.month != null : kind === "achievement";',
     );
     expect(formSource).toMatch(/label="Year"[\s\S]*?required=\{yearRequired\}/);
     expect(formSource).toMatch(/<FormControl required=\{monthRequired\}/);

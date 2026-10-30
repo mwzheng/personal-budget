@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Box, Button, Container } from "@mui/material";
+import { Button, Container } from "@mui/material";
 import { WORKSPACE_MAX_WIDTH } from "@/lib/theme/layout";
 import Grid from "@mui/material/Grid";
 import GoalHero from "@/components/progress/GoalHero";
@@ -38,6 +38,8 @@ export default function Page() {
 
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
+  const [milestoneAmount, setMilestoneAmount] = useState<number | undefined>();
+  const [addYearRequest, setAddYearRequest] = useState(0);
 
   const handleGoalData = useCallback((targetAmount: number | null) => {
     setGoalTargetAmount(targetAmount);
@@ -119,7 +121,6 @@ export default function Page() {
         goalTargetAmount={goalTargetAmount}
         retirementEntries={retirementEntries}
         milestones={milestones}
-        onAddMilestone={() => setMilestoneDialogOpen(true)}
         onEditGoal={() => setGoalDialogOpen(true)}
         loading={chartLoading}
       />
@@ -148,80 +149,99 @@ export default function Page() {
         title="Add Milestone"
         onClose={() => setMilestoneDialogOpen(false)}
       >
-        <MilestoneForm
-          onSaved={async () => {
-            await refreshMilestones();
-            setMilestoneDialogOpen(false);
-          }}
-          onCancel={() => setMilestoneDialogOpen(false)}
-        />
+        {milestoneDialogOpen && (
+          <MilestoneForm
+            defaultAmount={milestoneAmount}
+            milestones={milestones}
+            onSaved={async () => {
+              await refreshMilestones();
+              setMilestoneDialogOpen(false);
+            }}
+            onCancel={() => setMilestoneDialogOpen(false)}
+          />
+        )}
       </ProgressEntryDialog>
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Retirement trend */}
-        <Grid item xs={12}>
-          <SectionCard
-            title="Retirement Savings Over Time"
-            headingId="progress-charts-heading"
-            elevation={1}
-            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-            contentSx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-            }}
-          >
-            <ProgressCharts
-              retirementEntries={retirementEntries}
-              loading={chartLoading}
-              error={chartError}
-              goalTargetAmount={goalTargetAmount}
-              milestones={milestones}
-            />
-          </SectionCard>
-        </Grid>
-
         {/* Milestones */}
-        <Grid item xs={12} lg={5}>
+        <Grid item xs={12} lg={5} sx={{ order: { xs: 2, lg: 1 } }}>
           <SectionCard
             title="Milestones"
             description="Celebrate the next step"
             headingId="progress-milestones-heading"
             elevation={1}
-            sx={{ height: { lg: "100%" } }}
-          >
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            titleAlign="left"
+            action={
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => setMilestoneDialogOpen(true)}
+                onClick={() => {
+                  setMilestoneAmount(undefined);
+                  setMilestoneDialogOpen(true);
+                }}
               >
-                Add Milestone
+                Record Milestone
               </Button>
-            </Box>
+            }
+            sx={{ height: { lg: "100%" } }}
+          >
             <MilestonesList
               milestones={milestones}
               loading={chartLoading}
               currentAmount={getLatestRetirementTotal(retirementEntries)}
               onMilestonesChanged={refreshMilestones}
+              onRecordAchievement={(amount) => {
+                setMilestoneAmount(amount);
+                setMilestoneDialogOpen(true);
+              }}
             />
           </SectionCard>
         </Grid>
 
         {/* Retirement history */}
-        <Grid item xs={12} lg={7} id="retirement-history">
+        <Grid
+          item
+          xs={12}
+          lg={7}
+          id="retirement-history"
+          sx={{ order: { xs: 1, lg: 2 } }}
+        >
           <SectionCard
             title="Retirement History"
             description="Review and update your retirement account balances."
             headingId="progress-history-heading"
             elevation={1}
+            titleAlign="left"
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setAddYearRequest((value) => value + 1)}
+              >
+                Add Yearly Record
+              </Button>
+            }
             sx={{ height: { lg: "100%" } }}
           >
             <RetirementList
               entries={retirementEntries}
               loading={chartLoading}
               onEntriesChanged={handleRetirementEntriesChanged}
+              addRequest={addYearRequest}
+            />
+          </SectionCard>
+        </Grid>
+        <Grid item xs={12} sx={{ order: 3 }}>
+          <SectionCard
+            title="Retirement Savings Over Time"
+            headingId="progress-charts-heading"
+            elevation={1}
+          >
+            <ProgressCharts
+              retirementEntries={retirementEntries}
+              loading={chartLoading}
+              error={chartError}
+              goalTargetAmount={goalTargetAmount}
             />
           </SectionCard>
         </Grid>

@@ -10,18 +10,20 @@ import type { RetirementEntry } from "@/lib/types/types";
 
 export default function RetirementForm({
   defaultEntry,
+  latestEndAmount,
   onSaved,
   onCancel,
 }: {
   defaultEntry?: RetirementEntry;
+  latestEndAmount?: number;
   onSaved?: (entry: RetirementEntry) => void | Promise<void>;
   onCancel?: () => void;
 }) {
   const [year, setYear] = useState(
-    String(defaultEntry?.year ?? new Date().getFullYear()),
+    String(defaultEntry?.year ?? new Date().getFullYear() - 1),
   );
   const [startAmount, setStartAmount] = useState(
-    String(defaultEntry?.startAmount ?? "0"),
+    String(defaultEntry?.startAmount ?? latestEndAmount ?? 0),
   );
   const [endAmount, setEndAmount] = useState(
     String(defaultEntry?.endAmount ?? "0"),
@@ -38,6 +40,11 @@ export default function RetirementForm({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+      Number(year) >= new Date().getFullYear() &&
+      Number(year) !== defaultEntry?.year
+    )
+      return;
     const body: Record<string, unknown> = {
       year: Number(sanitizeNumberString(year)),
       startAmount: Number(sanitizeNumberString(startAmount)),
@@ -52,10 +59,18 @@ export default function RetirementForm({
       <Stack spacing={2}>
         <TextField
           label="Year"
+          disabled={Boolean(defaultEntry)}
           value={year}
           onChange={(e) => setYear(sanitizeNumberString(e.target.value))}
           required
           type="number"
+          inputProps={{
+            min: 1,
+            max: Math.max(
+              new Date().getFullYear() - 1,
+              defaultEntry?.year ?? 0,
+            ),
+          }}
         />
         <TextField
           label="Start amount"

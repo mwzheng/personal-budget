@@ -23,7 +23,7 @@ import {
 import SalaryForm from "@/components/forms/SalaryForm";
 import SalaryChart from "@/components/charts/SalaryChart";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
-import { SectionHeader } from "@/components/progress/SectionHeader";
+import PageHeader from "@/components/ui/PageHeader";
 import { ActionIconButton } from "@/components/ui/ActionIconButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
@@ -133,8 +133,9 @@ export default function SalaryList({
   return (
     <Box>
       {showSectionHeader && (
-        <SectionHeader
+        <PageHeader
           title="Salary History"
+          description="Review annual salary history and compare income growth over time."
           sx={{ mb: 2 }}
           action={
             <Button

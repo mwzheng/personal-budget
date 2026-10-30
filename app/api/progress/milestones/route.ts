@@ -48,6 +48,17 @@ export async function POST(request: Request) {
         { ok: false, error: "Invalid milestone" },
         { status: 400 },
       );
+    if (
+      parsed.data.kind === "achievement" &&
+      (await getUserMilestones(userId)).some(
+        (m) => m.kind === "achievement" && m.amount === parsed.data.amount,
+      )
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "An achievement for this amount already exists." },
+        { status: 409 },
+      );
+    }
     const created = await putMilestone(userId, parsed.data);
     return NextResponse.json({ ok: true, created });
   } catch (err) {
@@ -69,6 +80,20 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         { ok: false, error: "Invalid milestone" },
         { status: 400 },
+      );
+    }
+    if (
+      parsed.data.kind === "achievement" &&
+      (await getUserMilestones(userId)).some(
+        (m) =>
+          m.kind === "achievement" &&
+          m.amount === parsed.data.amount &&
+          m.milestoneId !== parsed.data.milestoneId,
+      )
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "An achievement for this amount already exists." },
+        { status: 409 },
       );
     }
     const updated = await updateMilestone(userId, {

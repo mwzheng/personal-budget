@@ -125,14 +125,20 @@ export default function SalaryChart({
             <YAxis
               yAxisId={0}
               tickFormatter={(value: number) =>
-                value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value}`
+                value === 0
+                  ? ""
+                  : value >= 1000
+                    ? `$${(value / 1000).toFixed(1)}K`
+                    : `$${value}`
               }
               tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
             />
             <YAxis
               yAxisId={1}
               orientation="right"
-              tickFormatter={(value: number) => `${value}%`}
+              tickFormatter={(value: number) =>
+                value === 0 ? "" : `${value}%`
+              }
               tick={{ fill: SERVER_THEME_TOKENS.chart.axis }}
             />
             <Tooltip content={tooltipContent} />

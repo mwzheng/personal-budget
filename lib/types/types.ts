@@ -65,6 +65,7 @@ export interface RetirementEntry {
 // the user provided without inventing placeholder values.
 export interface MilestoneEntry {
   milestoneId: string;
+  kind?: "achievement" | "target";
   amount: number;
   year: number | null;
   month?: number | null;

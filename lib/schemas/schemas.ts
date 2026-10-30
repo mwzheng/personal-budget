@@ -63,6 +63,7 @@ export const ContactSubmissionSchema = z.object({
 // API compatibility while requiring a year whenever an exact calendar month is
 // supplied; the form enforces month/year for new interactive entries.
 const MilestoneFieldsSchema = z.object({
+  kind: z.enum(["achievement", "target"]).optional(),
   amount: z.number().finite().positive(),
   year: z.number().int().min(1).max(9999).nullable().optional(),
   month: z.number().int().min(1).max(12).nullable().optional(),
@@ -71,9 +72,33 @@ const MilestoneFieldsSchema = z.object({
 });
 
 function requireYearForMonth(
-  value: { year?: number | null; month?: number | null },
+  value: {
+    year?: number | null;
+    month?: number | null;
+    kind?: "achievement" | "target";
+  },
   ctx: z.RefinementCtx,
 ) {
+  if (
+    value.kind === "achievement" &&
+    (value.year == null || value.month == null)
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["month"],
+      message: "A reached month and year are required.",
+    });
+  }
+  if (
+    value.kind === "target" &&
+    (value.year == null) !== (value.month == null)
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["month"],
+      message: "Provide both target month and year, or neither.",
+    });
+  }
   if (
     value.month !== null &&
     value.month !== undefined &&
