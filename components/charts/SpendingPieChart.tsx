@@ -106,7 +106,8 @@ export function SpendingPieChart({
               cy="50%"
               outerRadius="90%"
               innerRadius="65%"
-              paddingAngle={2}
+              paddingAngle={mode === "tag" ? 0 : 2}
+              stroke={mode === "tag" ? "none" : undefined}
               animationDuration={1200}
               animationEasing="ease-out"
               animationBegin={200}
