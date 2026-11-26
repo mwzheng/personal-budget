@@ -107,6 +107,7 @@ export function SankeyChart({ data }: Props) {
           nodeSpacing={metrics.nodeSpacing}
           nodeBorderWidth={0}
           linkOpacity={0.72}
+          linkBlendMode="normal"
           linkHoverOpacity={0.94}
           linkHoverOthersOpacity={0.12}
           enableLinkGradient
