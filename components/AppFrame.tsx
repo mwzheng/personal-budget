@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { AppNav } from "@/components/AppNav";
+import { AppNav, COLLAPSED_NAV_WIDTH, NAV_WIDTH } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { AUTH_CHANGED_EVENT, isAuthenticated } from "@/lib/auth/cognitoClient";
 
@@ -12,6 +12,17 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isPrototype = pathname?.startsWith("/prototypes/") ?? false;
   const [loggedIn, setLoggedIn] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(document.cookie.split("; ").includes("nav_collapsed=true"));
+  }, []);
+
+  const toggleNavigation = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    document.cookie = `nav_collapsed=${next}; Path=/; SameSite=Lax`;
+  };
 
   useEffect(() => {
     const check = () => setLoggedIn(isAuthenticated());
@@ -30,13 +41,22 @@ export function AppFrame({ children }: { children: ReactNode }) {
         minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
-        pl: !isPrototype && loggedIn ? { xs: 0, lg: "248px" } : 0,
+        pl:
+          !isPrototype && loggedIn
+            ? { xs: 0, lg: `${collapsed ? COLLAPSED_NAV_WIDTH : NAV_WIDTH}px` }
+            : 0,
         width: "100%",
         minWidth: 0,
         overflowX: "clip",
       }}
     >
-      {!isPrototype && <AppNav loggedIn={loggedIn} />}
+      {!isPrototype && (
+        <AppNav
+          loggedIn={loggedIn}
+          collapsed={collapsed}
+          onToggleNavigation={toggleNavigation}
+        />
+      )}
       <Box component="div" sx={{ flexGrow: 1, minWidth: 0, maxWidth: "100%" }}>
         {children}
       </Box>
