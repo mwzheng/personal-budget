@@ -24,6 +24,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Tooltip from "@mui/material/Tooltip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -1375,35 +1376,32 @@ const ReportsPageContent = () => {
           />
         ) : null}
       </Dialog>
-      <Fab
-        data-testid="reports-add-transaction-fab"
-        color="primary"
-        variant="extended"
-        aria-label="Add transaction"
-        onClick={() => handleAddTransaction()}
-        sx={{
-          position: "fixed",
-          right: {
-            xs: "calc(16px + env(safe-area-inset-right))",
-            sm: "calc(24px + env(safe-area-inset-right))",
-          },
-          bottom: {
-            xs: "calc(16px + env(safe-area-inset-bottom))",
-            sm: "calc(24px + env(safe-area-inset-bottom))",
-          },
-          zIndex: (theme) => theme.zIndex.speedDial,
-          width: { xs: 56, sm: "auto" },
-          minWidth: { xs: 56, sm: 0 },
-          height: 56,
-          px: { xs: 0, sm: 2 },
-          borderRadius: { xs: "50%", sm: 1.5 },
-        }}
-      >
-        <AddIcon sx={{ mr: { xs: 0, sm: 1 } }} />
-        <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-          Add Transaction
-        </Box>
-      </Fab>
+      <Tooltip title="Add Transaction">
+        <Fab
+          data-testid="reports-add-transaction-fab"
+          color="primary"
+          aria-label="Add transaction"
+          onClick={() => handleAddTransaction()}
+          sx={{
+            position: "fixed",
+            right: {
+              xs: "calc(16px + env(safe-area-inset-right))",
+              sm: "calc(24px + env(safe-area-inset-right))",
+            },
+            bottom: {
+              xs: "calc(16px + env(safe-area-inset-bottom))",
+              sm: "calc(24px + env(safe-area-inset-bottom))",
+            },
+            zIndex: (theme) => theme.zIndex.speedDial,
+            width: 48,
+            minWidth: 48,
+            height: 48,
+            p: 0,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
     </Container>
   );
 };
